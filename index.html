@@ -1015,6 +1015,7 @@ function stopCam(){
   CAM.stream = null; $("cam").srcObject = null; $("cam").hidden = true; $("avatar").hidden = false;
   $("camBtn").textContent = "カメラで表情を映す"; $("camBtn").disabled = false; $("camMode").hidden = true; $("ampBox").hidden = true; $("mood").textContent = "";
   drawAvatar(REST); camNote("あなたの表情を読み取って、キャラクターが同じ顔をします。");
+  ON.called = false; onVideo();
 }
 function applyCamMode(){
   const video = CAM.on && $("camMode").value === "video";
@@ -1116,6 +1117,7 @@ function onData(m){
   if (m.t === "hello"){ ON.oppName = String(m.name || "ともだち").slice(0, 8); ON.oppSkin = SKINS[m.skin] ? m.skin : "hito"; ON.oppBack = ITEMS.back.some(x => x.id === m.back) ? m.back : "classic"; ON.oppFx = ITEMS.fx.some(x => x.id === m.fx) ? m.fx : "star"; lobbyMsg(`${ON.oppName}さんとつながりました！`); meetFriend(m.pid); $("bubble").textContent = "よろしく！"; if (ON.lastView) applyView(ON.lastView); else render(); return; }
   if (m.t === "full"){ lobbyMsg("その部屋はもう2人で遊んでいます。"); return; }
   if (m.t === "face"){ ON.oppFace = m.v; ON.oppFaceAt = performance.now(); if (SKINS[m.skin]) ON.oppSkin = m.skin; ON.oppVideo = !!m.video; if (m.mood) $("bubble").dataset.mood = m.mood; drawOpp(); return; }
+  if (m.t === "mode"){ ON.oppVideo = !!m.video; drawOpp(); return; }
   if (m.t === "say"){ const t = String(m.text || "").slice(0, 20); $("bubble").textContent = t; const f = $("face"); f.classList.remove("bump"); void f.offsetWidth; f.classList.add("bump"); SFX.tap(); return; }
   if (m.t === "view"){ applyView(m.v); return; }
   if (ON.host) hostAct("guest", m);
@@ -1220,8 +1222,9 @@ function onFace(){
 function onVideo(){
   if (!ON.active || !ON.open || !ON.peer) return;
   const want = CAM.on && $("camMode").value === "video";
-  if (want && !ON.called && CAM.stream){ ON.called = true; try { ON.peer.call(ON.conn.peer, CAM.stream); } catch (e) {} }
-  if (!want) ON.conn.send({ t: "face", v: CAM.v ? exaggerate(CAM.v) : REST, skin: SKIN.id, video: false });
+  // tell the other side which view to show, even before a face has been found
+  ON.conn.send({ t: "mode", video: want });
+  if (want && !ON.called && CAM.stream){ ON.called = true; try { ON.peer.call(ON.conn.peer, CAM.stream); } catch (e) { ON.called = false; } }
 }
 function onCall(call){
   call.answer();
