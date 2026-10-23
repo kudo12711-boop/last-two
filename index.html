@@ -15,7 +15,7 @@
 :root{
   --felt:#2c0d14; --felt2:#45141f; --rail:#1a070b; --line:#6e3240; --brass:#d9a94f; --brassDim:#8f6a2c;
   --cream:#f7ecd8; --cardInk:#2a0b10; --ink:#f5e7d2; --muted:#cfae9f; --baba:#5d2c8c; --good:#9fdcaa; --sky:#7cc4ff; --shade:rgb(20 4 8 / .8);
-  --skinMe:#f0cfae; --nekoFur:#f4d3a1; --nekoDark:#c98a4b; --kumaFur:#a8744a; --kumaMuzzle:#ecd2ad; --roboBody:#b9c3cf; --roboDark:#6d7886; --anger:#ff6b6b; --hairMe:#3b2742; --blush:#ef8f8f; --skin0:#e0a868; --skin1:#f3dcb8; --skin2:#a7a3b5;
+  --skinMe:#f0cfae; --nekoFur:#f4d3a1; --nekoDark:#c98a4b; --kumaFur:#a8744a; --kumaMuzzle:#ecd2ad; --roboBody:#b9c3cf; --roboDark:#6d7886; --anger:#ff6b6b; --night:#1b1f4a; --usagiFur:#f6f1ea; --obake:#eef3ff; --hairMe:#3b2742; --blush:#ef8f8f; --skin0:#e0a868; --skin1:#f3dcb8; --skin2:#a7a3b5;
   --display:"Dela Gothic One","M PLUS 1p","Hiragino Sans",sans-serif; --body:"M PLUS 1p","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
   --cw:clamp(30px,8.4vw,60px);
   color-scheme:dark;
@@ -73,6 +73,14 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
   repeating-linear-gradient(45deg,transparent 0 5px,var(--brassDim) 5px 6px),
   repeating-linear-gradient(-45deg,transparent 0 5px,var(--brassDim) 5px 6px),var(--felt2)}
 .card.back::before{content:"";position:absolute;inset:18%;border:1.5px solid var(--brass);border-radius:50%;background:var(--felt)}
+.hand[data-back="dots"] .card.back{background:radial-gradient(circle,var(--brass) 1.4px,transparent 1.8px) 0 0/7px 7px,var(--felt2)}
+.hand[data-back="ichimatsu"] .card.back{background:conic-gradient(var(--felt2) 25%,var(--brassDim) 0 50%,var(--felt2) 0 75%,var(--brassDim) 0) 0 0/10px 10px}
+.hand[data-back="neon"] .card.back{background:var(--rail);border-color:var(--sky);box-shadow:inset 0 0 8px var(--sky)}
+.hand[data-back="neon"] .card.back::before{border-color:var(--sky);background:var(--rail)}
+.hand[data-back="stars"] .card.back{background:radial-gradient(circle,var(--cream) 1px,transparent 1.4px) 0 0/9px 11px,radial-gradient(circle,var(--brass) .8px,transparent 1.2px) 4px 5px/13px 9px,var(--night)}
+.hand[data-back="stars"] .card.back::before{background:var(--night);border-color:var(--cream)}
+.hand[data-back="gold"] .card.back{background:linear-gradient(135deg,var(--brass),var(--brassDim) 60%,var(--brass));border-color:var(--cream)}
+.hand[data-back="gold"] .card.back::before{background:var(--baba);border-color:var(--cream)}
 .card:disabled{cursor:default}
 .you .card:not(:disabled):hover{transform:translateY(-5px)}
 .cpu .card:not(:disabled):hover{transform:translateY(5px)}
@@ -132,6 +140,8 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .av .muzzle{fill:var(--kumaMuzzle)}
 .av .robo{fill:var(--roboBody);stroke:var(--rail);stroke-width:2}
 .av .roboD{fill:var(--roboDark)}
+.av .usagi{fill:var(--usagiFur);stroke:var(--rail);stroke-width:2}
+.av .obake{fill:var(--obake);stroke:var(--rail);stroke-width:2}
 .av .whisk{stroke:var(--cardInk);stroke-width:1.2;stroke-linecap:round}
 .amp{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted)}
 .amp input{width:96px;accent-color:var(--brass)}
@@ -159,6 +169,31 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .lnote{margin:0;font-size:.85rem;color:var(--muted)}
 .face.av{width:96px;height:96px}
 .face video{width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scaleX(-1)}
+.coins{font-family:var(--display);font-weight:400;color:var(--brass);font-size:.95rem}
+.shop{background:var(--felt);border:2px solid var(--brass);border-radius:18px;padding:16px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow-y:auto;display:grid;gap:12px}
+.shop header h2{font-family:var(--display);font-weight:400;margin:0;font-size:1.4rem;color:var(--brass)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button[aria-selected="true"]{background:var(--brass);border-color:var(--brass);color:var(--cardInk);font-weight:700}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.item{background:var(--rail);border:1.5px solid var(--line);border-radius:14px;padding:10px;display:grid;gap:6px;justify-items:center;text-align:center;min-width:0}
+.item.on{border-color:var(--brass)}
+.item b{font-size:.9rem}
+.item .pv{width:64px;height:64px;display:grid;place-items:center}
+.item .pv svg{width:64px;height:64px}
+.item .pv .hand{padding:0;min-height:0}
+.item small{font-size:.72rem;color:var(--muted);line-height:1.4}
+.item button{font-size:.8rem;padding:4px 10px;width:100%}
+.tag{font-size:.7rem;background:var(--baba);color:var(--cream);border-radius:999px;padding:1px 8px}
+.pass{display:grid;gap:10px}
+.pass .bar{height:10px}
+.prow{display:grid;grid-template-columns:3.2em minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:center;font-size:.82rem}
+.prow>div{background:var(--rail);border:1.5px solid var(--line);border-radius:10px;padding:6px 8px;display:grid;gap:4px;min-width:0}
+.prow>div.prem{border-color:var(--baba)}
+.prow b{font-family:var(--display);font-weight:400;color:var(--brass)}
+.prow button{font-size:.75rem;padding:2px 8px}
+.fake{font-size:.75rem;color:var(--muted);margin:0}
+.adbox{border:1.5px dashed var(--line);border-radius:10px;padding:12px;text-align:center;font-size:.8rem;color:var(--muted)}
+.earn{color:var(--good);font-weight:700}
 .later{margin:0;font-size:.8rem;color:var(--muted);text-align:center}
 
 .pop{position:fixed;pointer-events:none;font-family:var(--display);font-size:1.6rem;color:var(--good);text-shadow:0 3px 0 var(--rail);animation:rise 1.1s ease-out forwards;z-index:20;white-space:nowrap}
@@ -190,12 +225,13 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 
 <div class="wrap">
   <header>
-    <h1>ラスト・ツー<small>試作 v0.6・1対1、ババの読み合い（1ゲーム約1分）</small></h1>
+    <h1>ラスト・ツー<small>試作 v0.7・1対1、ババの読み合い（1ゲーム約1分）</small></h1>
     <div class="controls">
       <div class="modes"><button id="modeCpu" aria-pressed="true">CPUと</button><button id="modeOn" aria-pressed="false">友だちと</button></div>
       <label for="level" class="lv" id="levelLab">相手</label>
       <select id="level"><option value="0">ポン太（よわい）</option><option value="1" selected>ミケ（ふつう）</option><option value="2">クロ（つよい）</option></select>
       <button id="sound" aria-pressed="true">音 オン</button>
+      <button id="shopBtn">きせかえ <span class="coins" id="coinTop">0</span></button>
       <button class="primary" id="start">スタート</button>
     </div>
   </header>
@@ -218,7 +254,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
       <div class="face" id="face"></div>
       <div class="namebox"><b id="cpuName">ミケ<span>ふつう</span></b><div class="bubble" id="bubble">よろしくね</div></div>
     </div>
-    <div class="hand cpu" id="cpuHand" aria-label="相手の手札"></div>
+    <div class="hand cpu" id="cpuHand" data-back="classic" aria-label="相手の手札"></div>
     <div class="mid">
       <div class="pile">
         <span>すてたペア</span>
@@ -231,11 +267,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
       </div>
     </div>
     <div class="hand you" id="youHand" aria-label="あなたの手札"></div>
-    <div class="talk" id="stamps" hidden>
-      <button data-t="それ、ババだよ">それ、ババだよ</button><button data-t="それはババじゃないよ">ババじゃないよ</button>
-      <button data-t="それ、ババ？">それ、ババ？</button><button data-t="どうかな〜">どうかな〜</button>
-      <button data-t="はやく引いて！">はやく引いて！</button><button data-t="うーん…">うーん…</button>
-    </div>
+    <div class="talk" id="stamps" hidden></div>
     <div class="talk" id="ask" hidden><button id="askBtn">「それ、ババ？」と聞く</button></div>
     <div class="tools" id="tools" hidden>
       <button id="mix">まぜる</button>
@@ -252,7 +284,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
         <b>あなた<span id="mood"></span></b>
         <div class="bubble mine" id="myBubble" hidden></div>
         <div class="camrow">
-          <select id="skin" aria-label="キャラ"><option value="hito">ひと</option><option value="neko">ねこ</option><option value="kuma">くま</option><option value="robo">ロボ</option></select>
+          <select id="skin" aria-label="キャラ"></select>
           <button id="camBtn">カメラで表情を映す</button>
           <select id="camMode" aria-label="表示のしかた" hidden><option value="char">キャラで表示</option><option value="video">カメラ映像で表示</option></select>
           <label class="amp" id="ampBox" hidden>大げささ <input type="range" id="amp" min="1" max="3" step="0.5" value="2"></label>
@@ -384,6 +416,7 @@ function cardHTML(c, i, side, enabled){
 function render(){
   const youOn = ["pick", "guard", "cpuwait", "oguard"].includes(S.phase);
   $("youHand").innerHTML = S.you.map((c, i) => cardHTML(c, i, "you", youOn)).join("");
+  $("cpuHand").dataset.back = ON.active ? (ON.oppBack || "classic") : INV.equip.back;
   $("cpuHand").innerHTML = S.cpu.map((c, i) => cardHTML(c, i, "cpu", S.phase === "pick")).join("");
   $("pairs").textContent = S.pairs;
   $("tools").hidden = !["guard", "oguard"].includes(S.phase); $("go").hidden = S.phase === "oguard";
@@ -629,6 +662,7 @@ function finish(win){
   const rec = loadRec(), key = "lv" + S.lv, r = rec[key] || { w: 0, l: 0, best: 0 };
   win ? r.w++ : r.l++; r.best = Math.max(r.best, score.streak); rec[key] = r; saveRec(rec);
   $("sYou").textContent = score.you; $("sCpu").textContent = score.cpu; $("streak").textContent = score.streak;
+  const earned = earn(win);
   render();
   if (win){ say("shock", "負けた〜！"); SFX.win(); avatarEvent({ smile: .95, openL: .05, openR: .05 }, 3000); msg(`<b>あなたの勝ち！</b>　ババは${name()}の手に残りました。`); }
   else { say("happy", "ぼくの勝ち！"); SFX.lose(); avatarEvent({ inner: .9, frown: .8 }, 3000); msg(`<b>負け…</b>　ババがあなたの手に残りました。`); }
@@ -646,8 +680,10 @@ function finish(win){
         <tr><td>最高連勝</td><td>${r.best}</td></tr>
         <tr><td>${name()}の顔色の正体</td><td>${STYLE_TXT[S.style]}</td></tr>
       </table>
+      ${earnHTML(earned)}
       <h3>あなたの顔</h3>
       ${faceReport()}
+      ${adHTML()}
       <div class="rbtns"><button class="primary" id="again">もう一回</button><button id="close">閉じる</button></div>
       <p class="rnote">${S.lv < 2 && win ? "次は相手を強くしてみよう。" : S.lv > 0 ? "強い相手ほど、あなたのクセを覚えていきます。" : "顔色をよく見よう。"}</p>
     </div></div>`;
@@ -705,8 +741,33 @@ function exaggerate(v){
     puff: cl((v.puff - n.puff) * a * 1.5, 0, 1), squint: cl((v.squint - n.squint) * a * 1.3, 0, 1)
   };
 }
-const SKIN = { id: "hito" };
-try { const x = localStorage.getItem("lasttwo-skin"); if (["hito", "neko", "kuma", "robo"].includes(x)) SKIN.id = x; } catch (e) {}
+// --- cosmetics: everything here only changes looks, never the odds ---
+const ITEMS = {
+  skin: [{ id: "hito", name: "ひと", price: 0 }, { id: "neko", name: "ねこ", price: 0 }, { id: "kuma", name: "くま", price: 300 }, { id: "robo", name: "ロボ", price: 500 },
+    { id: "usagi", name: "うさぎ", price: 800 }, { id: "obake", name: "おばけ", pass: true }],
+  back: [{ id: "classic", name: "クラシック", price: 0 }, { id: "dots", name: "ドット", price: 200 }, { id: "ichimatsu", name: "市松", price: 300 }, { id: "neon", name: "ネオン", price: 400 },
+    { id: "stars", name: "星空", pass: true }, { id: "gold", name: "金のババ", pass: true }],
+  stamp: [{ id: "basic", name: "きほん", price: 0, lines: ["それ、ババだよ", "それはババじゃないよ", "それ、ババ？", "どうかな〜", "はやく引いて！", "うーん…"] },
+    { id: "polite", name: "ていねい", price: 200, lines: ["そちら、ババでございます", "ババではございません", "そちら、ババですか？", "さあ、どうでしょう", "お早めにどうぞ", "お手やわらかに"] },
+    { id: "kansai", name: "関西弁", price: 300, lines: ["それババやで", "ババちゃうで", "それババちゃうん？", "知らんけど", "はよ引いてや", "なんでやねん"] },
+    { id: "animal", name: "どうぶつ", price: 300, lines: ["にゃー（ババだにゃ）", "わん（ちがうわん）", "ぴよ？（ババ？）", "がおー", "ぶーぶー（はやく）", "こけっ"] }],
+  fx: [{ id: "star", name: "キラキラ", price: 0 }, { id: "heart", name: "ハート", price: 300 }, { id: "note", name: "音符", price: 300 }, { id: "flower", name: "花", pass: true }]
+};
+const KIND_TXT = { skin: "キャラ", back: "カード柄", stamp: "スタンプ", fx: "マンガ効果" };
+const SEASON = { name: "シーズン1　はじまりの卓", ends: "2026年12月31日", rows: [
+  [2, { coins: 50 }, { item: ["back", "stars"] }], [4, { coins: 50 }, { item: ["fx", "heart"] }], [6, { item: ["back", "dots"] }, { item: ["stamp", "kansai"] }],
+  [8, { coins: 100 }, { coins: 200 }], [10, { item: ["stamp", "polite"] }, { item: ["skin", "obake"] }], [12, { coins: 100 }, { item: ["fx", "note"] }],
+  [14, { coins: 100 }, { item: ["back", "neon"] }], [16, { coins: 150 }, { coins: 300 }], [18, { coins: 150 }, { item: ["fx", "flower"] }],
+  [20, { item: ["skin", "usagi"] }, { item: ["back", "gold"] }]] };
+const INV = { coins: 100, xp: 0, pass: false, owned: { skin: ["hito", "neko"], back: ["classic"], stamp: ["basic"], fx: ["star"] },
+  equip: { skin: "hito", back: "classic", stamp: "basic", fx: "star" }, claimed: { free: [], prem: [] } };
+try {
+  const saved = JSON.parse(localStorage.getItem("lasttwo-inv"));
+  if (saved && saved.owned) Object.assign(INV, saved);
+  else { const old = localStorage.getItem("lasttwo-skin"); if (old === "kuma" || old === "robo"){ INV.owned.skin.push(old); INV.equip.skin = old; } }
+} catch (e) {}
+function saveInv(){ try { localStorage.setItem("lasttwo-inv", JSON.stringify(INV)); } catch (e) {} }
+const SKIN = { get id(){ return INV.equip.skin; }, set id(x){ INV.equip.skin = x; saveInv(); } };
 // each character only changes what sits behind and around the face; the moving parts are shared
 const SKINS = {
   hito: { head: `<circle cx="32" cy="35" r="24" class="head"/>`, cheek: "head",
@@ -715,10 +776,21 @@ const SKINS = {
     top: "", front: `<path d="M30 39h4l-2 2.5z" class="dot"/><path d="M6 40l10 1M6 45l10-1M58 40l-10 1M58 45l-10-1" class="whisk"/>` },
   kuma: { head: `<circle cx="13" cy="15" r="8" class="kuma"/><circle cx="51" cy="15" r="8" class="kuma"/><circle cx="13" cy="15" r="4" class="muzzle"/><circle cx="51" cy="15" r="4" class="muzzle"/><circle cx="32" cy="35" r="24" class="kuma"/>`, cheek: "kuma",
     top: "", front: `<ellipse cx="32" cy="45" rx="11" ry="8" class="muzzle" opacity=".9"/><ellipse cx="32" cy="39.5" rx="3" ry="2" class="dot"/>`, muzzleBack: true },
+  usagi: { head: `<ellipse cx="23" cy="10" rx="5" ry="13" class="usagi"/><ellipse cx="41" cy="10" rx="5" ry="13" class="usagi"/><ellipse cx="23" cy="11" rx="2.2" ry="9" class="heart"/><ellipse cx="41" cy="11" rx="2.2" ry="9" class="heart"/><circle cx="32" cy="36" r="23" class="usagi"/>`, cheek: "usagi",
+    top: "", front: `<ellipse cx="32" cy="39.5" rx="2.2" ry="1.6" class="heart"/>` },
+  obake: { head: `<path d="M8 36a24 24 0 0 1 48 0v20l-6-4-6 4-6-4-6 4-6-4-6 4-6-4-6 4z" class="obake"/>`, cheek: "obake",
+    top: `<path d="M30 9q2-6 6-7q-1 4 1 7" class="obake"/>`, front: "" },
   robo: { head: `<path d="M32 4v7" class="ln"/><circle cx="32" cy="4" r="3" class="fx"/><rect x="2" y="29" width="6" height="12" rx="2" class="roboD"/><rect x="56" y="29" width="6" height="12" rx="2" class="roboD"/><rect x="8" y="11" width="48" height="46" rx="12" class="robo"/>`, cheek: "robo",
     top: `<path d="M14 18h36" class="ln" stroke-width="1.5" opacity=".4"/>`, front: "" }
 };
-function avatarInner(v, skinId = SKIN.id){
+function sparkle(x, y, r, fxId){
+  if (fxId === "heart") return `<path d="M${x} ${y + r * .2}c-${r * .4}-${r * .7}-${r * 1.3}-${r * .1}-${r * .6} ${r * .6}l${r * .6} ${r * .6} ${r * .6}-${r * .6}c${r * .7}-${r * .7}-${r * .2}-${r * 1.3}-${r * .6}-${r * .6}z" class="heart"/>`;
+  if (fxId === "note") return `<path d="M${x + r * .3} ${y - r}v${r * 1.5}" class="ln" stroke="var(--brass)" style="stroke:var(--brass)"/><ellipse cx="${x - r * .05}" cy="${y + r * .55}" rx="${r * .4}" ry="${r * .3}" class="fx"/><path d="M${x + r * .3} ${y - r}q${r * .5} ${r * .2} ${r * .6} ${r * .7}" class="ln" style="stroke:var(--brass)"/>`;
+  if (fxId === "flower") return [0, 72, 144, 216, 288].map(a => `<circle cx="${(x + Math.cos(a * Math.PI / 180) * r * .5).toFixed(1)}" cy="${(y + Math.sin(a * Math.PI / 180) * r * .5).toFixed(1)}" r="${(r * .38).toFixed(1)}" class="heart"/>`).join("") + `<circle cx="${x}" cy="${y}" r="${(r * .3).toFixed(1)}" class="fx"/>`;
+  const k = r / 4;
+  return `<path d="M${x} ${y - 4 * k}l${1.5 * k} ${2.5 * k} ${2.5 * k} ${1.5 * k}-${2.5 * k} ${1.5 * k}-${1.5 * k} ${2.5 * k}-${1.5 * k}-${2.5 * k}-${2.5 * k}-${1.5 * k} ${2.5 * k}-${1.5 * k}z" class="fx"/>`;
+}
+function avatarInner(v, skinId = SKIN.id, fxId = INV.equip.fx){
   const sk = SKINS[skinId] || SKINS.hito, f = x => x.toFixed(1), open = (v.openL + v.openR) / 2;
   const wink = Math.min(v.openL, v.openR) < .3 && Math.max(v.openL, v.openR) > .6;
   const eye = (cx, o) => {
@@ -733,13 +805,13 @@ function avatarInner(v, skinId = SKIN.id){
   const ox = v.yaw * 6, oy = v.pitch * 4, hx = v.hx * 4, hy = v.hy * 3;
   const cheekR = 6 + v.puff * 7;
   let fx = "";
-  if (v.smile > .55) fx += `<path d="M10 12l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" class="fx"/><path d="M54 16l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" class="fx"/>`;
+  if (v.smile > .55) fx += sparkle(10, 16, 4, fxId) + sparkle(54, 19, 3, fxId);
   if (v.jaw > .45 && (open > 1.15 || v.inner > .4)) fx += `<path d="M47 4h5l-1 11h-3z" class="fx"/><circle cx="49.5" cy="19" r="2" class="fx"/>`;
   if (v.inner > .4 || v.frown > .4) fx += `<path d="M52 20q5 7 0 10q-5-3 0-10Z" class="drop"/>` + (v.inner > .7 ? `<path d="M9 26q4 6 0 8q-4-2 0-8Z" class="drop"/>` : "");
   if (Math.abs(v.gx) > .8){ const x = v.gx > 0 ? 58 : 4; fx += `<path d="M${x} 28h3M${x} 33h3M${x} 38h3" class="fxs"/>`; }
   if (v.down > .5 && v.smile < .2) fx += `<path d="M46 8q3 3 0 6M52 8q-3 3 0 6M46 8q3 3 6 0M46 14q3-3 6 0" class="anger"/>`;
   if (v.pucker > .5) fx += `<path d="M54 44c-3-4-8-1-4 3l4 4 4-4c4-4-1-7-4-3z" class="heart"/>`;
-  if (wink){ const x = v.openL < v.openR ? 8 : 56; fx += `<path d="M${x} 22l1.2 3 3 1.2-3 1.2-1.2 3-1.2-3-3-1.2 3-1.2z" class="fx"/>`; }
+  if (wink){ const x = v.openL < v.openR ? 8 : 56; fx += sparkle(x, 26, 3, fxId); }
   const puffs = v.puff > .15 ? `<circle cx="${f(17 - v.puff * 3)}" cy="43" r="${f(cheekR)}" class="${sk.cheek}"/><circle cx="${f(47 + v.puff * 3)}" cy="43" r="${f(cheekR)}" class="${sk.cheek}"/>` : "";
   const bl = Math.min(.9, v.smile * 1.2 + v.puff * .6).toFixed(2), blR = f(4 + v.smile * 2 + v.puff * 2);
   return `<g transform="translate(${f(hx)} ${f(hy)}) rotate(${f(v.roll * 57.3)} 32 35) translate(32 35) scale(${sx.toFixed(3)} ${sy.toFixed(3)}) translate(-32 -35)">
@@ -938,8 +1010,7 @@ function applyCamMode(){
 $("camBtn").addEventListener("click", () => CAM.on ? stopCam() : startCam());
 $("camMode").addEventListener("change", applyCamMode);
 $("amp").value = AMP.v;
-$("skin").value = SKIN.id;
-$("skin").addEventListener("change", e => { SKIN.id = e.target.value; try { localStorage.setItem("lasttwo-skin", SKIN.id); } catch (x) {} if (CAM.on && CAM.v) drawAvatar(exaggerate(CAM.v)); if (ON.open) ON.conn.send({ t: "hello", name: nick(), skin: SKIN.id }); });
+$("skin").addEventListener("change", e => { equip("skin", e.target.value); });
 $("amp").addEventListener("input", e => { AMP.v = +e.target.value; try { localStorage.setItem("lasttwo-amp", AMP.v); } catch (x) {} });
 drawAvatar(REST);
 
@@ -1010,7 +1081,7 @@ function bindConn(c){
   const timer = setTimeout(() => { if (!ON.open) lobbyMsg("つながるのに時間がかかっています。お互いの通信環境によってはつながらないことがあります（Wi-Fiを切りかえると直ることがあります）。"); }, 12000);
   c.on("open", () => {
     clearTimeout(timer); ON.open = true; ON.called = false;
-    c.send({ t: "hello", name: nick(), skin: SKIN.id });
+    sendHello();
     if (ON.host){ hostDeal(); }
     onVideo();
   });
@@ -1027,7 +1098,7 @@ function onSend(m){
 }
 function onData(m){
   if (!m || typeof m !== "object") return;
-  if (m.t === "hello"){ ON.oppName = String(m.name || "ともだち").slice(0, 8); ON.oppSkin = SKINS[m.skin] ? m.skin : "hito"; lobbyMsg(`${ON.oppName}さんとつながりました！`); $("bubble").textContent = "よろしく！"; if (ON.lastView) applyView(ON.lastView); else render(); return; }
+  if (m.t === "hello"){ ON.oppName = String(m.name || "ともだち").slice(0, 8); ON.oppSkin = SKINS[m.skin] ? m.skin : "hito"; ON.oppBack = ITEMS.back.some(x => x.id === m.back) ? m.back : "classic"; ON.oppFx = ITEMS.fx.some(x => x.id === m.fx) ? m.fx : "star"; lobbyMsg(`${ON.oppName}さんとつながりました！`); $("bubble").textContent = "よろしく！"; if (ON.lastView) applyView(ON.lastView); else render(); return; }
   if (m.t === "full"){ lobbyMsg("その部屋はもう2人で遊んでいます。"); return; }
   if (m.t === "face"){ ON.oppFace = m.v; ON.oppFaceAt = performance.now(); if (SKINS[m.skin]) ON.oppSkin = m.skin; ON.oppVideo = !!m.video; if (m.mood) $("bubble").dataset.mood = m.mood; drawOpp(); return; }
   if (m.t === "say"){ const t = String(m.text || "").slice(0, 20); $("bubble").textContent = t; const f = $("face"); f.classList.remove("bump"); void f.offsetWidth; f.classList.add("bump"); SFX.tap(); return; }
@@ -1095,7 +1166,8 @@ function applyView(v){
   if (S.phase === "over"){
     if (was !== "over"){
       if (v.win){ SFX.win(); avatarEvent({ smile: .95, openL: .05, openR: .05 }, 3000); } else { SFX.lose(); avatarEvent({ inner: .9, frown: .8 }, 3000); }
-      setTimeout(() => showOnlineResult(v), 900);
+      const earned = earn(v.win);
+      setTimeout(() => showOnlineResult(v, earned), 900);
     }
     msg(v.win ? `<b>あなたの勝ち！</b>　ババは${who}さんの手に残りました。` : `<b>負け…</b>　ババがあなたの手に残りました。`, "");
   } else if (S.phase === "pick"){
@@ -1106,13 +1178,15 @@ function applyView(v){
   render();
 }
 function onArrange(){ onSend({ t: "arrange", order: S.you.map(c => c.id), stick: S.youStick }); }
-function showOnlineResult(v){
+function showOnlineResult(v, earned){
   if (!ON.active || S.phase !== "over") return;
   const who = esc(ON.oppName || "ともだち");
   $("overlayHost").innerHTML = `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="rt"><div class="result">
     <h2 id="rt">${v.win ? "勝ち！" : "負け…"}</h2>
     <p>${v.win ? `${who}さんにババを押しつけました。` : `${who}さんにババを押しつけられました。`}</p>
     <table><tr><td>かかった時間</td><td>${v.secs}秒</td></tr></table>
+    ${earnHTML(earned)}
+    ${adHTML()}
     <div class="rbtns"><button class="primary" id="again">もう一回</button><button id="close">閉じる</button></div>
     <p class="rnote">どちらかが「もう一回」を押すと、次のゲームが配られます。</p>
   </div></div>`;
@@ -1150,9 +1224,105 @@ function drawOpp(){
   const now = performance.now(), fresh = ON.oppFace && now - ON.oppFaceAt < 1200;
   let v = fresh ? ON.oppFace : { ...REST, hy: Math.sin(now / 700) * .35 };
   if (!fresh){ if (now > ON.blinkAt + 160) ON.blinkAt = now + 2500 + Math.random() * 3000; if (now >= ON.blinkAt && now < ON.blinkAt + 160) v = { ...v, openL: .05, openR: .05 }; }
-  f.innerHTML = `<svg viewBox="0 0 64 64" aria-hidden="true">${avatarInner({ ...REST, ...v }, ON.oppSkin)}</svg>`;
+  f.innerHTML = `<svg viewBox="0 0 64 64" aria-hidden="true">${avatarInner({ ...REST, ...v }, ON.oppSkin, ON.oppFx || "star")}</svg>`;
 }
 setInterval(() => { if (ON.active && !(ON.oppFace && performance.now() - ON.oppFaceAt < 1200)) drawOpp(); }, 100);
+
+// --- coins, season pass and the dressing-up shop (payments are pretend in this prototype) ---
+const itemOf = (kind, id) => ITEMS[kind].find(x => x.id === id);
+const owns = (kind, id) => INV.owned[kind].includes(id);
+const level = () => Math.min(20, Math.floor(INV.xp / 100) + 1);
+function grant(kind, id){ if (!owns(kind, id)) INV.owned[kind].push(id); }
+function rewardTxt(r){ if (r.coins) return `${r.coins}コイン`; const it = itemOf(r.item[0], r.item[1]); return `${KIND_TXT[r.item[0]]}「${it.name}」`; }
+function earn(win){
+  const before = level(), c = win ? 30 : 10, x = win ? 100 : 50;
+  INV.coins += c; INV.xp += x; saveInv(); updateCoins();
+  return { c, x, up: level() > before ? level() : 0 };
+}
+function earnHTML(e){ return `<p class="earn">+${e.c}コイン　+${e.x}XP${e.up ? `　シーズンパス レベル${e.up}になりました！` : ""}</p>`; }
+function adHTML(){ return INV.pass ? "" : `<div class="adbox">広告スペース（試作）<br>シーズンパスを持っていると広告は出ません</div>`; }
+function updateCoins(){ $("coinTop").textContent = INV.coins; }
+function fillSkinSelect(){
+  $("skin").innerHTML = ITEMS.skin.filter(x => owns("skin", x.id)).map(x => `<option value="${x.id}">${x.name}</option>`).join("");
+  $("skin").value = INV.equip.skin;
+}
+function fillStamps(){
+  const set = itemOf("stamp", INV.equip.stamp) || ITEMS.stamp[0];
+  $("stamps").innerHTML = set.lines.map(t => `<button data-t="${esc(t)}">${esc(t)}</button>`).join("");
+}
+function sendHello(){ if (ON.open) ON.conn.send({ t: "hello", name: nick(), skin: INV.equip.skin, back: INV.equip.back, fx: INV.equip.fx }); }
+function equip(kind, id){
+  if (!owns(kind, id)) return;
+  INV.equip[kind] = id; saveInv();
+  if (kind === "skin"){ fillSkinSelect(); if (CAM.on && CAM.v) drawAvatar(exaggerate(CAM.v)); }
+  if (kind === "stamp") fillStamps();
+  if (kind === "back" && S) render();
+  sendHello();
+}
+let shopTab = "skin";
+function preview(kind, it){
+  if (kind === "skin") return `<svg viewBox="0 0 64 64" class="av" aria-hidden="true">${avatarInner({ ...REST, smile: .35 }, it.id, "star")}</svg>`;
+  if (kind === "fx") return `<svg viewBox="0 0 64 64" class="av" aria-hidden="true">${avatarInner({ ...REST, smile: .8 }, INV.equip.skin, it.id)}</svg>`;
+  if (kind === "back") return `<div class="hand" data-back="${it.id}" style="--cw:40px"><span class="card back"></span></div>`;
+  return `<small>「${esc(it.lines[0])}」<br>「${esc(it.lines[5])}」</small>`;
+}
+function renderShop(){
+  const box = $("shopBody"); if (!box) return;
+  $("shopCoins").textContent = INV.coins;
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === shopTab));
+  if (shopTab === "pass"){
+    const L = level(), inLv = INV.xp % 100;
+    box.innerHTML = `<div class="pass">
+      <div><b>${SEASON.name}</b><br><small class="rnote">${SEASON.ends}まで　・　試合をするとXPがたまります（勝ち100・負け50）</small></div>
+      <div>レベル <b class="coins">${L}</b> / 20${L < 20 ? `　つぎまで ${100 - inLv}XP` : ""}<div class="bar"><i style="width:${L < 20 ? inLv : 100}%"></i></div></div>
+      ${INV.pass ? `<p class="earn">シーズンパスを持っています。プレミアムの報酬と、広告なしが使えます。</p>` : `<div class="lrow"><button class="primary" id="buyPass">シーズンパスを買う　480円（仮）</button></div><p class="fake">プレミアムの報酬がもらえて、試合のあとの広告が出なくなります。試作なので、実際のお金はかかりません。</p>`}
+      <div class="prow"><span></span><small>ふつう（だれでも）</small><small>プレミアム（パス）</small></div>
+      ${SEASON.rows.map(([lv, fr, pr]) => {
+        const cell = (r, track) => {
+          const got = INV.claimed[track].includes(lv), can = L >= lv && (track === "free" || INV.pass);
+          return `<div class="${track === "prem" ? "prem" : ""}">${rewardTxt(r)}${got ? `<small>もらいました</small>` : can ? `<button data-claim="${track}:${lv}">もらう</button>` : `<small>${L < lv ? `レベル${lv}で` : "パスで"}</small>`}</div>`;
+        };
+        return `<div class="prow"><b>Lv${lv}</b>${cell(fr, "free")}${cell(pr, "prem")}</div>`;
+      }).join("")}
+    </div>`;
+    return;
+  }
+  box.innerHTML = `<div class="items">${ITEMS[shopTab].map(it => {
+    const own = owns(shopTab, it.id), on = INV.equip[shopTab] === it.id;
+    const btn = on ? `<button disabled>つけています</button>` : own ? `<button data-equip="${it.id}">つける</button>`
+      : it.pass ? `<span class="tag">シーズンパスの報酬</span>` : `<button data-buy="${it.id}" ${INV.coins < it.price ? "disabled" : ""}>${it.price}コインで買う</button>`;
+    return `<div class="item ${on ? "on" : ""}"><div class="pv">${preview(shopTab, it)}</div><b>${it.name}</b>${btn}</div>`;
+  }).join("")}</div>
+  <div class="lrow"><button id="buyCoins">1000コインを買う　120円（仮）</button></div><p class="fake">試作なので、実際のお金はかかりません。勝ち負けに関わるものは売っていません。</p>`;
+}
+function openShop(tab){
+  if (tab) shopTab = tab;
+  $("overlayHost").innerHTML = `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="shopT"><div class="shop">
+    <header><h2 id="shopT">きせかえ</h2><span><span class="coins" id="shopCoins"></span> コイン</span><button id="shopClose">閉じる</button></header>
+    <div class="tabs" role="tablist">${["skin", "back", "stamp", "fx"].map(k => `<button role="tab" data-tab="${k}">${KIND_TXT[k]}</button>`).join("")}<button role="tab" data-tab="pass">シーズンパス</button></div>
+    <div id="shopBody"></div></div></div>`;
+  renderShop();
+  $("shopClose").focus();
+}
+$("overlayHost").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || !$("shopBody")) return;
+  if (b.id === "shopClose"){ $("overlayHost").innerHTML = ""; $("shopBtn").focus(); return; }
+  if (b.dataset.tab){ shopTab = b.dataset.tab; renderShop(); return; }
+  if (b.dataset.equip){ equip(shopTab, b.dataset.equip); renderShop(); return; }
+  if (b.dataset.buy){ const it = itemOf(shopTab, b.dataset.buy); if (it && INV.coins >= it.price){ INV.coins -= it.price; grant(shopTab, it.id); saveInv(); updateCoins(); equip(shopTab, it.id); SFX.pair(); } renderShop(); return; }
+  if (b.id === "buyCoins"){ INV.coins += 1000; saveInv(); updateCoins(); SFX.win(); renderShop(); return; }
+  if (b.id === "buyPass"){ INV.pass = true; saveInv(); SFX.win(); renderShop(); return; }
+  if (b.dataset.claim){
+    const [track, lv] = b.dataset.claim.split(":"), row = SEASON.rows.find(r => r[0] === +lv), r = row && row[track === "free" ? 1 : 2];
+    if (r && !INV.claimed[track].includes(+lv) && level() >= +lv && (track === "free" || INV.pass)){
+      INV.claimed[track].push(+lv); if (r.coins) INV.coins += r.coins; else grant(r.item[0], r.item[1]);
+      saveInv(); updateCoins(); fillSkinSelect(); SFX.pair();
+    }
+    renderShop();
+  }
+});
+$("shopBtn").addEventListener("click", () => openShop());
+fillSkinSelect(); fillStamps(); updateCoins();
 $("modeCpu").addEventListener("click", () => setMode(false));
 $("modeOn").addEventListener("click", () => setMode(true));
 $("mkRoom").addEventListener("click", mkRoom);
@@ -1167,7 +1337,7 @@ $("stamps").addEventListener("click", e => {
   mySay(b.dataset.t); ON.conn.send({ t: "say", text: b.dataset.t }); SFX.tap();
 });
 try { const n = localStorage.getItem("lasttwo-nick"); if (n) $("nick").value = n; } catch (e) {}
-$("nick").addEventListener("change", () => { try { localStorage.setItem("lasttwo-nick", nick()); } catch (e) {} if (ON.open) ON.conn.send({ t: "hello", name: nick(), skin: SKIN.id }); });
+$("nick").addEventListener("change", () => { try { localStorage.setItem("lasttwo-nick", nick()); } catch (e) {} sendHello(); });
 
 idle();
 requestAnimationFrame(frame);
