@@ -240,6 +240,9 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .faces svg{width:100%;max-width:60px;aspect-ratio:1;border-radius:50%;background:var(--rail);border:1.5px solid var(--brassDim)}
 .faces figure.bb svg{border-color:var(--brass)}
 .talk{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.fbtns{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.fbtn{display:grid;justify-items:center;gap:1px;padding:4px 10px;border-radius:14px;font-size:.75rem;line-height:1.2}
+.fbtn svg{width:36px;height:36px}
 .talk button{font-size:.85rem;padding:4px 12px;border-style:dashed}
 .bubble.mine{background:var(--sky);max-width:240px}
 @media (max-width:420px){h1{font-size:1.6rem}.pile{min-width:70px}}
@@ -248,7 +251,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 
 <div class="wrap">
   <header>
-    <h1>ラスト・ツー<small>試作 v0.8・1対1、ババの読み合い（1ゲーム約1分）</small></h1>
+    <h1>ラスト・ツー<small>試作 v0.9・1対1、ババの読み合い（1ゲーム約1分）</small></h1>
     <div class="controls">
       <div class="modes"><button id="modeCpu" aria-pressed="true">CPUと</button><button id="modeOn" aria-pressed="false">友だちと</button></div>
       <label for="level" class="lv" id="levelLab">相手</label>
@@ -298,6 +301,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
       <button id="mix">まぜる</button>
       <button id="go">これでどうぞ</button>
     </div>
+    <div class="fbtns" id="faceBtns" hidden aria-label="表情ボタン"></div>
     <div class="talk" id="talk" hidden>
       <button data-say="baba">「それ、ババだよ」</button>
       <button data-say="safe">「それはババじゃないよ」</button>
@@ -331,6 +335,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
       <li><b>引くとき</b>：相手のカードを1回タップすると指さします。相手の<b>顔色</b>が変わるので、それを読んで、もう一度タップで引きます。顔色は正直とは限りません。</li>
       <li><b>引かれるとき</b>：自分のカードを2枚タップすると<b>入れかえ</b>、同じカードを2回タップすると1枚だけ<b>つき出せ</b>ます。「まぜる」でシャッフルも。引いたカードは右はしに入るので、そのままだと場所がバレます。</li>
       <li>相手が強くなるほど、顔色でウソをつき、あなたのクセ（つき出し方やババを置く場所）を覚えてきます。</li>
+      <li><b>にらみ合い</b>：相手が引く番は「並べかえタイム」と「にらみ合いタイム」に分かれます。にらみ合いの間はカードを動かせないかわりに、<b>表情ボタン</b>（にやり・ドキッ・すまし・びっくり・ウインク）で顔を作れます。相手はその顔も読んでくるので、わざとちがうカードであせってみせるのが作戦です。</li>
       <li><b>ドキッ</b>：相手の指があなたのババの上に来ると、心臓の音がして、スマホがブルッとふるえます（ふるえるのはAndroidのみ。「音 オフ」で止まります）。</li>
       <li><b>話しかける</b>：相手の指があなたのカードの上にあるとき「それ、ババだよ」「それはババじゃないよ」と言えます。ウソでもOK。自分が引くときは「それ、ババ？」と聞けます（相手もウソをつきます）。</li>
       <li><b>カメラ</b>（パソコンのChromeで開いたとき）：「カメラで表情を映す」を押すと、あなたの表情をキャラクターがまねします。相手はその表情も読んでくるので、ポーカーフェイスが大事になります。</li>
@@ -344,7 +349,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 (() => {
 const $ = id => document.getElementById(id);
 const NAMES = ["ポン太", "ミケ", "クロ"], LVTXT = ["よわい", "ふつう", "つよい"];
-const PICK_MS = 12000, GUARD_MS = [7000, 6000, 5500];
+const PICK_MS = 12000, ARRANGE_MS = [4500, 4000, 3500], STARE_MS = [6500, 6000, 5500];
 let S = null, gen = 0, soundOn = true, actx = null, guardDone = null, guardTimer = 0;
 let learn = { sb: 0, st: 0, bk: [0, 0, 0], fs: 0, fn: 0, ct: 0, cn: 0 };
 const score = { you: 0, cpu: 0, streak: 0 };
@@ -454,13 +459,15 @@ function render(){
   const mypick = S.phase === "pick", t = $("table");
   if (mypick && !t.classList.contains("mypick")) popAt("あなたの番！");
   t.classList.toggle("mypick", mypick);
-  const youOn = ["pick", "guard", "cpuwait", "oguard"].includes(S.phase);
+  const youOn = ["pick", "guard", "cpuwait", "oguard", "stare"].includes(S.phase);
   $("youHand").innerHTML = S.you.map((c, i) => cardHTML(c, i, "you", youOn)).join("");
   $("cpuHand").dataset.back = ON.active ? (ON.oppBack || "classic") : INV.equip.back;
   $("cpuHand").innerHTML = S.cpu.map((c, i) => cardHTML(c, i, "cpu", S.phase === "pick")).join("");
   $("pairs").textContent = S.pairs;
-  $("tools").hidden = !["guard", "oguard"].includes(S.phase); $("go").hidden = S.phase === "oguard";
-  $("talk").hidden = S.phase !== "guard";
+  $("tools").hidden = !["guard", "oguard", "stare"].includes(S.phase); $("go").hidden = S.phase === "oguard"; $("mix").hidden = S.phase === "stare";
+  $("go").textContent = S.phase === "guard" ? "並べかえ完了" : "これでどうぞ";
+  $("talk").hidden = S.phase !== "stare";
+  $("faceBtns").hidden = !(S.phase === "stare" || (ON.active && ON.open && ["pick", "oguard"].includes(S.phase)));
   $("stamps").hidden = !(ON.active && ON.open);
   $("ask").hidden = !(S.phase === "pick" && holdsBaba(S.cpu) && S.aimCpu >= 0);
   $("cpuName").innerHTML = ON.active ? `${esc(ON.oppName || "ともだち")}<span>${ON.open ? "ともだち" : "まだいません"}</span>` : `${name()}<span>${LVTXT[S.lv]}</span>`;
@@ -484,7 +491,7 @@ function frame(){
   if (S && S.deadline){
     const left = S.deadline - performance.now();
     $("bar").style.width = Math.max(0, left / S.dur * 100) + "%";
-    $("barBox").classList.toggle("hot", S.phase === "guard");
+    $("barBox").classList.toggle("hot", S.phase === "guard" || S.phase === "stare");
     if (left <= 0 && S.phase === "pick"){ stopTimer(); youDraw(S.aimCpu >= 0 ? S.aimCpu : rnd(S.cpu.length)); }
   }
   requestAnimationFrame(frame);
@@ -618,7 +625,7 @@ function cpuChoose(){
 }
 const trust = () => (learn.ct + 1) / (learn.cn + 2);
 function faceZ(){
-  if (!CAM.on || !S.faceObs) return null;
+  if ((!CAM.on && !S.faceUsed) || !S.faceObs) return null;
   const d = S.you.map(c => { const o = S.faceObs[c.id]; return o && o.n >= 3 ? o.s / o.n : null; });
   const vals = d.filter(x => x !== null);
   if (vals.length < 2) return null;
@@ -640,11 +647,20 @@ async function cpuTurn(g){
   S.aimYou = -1;
   const guarding = holdsBaba(S.you);
   if (guarding){
-    S.phase = "guard"; S.faceObs = {}; S.wq = null; S.claims = {}; S.hw = null; setTimer(GUARD_MS[S.lv]); say("think");
-    msg(`<b>${name()}が引く番</b>　ババを隠そう。${CAM.on && S.lv > 0 ? "<br>相手はあなたの<b>表情</b>も見ています。" : ""}`, "2枚タップで入れかえ ・ 同じカードを2回タップでつき出す ・ 指の先のカードについて話しかけられます");
+    // two beats: first your hands hide the ババ, then your face defends it while the finger roams
+    S.phase = "guard"; S.faceObs = {}; S.wq = null; S.claims = {}; S.hw = null; S.faceUsed = false; S.aimYou = -1;
+    setTimer(ARRANGE_MS[S.lv]); say("think", "並べかえ中？");
+    msg(`<b>${name()}が引く番</b>　まずは<b>並べかえタイム</b>。ババを隠そう。`, "2枚タップで入れかえ ・ 同じカードを2回タップでつき出す");
     render();
-    const wander = setInterval(() => { if (g === gen && S.phase === "guard" && performance.now() > S.pauseUntil){ flushHover(); S.aimYou = wanderIdx(); render(); SFX.aim(); } }, CAM.on ? 650 : 800);
-    await new Promise(r => { guardDone = r; guardTimer = setTimeout(r, GUARD_MS[S.lv]); });
+    await new Promise(r => { guardDone = r; guardTimer = setTimeout(r, ARRANGE_MS[S.lv]); });
+    clearTimeout(guardTimer); guardDone = null;
+    if (g !== gen) return;
+    S.phase = "stare"; S.sel = -1; S.aimYou = wanderIdx(); if (!CAM.on) noteHover();
+    setTimer(STARE_MS[S.lv]); say("think");
+    msg(`<b>にらみ合いタイム</b>　${name()}の指がうろうろします。顔で勝負！${CAM.on && S.lv > 0 ? "<br>あなたの本当の表情も見られています。" : ""}`, "表情ボタンや話しかけで、指をババから遠ざけよう");
+    render(); SFX.aim();
+    const wander = setInterval(() => { if (g === gen && S.phase === "stare" && performance.now() > S.pauseUntil){ flushHover(); S.aimYou = wanderIdx(); if (!CAM.on) noteHover(); render(); SFX.aim(); } }, CAM.on ? 800 : 1000);
+    await new Promise(r => { guardDone = r; guardTimer = setTimeout(r, STARE_MS[S.lv]); });
     clearInterval(wander); clearTimeout(guardTimer); guardDone = null;
     if (g !== gen) return;
   } else {
@@ -922,7 +938,7 @@ function sampleFace(v){
   if (!CAM.base) CAM.base = f.slice();
   const dev = f.reduce((s, x, i) => s + Math.abs(x - CAM.base[i]), 0);
   CAM.base = CAM.base.map((x, i) => x + (f[i] - x) * .02);
-  if (S && S.phase === "guard" && S.aimYou >= 0 && S.you[S.aimYou]){
+  if (S && S.phase === "stare" && S.aimYou >= 0 && S.you[S.aimYou]){
     const id = S.you[S.aimYou].id, o = S.faceObs[id] || (S.faceObs[id] = { s: 0, n: 0 });
     o.s += dev; o.n++;
     const isB = S.you[S.aimYou].n === 0;
@@ -965,13 +981,13 @@ function mySay(t){
   clearTimeout(mySay.t); mySay.t = setTimeout(() => { el.hidden = true; }, 2600);
 }
 $("talk").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b || S.phase !== "guard" || S.aimYou < 0) return;
+  const b = e.target.closest("button"); if (!b || S.phase !== "stare" || S.aimYou < 0) return;
   const c = S.you[S.aimYou], kind = b.dataset.say;
   S.claims[c.id] = kind; S.pauseUntil = performance.now() + 1300; SFX.tap();
   mySay(kind === "baba" ? "それ、ババだよ" : "それはババじゃないよ");
   const t = trust();
   setTimeout(() => {
-    if (S.phase !== "guard") return;
+    if (S.phase !== "stare") return;
     if (S.lv === 0) say("sweat", kind === "baba" ? "えっ、そうなの！？" : "ほんと？じゃあ…");
     else if (t > .62) say("think", "…信じてみようかな");
     else if (t < .38) say("grin", "その手には乗らないよ");
@@ -1002,7 +1018,7 @@ function camLoop(){
       const t = readFace(r, vid);
       CAM.v = CAM.v ? Object.fromEntries(Object.keys(t).map(k => [k, CAM.v[k] + (t[k] - CAM.v[k]) * .45])) : t;
       CAM.neutral = CAM.neutral ? Object.fromEntries(Object.keys(t).map(k => [k, CAM.neutral[k] + (t[k] - CAM.neutral[k]) * .004])) : { ...t };
-      CAM.seen = now; drawAvatar(exaggerate(CAM.v)); $("mood").textContent = moodOf(CAM.v); sampleFace(CAM.v);
+      CAM.seen = now; drawAvatar(now < OVR.until ? { ...REST, ...OVR.v } : exaggerate(CAM.v)); $("mood").textContent = moodOf(CAM.v); sampleFace(CAM.v);
       onFace();
     } else if (now - CAM.seen > 800) $("mood").textContent = "顔が見えません";
   }
@@ -1144,7 +1160,7 @@ function onData(m){
   if (!m || typeof m !== "object") return;
   if (m.t === "hello"){ ON.oppName = String(m.name || "ともだち").slice(0, 8); ON.oppSkin = SKINS[m.skin] ? m.skin : "hito"; ON.oppBack = ITEMS.back.some(x => x.id === m.back) ? m.back : "classic"; ON.oppFx = ITEMS.fx.some(x => x.id === m.fx) ? m.fx : "star"; lobbyMsg(`${ON.oppName}さんとつながりました！`); meetFriend(m.pid); $("bubble").textContent = "よろしく！"; if (ON.lastView) applyView(ON.lastView); else render(); return; }
   if (m.t === "full"){ lobbyMsg("その部屋はもう2人で遊んでいます。"); return; }
-  if (m.t === "face"){ ON.oppFace = m.v; ON.oppFaceAt = performance.now(); if (SKINS[m.skin]) ON.oppSkin = m.skin; ON.oppVideo = !!m.video; if (m.mood) $("bubble").dataset.mood = m.mood; drawOpp(); return; }
+  if (m.t === "face"){ ON.oppFace = m.v; ON.oppFaceAt = performance.now() + (m.hold ? m.hold - 1200 : 0); if (m.hold) ON.oppOvrUntil = performance.now() + m.hold; if (SKINS[m.skin]) ON.oppSkin = m.skin; ON.oppVideo = !!m.video; if (m.mood) $("bubble").dataset.mood = m.mood; drawOpp(); return; }
   if (m.t === "mode"){ ON.oppVideo = !!m.video; drawOpp(); return; }
   if (m.t === "say"){ const t = String(m.text || "").slice(0, 20); $("bubble").textContent = t; const f = $("face"); f.classList.remove("bump"); void f.offsetWidth; f.classList.add("bump"); SFX.tap(); return; }
   if (m.t === "view"){ applyView(m.v); return; }
@@ -1243,7 +1259,7 @@ function onFace(){
   if (!ON.active || !ON.open || !CAM.v) return;
   const now = performance.now(); if (now - ON.lastFaceSent < 100) return;
   ON.lastFaceSent = now;
-  const e = exaggerate(CAM.v), v = {};
+  const e = now < OVR.until ? { ...REST, ...OVR.v } : exaggerate(CAM.v), v = {};
   for (const k in e) v[k] = Math.round(e[k] * 100) / 100;
   ON.conn.send({ t: "face", v, skin: SKIN.id, mood: moodOf(CAM.v), video: $("camMode").value === "video" });
 }
@@ -1260,7 +1276,7 @@ function onCall(call){
 }
 function drawOpp(){
   if (!ON.active) return;
-  const f = $("face"), useVid = ON.oppVideo && ON.oppStream;
+  const f = $("face"), useVid = ON.oppVideo && ON.oppStream && performance.now() > (ON.oppOvrUntil || 0);
   if (useVid){
     let vd = f.querySelector("video");
     if (!vd){ f.innerHTML = `<video playsinline muted autoplay></video>`; vd = f.querySelector("video"); }
@@ -1427,6 +1443,38 @@ $("qrBtn").addEventListener("click", async () => {
   } catch (e) { lobbyMsg("QRコードを作れませんでした。URLをコピーして送ってください。"); }
 });
 renderFriends();
+
+// --- face buttons: put on a face with one tap, so you can bluff even while your hands are busy ---
+const FACES = {
+  niyari: { label: "にやり", v: { smile: .5, squint: .7, openL: .85, openR: .85 }, dev: .7, line: "その笑い、なに？" },
+  doki: { label: "ドキッ", v: { inner: .85, frown: .5, openL: 1.3, openR: 1.3 }, dev: 1, line: "あれ、あせってる？" },
+  sumashi: { label: "すまし", v: { gx: .9 }, dev: 0, line: "…読めないなあ" },
+  bikkuri: { label: "びっくり", v: { jaw: .7, openL: 1.5, openR: 1.5, inner: .7 }, dev: 1.2, line: "びっくりしすぎでしょ" },
+  wink: { label: "ウインク", v: { openL: .05, smile: .45 }, dev: .6, line: "ウインクされても…" }
+};
+let OVR = { v: null, until: 0 };
+function noteHover(){
+  const c = S.you[S.aimYou]; if (!c) return;
+  const o = S.faceObs[c.id] || (S.faceObs[c.id] = { s: 0, n: 0 }); o.n += 2;
+}
+function renderFaceBtns(){
+  $("faceBtns").innerHTML = Object.entries(FACES).map(([k, f]) =>
+    `<button class="fbtn" data-face="${k}"><svg viewBox="0 0 64 64" class="av" aria-hidden="true">${avatarInner({ ...REST, ...f.v })}</svg>${f.label}</button>`).join("");
+}
+$("faceBtns").addEventListener("click", e => {
+  const b = e.target.closest("[data-face]"); if (!b) return;
+  const f = FACES[b.dataset.face], now = performance.now();
+  OVR = { v: f.v, until: now + 1800 }; avatarEvent(f.v, 1800); drawAvatar({ ...REST, ...f.v }); SFX.tap();
+  if (S.phase === "stare" && S.aimYou >= 0 && S.you[S.aimYou]){
+    // the CPU reads a pressed face like a real one: which card was under its finger when you made it
+    const c = S.you[S.aimYou], o = S.faceObs[c.id] || (S.faceObs[c.id] = { s: 0, n: 0 });
+    o.s += f.dev * 4; o.n += 2; S.faceUsed = true; S.pauseUntil = now + 1200;
+    if (S.lv > 0) setTimeout(() => { if (S.phase === "stare") say(f.dev > .8 ? "grin" : "think", f.line); }, 400);
+  }
+  if (ON.active && ON.open) ON.conn.send({ t: "face", v: { ...REST, ...f.v }, skin: INV.equip.skin, hold: 1800, video: CAM.on && $("camMode").value === "video" });
+});
+renderFaceBtns();
+$("skin").addEventListener("change", renderFaceBtns);
 $("modeCpu").addEventListener("click", () => setMode(false));
 $("modeOn").addEventListener("click", () => setMode(true));
 $("mkRoom").addEventListener("click", () => { ON.inviteFor = ""; mkRoom(); });
