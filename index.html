@@ -120,6 +120,12 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .av .wh{fill:var(--cream);stroke:var(--cardInk);stroke-width:1.2}
 .av .ln{fill:none;stroke:var(--cardInk);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .av .ln.open{fill:var(--cardInk)}
+.av .fx{fill:var(--brass)}
+.av .fxs{fill:none;stroke:var(--sky);stroke-width:2;stroke-linecap:round}
+.av .drop{fill:var(--sky)}
+.av .tongue{fill:var(--blush)}
+.amp{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted)}
+.amp input{width:96px;accent-color:var(--brass)}
 .camctl{display:grid;gap:5px;justify-items:start;min-width:0;flex:1 1 170px;max-width:300px}
 .camctl b{font-family:var(--display);font-weight:400;letter-spacing:.1em;color:var(--muted)}
 .camctl b span{font-family:var(--body);font-weight:700;color:var(--brass);letter-spacing:0;margin-left:8px;font-size:.85rem}
@@ -162,7 +168,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 
 <div class="wrap">
   <header>
-    <h1>ラスト・ツー<small>試作 v0.3・CPUと1対1、ババの読み合い（1ゲーム約1分）</small></h1>
+    <h1>ラスト・ツー<small>試作 v0.4・CPUと1対1、ババの読み合い（1ゲーム約1分）</small></h1>
     <div class="controls">
       <label for="level" class="lv">相手</label>
       <select id="level"><option value="0">ポン太（よわい）</option><option value="1" selected>ミケ（ふつう）</option><option value="2">クロ（つよい）</option></select>
@@ -208,6 +214,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
         <div class="camrow">
           <button id="camBtn">カメラで表情を映す</button>
           <select id="camMode" aria-label="表示のしかた" hidden><option value="char">キャラで表示</option><option value="video">カメラ映像で表示</option></select>
+          <label class="amp" id="ampBox" hidden>大げささ <input type="range" id="amp" min="1" max="3" step="0.5" value="2"></label>
         </div>
         <p class="camnote" id="camNote">あなたの表情を読み取って、キャラクターが同じ顔をします。</p>
       </div>
@@ -633,21 +640,45 @@ const CAM = { on: false, lm: null, stream: null, v: null, base: null, lastT: -1,
 const MP = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
 const MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 const REST = { openL: 1, openR: 1, gx: 0, gy: 0, inner: 0, down: 0, outer: 0, smile: 0, frown: 0, jaw: 0, pucker: 0, roll: 0 };
-function avatarInner(v){
-  const eye = (cx, open) => {
-    const o = Math.max(.06, Math.min(1.35, open)), px = cx + v.gx * 2.6, py = 32 + v.gy * 1.8;
-    return `<ellipse cx="${cx}" cy="32" rx="5" ry="${(4.5 * o).toFixed(2)}" class="wh"/>` + (o < .3 ? "" : `<circle cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" r="2.3" class="dot"/>`);
+const AMP = { v: 2 };
+try { const x = +localStorage.getItem("lasttwo-amp"); if (x >= 1 && x <= 3) AMP.v = x; } catch (e) {}
+// blow up how far your face moves from its own resting look, so small changes read clearly on the character
+function exaggerate(v){
+  const n = CAM.neutral || REST, a = AMP.v, cl = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+  const eye = k => { const r = v[k] / Math.max(.3, n[k]); return r < .35 ? .05 : cl(1 + (r - 1) * a * 1.2, .05, 1.8); };
+  return {
+    openL: eye("openL"), openR: eye("openR"),
+    gx: cl((v.gx - n.gx) * a, -1.3, 1.3), gy: cl((v.gy - n.gy) * a, -1, 1),
+    smile: cl((v.smile - n.smile * .8) * a * 1.2, 0, 1), frown: cl((v.frown - n.frown) * a * 1.5, 0, 1),
+    jaw: cl((v.jaw - n.jaw) * a * 1.3, 0, 1), inner: cl((v.inner - n.inner) * a * 1.6, 0, 1),
+    down: cl((v.down - n.down) * a * 1.5, 0, 1), outer: cl((v.outer - n.outer) * a * 1.5, 0, 1),
+    pucker: cl((v.pucker - n.pucker) * a, 0, 1), roll: cl((v.roll - n.roll) * a * .8, -.6, .6)
   };
-  const yIn = 23 - v.inner * 5 + v.down * 3, yOut = 23 - v.outer * 3 + v.down * 1.2;
-  const sm = v.smile - v.frown * .8, hw = 8 - v.pucker * 3.5 + v.smile * 1.5, cy = 45 - sm * 3.5;
-  const up = 45 + sm * 4.5 - v.jaw * 1.5, low = up + v.jaw * 16 + .5, bl = Math.min(.8, v.smile).toFixed(2);
-  const f = x => x.toFixed(1);
-  return `<g transform="rotate(${f(Math.max(-.5, Math.min(.5, v.roll)) * 57.3)} 32 35)"><circle cx="32" cy="35" r="24" class="head"/>
-    <path d="M9 30q0-21 23-21t23 21q-6-9-14-10q-3 5-9 5q-6 0-9-5q-8 1-14 10z" class="hair"/>
-    <circle cx="17" cy="42" r="4" class="blush" opacity="${bl}"/><circle cx="47" cy="42" r="4" class="blush" opacity="${bl}"/>
+}
+function avatarInner(v){
+  const f = x => x.toFixed(1), open = (v.openL + v.openR) / 2;
+  const eye = (cx, o) => {
+    if (o < .3) return v.smile > .3 ? `<path d="M${cx - 5} 33q5-6 10 0" class="ln"/>` : `<path d="M${cx - 5} 32h10" class="ln"/>`;
+    const big = o > 1.15, rx = 5 + Math.max(0, o - 1) * 4, px = cx + v.gx * 3.2, py = 32 + v.gy * 2.2;
+    return `<ellipse cx="${cx}" cy="32" rx="${f(rx)}" ry="${f(4.5 * o)}" class="wh"/><circle cx="${f(px)}" cy="${f(py)}" r="${big ? 1.6 : 2.4}" class="dot"/>`;
+  };
+  const yIn = Math.max(16, 23 - v.inner * 8 + v.down * 5), yOut = Math.max(17, 23 - v.outer * 5 + v.down * 2);
+  const sm = v.smile - v.frown * .8, hw = 8 + v.smile * 5 - v.pucker * 5, cy = 45 - sm * 6;
+  const up = 45 + sm * 7 - v.jaw * 2, low = up + v.jaw * 22 + .5;
+  const sx = 1 + v.smile * .06 - v.jaw * .04, sy = 1 + v.jaw * .14 - v.smile * .04;
+  let fx = "";
+  if (v.smile > .55) fx += `<path d="M10 12l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" class="fx"/><path d="M54 16l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" class="fx"/>`;
+  if (v.jaw > .45 && (open > 1.15 || v.inner > .4)) fx += `<path d="M47 4h5l-1 11h-3z" class="fx"/><circle cx="49.5" cy="19" r="2" class="fx"/>`;
+  if (v.inner > .4 || v.frown > .4) fx += `<path d="M52 20q5 7 0 10q-5-3 0-10Z" class="drop"/>` + (v.inner > .7 ? `<path d="M9 26q4 6 0 8q-4-2 0-8Z" class="drop"/>` : "");
+  if (Math.abs(v.gx) > .8){ const x = v.gx > 0 ? 58 : 4; fx += `<path d="M${x} 28h3M${x} 33h3M${x} 38h3" class="fxs"/>`; }
+  return `<g transform="rotate(${f(v.roll * 57.3)} 32 35) translate(32 35) scale(${sx.toFixed(3)} ${sy.toFixed(3)}) translate(-32 -35)">
+    <circle cx="32" cy="35" r="24" class="head"/>
+    <path d="M9 28q0-19 23-19t23 19q-6-10-14-12q-3 2-9 2q-6 0-9-2q-8 2-14 12z" class="hair"/>
+    <circle cx="16" cy="42" r="${f(4 + v.smile * 2)}" class="blush" opacity="${Math.min(.9, v.smile * 1.2).toFixed(2)}"/><circle cx="48" cy="42" r="${f(4 + v.smile * 2)}" class="blush" opacity="${Math.min(.9, v.smile * 1.2).toFixed(2)}"/>
     ${eye(23, v.openL)}${eye(41, v.openR)}
-    <path d="M17 ${f(yOut)}L28 ${f(yIn)}M36 ${f(yIn)}L47 ${f(yOut)}" class="ln"/>
-    <path d="M${f(32 - hw)} ${f(cy)}Q32 ${f(up)} ${f(32 + hw)} ${f(cy)}Q32 ${f(low)} ${f(32 - hw)} ${f(cy)}Z" class="ln${v.jaw > .1 ? " open" : ""}"/></g>`;
+    <path d="M16 ${f(yOut)}L28 ${f(yIn)}M36 ${f(yIn)}L48 ${f(yOut)}" class="ln" stroke-width="2.8"/>
+    <path d="M${f(32 - hw)} ${f(cy)}Q32 ${f(up)} ${f(32 + hw)} ${f(cy)}Q32 ${f(low)} ${f(32 - hw)} ${f(cy)}Z" class="ln${v.jaw > .1 ? " open" : ""}"/>
+    ${v.jaw > .5 ? `<ellipse cx="32" cy="${f((cy + low) / 2 - 1.5)}" rx="4" ry="2.5" class="tongue"/>` : ""}</g>${fx}`;
 }
 function drawAvatar(v){ $("avatar").innerHTML = avatarInner(v); }
 function moodOf(v){
@@ -724,7 +755,7 @@ function faceReport(){
     const t = r >= 1.5 ? "ババのとき、顔に出ていました！" : r >= 1.15 ? "ババのとき、少し顔に出ていました" : r >= .85 ? "ポーカーフェイスでした" : "ババのときほど落ち着いていました（それもヒントになります）";
     verdict = `<p><b>顔に出やすさ</b>　${t}<br><span class="rnote">ババのときの表情の動きは、ほかのときの${r.toFixed(1)}倍</span></p>`;
   }
-  return `<div class="faces av">${items.map(it => `<figure class="${it.bb ? "bb" : ""}"><svg viewBox="0 0 64 64" aria-hidden="true">${avatarInner(it.v)}</svg><figcaption>${it.label}<br>${moodOf(it.v)}</figcaption></figure>`).join("")}</div>${verdict}`;
+  return `<div class="faces av">${items.map(it => `<figure class="${it.bb ? "bb" : ""}"><svg viewBox="0 0 64 64" aria-hidden="true">${avatarInner(exaggerate(it.v))}</svg><figcaption>${it.label}<br>${moodOf(it.v)}</figcaption></figure>`).join("")}</div>${verdict}`;
 }
 function mySay(t){
   const el = $("myBubble"); el.textContent = t; el.hidden = false;
@@ -767,7 +798,8 @@ function camLoop(){
     if (r && r.faceBlendshapes && r.faceBlendshapes[0] && r.faceLandmarks[0]){
       const t = readFace(r, vid);
       CAM.v = CAM.v ? Object.fromEntries(Object.keys(t).map(k => [k, CAM.v[k] + (t[k] - CAM.v[k]) * .45])) : t;
-      CAM.seen = now; drawAvatar(CAM.v); $("mood").textContent = moodOf(CAM.v); sampleFace(CAM.v);
+      CAM.neutral = CAM.neutral ? Object.fromEntries(Object.keys(t).map(k => [k, CAM.neutral[k] + (t[k] - CAM.neutral[k]) * .004])) : { ...t };
+      CAM.seen = now; drawAvatar(exaggerate(CAM.v)); $("mood").textContent = moodOf(CAM.v); sampleFace(CAM.v);
     } else if (now - CAM.seen > 800) $("mood").textContent = "顔が見えません";
   }
   requestAnimationFrame(camLoop);
@@ -795,7 +827,7 @@ async function startCam(){
   } catch (e) {
     stopCam(); camNote("表情を読み取る仕組みを読み込めませんでした。ネットにつながっているか確かめてください。"); $("camHelp").hidden = false; return;
   }
-  CAM.on = true; CAM.v = null; CAM.base = null; CAM.seen = performance.now();
+  CAM.on = true; CAM.v = null; CAM.base = null; CAM.neutral = null; $("ampBox").hidden = false; CAM.seen = performance.now();
   btn.disabled = false; btn.textContent = "カメラを止める"; $("camMode").hidden = false; $("camHelp").hidden = true;
   camNote("映像はこの端末の中だけで使い、どこにも送りません。相手がつよいほど、あなたの表情も読んできます。");
   applyCamMode(); camLoop();
@@ -804,7 +836,7 @@ function stopCam(){
   CAM.on = false;
   if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
   CAM.stream = null; $("cam").srcObject = null; $("cam").hidden = true; $("avatar").hidden = false;
-  $("camBtn").textContent = "カメラで表情を映す"; $("camBtn").disabled = false; $("camMode").hidden = true; $("mood").textContent = "";
+  $("camBtn").textContent = "カメラで表情を映す"; $("camBtn").disabled = false; $("camMode").hidden = true; $("ampBox").hidden = true; $("mood").textContent = "";
   drawAvatar(REST); camNote("あなたの表情を読み取って、キャラクターが同じ顔をします。");
 }
 function applyCamMode(){
@@ -813,6 +845,8 @@ function applyCamMode(){
 }
 $("camBtn").addEventListener("click", () => CAM.on ? stopCam() : startCam());
 $("camMode").addEventListener("change", applyCamMode);
+$("amp").value = AMP.v;
+$("amp").addEventListener("input", e => { AMP.v = +e.target.value; try { localStorage.setItem("lasttwo-amp", AMP.v); } catch (x) {} });
 drawAvatar(REST);
 
 idle();
