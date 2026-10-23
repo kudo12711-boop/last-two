@@ -126,7 +126,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .meseat{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
 .myface{position:relative;width:88px;height:88px;flex:none;border-radius:50%;overflow:hidden;background:var(--rail);border:2px solid var(--brassDim)}
 .myface svg,.myface video{width:100%;height:100%;display:block}
-.myface video{object-fit:cover;transform:scaleX(-1)}
+.myface video{object-fit:cover;transform:scale(-1.5,1.5)}
 /* the camera video stays on screen under the character, because phones stop drawing a hidden video */
 .myface svg{position:absolute;inset:0;z-index:1;background:var(--rail)}
 .av .head{fill:var(--skinMe);stroke:var(--rail);stroke-width:2}
@@ -180,7 +180,9 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .table.mypick .face.av{width:min(76vw,300px);height:min(76vw,300px)}
 .who:has(.face.av){flex-direction:column;gap:6px}
 .who:has(.face.av) .namebox{justify-items:center;text-align:center}
-.face video{width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scaleX(-1)}
+/* phone cameras show a lot of room around the face; zoom in so the face fills the circle */
+.face:has(video){border-radius:50%;overflow:hidden}
+.face video{width:100%;height:100%;object-fit:cover;transform:scale(-1.5,1.5)}
 .coins{font-family:var(--display);font-weight:400;color:var(--brass);font-size:.95rem}
 .shop{background:var(--felt);border:2px solid var(--brass);border-radius:18px;padding:16px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow-y:auto;display:grid;gap:12px}
 .shop header h2{font-family:var(--display);font-weight:400;margin:0;font-size:1.4rem;color:var(--brass)}
