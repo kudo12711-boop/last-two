@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>ラスト・ツー</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+1p:wght@400;700&display=swap">
+<style>
+/* Layout: a late-night card table seen from your seat. Rival's face and hand on the far side, the discard pile in the middle, your hand on the near side. Single dark look on purpose. */
+:root{
+  --felt:#2c0d14; --felt2:#45141f; --rail:#1a070b; --line:#6e3240; --brass:#d9a94f; --brassDim:#8f6a2c;
+  --cream:#f7ecd8; --cardInk:#2a0b10; --ink:#f5e7d2; --muted:#cfae9f; --baba:#5d2c8c; --good:#9fdcaa; --sky:#7cc4ff; --shade:rgb(20 4 8 / .8);
+  --skinMe:#f0cfae; --hairMe:#3b2742; --blush:#ef8f8f; --skin0:#e0a868; --skin1:#f3dcb8; --skin2:#a7a3b5;
+  --display:"Dela Gothic One","M PLUS 1p","Hiragino Sans",sans-serif; --body:"M PLUS 1p","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --cw:clamp(30px,8.4vw,60px);
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+[hidden]{display:none!important}
+body{background:var(--felt);background-image:radial-gradient(ellipse at 50% 30%,var(--felt2),var(--felt) 70%);background-attachment:fixed;
+  color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px}
+.wrap{max-width:720px;margin:0 auto;display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+h1{font-family:var(--display);font-weight:400;font-size:1.9rem;margin:0;letter-spacing:.08em;line-height:1.2;color:var(--brass)}
+h1 small{display:block;font-family:var(--body);font-size:.8rem;color:var(--muted);letter-spacing:0}
+button{font:inherit;cursor:pointer;border-radius:999px;border:1.5px solid var(--brassDim);background:var(--rail);color:var(--ink);padding:6px 14px}
+button.primary{background:var(--brass);border-color:var(--brass);color:var(--cardInk);font-weight:700}
+button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls select{font:inherit;background:var(--rail);color:var(--ink);border:1.5px solid var(--brassDim);border-radius:999px;padding:5px 10px}
+.lv{font-size:.8rem;color:var(--muted)}
+.howto{background:var(--rail);border:1.5px solid var(--line);border-radius:14px;padding:10px 14px}
+.howto summary{cursor:pointer;font-weight:700}
+.howto ol{margin:8px 0 0;padding-left:1.4em;display:grid;gap:4px}
+.howto b{color:var(--brass)}
+
+.table{position:relative;border:2px solid var(--brassDim);border-radius:26px;padding:14px 12px;display:grid;gap:10px;
+  background:radial-gradient(ellipse at 50% 50%,var(--felt2),var(--felt) 80%);box-shadow:inset 0 0 0 6px var(--rail),inset 0 0 40px var(--shade)}
+.table.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+.who{display:flex;gap:10px;align-items:center;justify-content:center}
+.face{width:64px;height:64px;flex:none}
+.face svg{width:100%;height:100%;display:block}
+.face .head{stroke:var(--rail);stroke-width:2}
+.face .dot{fill:var(--cardInk)}
+.face .wh{fill:var(--cream);stroke:var(--cardInk);stroke-width:1.5}
+.face .ln{fill:none;stroke:var(--cardInk);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.face .drop{fill:var(--sky)}
+.face .ear{stroke:var(--rail);stroke-width:2}
+.face.bump{animation:bump .3s}
+@keyframes bump{50%{transform:scale(1.12)}}
+.namebox{display:grid;gap:2px;min-width:0}
+.namebox b{font-family:var(--display);font-weight:400;font-size:1rem;letter-spacing:.05em}
+.namebox b span{font-family:var(--body);font-size:.75rem;color:var(--muted);margin-left:6px}
+.bubble{background:var(--cream);color:var(--cardInk);border-radius:12px;padding:3px 12px;font-size:.9rem;font-weight:700;min-height:1.6em;max-width:220px}
+
+.hand{display:flex;justify-content:center;gap:5px;padding-block:18px;min-height:calc(var(--cw) * 1.42 + 36px);align-items:center}
+.card{width:var(--cw);height:calc(var(--cw) * 1.42);max-width:100%;flex:0 0 auto;border-radius:calc(var(--cw) * .14);border:2px solid var(--brassDim);padding:0;
+  display:grid;place-items:center;position:relative;transition:transform .15s,box-shadow .15s,opacity .3s}
+.card.up{background:var(--cream);color:var(--cardInk)}
+.card.up::before{content:attr(data-n);position:absolute;top:2px;left:5px;font-family:var(--display);font-size:calc(var(--cw) * .2);line-height:1}
+.card .cn{font-family:var(--display);font-size:calc(var(--cw) * .52);line-height:1}
+.card.baba{background:var(--baba);color:var(--brass);border-color:var(--brass)}
+.card.baba::before{content:none}
+.card .bb{font-family:var(--display);writing-mode:vertical-rl;font-size:calc(var(--cw) * .3);letter-spacing:.1em}
+.card.back{border-color:var(--brass);background:
+  repeating-linear-gradient(45deg,transparent 0 5px,var(--brassDim) 5px 6px),
+  repeating-linear-gradient(-45deg,transparent 0 5px,var(--brassDim) 5px 6px),var(--felt2)}
+.card.back::before{content:"";position:absolute;inset:18%;border:1.5px solid var(--brass);border-radius:50%;background:var(--felt)}
+.card:disabled{cursor:default}
+.you .card:not(:disabled):hover{transform:translateY(-5px)}
+.cpu .card:not(:disabled):hover{transform:translateY(5px)}
+.you .card.stick{transform:translateY(-18px)}
+.cpu .card.stick{transform:translateY(18px)}
+.card.sel{box-shadow:0 0 0 3px var(--sky)}
+.card.aim{box-shadow:0 0 0 3px var(--brass)}
+.card.aim::after{position:absolute;left:50%;transform:translateX(-50%);color:var(--brass);font-size:14px;line-height:1}
+.you .card.aim::after{content:"▼";top:-18px}
+.cpu .card.aim::after{content:"▲";bottom:-18px}
+.card.mate{box-shadow:0 0 0 3px var(--good)}
+.card.new{animation:drop .4s ease-out}
+@keyframes drop{from{transform:scale(1.3);opacity:.2}to{transform:none;opacity:1}}
+.you .card.taken{transform:translateY(-60px);opacity:0}
+.cpu .card.taken{transform:translateY(60px);opacity:0}
+.hand.mixing .card{animation:wob .6s ease-in-out}
+.hand.mixing .card:nth-child(even){animation-direction:reverse}
+@keyframes wob{25%{transform:translateX(-10px) rotate(-8deg)}50%{transform:translateX(8px) rotate(6deg)}75%{transform:translateX(-5px) rotate(-3deg)}}
+
+.mid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;border-block:1.5px dashed var(--line);padding-block:10px}
+.pile{display:grid;justify-items:center;gap:2px;min-width:86px}
+.pile span{font-size:.72rem;color:var(--muted);letter-spacing:.05em}
+.lastpair{display:flex;gap:3px;min-height:44px;align-items:center}
+.lastpair .card{--cw:30px;border-width:1.5px}
+.lastpair .card.in{animation:drop .4s ease-out}
+.pile em{font-style:normal;font-size:.8rem;color:var(--muted)}
+.pile em b{font-family:var(--display);font-weight:400;color:var(--ink);font-size:1rem}
+.status{display:grid;gap:6px;min-width:0}
+.msg{margin:0;font-size:.95rem;min-height:3.2em}
+.msg b{color:var(--brass)}
+.bar{height:6px;border-radius:3px;background:var(--rail);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--brass)}
+.bar.hot i{background:var(--good)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.tools button{flex:0 1 auto}
+.hint{margin:0;font-size:.82rem;color:var(--muted);text-align:center;min-height:1.4em}
+.meseat{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+.myface{width:88px;height:88px;flex:none;border-radius:50%;overflow:hidden;background:var(--rail);border:2px solid var(--brassDim)}
+.myface svg,.myface video{width:100%;height:100%;display:block}
+.myface video{object-fit:cover;transform:scaleX(-1)}
+.av .head{fill:var(--skinMe);stroke:var(--rail);stroke-width:2}
+.av .hair{fill:var(--hairMe)}
+.av .blush{fill:var(--blush)}
+.av .dot{fill:var(--cardInk)}
+.av .wh{fill:var(--cream);stroke:var(--cardInk);stroke-width:1.2}
+.av .ln{fill:none;stroke:var(--cardInk);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.av .ln.open{fill:var(--cardInk)}
+.camctl{display:grid;gap:5px;justify-items:start;min-width:0;flex:1 1 170px;max-width:300px}
+.camctl b{font-family:var(--display);font-weight:400;letter-spacing:.1em;color:var(--muted)}
+.camctl b span{font-family:var(--body);font-weight:700;color:var(--brass);letter-spacing:0;margin-left:8px;font-size:.85rem}
+.camrow{display:flex;flex-wrap:wrap;gap:6px}
+.camrow button,.camrow select{font-size:.85rem;padding:4px 12px}
+.camrow select{font:inherit;font-size:.85rem;background:var(--rail);color:var(--ink);border:1.5px solid var(--brassDim);border-radius:999px;padding:4px 10px}
+.camnote{margin:0;font-size:.78rem;color:var(--muted);max-width:300px}
+.camhelp{margin:0;font-size:.8rem;background:var(--rail);border:1.5px dashed var(--brassDim);border-radius:12px;padding:8px 12px}
+
+.score{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;align-items:baseline;font-size:.9rem;color:var(--muted)}
+.score b{font-family:var(--display);font-weight:400;font-size:1.3rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.later{margin:0;font-size:.8rem;color:var(--muted);text-align:center}
+
+.pop{position:fixed;pointer-events:none;font-family:var(--display);font-size:1.6rem;color:var(--good);text-shadow:0 3px 0 var(--rail);animation:rise 1.1s ease-out forwards;z-index:20;white-space:nowrap}
+.pop.baba{color:var(--brass)}
+@keyframes rise{from{opacity:1;transform:translate(-50%,0) scale(1.1)}to{opacity:0;transform:translate(-50%,-60px)}}
+
+.overlay{position:fixed;inset:0;background:var(--shade);display:grid;place-items:center;z-index:30;padding:16px}
+.result{background:var(--felt);border:2px solid var(--brass);border-radius:18px;padding:20px 22px;width:min(380px,100%);display:grid;gap:10px}
+.result h2{font-family:var(--display);font-weight:400;margin:0;font-size:1.6rem;color:var(--brass)}
+.result p{margin:0}
+.result table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.result td{padding:4px 0;border-bottom:1px solid var(--line)}
+.result td:last-child{text-align:right;font-family:var(--display)}
+.rbtns{display:flex;flex-wrap:wrap;gap:8px}
+.rbtns button{flex:1 1 140px}
+.rnote{font-size:.8rem;color:var(--muted)}
+.result{max-height:calc(100vh - 32px);overflow-y:auto}
+.result h3{margin:4px 0 0;font-size:.9rem;color:var(--brass)}
+.faces{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.faces figure{margin:0;display:grid;justify-items:center;gap:2px;text-align:center;font-size:.7rem;color:var(--muted);line-height:1.35}
+.faces svg{width:100%;max-width:60px;aspect-ratio:1;border-radius:50%;background:var(--rail);border:1.5px solid var(--brassDim)}
+.faces figure.bb svg{border-color:var(--brass)}
+.talk{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.talk button{font-size:.85rem;padding:4px 12px;border-style:dashed}
+.bubble.mine{background:var(--sky);max-width:240px}
+@media (max-width:420px){h1{font-size:1.6rem}.pile{min-width:70px}}
+@media (prefers-reduced-motion:reduce){.card,.card.new,.hand.mixing .card,.table.shake,.pop,.face.bump,.lastpair .card.in{animation:none;transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>ラスト・ツー<small>試作 v0.3・CPUと1対1、ババの読み合い（1ゲーム約1分）</small></h1>
+    <div class="controls">
+      <label for="level" class="lv">相手</label>
+      <select id="level"><option value="0">ポン太（よわい）</option><option value="1" selected>ミケ（ふつう）</option><option value="2">クロ（つよい）</option></select>
+      <button id="sound" aria-pressed="true">音 オン</button>
+      <button class="primary" id="start">スタート</button>
+    </div>
+  </header>
+
+
+  <section class="table" id="table" aria-label="テーブル">
+    <div class="who">
+      <div class="face" id="face"></div>
+      <div class="namebox"><b id="cpuName">ミケ<span>ふつう</span></b><div class="bubble" id="bubble">よろしくね</div></div>
+    </div>
+    <div class="hand cpu" id="cpuHand" aria-label="相手の手札"></div>
+    <div class="mid">
+      <div class="pile">
+        <span>すてたペア</span>
+        <div class="lastpair" id="lastPair"></div>
+        <em><b id="pairs">0</b> / 7組</em>
+      </div>
+      <div class="status">
+        <p class="msg" id="msg" aria-live="polite">スタートを押すとゲームが始まります。</p>
+        <div class="bar" id="barBox"><i id="bar"></i></div>
+      </div>
+    </div>
+    <div class="hand you" id="youHand" aria-label="あなたの手札"></div>
+    <div class="talk" id="ask" hidden><button id="askBtn">「それ、ババ？」と聞く</button></div>
+    <div class="tools" id="tools" hidden>
+      <button id="mix">まぜる</button>
+      <button id="go">これでどうぞ</button>
+    </div>
+    <div class="talk" id="talk" hidden>
+      <button data-say="baba">「それ、ババだよ」</button>
+      <button data-say="safe">「それはババじゃないよ」</button>
+    </div>
+    <p class="hint" id="hint"></p>
+    <div class="meseat">
+      <div class="myface av" aria-hidden="true"><svg id="avatar" viewBox="0 0 64 64"></svg><video id="cam" playsinline muted hidden></video></div>
+      <div class="camctl">
+        <b>あなた<span id="mood"></span></b>
+        <div class="bubble mine" id="myBubble" hidden></div>
+        <div class="camrow">
+          <button id="camBtn">カメラで表情を映す</button>
+          <select id="camMode" aria-label="表示のしかた" hidden><option value="char">キャラで表示</option><option value="video">カメラ映像で表示</option></select>
+        </div>
+        <p class="camnote" id="camNote">あなたの表情を読み取って、キャラクターが同じ顔をします。</p>
+      </div>
+    </div>
+    <p class="camhelp" id="camHelp" hidden>Claudeの画面の中では、安全のためカメラが使えません。カメラを使うときは、このゲームを公開したページ（スマホでも開けます）か、ファイル（last-two.html）をパソコンのChromeで開いてください。</p>
+  </section>
+
+  <div class="score">
+    <span>あなた <b id="sYou">0</b></span><span>相手 <b id="sCpu">0</b></span><span>連勝 <b id="streak">0</b></span>
+  </div>
+  <details class="howto" open>
+    <summary>遊び方</summary>
+    <ol>
+      <li>ババ抜きの「最後の2人」だけを遊びます。1〜7のカードが1枚ずつ配られ、どちらか一方に<b>ババ</b>が入ります。</li>
+      <li>交互に、相手の手札から1枚引きます。ババ以外なら必ずペアがそろって捨てられます。先に手札がなくなった方の勝ち。</li>
+      <li><b>引くとき</b>：相手のカードを1回タップすると指さします。相手の<b>顔色</b>が変わるので、それを読んで、もう一度タップで引きます。顔色は正直とは限りません。</li>
+      <li><b>引かれるとき</b>：自分のカードを2枚タップすると<b>入れかえ</b>、同じカードを2回タップすると1枚だけ<b>つき出せ</b>ます。「まぜる」でシャッフルも。引いたカードは右はしに入るので、そのままだと場所がバレます。</li>
+      <li>相手が強くなるほど、顔色でウソをつき、あなたのクセ（つき出し方やババを置く場所）を覚えてきます。</li>
+      <li><b>話しかける</b>：相手の指があなたのカードの上にあるとき「それ、ババだよ」「それはババじゃないよ」と言えます。ウソでもOK。自分が引くときは「それ、ババ？」と聞けます（相手もウソをつきます）。</li>
+      <li><b>カメラ</b>（パソコンのChromeで開いたとき）：「カメラで表情を映す」を押すと、あなたの表情をキャラクターがまねします。相手はその表情も読んでくるので、ポーカーフェイスが大事になります。</li>
+    </ol>
+  </details>
+  <p class="later">いまはCPUと対戦する試作版です。友だちとのオンライン対戦は、サーバーの準備ができてからの次の段階になります。</p>
+</div>
+<div id="overlayHost"></div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const NAMES = ["ポン太", "ミケ", "クロ"], LVTXT = ["よわい", "ふつう", "つよい"];
+const PICK_MS = 12000, GUARD_MS = [7000, 6000, 5500];
+let S = null, gen = 0, soundOn = true, actx = null, guardDone = null, guardTimer = 0;
+let learn = { sb: 0, st: 0, bk: [0, 0, 0], fs: 0, fn: 0, ct: 0, cn: 0 };
+const score = { you: 0, cpu: 0, streak: 0 };
+
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const rnd = n => Math.floor(Math.random() * n);
+function shuffle(a){ for (let i = a.length - 1; i > 0; i--){ const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const name = () => NAMES[S.lv];
+
+function tone(f, d = .08, type = "sine", v = .12, delay = 0){
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d + .02);
+  } catch (e) {}
+}
+const SFX = {
+  tap: () => tone(660, .05, "triangle", .07),
+  aim: () => tone(880, .03, "sine", .04),
+  pair: () => { tone(523, .1, "triangle"); tone(784, .16, "triangle", .12, .08); },
+  baba: () => { tone(196, .35, "sawtooth", .09); tone(131, .45, "sawtooth", .08, .14); },
+  give: () => [392, 523, 784].forEach((f, i) => tone(f, .14, "square", .05, i * .09)),
+  mix: () => [0, 1, 2, 3, 4].forEach(i => tone(260 + Math.random() * 240, .04, "triangle", .05, i * .06)),
+  win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .2, "triangle", .12, i * .11)),
+  lose: () => [392, 330, 262].forEach((f, i) => tone(f, .28, "triangle", .1, i * .16))
+};
+
+function loadRec(){ try { return JSON.parse(localStorage.getItem("lasttwo-v1")) || {}; } catch (e) { return {}; } }
+function saveRec(r){ try { localStorage.setItem("lasttwo-v1", JSON.stringify(r)); } catch (e) {} }
+
+// --- CPU face ---
+function faceSVG(st, lv){
+  const skin = `var(--skin${lv})`;
+  const ears = lv === 0 ? `<circle cx="13" cy="15" r="7" class="ear" fill="${skin}"/><circle cx="51" cy="15" r="7" class="ear" fill="${skin}"/>`
+    : `<path d="M10 22 14 3 27 13Z" class="ear" fill="${skin}"/><path d="M54 22 50 3 37 13Z" class="ear" fill="${skin}"/>`;
+  const E = {
+    calm: `<circle cx="23" cy="30" r="3" class="dot"/><circle cx="41" cy="30" r="3" class="dot"/>`,
+    grin: `<path d="M18 30q5-4 10 0M36 30q5-4 10 0" class="ln"/>`,
+    sweat: `<circle cx="23" cy="30" r="5" class="wh"/><circle cx="41" cy="30" r="5" class="wh"/><circle cx="23" cy="31" r="2" class="dot"/><circle cx="41" cy="31" r="2" class="dot"/>`,
+    happy: `<path d="M18 32q5-7 10 0M36 32q5-7 10 0" class="ln"/>`,
+    shock: `<circle cx="23" cy="29" r="6" class="wh"/><circle cx="41" cy="29" r="6" class="wh"/><circle cx="23" cy="29" r="1.6" class="dot"/><circle cx="41" cy="29" r="1.6" class="dot"/>`,
+    think: `<circle cx="26" cy="28" r="3" class="dot"/><circle cx="44" cy="28" r="3" class="dot"/>`
+  }[st];
+  const B = { grin: `<path d="M17 22l10 2M47 22l-10 2" class="ln"/>`, sweat: `<path d="M18 23l9-3M46 23l-9-3" class="ln"/>`,
+    shock: `<path d="M17 19q6-4 11 0M36 19q6-4 11 0" class="ln"/>`, think: `<path d="M21 21h10M39 19h10" class="ln"/>` }[st] || "";
+  const M = {
+    calm: `<path d="M25 45h14" class="ln"/>`, grin: `<path d="M23 43q10 6 18-4" class="ln"/>`,
+    sweat: `<path d="M23 46q2.5-3 5 0t5 0t5 0t3 0" class="ln"/>`, happy: `<path d="M21 41q11 11 22 0Z" class="ln" fill="var(--cardInk)"/>`,
+    shock: `<ellipse cx="32" cy="46" rx="4" ry="5" class="ln"/>`, think: `<path d="M29 45h8" class="ln"/>`
+  }[st];
+  const drop = (st === "sweat" || st === "shock") ? `<path d="M52 18q5 7 0 10q-5-3 0-10Z" class="drop"/>` : "";
+  const mark = lv === 2 ? `<path d="M25 13q7 4 14 0" class="ln" stroke-width="2"/>` : lv === 1 ? `<path d="M22 12q4-3 8 0" class="ln" stroke-width="2"/>` : "";
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">${ears}<circle cx="32" cy="35" r="24" class="head" fill="${skin}"/>${mark}${B}${E}${M}${drop}</svg>`;
+}
+const LINES = { calm: "どうぞ", grin: "…それでいいの？", sweat: "えっ、そこ…？", happy: "ふふっ", shock: "うわっ！", think: "うーん…" };
+function say(st, text){
+  S.face = st;
+  const f = $("face"); f.innerHTML = faceSVG(st, S.lv);
+  f.classList.remove("bump"); void f.offsetWidth; f.classList.add("bump");
+  $("bubble").textContent = text ?? LINES[st];
+}
+
+// --- state ---
+function pickStyle(lv){ if (lv === 0) return "honest"; if (lv === 1) return Math.random() < .65 ? "honest" : "random"; return ["honest", "reverse", "random"][rnd(3)]; }
+function newState(){
+  const lv = +$("level").value;
+  let id = 0; const you = [], cpu = [];
+  for (let n = 1; n <= 7; n++){ you.push({ id: id++, n }); cpu.push({ id: id++, n }); }
+  (Math.random() < .5 ? you : cpu).push({ id: id++, n: 0 });
+  shuffle(you); shuffle(cpu);
+  return { lv, you, cpu, phase: "idle", aimCpu: -1, aimYou: -1, sel: -1, youStick: null, cpuStick: null, reacts: {},
+    style: pickStyle(lv), know: false, pairs: 0, youDrew: 0, cpuDrew: 0, t0: 0, deadline: 0, dur: 0, fx: {}, last: null, face: "calm", claims: {}, asked: {}, snaps: [], events: [], hw: null, lastCm: 0, pauseUntil: 0 };
+}
+const holdsBaba = h => h.some(c => c.n === 0);
+
+// --- render ---
+function cardHTML(c, i, side, enabled){
+  const cls = ["card"];
+  const show = side === "you" || S.phase === "over";
+  cls.push(show ? "up" : "back");
+  if (show && c.n === 0) cls.push("baba");
+  if ((side === "you" ? S.youStick : S.cpuStick) === c.id) cls.push("stick");
+  if (side === "you" && S.sel === i) cls.push("sel");
+  if ((side === "you" ? S.aimYou : S.aimCpu) === i) cls.push("aim");
+  if (S.fx.newId === c.id) cls.push("new");
+  if (S.fx.mates && S.fx.mates.includes(c.id)) cls.push("mate");
+  if (S.fx.takenId === c.id) cls.push("taken");
+  const lab = show ? (c.n ? String(c.n) : "ババ") : `左から${i + 1}枚目`;
+  const inner = !show ? "" : c.n ? `<span class="cn">${c.n}</span>` : `<span class="bb">ババ</span>`;
+  return `<button class="${cls.join(" ")}" data-i="${i}" data-n="${c.n || ""}" ${enabled ? "" : "disabled"} aria-label="${lab}">${inner}</button>`;
+}
+function render(){
+  const youOn = ["pick", "guard", "cpuwait"].includes(S.phase);
+  $("youHand").innerHTML = S.you.map((c, i) => cardHTML(c, i, "you", youOn)).join("");
+  $("cpuHand").innerHTML = S.cpu.map((c, i) => cardHTML(c, i, "cpu", S.phase === "pick")).join("");
+  $("pairs").textContent = S.pairs;
+  $("tools").hidden = $("talk").hidden = S.phase !== "guard";
+  $("ask").hidden = !(S.phase === "pick" && holdsBaba(S.cpu) && S.aimCpu >= 0);
+  $("cpuName").innerHTML = `${name()}<span>${LVTXT[S.lv]}</span>`;
+}
+function renderPair(n){
+  $("lastPair").innerHTML = [0, 1].map(() => `<span class="card up in" data-n="${n}"><span class="cn">${n}</span></span>`).join("");
+}
+function msg(html, hint = ""){ $("msg").innerHTML = html; $("hint").textContent = hint; }
+function popAt(text, kind = ""){
+  const r = $("msg").getBoundingClientRect();
+  const el = document.createElement("div");
+  el.className = "pop " + kind; el.textContent = text;
+  el.style.left = Math.min(window.innerWidth - 90, Math.max(90, r.left + r.width / 2)) + "px";
+  el.style.top = (r.top - 10) + "px";
+  document.body.appendChild(el); setTimeout(() => el.remove(), 1200);
+}
+function shake(){ const t = $("table"); t.classList.remove("shake"); void t.offsetWidth; t.classList.add("shake"); }
+function setTimer(ms){ S.dur = ms; S.deadline = performance.now() + ms; }
+function stopTimer(){ S.deadline = 0; $("bar").style.width = "0"; }
+function frame(){
+  if (S && S.deadline){
+    const left = S.deadline - performance.now();
+    $("bar").style.width = Math.max(0, left / S.dur * 100) + "%";
+    $("barBox").classList.toggle("hot", S.phase === "guard");
+    if (left <= 0 && S.phase === "pick"){ stopTimer(); youDraw(S.aimCpu >= 0 ? S.aimCpu : rnd(S.cpu.length)); }
+  }
+  requestAnimationFrame(frame);
+}
+
+// --- your hand: swap / stick out ---
+function swapYou(i, j){
+  const a = S.you[i], b = S.you[j];
+  [S.you[i], S.you[j]] = [b, a];
+  if (S.know && (a.n === 0 || b.n === 0)){
+    // ふつう loses track of a moved ババ; つよい keeps following it half the time
+    if (S.lv === 1 || Math.random() < .5) S.know = false;
+  }
+}
+$("youHand").addEventListener("click", e => {
+  const b = e.target.closest(".card"); if (!b || b.disabled) return;
+  const i = +b.dataset.i; SFX.tap();
+  if (S.sel === -1) S.sel = i;
+  else if (S.sel === i){ const id = S.you[i].id; S.youStick = S.youStick === id ? null : id; S.sel = -1; }
+  else { swapYou(S.sel, i); S.sel = -1; }
+  render();
+});
+$("mix").addEventListener("click", () => {
+  if (S.phase !== "guard") return;
+  shuffle(S.you); S.youStick = null; S.sel = -1; S.know = false; SFX.mix();
+  render(); $("youHand").classList.remove("mixing"); void $("youHand").offsetWidth; $("youHand").classList.add("mixing");
+});
+$("go").addEventListener("click", () => { if (guardDone) guardDone(); });
+
+// --- your turn: draw from CPU ---
+function reactTo(c){
+  if (!holdsBaba(S.cpu)) return "calm";
+  if (S.reacts[c.id]) return S.reacts[c.id];
+  const isB = c.n === 0, noise = [.1, .15, .15][S.lv];
+  let st = S.style === "honest" ? (isB ? "grin" : "sweat") : S.style === "reverse" ? (isB ? "sweat" : "grin") : ["grin", "sweat", "calm"][rnd(3)];
+  if (Math.random() < noise) st = ["grin", "sweat", "calm"][rnd(3)];
+  return S.reacts[c.id] = st;
+}
+async function yourTurn(g){
+  S.reacts = {}; S.aimCpu = -1; S.cpuStick = null;
+  if (holdsBaba(S.cpu)){
+    if (S.lv > 0 || Math.random() < .5){
+      S.phase = "anim"; msg(`${name()}が手札をまぜています…`); render();
+      shuffle(S.cpu); render(); const h = $("cpuHand");
+      h.classList.remove("mixing"); void h.offsetWidth; h.classList.add("mixing"); SFX.mix();
+      await wait(700); if (g !== gen) return;
+    }
+    if (S.lv > 0 && Math.random() < .35){
+      const b = S.cpu.find(c => c.n === 0), others = S.cpu.filter(c => c.n !== 0);
+      S.cpuStick = (Math.random() < .5 || !others.length) ? b.id : others[rnd(others.length)].id;
+    }
+  }
+  S.phase = "pick"; say("calm", holdsBaba(S.cpu) ? "どれにする？" : "好きなのどうぞ");
+  msg(`<b>あなたの番</b>　${name()}の手札から1枚引こう。`,
+    holdsBaba(S.cpu) ? "1回タップで指さす → 顔色を読んで、もう一度タップで引く" : "ババはあなたの手にあります。どれを引いてもそろいます");
+  setTimer(PICK_MS); render();
+}
+$("cpuHand").addEventListener("click", e => {
+  const b = e.target.closest(".card"); if (!b || b.disabled || S.phase !== "pick") return;
+  const i = +b.dataset.i;
+  if (S.aimCpu === i){ youDraw(i); return; }
+  S.aimCpu = i; SFX.aim();
+  const st = reactTo(S.cpu[i]); say(st);
+  render();
+});
+async function youDraw(i){
+  const g = gen; S.phase = "anim"; stopTimer();
+  const c = S.cpu[i];
+  S.aimCpu = -1; S.fx = { takenId: c.id }; render(); await wait(280); if (g !== gen) return;
+  S.cpu.splice(i, 1); S.cpuStick = null; S.sel = -1;
+  if (c.n === 0){
+    snapEvent("ババを引いた瞬間");
+    S.you.push(c); S.youDrew++; S.know = S.lv > 0; S.fx = { newId: c.id };
+    say("happy", "ふふっ、引いたね"); SFX.baba(); shake(); popAt("ババ！", "baba");
+    msg(`<b>ババを引いてしまった…</b>　右はしに入りました。`, "引かれる前に並べかえよう");
+    render(); await wait(1000); if (g !== gen) return;
+  } else {
+    const m = S.you.find(x => x.n === c.n);
+    S.you.push(c); S.fx = { newId: c.id, mates: [c.id, m.id] }; render();
+    say(holdsBaba(S.cpu) ? "sweat" : "calm", holdsBaba(S.cpu) ? "くっ…" : "そろったね");
+    await wait(520); if (g !== gen) return;
+    S.you = S.you.filter(x => x.n !== c.n); S.pairs++; renderPair(c.n); SFX.pair(); popAt("ペア！");
+    S.fx = {}; render(); await wait(350); if (g !== gen) return;
+  }
+  S.fx = {};
+  if (!checkEnd()) cpuTurn(g);
+}
+
+// --- CPU turn: draw from you ---
+function bucketOf(i, n){ return i === 0 ? 0 : i === n - 1 ? 2 : 1; }
+function cpuChoose(){
+  const n = S.you.length;
+  if (!holdsBaba(S.you) || n === 1) return rnd(n);
+  if (S.lv === 0){
+    // ポン太 believes whatever you tell it
+    const w = S.you.map(c => S.claims[c.id] === "baba" ? .1 : S.claims[c.id] === "safe" ? 4 : 1);
+    let r = Math.random() * w.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < n; i++){ r -= w[i]; if (r <= 0) return i; }
+    return n - 1;
+  }
+  const p = new Array(n).fill(1);
+  const si = S.you.findIndex(c => c.id === S.youStick);
+  if (si >= 0){
+    // belief that the stuck-out card is ババ: ふつう starts suspicious, つよい starts neutral and learns faster
+    const w = S.lv === 1 ? 1 : 2, a = 1, b = S.lv === 1 ? 1 : n - 1;
+    const rate = Math.min(.95, (learn.sb * w + a) / (learn.st * w + a + b));
+    p[si] = rate * (n - 1) / (1 - rate);
+  }
+  if (S.lv === 2 && n >= 3){
+    const tot = learn.bk[0] + learn.bk[1] + learn.bk[2];
+    for (let i = 0; i < n; i++){ const k = bucketOf(i, n), size = k === 1 ? n - 2 : 1; p[i] *= ((learn.bk[k] + 1) / (tot + 3)) / (size / n); }
+  }
+  const fz = faceZ();
+  if (fz && S.lv > 0){
+    // reads your face: by default a bigger reaction means ババ; learns your real direction over games
+    const dir = learn.fs + .3 >= 0 ? 1 : -1, k = S.lv === 1 ? .7 : 1.4;
+    fz.forEach((z, i) => { if (z !== null) p[i] *= Math.exp(k * dir * z); });
+  }
+  const odds = Math.pow(trust() / (1 - trust()), S.lv === 1 ? 1 : 1.5);
+  S.you.forEach((c, i) => { if (S.claims[c.id] === "baba") p[i] *= odds; else if (S.claims[c.id] === "safe") p[i] /= odds; });
+  if (S.know){ const ki = S.you.findIndex(c => c.n === 0); p[ki] *= (S.lv === 1 ? 8 : 40) * n; }
+  const sum = p.reduce((s, x) => s + x, 0), k = S.lv === 1 ? 3 : 8;
+  const w = p.map(x => Math.pow(Math.max(0, 1 - x / sum), k));
+  let r = Math.random() * w.reduce((s, x) => s + x, 0);
+  for (let i = 0; i < n; i++){ r -= w[i]; if (r <= 0) return i; }
+  return n - 1;
+}
+const trust = () => (learn.ct + 1) / (learn.cn + 2);
+function faceZ(){
+  if (!CAM.on || !S.faceObs) return null;
+  const d = S.you.map(c => { const o = S.faceObs[c.id]; return o && o.n >= 3 ? o.s / o.n : null; });
+  const vals = d.filter(x => x !== null);
+  if (vals.length < 2) return null;
+  const m = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const sd = Math.sqrt(vals.reduce((a, b) => a + (b - m) ** 2, 0) / vals.length) + .02;
+  return d.map(x => x === null ? null : (x - m) / sd);
+}
+function wanderIdx(){
+  if (CAM.on){
+    // with the camera on, sweep every card so each one gets a look at your face
+    if (!S.wq || !S.wq.length) S.wq = shuffle(S.you.map((_, i) => i));
+    const i = S.wq.pop(); return Math.min(i, S.you.length - 1);
+  }
+  const si = S.you.findIndex(c => c.id === S.youStick);
+  if (si >= 0 && S.lv === 2 && Math.random() < .4) return si;
+  return rnd(S.you.length);
+}
+async function cpuTurn(g){
+  S.aimYou = -1;
+  const guarding = holdsBaba(S.you);
+  if (guarding){
+    S.phase = "guard"; S.faceObs = {}; S.wq = null; S.claims = {}; S.hw = null; setTimer(GUARD_MS[S.lv]); say("think");
+    msg(`<b>${name()}が引く番</b>　ババを隠そう。${CAM.on && S.lv > 0 ? "<br>相手はあなたの<b>表情</b>も見ています。" : ""}`, "2枚タップで入れかえ ・ 同じカードを2回タップでつき出す ・ 指の先のカードについて話しかけられます");
+    render();
+    const wander = setInterval(() => { if (g === gen && S.phase === "guard" && performance.now() > S.pauseUntil){ flushHover(); S.aimYou = wanderIdx(); render(); SFX.aim(); } }, CAM.on ? 650 : 800);
+    await new Promise(r => { guardDone = r; guardTimer = setTimeout(r, GUARD_MS[S.lv]); });
+    clearInterval(wander); clearTimeout(guardTimer); guardDone = null;
+    if (g !== gen) return;
+  } else {
+    S.phase = "cpuwait"; say("think", "どれにしようかな");
+    msg(`<b>${name()}が引く番</b>`, "ババは相手の手にあります"); render();
+    await wait(800); if (g !== gen) return;
+  }
+  S.phase = "anim"; S.sel = -1; stopTimer();
+  if (guarding) flushHover();
+  const j = cpuChoose(), n = S.you.length;
+  if (guarding){
+    const bid = S.you.find(c => c.n === 0).id;
+    Object.entries(S.claims).forEach(([id, cl]) => { learn.cn++; if ((cl === "baba") === (+id === bid)) learn.ct++; });
+    const si = S.you.findIndex(c => c.id === S.youStick), bi = S.you.findIndex(c => c.n === 0);
+    if (si >= 0){ learn.st++; if (si === bi) learn.sb++; }
+    learn.bk[bucketOf(bi, n)]++;
+    const fz = faceZ();
+    if (fz && fz[bi] !== null){ learn.fs += fz[bi]; learn.fn++; }
+    if (S.lv === 2 && n > 1 && Math.random() < .35){
+      let k; do { k = rnd(n); } while (k === j);
+      S.aimYou = k; render(); await wait(550); if (g !== gen) return;
+    }
+  }
+  S.aimYou = j; say("think", guarding ? "…これ！" : "これ"); render();
+  await wait(guarding ? 700 : 300); if (g !== gen) return;
+  const c = S.you[j];
+  S.fx = { takenId: c.id }; render(); await wait(300); if (g !== gen) return;
+  S.you.splice(j, 1); S.youStick = null; S.aimYou = -1; S.know = false;
+  if (c.n === 0){
+    snapEvent("ババを引かせた瞬間");
+    S.cpu.push(c); S.cpuDrew++; S.fx = { newId: c.id };
+    say("shock", "うわっ…ババ！"); SFX.give(); popAt("ババを引かせた！", "baba");
+    msg(`<b>ババを引かせた！</b>`, ""); render(); await wait(1000); if (g !== gen) return;
+  } else {
+    const m = S.cpu.find(x => x.n === c.n);
+    S.cpu.push(c); S.fx = { newId: c.id, mates: [c.id, m.id] }; render();
+    say("happy", "そろった♪"); await wait(450); if (g !== gen) return;
+    S.cpu = S.cpu.filter(x => x.n !== c.n); S.pairs++; renderPair(c.n); SFX.pair();
+    S.fx = {}; render(); await wait(350); if (g !== gen) return;
+  }
+  S.fx = {};
+  if (!checkEnd()) yourTurn(g);
+}
+
+// --- end of game ---
+function checkEnd(){
+  if (S.you.length && S.cpu.length) return false;
+  finish(S.you.length === 0);
+  return true;
+}
+function finish(win){
+  const g = gen; S.phase = "over"; stopTimer(); S.sel = -1; S.youStick = S.cpuStick = null;
+  const secs = Math.round((performance.now() - S.t0) / 1000);
+  if (win){ score.you++; score.streak++; } else { score.cpu++; score.streak = 0; }
+  const rec = loadRec(), key = "lv" + S.lv, r = rec[key] || { w: 0, l: 0, best: 0 };
+  win ? r.w++ : r.l++; r.best = Math.max(r.best, score.streak); rec[key] = r; saveRec(rec);
+  $("sYou").textContent = score.you; $("sCpu").textContent = score.cpu; $("streak").textContent = score.streak;
+  render();
+  if (win){ say("shock", "負けた〜！"); SFX.win(); msg(`<b>あなたの勝ち！</b>　ババは${name()}の手に残りました。`); }
+  else { say("happy", "ぼくの勝ち！"); SFX.lose(); msg(`<b>負け…</b>　ババがあなたの手に残りました。`); }
+  $("start").textContent = "もう一回";
+  setTimeout(() => {
+    if (g !== gen) return;
+    $("overlayHost").innerHTML = `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="rt"><div class="result">
+      <h2 id="rt">${win ? "勝ち！" : "負け…"}</h2>
+      <p>${win ? `${name()}にババを押しつけました。` : `ババを押しつけられました。`}</p>
+      <table>
+        <tr><td>かかった時間</td><td>${secs}秒</td></tr>
+        <tr><td>ババを引いた回数</td><td>${S.youDrew}</td></tr>
+        <tr><td>ババを引かせた回数</td><td>${S.cpuDrew}</td></tr>
+        <tr><td>${name()}との通算</td><td>${r.w}勝 ${r.l}敗</td></tr>
+        <tr><td>最高連勝</td><td>${r.best}</td></tr>
+        <tr><td>${name()}の顔色の正体</td><td>${STYLE_TXT[S.style]}</td></tr>
+      </table>
+      <h3>あなたの顔</h3>
+      ${faceReport()}
+      <div class="rbtns"><button class="primary" id="again">もう一回</button><button id="close">閉じる</button></div>
+      <p class="rnote">${S.lv < 2 && win ? "次は相手を強くしてみよう。" : S.lv > 0 ? "強い相手ほど、あなたのクセを覚えていきます。" : "顔色をよく見よう。"}</p>
+    </div></div>`;
+    $("again").addEventListener("click", startGame);
+    $("close").addEventListener("click", () => { $("overlayHost").innerHTML = ""; $("start").focus(); });
+    $("again").focus();
+  }, 1100);
+}
+
+// --- start ---
+function startGame(){
+  gen++; const g = gen;
+  if (guardDone){ clearTimeout(guardTimer); guardDone = null; }
+  $("overlayHost").innerHTML = ""; $("lastPair").innerHTML = "";
+  S = newState(); S.t0 = performance.now();
+  $("start").textContent = "やり直す";
+  const youFirst = !holdsBaba(S.you);
+  say("calm", "勝負！");
+  msg(youFirst ? `ババは<b>${name()}</b>が持っています。あなたが先に引きます。` : `ババは<b>あなた</b>が持っています。${name()}が先に引きます。`);
+  render();
+  setTimeout(() => { if (g === gen) youFirst ? yourTurn(g) : cpuTurn(g); }, 1200);
+}
+function idle(){
+  gen++;
+  if (guardDone){ clearTimeout(guardTimer); guardDone = null; }
+  S = newState(); say("calm", "よろしくね");
+  msg("スタートを押すとゲームが始まります。", "下に並んでいるのは配られる手札の例です");
+  $("start").textContent = "スタート"; $("lastPair").innerHTML = ""; stopTimer(); render();
+}
+$("start").addEventListener("click", startGame);
+$("level").addEventListener("change", () => { learn = { sb: 0, st: 0, bk: [0, 0, 0], fs: 0, fn: 0, ct: 0, cn: 0 }; score.you = score.cpu = score.streak = 0;
+  $("sYou").textContent = 0; $("sCpu").textContent = 0; $("streak").textContent = 0; idle(); });
+$("sound").addEventListener("click", e => { soundOn = !soundOn; e.target.textContent = soundOn ? "音 オン" : "音 オフ"; e.target.setAttribute("aria-pressed", soundOn); });
+
+// --- your face: camera → character ---
+const CAM = { on: false, lm: null, stream: null, v: null, base: null, lastT: -1, seen: 0 };
+const MP = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+const MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+const REST = { openL: 1, openR: 1, gx: 0, gy: 0, inner: 0, down: 0, outer: 0, smile: 0, frown: 0, jaw: 0, pucker: 0, roll: 0 };
+function avatarInner(v){
+  const eye = (cx, open) => {
+    const o = Math.max(.06, Math.min(1.35, open)), px = cx + v.gx * 2.6, py = 32 + v.gy * 1.8;
+    return `<ellipse cx="${cx}" cy="32" rx="5" ry="${(4.5 * o).toFixed(2)}" class="wh"/>` + (o < .3 ? "" : `<circle cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" r="2.3" class="dot"/>`);
+  };
+  const yIn = 23 - v.inner * 5 + v.down * 3, yOut = 23 - v.outer * 3 + v.down * 1.2;
+  const sm = v.smile - v.frown * .8, hw = 8 - v.pucker * 3.5 + v.smile * 1.5, cy = 45 - sm * 3.5;
+  const up = 45 + sm * 4.5 - v.jaw * 1.5, low = up + v.jaw * 16 + .5, bl = Math.min(.8, v.smile).toFixed(2);
+  const f = x => x.toFixed(1);
+  return `<g transform="rotate(${f(Math.max(-.5, Math.min(.5, v.roll)) * 57.3)} 32 35)"><circle cx="32" cy="35" r="24" class="head"/>
+    <path d="M9 30q0-21 23-21t23 21q-6-9-14-10q-3 5-9 5q-6 0-9-5q-8 1-14 10z" class="hair"/>
+    <circle cx="17" cy="42" r="4" class="blush" opacity="${bl}"/><circle cx="47" cy="42" r="4" class="blush" opacity="${bl}"/>
+    ${eye(23, v.openL)}${eye(41, v.openR)}
+    <path d="M17 ${f(yOut)}L28 ${f(yIn)}M36 ${f(yIn)}L47 ${f(yOut)}" class="ln"/>
+    <path d="M${f(32 - hw)} ${f(cy)}Q32 ${f(up)} ${f(32 + hw)} ${f(cy)}Q32 ${f(low)} ${f(32 - hw)} ${f(cy)}Z" class="ln${v.jaw > .1 ? " open" : ""}"/></g>`;
+}
+function drawAvatar(v){ $("avatar").innerHTML = avatarInner(v); }
+function moodOf(v){
+  const open = (v.openL + v.openR) / 2;
+  if (v.jaw > .35 && (open > 1.1 || v.inner > .35)) return "びっくり";
+  if (v.smile > .5) return "にっこり";
+  if (v.smile > .22) return "にやり";
+  if (open < .25) return "目をつむった";
+  if (v.inner > .35 || v.frown > .3) return "ドキドキ";
+  if (Math.abs(v.gx) > .55) return "目が泳いでる";
+  return "ポーカーフェイス";
+}
+function camNote(t){ $("camNote").textContent = t; }
+function readFace(r, vid){
+  const b = {}; r.faceBlendshapes[0].categories.forEach(c => b[c.categoryName] = c.score);
+  const L = r.faceLandmarks[0], W = vid.videoWidth || 640, H = vid.videoHeight || 480;
+  const P = i => ({ x: L[i].x * W, y: L[i].y * H }), dist = (a, c) => Math.hypot(a.x - c.x, a.y - c.y);
+  // eyes from landmarks, so left/right follow the mirror: the eye at the picture's left (33-133) shows on the screen's right
+  const ear = (t, bt, a, c) => (dist(P(t), P(bt)) / dist(P(a), P(c)) - .06) / .2;
+  const openImgL = ear(159, 145, 33, 133), openImgR = ear(386, 374, 362, 263);
+  const gaze = (a, c) => {
+    const A = P(a), C = P(c), mid = { x: (A.x + C.x) / 2, y: (A.y + C.y) / 2 };
+    const iris = L.length > 473 ? [P(468), P(473)].sort((u, w) => dist(u, mid) - dist(w, mid))[0] : mid;
+    return ((iris.x - Math.min(A.x, C.x)) / Math.abs(A.x - C.x) - .5) * 2;
+  };
+  const gImg = (gaze(33, 133) + gaze(362, 263)) / 2;
+  const avg = (a, c) => ((b[a] || 0) + (b[c] || 0)) / 2;
+  const e1 = P(33), e2 = P(263);
+  return { openL: openImgR, openR: openImgL, gx: Math.max(-1, Math.min(1, -gImg * 2.2)),
+    gy: avg("eyeLookDownLeft", "eyeLookDownRight") - avg("eyeLookUpLeft", "eyeLookUpRight"),
+    inner: b.browInnerUp || 0, down: avg("browDownLeft", "browDownRight"), outer: avg("browOuterUpLeft", "browOuterUpRight"),
+    smile: avg("mouthSmileLeft", "mouthSmileRight"), frown: avg("mouthFrownLeft", "mouthFrownRight"),
+    jaw: b.jawOpen || 0, pucker: b.mouthPucker || 0, roll: -Math.atan2(e2.y - e1.y, e2.x - e1.x) };
+}
+const COMMENT = { "にっこり": "いま笑った？", "にやり": "口元がゆるんだね", "ドキドキ": "あれ、困ってる？", "目が泳いでる": "目が泳いでるよ〜", "びっくり": "びくっとしたね", "目をつむった": "見ないふり？" };
+function sampleFace(v){
+  const f = [v.smile, v.jaw, v.inner, (v.openL + v.openR) / 2, v.gx * .5, v.down, v.frown];
+  if (!CAM.base) CAM.base = f.slice();
+  const dev = f.reduce((s, x, i) => s + Math.abs(x - CAM.base[i]), 0);
+  CAM.base = CAM.base.map((x, i) => x + (f[i] - x) * .02);
+  if (S && S.phase === "guard" && S.aimYou >= 0 && S.you[S.aimYou]){
+    const id = S.you[S.aimYou].id, o = S.faceObs[id] || (S.faceObs[id] = { s: 0, n: 0 });
+    o.s += dev; o.n++;
+    const isB = S.you[S.aimYou].n === 0;
+    if (!S.hw || S.hw.id !== id) S.hw = { id, isB, dev: 0, sum: 0, n: 0, v: null };
+    S.hw.sum += dev; S.hw.n++;
+    if (dev >= S.hw.dev){ S.hw.dev = dev; S.hw.v = { ...v }; }
+    // live remarks: the rival tells you what it just noticed on your face
+    const m = moodOf(v), now = performance.now();
+    if (S.lv > 0 && dev > .35 && COMMENT[m] && now - S.lastCm > 2600){ S.lastCm = now; say("grin", COMMENT[m]); }
+  }
+}
+function flushHover(){
+  if (S.hw && S.hw.n >= 3) S.snaps.push({ isB: S.hw.isB, dev: S.hw.sum / S.hw.n, v: S.hw.v });
+  S.hw = null;
+}
+function snapEvent(label){
+  if (!CAM.on || !CAM.v) return;
+  const s0 = S; setTimeout(() => { if (S === s0 && CAM.v) s0.events.push({ label, v: { ...CAM.v } }); }, 450);
+}
+const STYLE_TXT = { honest: "正直者", reverse: "ウソつき", random: "でたらめ" };
+function faceReport(){
+  if (!S.snaps.length && !S.events.length)
+    return `<p class="rnote">${CAM.on ? "今回は、相手の指があなたのババに近づく場面がありませんでした。" : "カメラをつけると、ここに相手から見えたあなたの表情の振り返りが出ます。"}</p>`;
+  const b = S.snaps.filter(x => x.isB), o = S.snaps.filter(x => !x.isB);
+  const top = arr => arr.slice().sort((x, y) => y.dev - x.dev)[0];
+  const items = [];
+  if (b.length) items.push({ label: "指がババの上", v: top(b).v, bb: true });
+  if (o.length) items.push({ label: "ほかのカードの上", v: top(o).v });
+  S.events.slice(0, 2).forEach(e => items.push(e));
+  let verdict = "";
+  if (b.length && o.length){
+    const avg = arr => arr.reduce((t, x) => t + x.dev, 0) / arr.length, r = avg(b) / (avg(o) + .01);
+    const t = r >= 1.5 ? "ババのとき、顔に出ていました！" : r >= 1.15 ? "ババのとき、少し顔に出ていました" : r >= .85 ? "ポーカーフェイスでした" : "ババのときほど落ち着いていました（それもヒントになります）";
+    verdict = `<p><b>顔に出やすさ</b>　${t}<br><span class="rnote">ババのときの表情の動きは、ほかのときの${r.toFixed(1)}倍</span></p>`;
+  }
+  return `<div class="faces av">${items.map(it => `<figure class="${it.bb ? "bb" : ""}"><svg viewBox="0 0 64 64" aria-hidden="true">${avatarInner(it.v)}</svg><figcaption>${it.label}<br>${moodOf(it.v)}</figcaption></figure>`).join("")}</div>${verdict}`;
+}
+function mySay(t){
+  const el = $("myBubble"); el.textContent = t; el.hidden = false;
+  clearTimeout(mySay.t); mySay.t = setTimeout(() => { el.hidden = true; }, 2600);
+}
+$("talk").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || S.phase !== "guard" || S.aimYou < 0) return;
+  const c = S.you[S.aimYou], kind = b.dataset.say;
+  S.claims[c.id] = kind; S.pauseUntil = performance.now() + 1300; SFX.tap();
+  mySay(kind === "baba" ? "それ、ババだよ" : "それはババじゃないよ");
+  const t = trust();
+  setTimeout(() => {
+    if (S.phase !== "guard") return;
+    if (S.lv === 0) say("sweat", kind === "baba" ? "えっ、そうなの！？" : "ほんと？じゃあ…");
+    else if (t > .62) say("think", "…信じてみようかな");
+    else if (t < .38) say("grin", "その手には乗らないよ");
+    else say("think", "ほんとに〜？");
+  }, 500);
+});
+$("askBtn").addEventListener("click", () => {
+  if (S.phase !== "pick" || S.aimCpu < 0) return;
+  const c = S.cpu[S.aimCpu]; if (S.asked[c.id]) return;
+  S.asked[c.id] = true; SFX.tap(); mySay("それ、ババ？");
+  const isB = c.n === 0;
+  const honest = S.lv === 0 ? .8 : S.lv === 1 ? .6 : { honest: .85, reverse: .15, random: .5 }[S.style];
+  const yes = Math.random() < honest ? isB : !isB;
+  setTimeout(() => {
+    if (S.phase !== "pick") return;
+    if (Math.random() < .15) say(reactTo(c), "ないしょ♪");
+    else say(reactTo(c), yes ? "…うん、ババだよ" : "ちがうよ");
+  }, 600);
+});
+function camLoop(){
+  if (!CAM.on) return;
+  const vid = $("cam"), now = performance.now();
+  // about 15 reads a second is plenty for faces and keeps phones cool
+  if (vid.readyState >= 2 && vid.currentTime !== CAM.lastT && now - (CAM.lastRun || 0) >= 66){
+    CAM.lastT = vid.currentTime; CAM.lastRun = now;
+    let r = null; try { r = CAM.lm.detectForVideo(vid, now); } catch (e) {}
+    if (r && r.faceBlendshapes && r.faceBlendshapes[0] && r.faceLandmarks[0]){
+      const t = readFace(r, vid);
+      CAM.v = CAM.v ? Object.fromEntries(Object.keys(t).map(k => [k, CAM.v[k] + (t[k] - CAM.v[k]) * .45])) : t;
+      CAM.seen = now; drawAvatar(CAM.v); $("mood").textContent = moodOf(CAM.v); sampleFace(CAM.v);
+    } else if (now - CAM.seen > 800) $("mood").textContent = "顔が見えません";
+  }
+  requestAnimationFrame(camLoop);
+}
+async function makeLandmarker(){
+  const { FaceLandmarker, FilesetResolver } = await import(MP + "/vision_bundle.mjs");
+  const files = await FilesetResolver.forVisionTasks(MP + "/wasm");
+  const opts = d => ({ baseOptions: { modelAssetPath: MODEL, delegate: d }, runningMode: "VIDEO", numFaces: 1, outputFaceBlendshapes: true });
+  try { return await FaceLandmarker.createFromOptions(files, opts("GPU")); }
+  catch (e) { return await FaceLandmarker.createFromOptions(files, opts("CPU")); }
+}
+async function startCam(){
+  const btn = $("camBtn"); btn.disabled = true; camNote("カメラを準備しています…");
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("none");
+    CAM.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+  } catch (e) {
+    btn.disabled = false;
+    camNote(e && e.name === "NotAllowedError" ? "カメラが許可されませんでした。ここでは使えないか、ブラウザで「許可」が必要です。" : "この画面ではカメラが使えません。");
+    $("camHelp").hidden = false; return;
+  }
+  const vid = $("cam"); vid.srcObject = CAM.stream; await vid.play().catch(() => {});
+  try {
+    if (!CAM.lm){ camNote("表情を読み取る仕組みを読み込み中…（はじめは数秒かかります）"); CAM.lm = await makeLandmarker(); }
+  } catch (e) {
+    stopCam(); camNote("表情を読み取る仕組みを読み込めませんでした。ネットにつながっているか確かめてください。"); $("camHelp").hidden = false; return;
+  }
+  CAM.on = true; CAM.v = null; CAM.base = null; CAM.seen = performance.now();
+  btn.disabled = false; btn.textContent = "カメラを止める"; $("camMode").hidden = false; $("camHelp").hidden = true;
+  camNote("映像はこの端末の中だけで使い、どこにも送りません。相手がつよいほど、あなたの表情も読んできます。");
+  applyCamMode(); camLoop();
+}
+function stopCam(){
+  CAM.on = false;
+  if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
+  CAM.stream = null; $("cam").srcObject = null; $("cam").hidden = true; $("avatar").hidden = false;
+  $("camBtn").textContent = "カメラで表情を映す"; $("camBtn").disabled = false; $("camMode").hidden = true; $("mood").textContent = "";
+  drawAvatar(REST); camNote("あなたの表情を読み取って、キャラクターが同じ顔をします。");
+}
+function applyCamMode(){
+  const video = CAM.on && $("camMode").value === "video";
+  $("cam").hidden = !video; $("avatar").hidden = video;
+}
+$("camBtn").addEventListener("click", () => CAM.on ? stopCam() : startCam());
+$("camMode").addEventListener("change", applyCamMode);
+drawAvatar(REST);
+
+idle();
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
