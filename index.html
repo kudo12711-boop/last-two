@@ -15,7 +15,7 @@
 :root{
   --felt:#2c0d14; --felt2:#45141f; --rail:#1a070b; --line:#6e3240; --brass:#d9a94f; --brassDim:#8f6a2c;
   --cream:#f7ecd8; --cardInk:#2a0b10; --ink:#f5e7d2; --muted:#cfae9f; --baba:#5d2c8c; --good:#9fdcaa; --sky:#7cc4ff; --shade:rgb(20 4 8 / .8);
-  --skinMe:#f0cfae; --hairMe:#3b2742; --blush:#ef8f8f; --skin0:#e0a868; --skin1:#f3dcb8; --skin2:#a7a3b5;
+  --skinMe:#f0cfae; --nekoFur:#f4d3a1; --nekoDark:#c98a4b; --kumaFur:#a8744a; --kumaMuzzle:#ecd2ad; --roboBody:#b9c3cf; --roboDark:#6d7886; --anger:#ff6b6b; --hairMe:#3b2742; --blush:#ef8f8f; --skin0:#e0a868; --skin1:#f3dcb8; --skin2:#a7a3b5;
   --display:"Dela Gothic One","M PLUS 1p","Hiragino Sans",sans-serif; --body:"M PLUS 1p","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
   --cw:clamp(30px,8.4vw,60px);
   color-scheme:dark;
@@ -124,6 +124,15 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .av .fxs{fill:none;stroke:var(--sky);stroke-width:2;stroke-linecap:round}
 .av .drop{fill:var(--sky)}
 .av .tongue{fill:var(--blush)}
+.av .anger{fill:none;stroke:var(--anger);stroke-width:2.2;stroke-linecap:round}
+.av .heart{fill:var(--blush)}
+.av .neko{fill:var(--nekoFur);stroke:var(--rail);stroke-width:2}
+.av .nekoD{fill:var(--nekoDark)}
+.av .kuma{fill:var(--kumaFur);stroke:var(--rail);stroke-width:2}
+.av .muzzle{fill:var(--kumaMuzzle)}
+.av .robo{fill:var(--roboBody);stroke:var(--rail);stroke-width:2}
+.av .roboD{fill:var(--roboDark)}
+.av .whisk{stroke:var(--cardInk);stroke-width:1.2;stroke-linecap:round}
 .amp{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted)}
 .amp input{width:96px;accent-color:var(--brass)}
 .camctl{display:grid;gap:5px;justify-items:start;min-width:0;flex:1 1 170px;max-width:300px}
@@ -168,7 +177,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 
 <div class="wrap">
   <header>
-    <h1>ラスト・ツー<small>試作 v0.4・CPUと1対1、ババの読み合い（1ゲーム約1分）</small></h1>
+    <h1>ラスト・ツー<small>試作 v0.5・CPUと1対1、ババの読み合い（1ゲーム約1分）</small></h1>
     <div class="controls">
       <label for="level" class="lv">相手</label>
       <select id="level"><option value="0">ポン太（よわい）</option><option value="1" selected>ミケ（ふつう）</option><option value="2">クロ（つよい）</option></select>
@@ -212,6 +221,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
         <b>あなた<span id="mood"></span></b>
         <div class="bubble mine" id="myBubble" hidden></div>
         <div class="camrow">
+          <select id="skin" aria-label="キャラ"><option value="hito">ひと</option><option value="neko">ねこ</option><option value="kuma">くま</option><option value="robo">ロボ</option></select>
           <button id="camBtn">カメラで表情を映す</button>
           <select id="camMode" aria-label="表示のしかた" hidden><option value="char">キャラで表示</option><option value="video">カメラ映像で表示</option></select>
           <label class="amp" id="ampBox" hidden>大げささ <input type="range" id="amp" min="1" max="3" step="0.5" value="2"></label>
@@ -442,6 +452,7 @@ async function youDraw(i){
   if (c.n === 0){
     snapEvent("ババを引いた瞬間");
     S.you.push(c); S.youDrew++; S.know = S.lv > 0; S.fx = { newId: c.id };
+    avatarEvent({ jaw: .7, openL: 1.5, openR: 1.5, inner: .8 }, 1500);
     say("happy", "ふふっ、引いたね"); SFX.baba(); shake(); popAt("ババ！", "baba");
     msg(`<b>ババを引いてしまった…</b>　右はしに入りました。`, "引かれる前に並べかえよう");
     render(); await wait(1000); if (g !== gen) return;
@@ -450,7 +461,7 @@ async function youDraw(i){
     S.you.push(c); S.fx = { newId: c.id, mates: [c.id, m.id] }; render();
     say(holdsBaba(S.cpu) ? "sweat" : "calm", holdsBaba(S.cpu) ? "くっ…" : "そろったね");
     await wait(520); if (g !== gen) return;
-    S.you = S.you.filter(x => x.n !== c.n); S.pairs++; renderPair(c.n); SFX.pair(); popAt("ペア！");
+    S.you = S.you.filter(x => x.n !== c.n); S.pairs++; renderPair(c.n); SFX.pair(); popAt("ペア！"); avatarEvent({ smile: .4 }, 700);
     S.fx = {}; render(); await wait(350); if (g !== gen) return;
   }
   S.fx = {};
@@ -556,7 +567,7 @@ async function cpuTurn(g){
   if (c.n === 0){
     snapEvent("ババを引かせた瞬間");
     S.cpu.push(c); S.cpuDrew++; S.fx = { newId: c.id };
-    say("shock", "うわっ…ババ！"); SFX.give(); popAt("ババを引かせた！", "baba");
+    say("shock", "うわっ…ババ！"); SFX.give(); popAt("ババを引かせた！", "baba"); avatarEvent({ smile: .8, squint: .6, openL: .9, openR: .9 }, 1500);
     msg(`<b>ババを引かせた！</b>`, ""); render(); await wait(1000); if (g !== gen) return;
   } else {
     const m = S.cpu.find(x => x.n === c.n);
@@ -583,8 +594,8 @@ function finish(win){
   win ? r.w++ : r.l++; r.best = Math.max(r.best, score.streak); rec[key] = r; saveRec(rec);
   $("sYou").textContent = score.you; $("sCpu").textContent = score.cpu; $("streak").textContent = score.streak;
   render();
-  if (win){ say("shock", "負けた〜！"); SFX.win(); msg(`<b>あなたの勝ち！</b>　ババは${name()}の手に残りました。`); }
-  else { say("happy", "ぼくの勝ち！"); SFX.lose(); msg(`<b>負け…</b>　ババがあなたの手に残りました。`); }
+  if (win){ say("shock", "負けた〜！"); SFX.win(); avatarEvent({ smile: .95, openL: .05, openR: .05 }, 3000); msg(`<b>あなたの勝ち！</b>　ババは${name()}の手に残りました。`); }
+  else { say("happy", "ぼくの勝ち！"); SFX.lose(); avatarEvent({ inner: .9, frown: .8 }, 3000); msg(`<b>負け…</b>　ババがあなたの手に残りました。`); }
   $("start").textContent = "もう一回";
   setTimeout(() => {
     if (g !== gen) return;
@@ -639,7 +650,7 @@ $("sound").addEventListener("click", e => { soundOn = !soundOn; e.target.textCon
 const CAM = { on: false, lm: null, stream: null, v: null, base: null, lastT: -1, seen: 0 };
 const MP = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
 const MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
-const REST = { openL: 1, openR: 1, gx: 0, gy: 0, inner: 0, down: 0, outer: 0, smile: 0, frown: 0, jaw: 0, pucker: 0, roll: 0 };
+const REST = { openL: 1, openR: 1, gx: 0, gy: 0, inner: 0, down: 0, outer: 0, smile: 0, frown: 0, jaw: 0, pucker: 0, roll: 0, yaw: 0, pitch: 0, hx: 0, hy: 0, puff: 0, squint: 0 };
 const AMP = { v: 2 };
 try { const x = +localStorage.getItem("lasttwo-amp"); if (x >= 1 && x <= 3) AMP.v = x; } catch (e) {}
 // blow up how far your face moves from its own resting look, so small changes read clearly on the character
@@ -652,40 +663,81 @@ function exaggerate(v){
     smile: cl((v.smile - n.smile * .8) * a * 1.2, 0, 1), frown: cl((v.frown - n.frown) * a * 1.5, 0, 1),
     jaw: cl((v.jaw - n.jaw) * a * 1.3, 0, 1), inner: cl((v.inner - n.inner) * a * 1.6, 0, 1),
     down: cl((v.down - n.down) * a * 1.5, 0, 1), outer: cl((v.outer - n.outer) * a * 1.5, 0, 1),
-    pucker: cl((v.pucker - n.pucker) * a, 0, 1), roll: cl((v.roll - n.roll) * a * .8, -.6, .6)
+    pucker: cl((v.pucker - n.pucker) * a, 0, 1), roll: cl((v.roll - n.roll) * a * .8, -.6, .6),
+    yaw: cl((v.yaw - n.yaw) * a * 1.5, -1, 1), pitch: cl((v.pitch - n.pitch) * a * 2.5, -1, 1),
+    hx: cl((v.hx - n.hx) * a, -1, 1), hy: cl((v.hy - n.hy) * a, -1, 1),
+    puff: cl((v.puff - n.puff) * a * 1.5, 0, 1), squint: cl((v.squint - n.squint) * a * 1.3, 0, 1)
   };
 }
-function avatarInner(v){
-  const f = x => x.toFixed(1), open = (v.openL + v.openR) / 2;
+const SKIN = { id: "hito" };
+try { const x = localStorage.getItem("lasttwo-skin"); if (["hito", "neko", "kuma", "robo"].includes(x)) SKIN.id = x; } catch (e) {}
+// each character only changes what sits behind and around the face; the moving parts are shared
+const SKINS = {
+  hito: { head: `<circle cx="32" cy="35" r="24" class="head"/>`, cheek: "head",
+    top: `<path d="M9 28q0-19 23-19t23 19q-6-10-14-12q-3 2-9 2q-6 0-9-2q-8 2-14 12z" class="hair"/>`, front: "" },
+  neko: { head: `<path d="M10 24 13 4 27 13Z" class="neko"/><path d="M54 24 51 4 37 13Z" class="neko"/><path d="M14 20 15 9 23 14Z" class="nekoD"/><path d="M50 20 49 9 41 14Z" class="nekoD"/><circle cx="32" cy="35" r="24" class="neko"/><path d="M26 12q6 4 12 0" class="ln" stroke-width="2"/>`, cheek: "neko",
+    top: "", front: `<path d="M30 39h4l-2 2.5z" class="dot"/><path d="M6 40l10 1M6 45l10-1M58 40l-10 1M58 45l-10-1" class="whisk"/>` },
+  kuma: { head: `<circle cx="13" cy="15" r="8" class="kuma"/><circle cx="51" cy="15" r="8" class="kuma"/><circle cx="13" cy="15" r="4" class="muzzle"/><circle cx="51" cy="15" r="4" class="muzzle"/><circle cx="32" cy="35" r="24" class="kuma"/>`, cheek: "kuma",
+    top: "", front: `<ellipse cx="32" cy="45" rx="11" ry="8" class="muzzle" opacity=".9"/><ellipse cx="32" cy="39.5" rx="3" ry="2" class="dot"/>`, muzzleBack: true },
+  robo: { head: `<path d="M32 4v7" class="ln"/><circle cx="32" cy="4" r="3" class="fx"/><rect x="2" y="29" width="6" height="12" rx="2" class="roboD"/><rect x="56" y="29" width="6" height="12" rx="2" class="roboD"/><rect x="8" y="11" width="48" height="46" rx="12" class="robo"/>`, cheek: "robo",
+    top: `<path d="M14 18h36" class="ln" stroke-width="1.5" opacity=".4"/>`, front: "" }
+};
+function avatarInner(v, skinId = SKIN.id){
+  const sk = SKINS[skinId] || SKINS.hito, f = x => x.toFixed(1), open = (v.openL + v.openR) / 2;
+  const wink = Math.min(v.openL, v.openR) < .3 && Math.max(v.openL, v.openR) > .6;
   const eye = (cx, o) => {
-    if (o < .3) return v.smile > .3 ? `<path d="M${cx - 5} 33q5-6 10 0" class="ln"/>` : `<path d="M${cx - 5} 32h10" class="ln"/>`;
-    const big = o > 1.15, rx = 5 + Math.max(0, o - 1) * 4, px = cx + v.gx * 3.2, py = 32 + v.gy * 2.2;
-    return `<ellipse cx="${cx}" cy="32" rx="${f(rx)}" ry="${f(4.5 * o)}" class="wh"/><circle cx="${f(px)}" cy="${f(py)}" r="${big ? 1.6 : 2.4}" class="dot"/>`;
+    if (o < .3) return v.smile > .3 || wink ? `<path d="M${cx - 5} 33q5-6 10 0" class="ln"/>` : `<path d="M${cx - 5} 32h10" class="ln"/>`;
+    const sq = (v.smile > .3 ? 1 - v.squint * .5 : 1), big = o > 1.15, rx = 5 + Math.max(0, o - 1) * 4, px = cx + v.gx * 3.2, py = 32 + v.gy * 2.2;
+    return `<ellipse cx="${cx}" cy="32" rx="${f(rx)}" ry="${f(4.5 * o * sq)}" class="wh"/><circle cx="${f(px)}" cy="${f(py)}" r="${big ? 1.6 : 2.4}" class="dot"/>`;
   };
   const yIn = Math.max(16, 23 - v.inner * 8 + v.down * 5), yOut = Math.max(17, 23 - v.outer * 5 + v.down * 2);
-  const sm = v.smile - v.frown * .8, hw = 8 + v.smile * 5 - v.pucker * 5, cy = 45 - sm * 6;
+  const sm = v.smile - v.frown * .8, hw = 8 + v.smile * 5 - v.pucker * 5 - v.puff * 2, cy = 45 - sm * 6;
   const up = 45 + sm * 7 - v.jaw * 2, low = up + v.jaw * 22 + .5;
-  const sx = 1 + v.smile * .06 - v.jaw * .04, sy = 1 + v.jaw * .14 - v.smile * .04;
+  const sx = 1 + v.smile * .06 - v.jaw * .04 + v.puff * .08, sy = 1 + v.jaw * .14 - v.smile * .04;
+  const ox = v.yaw * 6, oy = v.pitch * 4, hx = v.hx * 4, hy = v.hy * 3;
+  const cheekR = 6 + v.puff * 7;
   let fx = "";
   if (v.smile > .55) fx += `<path d="M10 12l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" class="fx"/><path d="M54 16l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" class="fx"/>`;
   if (v.jaw > .45 && (open > 1.15 || v.inner > .4)) fx += `<path d="M47 4h5l-1 11h-3z" class="fx"/><circle cx="49.5" cy="19" r="2" class="fx"/>`;
   if (v.inner > .4 || v.frown > .4) fx += `<path d="M52 20q5 7 0 10q-5-3 0-10Z" class="drop"/>` + (v.inner > .7 ? `<path d="M9 26q4 6 0 8q-4-2 0-8Z" class="drop"/>` : "");
   if (Math.abs(v.gx) > .8){ const x = v.gx > 0 ? 58 : 4; fx += `<path d="M${x} 28h3M${x} 33h3M${x} 38h3" class="fxs"/>`; }
-  return `<g transform="rotate(${f(v.roll * 57.3)} 32 35) translate(32 35) scale(${sx.toFixed(3)} ${sy.toFixed(3)}) translate(-32 -35)">
-    <circle cx="32" cy="35" r="24" class="head"/>
-    <path d="M9 28q0-19 23-19t23 19q-6-10-14-12q-3 2-9 2q-6 0-9-2q-8 2-14 12z" class="hair"/>
-    <circle cx="16" cy="42" r="${f(4 + v.smile * 2)}" class="blush" opacity="${Math.min(.9, v.smile * 1.2).toFixed(2)}"/><circle cx="48" cy="42" r="${f(4 + v.smile * 2)}" class="blush" opacity="${Math.min(.9, v.smile * 1.2).toFixed(2)}"/>
+  if (v.down > .5 && v.smile < .2) fx += `<path d="M46 8q3 3 0 6M52 8q-3 3 0 6M46 8q3 3 6 0M46 14q3-3 6 0" class="anger"/>`;
+  if (v.pucker > .5) fx += `<path d="M54 44c-3-4-8-1-4 3l4 4 4-4c4-4-1-7-4-3z" class="heart"/>`;
+  if (wink){ const x = v.openL < v.openR ? 8 : 56; fx += `<path d="M${x} 22l1.2 3 3 1.2-3 1.2-1.2 3-1.2-3-3-1.2 3-1.2z" class="fx"/>`; }
+  const puffs = v.puff > .15 ? `<circle cx="${f(17 - v.puff * 3)}" cy="43" r="${f(cheekR)}" class="${sk.cheek}"/><circle cx="${f(47 + v.puff * 3)}" cy="43" r="${f(cheekR)}" class="${sk.cheek}"/>` : "";
+  const bl = Math.min(.9, v.smile * 1.2 + v.puff * .6).toFixed(2), blR = f(4 + v.smile * 2 + v.puff * 2);
+  return `<g transform="translate(${f(hx)} ${f(hy)}) rotate(${f(v.roll * 57.3)} 32 35) translate(32 35) scale(${sx.toFixed(3)} ${sy.toFixed(3)}) translate(-32 -35)">
+    ${puffs}${sk.head}${sk.top}
+    <g transform="translate(${f(ox)} ${f(oy)})">
+    <circle cx="16" cy="42" r="${blR}" class="blush" opacity="${bl}"/><circle cx="48" cy="42" r="${blR}" class="blush" opacity="${bl}"/>
+    ${sk.muzzleBack ? sk.front : ""}
     ${eye(23, v.openL)}${eye(41, v.openR)}
     <path d="M16 ${f(yOut)}L28 ${f(yIn)}M36 ${f(yIn)}L48 ${f(yOut)}" class="ln" stroke-width="2.8"/>
+    ${sk.muzzleBack ? "" : sk.front}
     <path d="M${f(32 - hw)} ${f(cy)}Q32 ${f(up)} ${f(32 + hw)} ${f(cy)}Q32 ${f(low)} ${f(32 - hw)} ${f(cy)}Z" class="ln${v.jaw > .1 ? " open" : ""}"/>
-    ${v.jaw > .5 ? `<ellipse cx="32" cy="${f((cy + low) / 2 - 1.5)}" rx="4" ry="2.5" class="tongue"/>` : ""}</g>${fx}`;
+    ${v.jaw > .5 ? `<ellipse cx="32" cy="${f((cy + low) / 2 - 1.5)}" rx="4" ry="2.5" class="tongue"/>` : ""}</g></g>${fx}`;
 }
 function drawAvatar(v){ $("avatar").innerHTML = avatarInner(v); }
+// without the camera the character still lives: it breathes, blinks and reacts to what happens in the game
+const IDLE = { ev: null, until: 0, blinkAt: 0 };
+function avatarEvent(v, ms){ IDLE.ev = v; IDLE.until = performance.now() + ms; }
+setInterval(() => {
+  if (CAM.on) return;
+  const now = performance.now();
+  if (now > IDLE.blinkAt + 160) IDLE.blinkAt = now + 2500 + Math.random() * 3000;
+  const v = { ...REST, hy: Math.sin(now / 700) * .35, ...(now < IDLE.until ? IDLE.ev : {}) };
+  if (now >= IDLE.blinkAt && now < IDLE.blinkAt + 160 && !(now < IDLE.until && IDLE.ev.openL !== undefined)){ v.openL = v.openR = .05; }
+  drawAvatar(v);
+}, 80);
 function moodOf(v){
   const open = (v.openL + v.openR) / 2;
   if (v.jaw > .35 && (open > 1.1 || v.inner > .35)) return "びっくり";
+  if (Math.min(v.openL, v.openR) < .3 && Math.max(v.openL, v.openR) > .6) return "ウインク";
   if (v.smile > .5) return "にっこり";
   if (v.smile > .22) return "にやり";
+  if (v.puff > .35) return "ぷくー";
+  if (v.pucker > .5) return "チュー";
+  if (v.down > .45 && v.smile < .15) return "ぷんぷん";
   if (open < .25) return "目をつむった";
   if (v.inner > .35 || v.frown > .3) return "ドキドキ";
   if (Math.abs(v.gx) > .55) return "目が泳いでる";
@@ -706,14 +758,16 @@ function readFace(r, vid){
   };
   const gImg = (gaze(33, 133) + gaze(362, 263)) / 2;
   const avg = (a, c) => ((b[a] || 0) + (b[c] || 0)) / 2;
-  const e1 = P(33), e2 = P(263);
+  const e1 = P(33), e2 = P(263), nose = P(1), mid = { x: (e1.x + e2.x) / 2, y: (e1.y + e2.y) / 2 }, ed = dist(e1, e2) || 1;
   return { openL: openImgR, openR: openImgL, gx: Math.max(-1, Math.min(1, -gImg * 2.2)),
     gy: avg("eyeLookDownLeft", "eyeLookDownRight") - avg("eyeLookUpLeft", "eyeLookUpRight"),
     inner: b.browInnerUp || 0, down: avg("browDownLeft", "browDownRight"), outer: avg("browOuterUpLeft", "browOuterUpRight"),
     smile: avg("mouthSmileLeft", "mouthSmileRight"), frown: avg("mouthFrownLeft", "mouthFrownRight"),
-    jaw: b.jawOpen || 0, pucker: b.mouthPucker || 0, roll: -Math.atan2(e2.y - e1.y, e2.x - e1.x) };
+    jaw: b.jawOpen || 0, pucker: b.mouthPucker || 0, roll: -Math.atan2(e2.y - e1.y, e2.x - e1.x),
+    yaw: -(nose.x - mid.x) / ed, pitch: (nose.y - mid.y) / ed, hx: -(mid.x / W - .5) * 2, hy: (mid.y / H - .5) * 2,
+    puff: b.cheekPuff || 0, squint: avg("eyeSquintLeft", "eyeSquintRight") };
 }
-const COMMENT = { "にっこり": "いま笑った？", "にやり": "口元がゆるんだね", "ドキドキ": "あれ、困ってる？", "目が泳いでる": "目が泳いでるよ〜", "びっくり": "びくっとしたね", "目をつむった": "見ないふり？" };
+const COMMENT = { "にっこり": "いま笑った？", "にやり": "口元がゆるんだね", "ドキドキ": "あれ、困ってる？", "目が泳いでる": "目が泳いでるよ〜", "びっくり": "びくっとしたね", "目をつむった": "見ないふり？", "ウインク": "ウインクでごまかす気？", "ぷくー": "ほっぺふくらんでるよ", "チュー": "…なにその口", "ぷんぷん": "怒ってる？" };
 function sampleFace(v){
   const f = [v.smile, v.jaw, v.inner, (v.openL + v.openR) / 2, v.gx * .5, v.down, v.frown];
   if (!CAM.base) CAM.base = f.slice();
@@ -846,6 +900,8 @@ function applyCamMode(){
 $("camBtn").addEventListener("click", () => CAM.on ? stopCam() : startCam());
 $("camMode").addEventListener("change", applyCamMode);
 $("amp").value = AMP.v;
+$("skin").value = SKIN.id;
+$("skin").addEventListener("change", e => { SKIN.id = e.target.value; try { localStorage.setItem("lasttwo-skin", SKIN.id); } catch (x) {} if (CAM.on && CAM.v) drawAvatar(exaggerate(CAM.v)); });
 $("amp").addEventListener("input", e => { AMP.v = +e.target.value; try { localStorage.setItem("lasttwo-amp", AMP.v); } catch (x) {} });
 drawAvatar(REST);
 
