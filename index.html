@@ -45,7 +45,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .table.shake{animation:shake .45s}
 @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
 .who{display:flex;gap:10px;align-items:center;justify-content:center}
-.face{width:64px;height:64px;flex:none}
+.face{width:84px;height:84px;flex:none}
 .face svg{width:100%;height:100%;display:block}
 .face .head{stroke:var(--rail);stroke-width:2}
 .face .dot{fill:var(--cardInk)}
@@ -120,9 +120,11 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .tools button{flex:0 1 auto}
 .hint{margin:0;font-size:.82rem;color:var(--muted);text-align:center;min-height:1.4em}
 .meseat{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
-.myface{width:88px;height:88px;flex:none;border-radius:50%;overflow:hidden;background:var(--rail);border:2px solid var(--brassDim)}
+.myface{position:relative;width:88px;height:88px;flex:none;border-radius:50%;overflow:hidden;background:var(--rail);border:2px solid var(--brassDim)}
 .myface svg,.myface video{width:100%;height:100%;display:block}
 .myface video{object-fit:cover;transform:scaleX(-1)}
+/* the camera video stays on screen under the character, because phones stop drawing a hidden video */
+.myface svg{position:absolute;inset:0;z-index:1;background:var(--rail)}
 .av .head{fill:var(--skinMe);stroke:var(--rail);stroke-width:2}
 .av .hair{fill:var(--hairMe)}
 .av .blush{fill:var(--blush)}
@@ -169,7 +171,10 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .invite code{display:block;overflow-wrap:anywhere;background:var(--felt);border-radius:8px;padding:6px 10px;font-size:.85rem;user-select:all}
 .invite b{font-family:var(--display);font-weight:400;font-size:1.4rem;letter-spacing:.15em;color:var(--brass)}
 .lnote{margin:0;font-size:.85rem;color:var(--muted)}
-.face.av{width:96px;height:96px}
+/* with a friend, their face is the point of the game, so it gets the stage */
+.face.av{width:min(56vw,220px);height:min(56vw,220px)}
+.who:has(.face.av){flex-direction:column;gap:6px}
+.who:has(.face.av) .namebox{justify-items:center;text-align:center}
 .face video{width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scaleX(-1)}
 .coins{font-family:var(--display);font-weight:400;color:var(--brass);font-size:.95rem}
 .shop{background:var(--felt);border:2px solid var(--brass);border-radius:18px;padding:16px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow-y:auto;display:grid;gap:12px}
@@ -292,7 +297,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
     </div>
     <p class="hint" id="hint"></p>
     <div class="meseat">
-      <div class="myface av" aria-hidden="true"><svg id="avatar" viewBox="0 0 64 64"></svg><video id="cam" playsinline muted hidden></video></div>
+      <div class="myface av" aria-hidden="true"><svg id="avatar" viewBox="0 0 64 64"></svg><video id="cam" playsinline muted autoplay hidden></video></div>
       <div class="camctl">
         <b>あなた<span id="mood"></span></b>
         <div class="bubble mine" id="myBubble" hidden></div>
@@ -998,7 +1003,7 @@ async function startCam(){
     camNote(e && e.name === "NotAllowedError" ? "カメラが許可されませんでした。ここでは使えないか、ブラウザで「許可」が必要です。" : "この画面ではカメラが使えません。");
     $("camHelp").hidden = false; return;
   }
-  const vid = $("cam"); vid.srcObject = CAM.stream; await vid.play().catch(() => {});
+  const vid = $("cam"); vid.srcObject = CAM.stream; vid.hidden = false; await vid.play().catch(() => {});
   try {
     if (!CAM.lm){ camNote("表情を読み取る仕組みを読み込み中…（はじめは数秒かかります）"); CAM.lm = await makeLandmarker(); }
   } catch (e) {
@@ -1012,14 +1017,15 @@ async function startCam(){
 function stopCam(){
   CAM.on = false;
   if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
-  CAM.stream = null; $("cam").srcObject = null; $("cam").hidden = true; $("avatar").hidden = false;
+  CAM.stream = null; $("cam").srcObject = null; $("cam").hidden = true; $("avatar").style.display = "";
   $("camBtn").textContent = "カメラで表情を映す"; $("camBtn").disabled = false; $("camMode").hidden = true; $("ampBox").hidden = true; $("mood").textContent = "";
   drawAvatar(REST); camNote("あなたの表情を読み取って、キャラクターが同じ顔をします。");
   ON.called = false; onVideo();
 }
 function applyCamMode(){
   const video = CAM.on && $("camMode").value === "video";
-  $("cam").hidden = !video; $("avatar").hidden = video;
+  $("avatar").style.display = video ? "none" : "";
+  if (CAM.on){ $("cam").hidden = false; $("cam").play().catch(() => {}); }
   onVideo();
 }
 $("camBtn").addEventListener("click", () => CAM.on ? stopCam() : startCam());
