@@ -45,7 +45,9 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .table.shake{animation:shake .45s}
 @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
 .who{display:flex;gap:10px;align-items:center;justify-content:center}
-.face{width:84px;height:84px;flex:none}
+.face{width:84px;height:84px;flex:none;transition:width .35s ease,height .35s ease}
+/* your turn to pick: the face you have to read grows, so the turn change is impossible to miss */
+.table.mypick .face{width:140px;height:140px}
 .face svg{width:100%;height:100%;display:block}
 .face .head{stroke:var(--rail);stroke-width:2}
 .face .dot{fill:var(--cardInk)}
@@ -174,7 +176,8 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .invite b{font-family:var(--display);font-weight:400;font-size:1.4rem;letter-spacing:.15em;color:var(--brass)}
 .lnote{margin:0;font-size:.85rem;color:var(--muted)}
 /* with a friend, their face is the point of the game, so it gets the stage */
-.face.av{width:min(56vw,220px);height:min(56vw,220px)}
+.face.av{width:min(44vw,170px);height:min(44vw,170px)}
+.table.mypick .face.av{width:min(76vw,300px);height:min(76vw,300px)}
 .who:has(.face.av){flex-direction:column;gap:6px}
 .who:has(.face.av) .namebox{justify-items:center;text-align:center}
 .face video{width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scaleX(-1)}
@@ -238,7 +241,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .talk button{font-size:.85rem;padding:4px 12px;border-style:dashed}
 .bubble.mine{background:var(--sky);max-width:240px}
 @media (max-width:420px){h1{font-size:1.6rem}.pile{min-width:70px}}
-@media (prefers-reduced-motion:reduce){.card,.card.new,.hand.mixing .card,.table.shake,.pop,.face.bump,.lastpair .card.in{animation:none;transition:none}}
+@media (prefers-reduced-motion:reduce){.face{transition:none}.card,.card.new,.hand.mixing .card,.table.shake,.pop,.face.bump,.lastpair .card.in{animation:none;transition:none}}
 </style>
 
 <div class="wrap">
@@ -446,6 +449,9 @@ function render(){
   const ac = S.aimYou >= 0 && S.you[S.aimYou], key = ac && ac.n === 0 ? ac.id + ":" + S.aimYou : "";
   if (key && key !== lastTouch) babaTouch();
   lastTouch = key;
+  const mypick = S.phase === "pick", t = $("table");
+  if (mypick && !t.classList.contains("mypick")) popAt("あなたの番！");
+  t.classList.toggle("mypick", mypick);
   const youOn = ["pick", "guard", "cpuwait", "oguard"].includes(S.phase);
   $("youHand").innerHTML = S.you.map((c, i) => cardHTML(c, i, "you", youOn)).join("");
   $("cpuHand").dataset.back = ON.active ? (ON.oppBack || "classic") : INV.equip.back;
