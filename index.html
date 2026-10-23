@@ -90,6 +90,8 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .cpu .card.stick{transform:translateY(18px)}
 .card.sel{box-shadow:0 0 0 3px var(--sky)}
 .card.aim{box-shadow:0 0 0 3px var(--brass)}
+.you .card.baba.aim{box-shadow:0 0 0 3px var(--anger),0 0 14px var(--anger);animation:tremble .35s}
+@keyframes tremble{20%{translate:-2px 0}40%{translate:2px 0}60%{translate:-2px 0}80%{translate:1px 0}}
 .card.aim::after{position:absolute;left:50%;transform:translateX(-50%);color:var(--brass);font-size:14px;line-height:1}
 .you .card.aim::after{content:"▼";top:-18px}
 .cpu .card.aim::after{content:"▲";bottom:-18px}
@@ -324,6 +326,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
       <li><b>引くとき</b>：相手のカードを1回タップすると指さします。相手の<b>顔色</b>が変わるので、それを読んで、もう一度タップで引きます。顔色は正直とは限りません。</li>
       <li><b>引かれるとき</b>：自分のカードを2枚タップすると<b>入れかえ</b>、同じカードを2回タップすると1枚だけ<b>つき出せ</b>ます。「まぜる」でシャッフルも。引いたカードは右はしに入るので、そのままだと場所がバレます。</li>
       <li>相手が強くなるほど、顔色でウソをつき、あなたのクセ（つき出し方やババを置く場所）を覚えてきます。</li>
+      <li><b>ドキッ</b>：相手の指があなたのババの上に来ると、心臓の音がして、スマホがブルッとふるえます（ふるえるのはAndroidのみ。「音 オフ」で止まります）。</li>
       <li><b>話しかける</b>：相手の指があなたのカードの上にあるとき「それ、ババだよ」「それはババじゃないよ」と言えます。ウソでもOK。自分が引くときは「それ、ババ？」と聞けます（相手もウソをつきます）。</li>
       <li><b>カメラ</b>（パソコンのChromeで開いたとき）：「カメラで表情を映す」を押すと、あなたの表情をキャラクターがまねします。相手はその表情も読んでくるので、ポーカーフェイスが大事になります。</li>
     </ol>
@@ -359,6 +362,7 @@ function tone(f, d = .08, type = "sine", v = .12, delay = 0){
 const SFX = {
   tap: () => tone(660, .05, "triangle", .07),
   aim: () => tone(880, .03, "sine", .04),
+  beat: () => { tone(70, .12, "sine", .22); tone(58, .14, "sine", .2, .16); },
   pair: () => { tone(523, .1, "triangle"); tone(784, .16, "triangle", .12, .08); },
   baba: () => { tone(196, .35, "sawtooth", .09); tone(131, .45, "sawtooth", .08, .14); },
   give: () => [392, 523, 784].forEach((f, i) => tone(f, .14, "square", .05, i * .09)),
@@ -431,7 +435,17 @@ function cardHTML(c, i, side, enabled){
   const inner = !show ? "" : c.n ? `<span class="cn">${c.n}</span>` : `<span class="bb">ババ</span>`;
   return `<button class="${cls.join(" ")}" data-i="${i}" data-n="${c.n || ""}" ${enabled ? "" : "disabled"} aria-label="${lab}">${inner}</button>`;
 }
+// when the other side's finger lands on your ババ: a heartbeat in your hand (vibration where the phone supports it)
+let lastTouch = "";
+function babaTouch(){
+  if (!soundOn) return;
+  SFX.beat();
+  try { navigator.vibrate && navigator.vibrate([35, 60, 35]); } catch (e) {}
+}
 function render(){
+  const ac = S.aimYou >= 0 && S.you[S.aimYou], key = ac && ac.n === 0 ? ac.id + ":" + S.aimYou : "";
+  if (key && key !== lastTouch) babaTouch();
+  lastTouch = key;
   const youOn = ["pick", "guard", "cpuwait", "oguard"].includes(S.phase);
   $("youHand").innerHTML = S.you.map((c, i) => cardHTML(c, i, "you", youOn)).join("");
   $("cpuHand").dataset.back = ON.active ? (ON.oppBack || "classic") : INV.equip.back;
