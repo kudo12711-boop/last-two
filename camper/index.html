@@ -1671,7 +1671,7 @@ function showSettings() {
   <button class="big ghost" data-close>とじる</button>`);
   document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { tick(); st.speed = +b.dataset.speed; save(); document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b)); updateHud(); });
   document.querySelectorAll('[data-frame]').forEach(b => b.onclick = () => { setFrame(b.dataset.frame); document.querySelectorAll('[data-frame]').forEach(x => x.classList.toggle('on', x === b)); });
-  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = 'もう一度押すとリセットします'; return; } localStorage.removeItem(KEY); location.reload(); };
+  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = 'もう一度押すとリセットします'; return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } location.reload(); };
 }
 function showBottle() {
   // 次の港（または次の町）についての手紙
