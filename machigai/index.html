@@ -92,9 +92,14 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 #help .panel{text-align:left;font-size:15px;line-height:1.7;max-height:calc(100dvh - 32px);overflow:auto}
 #help h3{margin:16px 0 4px;font-size:18px}
 #help .note{font-size:13px;opacity:.75;line-height:1.6;margin:4px 0 8px}
-.recRow{display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px dashed var(--line)}
-.recLbl{flex:1;font-size:12px;line-height:1.3;min-width:0}
-.recLbl b{display:block;font-size:15px}
+.catBox{padding:10px 0;border-top:1px dashed var(--line)}
+.catHead{display:flex;justify-content:space-between;align-items:baseline}
+.catHead b{font-size:16px}.catHead span{font-size:12px;opacity:.6}
+.catEx{font-size:12px;opacity:.7;margin:2px 0 6px}
+.takes{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.take{display:inline-flex;gap:2px}
+.take .del{padding:8px 6px}
+.rb.rec{background:#ffd0d8}
 .rb{padding:8px 10px;border-radius:12px;background:var(--soft);font-weight:700;font-size:14px;white-space:nowrap}
 .rb.on{background:#ff3b5c;color:#fff;animation:blink 1s infinite}
 @keyframes blink{50%{opacity:.6}}
@@ -160,7 +165,7 @@ input[type=file]{display:none}
   ・見つからないときは 💡 で場所がふんわり光ります。<br>
   ・同じ写真でも「つぎの もんだい」で違う間違いになります。
   <h3>🎙️ ほめる こえ</h3>
-  <div class="note">おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。録音はこの端末の中だけに保存されます。録音していない言葉は、下で選んだ端末の声が話します。</div>
+  <div class="note">おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。同じ場面に いくつも録音すると、毎回ランダムに えらばれます。録音はこの端末の中だけに保存されます。ひとつでも録音すると、機械の声は使わなくなります（録音していない「ぜんぶ」「ヒント」は「あたり」の録音でほめます）。録音がないときは、下で選んだ端末の声が話します。</div>
   <div id="recList"></div>
   <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest">▶ ためす</button></div>
   <div class="note">端末の声がロボットっぽいときは、iPhoneなら「設定 → アクセシビリティ → 読み上げコンテンツ → 声 → 日本語」で「Kyoko（拡張）」や「O-ren（拡張）」をダウンロードすると、ずっと自然になります。</div>
@@ -202,12 +207,16 @@ const sfx = {
   tap() { tone(880, 0, .06, 'sine', .08); }
 };
 /* こえ：①おうちの人の録音 → ②端末の いちばん自然な声 の順に使う */
-const VOICE_SLOTS = [
-  { id: 'ok1', cat: 'ok', text: 'あった！' }, { id: 'ok2', cat: 'ok', text: 'みーつけた！' }, { id: 'ok3', cat: 'ok', text: 'すごいね！' },
-  { id: 'miss1', cat: 'miss', text: 'あれれ？' }, { id: 'miss2', cat: 'miss', text: 'そこじゃないかも' },
-  { id: 'hint1', cat: 'hint', text: 'このへん みてごらん' },
-  { id: 'clear1', cat: 'clear', text: 'ぜんぶ みつけたね！ すごーい！' }
+const VOICE_CATS = [
+  { cat: 'ok', label: 'あたり', ex: ['あった！', 'みーつけた！', 'すごいね！', 'やったね！'] },
+  { cat: 'miss', label: 'はずれ', ex: ['あれれ？', 'そこじゃないかも', 'おしい！'] },
+  { cat: 'hint', label: 'ヒント', ex: ['このへん みてごらん', 'よーく みてね'] },
+  { cat: 'clear', label: 'ぜんぶ みつけた', ex: ['ぜんぶ みつけたね！ すごーい！', 'やったー！ てんさい！'] }
 ];
+const MAX_TAKES = 8;
+// 録音のキーは「ok:1700000000000」の形（前のバージョンの「ok1」も そのまま使える）
+const catOf = k => String(k).split(':')[0].replace(/\d+$/, '');
+const takesOf = cat => Object.keys(recs).filter(k => catOf(k) === cat).sort((x, y) => (x.split(':')[1] || 0) - (y.split(':')[1] || 0));
 const TTS_TEXT = {
   ok: ['あった！', 'みーつけた！', 'すごいね！', 'やったね！', 'あたり！'],
   miss: ['あれれ？', 'そこじゃないかも', 'うーん、ちがうかな'],
@@ -250,11 +259,22 @@ let recAudio = null;
 function playBlob(b) {
   try { if (recAudio) { recAudio.pause(); URL.revokeObjectURL(recAudio.src); } recAudio = new Audio(URL.createObjectURL(b)); recAudio.play().catch(() => {}); } catch (e) {}
 }
+const lastTake = {};
+function pickTake(cat, list) { // おなじ声が つづかないように
+  const c = list.length > 1 ? list.filter(k => k !== lastTake[cat]) : list;
+  return (lastTake[cat] = pick(c));
+}
 let voiceMode = store.get('machigai-voicemode', 'auto'); // auto / off
 function speak(cat) {
   if (!soundOn || voiceMode === 'off') return;
-  const mine = VOICE_SLOTS.filter(v => v.cat === cat && recs[v.id]);
-  if (mine.length) return playBlob(recs[pick(mine).id]);
+  const mine = takesOf(cat);
+  if (mine.length) return playBlob(recs[pickTake(cat, mine)]);
+  // ひとつでも録音があれば、機械の声は まぜない（ぜんぶ・ヒントは「あたり」の録音でかわりにほめる）
+  if (Object.keys(recs).length) {
+    const alt = takesOf('ok');
+    if ((cat === 'clear' || cat === 'hint') && alt.length) playBlob(recs[pickTake('ok', alt)]);
+    return;
+  }
   tts(pick(TTS_TEXT[cat]));
 }
 
@@ -269,8 +289,9 @@ const vdb = {
 vdb.all().then(o => { Object.assign(recs, o); renderRecs(); }).catch(() => {});
 
 let recording = null;
-async function toggleRec(id) {
-  if (recording) { const same = recording.id === id; recording.stop(); if (same) return; }
+async function toggleRec(cat) {
+  if (recording) { const same = recording.cat === cat; recording.stop(); if (same) return; }
+  if (takesOf(cat).length >= MAX_TAKES) { alert(`ひとつの場面に ${MAX_TAKES}こまで 録音できます。いらない録音を 🗑 でけしてね。`); return; }
   if (!navigator.mediaDevices || !window.MediaRecorder) { alert('このブラウザでは録音できません。SafariかChromeで開いてください。'); return; }
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
@@ -280,21 +301,21 @@ async function toggleRec(id) {
   mr.onstop = async () => {
     stream.getTracks().forEach(t => t.stop()); clearTimeout(timer); recording = null;
     const blob = new Blob(chunks, { type: mr.mimeType || 'audio/mp4' });
-    if (blob.size > 800) { recs[id] = blob; try { await vdb.put(id, blob); } catch (e) {} playBlob(blob); }
+    if (blob.size > 800) { const k = cat + ':' + Date.now(); recs[k] = blob; try { await vdb.put(k, blob); } catch (e) {} playBlob(blob); }
     renderRecs();
   };
-  const timer = setTimeout(() => mr.state !== 'inactive' && mr.stop(), 4000);
-  recording = { id, stop: () => mr.state !== 'inactive' && mr.stop() };
+  const timer = setTimeout(() => mr.state !== 'inactive' && mr.stop(), 5000);
+  recording = { cat, stop: () => mr.state !== 'inactive' && mr.stop() };
   mr.start(); renderRecs();
 }
 function renderRecs() {
   const box = $('#recList'); if (!box) return;
-  box.innerHTML = VOICE_SLOTS.map(v => {
-    const isRec = recording && recording.id === v.id, has = !!recs[v.id];
-    return `<div class="recRow"><span class="recLbl">${{ ok: 'あたり', miss: 'はずれ', hint: 'ヒント', clear: 'ぜんぶ' }[v.cat]}<b>「${v.text}」</b></span>
-      <button class="rb ${isRec ? 'on' : ''}" data-rec="${v.id}">${isRec ? '■ とめる' : '● ろくおん'}</button>
-      <button class="rb" data-play="${v.id}" ${has ? '' : 'disabled'}>▶</button>
-      <button class="rb" data-del="${v.id}" ${has ? '' : 'disabled'}>🗑</button></div>`;
+  box.innerHTML = VOICE_CATS.map(c => {
+    const isRec = recording && recording.cat === c.cat, takes = takesOf(c.cat);
+    return `<div class="catBox"><div class="catHead"><b>${c.label}</b><span>${takes.length}こ</span></div>
+      <div class="catEx">れい：${c.ex.map(t => `「${t}」`).join('')}</div>
+      <div class="takes">${takes.map((k, i) => `<span class="take"><button class="rb" data-play="${k}">▶ ${i + 1}</button><button class="rb del" data-del="${k}" aria-label="けす">🗑</button></span>`).join('')}
+      <button class="rb rec ${isRec ? 'on' : ''}" data-rec="${c.cat}">${isRec ? '■ とめる' : takes.length ? '＋ ろくおん' : '● ろくおん'}</button></div></div>`;
   }).join('');
 }
 document.addEventListener('click', async e => {
