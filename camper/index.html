@@ -1,0 +1,1677 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#6b4a33">
+<title>キャンピングカー世界一周</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚐%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+/* キャンピングカーの車内：クリーム色の壁と木の窓わく。船の上では白い船の窓わくに変わる */
+:root{
+  --wall:#f4ead9; --wall2:#eadcc4; --wood:#8a5b3c; --wood2:#6b4a33; --ink:#3a2c22; --ink2:#7a6655;
+  --accent:#e8743b; --accent2:#fff1e6; --sea:#2f7fb0; --card:#fffaf2; --line:#e2d3bc;
+  --font:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--wall);color:var(--ink);font-family:var(--font);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+  background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.018) 0 2px,transparent 2px 46px)}
+button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+#app{height:100%;display:grid;grid-template-rows:auto 1fr auto;
+  padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+header{display:flex;align-items:flex-end;gap:10px;padding:10px 16px 4px}
+header .l{flex:1;min-width:0}
+#place{font-size:clamp(18px,5vw,26px);font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#addr{font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+header .r{text-align:right;white-space:nowrap}
+#clock{font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
+#wx{font-size:clamp(17px,4.6vw,22px);font-weight:900}
+#wx small{display:block;font-size:12px;font-weight:700;color:var(--ink2)}
+/* 窓 */
+#winwrap{position:relative;min-height:0;padding:6px 12px 22px}
+#win{position:relative;height:100%;border-radius:28px;overflow:hidden;background:#89b;
+  box-shadow:0 0 0 10px var(--wood),0 0 0 13px var(--wood2),0 10px 26px 12px rgba(60,40,20,.35);
+  margin:10px}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#win::after{content:"";position:absolute;inset:0;border-radius:28px;box-shadow:inset 0 0 0 3px rgba(0,0,0,.25),inset 0 8px 18px rgba(0,0,0,.25);pointer-events:none}
+.curtain{position:absolute;top:0;bottom:0;width:11%;max-width:70px;pointer-events:none;z-index:2;
+  background:repeating-linear-gradient(90deg,#c9543e 0 8px,#b2412f 8px 12px,#d8664c 12px 20px);
+  box-shadow:inset -6px 0 10px rgba(0,0,0,.25);clip-path:polygon(0 0,100% 0,60% 45%,85% 52%,100% 100%,0 100%)}
+.curtain.l{left:0}
+.curtain.r{right:0;transform:scaleX(-1)}
+.curtain::after{content:"";position:absolute;left:0;right:20%;top:46%;height:9px;background:#e8c27a;border-radius:4px}
+#sill{position:absolute;left:28px;right:28px;bottom:-4px;height:18px;background:linear-gradient(#9a6a48,#7a5236);border-radius:6px;z-index:3;box-shadow:0 4px 8px rgba(0,0,0,.25)}
+#sill span{position:absolute;bottom:10px;font-size:26px;line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+#win.sea{box-shadow:0 0 0 10px #f2f4f5,0 0 0 13px #9fb3bf,0 10px 26px 12px rgba(30,60,90,.3)}
+#win.sea .curtain{display:none}
+#winwrap.sea #sill{display:none}
+#toasts{position:absolute;left:0;right:0;top:12px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:5;pointer-events:none;padding:0 14%}
+.toast{background:rgba(255,250,242,.94);color:var(--ink);border-radius:16px;padding:9px 14px;font-weight:700;font-size:15px;box-shadow:0 6px 18px rgba(0,0,0,.25);text-align:center;max-width:420px;animation:tin .4s ease both}
+.toast small{display:block;font-weight:500;font-size:12px;color:var(--ink2);margin-top:2px}
+.toast.out{animation:tout .5s ease both}
+@keyframes tin{from{opacity:0;transform:translateY(-10px)}}
+@keyframes tout{to{opacity:0;transform:translateY(-10px)}}
+/* 下の操作パネル */
+#panel{padding:0 14px 12px;display:flex;flex-direction:column;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px 14px;box-shadow:0 2px 0 rgba(90,60,30,.08)}
+.route{display:flex;align-items:center;gap:8px;font-weight:900;font-size:14px}
+.route span{white-space:nowrap;max-width:30%;overflow:hidden;text-overflow:ellipsis}
+#bar{position:relative;flex:1;height:8px;background:var(--wall2);border-radius:99px}
+#bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:99px}
+#bar b{position:absolute;top:50%;transform:translate(-50%,-58%) scaleX(-1);font-size:20px;line-height:1}
+#next{font-size:14px;margin-top:6px;color:var(--ink2)}
+#next b{color:var(--ink);font-size:16px}
+#nextlm{font-size:13px;color:var(--ink2);margin-top:3px}
+#nextlm b{color:var(--ink)}
+#fork{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:9px 14px;font-size:13px;text-align:left}
+#fork b{font-size:14px;white-space:nowrap}
+#fork.todo{background:var(--accent);color:#fff;border-color:var(--accent);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.015)}}
+.stats{display:flex;gap:6px;justify-content:space-between;font-size:12px;color:var(--ink2)}
+.stats b{display:block;color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
+.stats>div{flex:1;text-align:center}
+nav{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+nav button{border:0;background:var(--wood2);color:#fff7ea;border-radius:16px;padding:9px 4px 8px;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 3px 0 #4b3423}
+nav button span{font-size:22px;line-height:1}
+nav button:active{transform:translateY(2px);box-shadow:0 1px 0 #4b3423}
+/* 横向き（iPad・スマホ横）では、パネルを右側に */
+@media (min-aspect-ratio:5/4){
+  #app{grid-template-columns:1fr minmax(280px,30%);grid-template-rows:auto 1fr}
+  header{grid-column:1/3}
+  #winwrap{grid-row:2}
+  #panel{grid-row:2;grid-column:2;overflow:auto;padding:16px 16px 16px 0;justify-content:center}
+}
+@media (min-aspect-ratio:5/4) and (max-height:500px){
+  header{padding:6px 16px 0}#addr{display:none}
+  #panel{gap:6px;padding-top:6px}.stats{display:none}#nextlm{display:none}
+}
+/* ダイアログ */
+.modal{position:fixed;inset:0;background:rgba(40,28,18,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+#sheet{background:var(--card);width:100%;max-width:640px;max-height:88%;overflow:auto;border-radius:24px 24px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px));animation:up .25s ease}
+@keyframes up{from{transform:translateY(30px);opacity:.4}}
+@media (min-width:700px) and (min-height:600px){.modal{align-items:center}#sheet{border-radius:24px}}
+#sheet h2{margin:0 0 10px;font-size:22px}
+#sheet h3{margin:16px 0 8px;font-size:16px}
+#sheet p{line-height:1.7;margin:8px 0}
+.note{color:var(--ink2);font-size:13px}
+.dots{padding-left:20px;line-height:1.75;margin:8px 0}
+.big{display:block;width:100%;margin-top:14px;border:0;background:var(--accent);color:#fff;border-radius:16px;padding:14px;font-size:17px;font-weight:900;box-shadow:0 3px 0 #b8541f}
+.big.ghost{background:var(--wall2);color:var(--ink);box-shadow:none}
+.big.danger{color:#b23a2a}
+.big-num{font-size:16px}.big-num b{font-size:22px;color:var(--accent)}
+.speeds{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.speeds button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:10px 2px;display:flex;flex-direction:column;align-items:center;gap:1px}
+.speeds b{font-size:15px}.speeds span{font-size:12px}.speeds small{font-size:10px;color:var(--ink2)}
+.speeds button.on{border-color:var(--accent);background:var(--accent2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--wall);border-radius:99px;padding:5px 10px;font-size:13px;font-weight:700}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+@media (max-width:420px){.opts{grid-template-columns:1fr}}
+.opt{border:2px solid var(--line);background:#fff;border-radius:18px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.opt.on{border-color:var(--accent);background:var(--accent2)}
+.opt .oi{font-size:28px;letter-spacing:2px}
+.opt b{font-size:18px}
+.opt p{font-size:13px;margin:0!important;line-height:1.55!important}
+.meta{font-size:12px;color:var(--ink2)}.meta.wx{color:var(--ink);font-weight:700;font-size:13px}
+.tag{align-self:flex-start;background:#ffe2a8;border-radius:99px;padding:3px 9px;font-size:12px;font-weight:700}
+.tag.soft{background:var(--wall)}.tag.pick{background:var(--accent);color:#fff}
+.maptabs,.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.maptabs button,.tabs button{border:0;background:var(--wall);border-radius:99px;padding:7px 14px;font-weight:700;font-size:14px}
+.maptabs button.on,.tabs button.on{background:var(--wood2);color:#fff}
+svg.map{width:100%;aspect-ratio:2.4/1;border-radius:14px;display:block;background:#bfe0ef}
+.map .sea{fill:#bfe0ef}.map .land{fill:#f3ead6;stroke:#d8c9a8;stroke-width:.4;vector-effect:non-scaling-stroke}
+.map path[class^=r-]{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.map .r-all{stroke:#b9a88a;stroke-width:1;stroke-dasharray:2 3;opacity:.6}
+.map .r-alt{stroke:#9a8e7a;stroke-width:1.5;stroke-dasharray:3 3}
+.map .r-ahead{stroke:#e8743b;stroke-width:2;stroke-dasharray:5 3;opacity:.8}
+.map .r-done{stroke:#d2491c;stroke-width:3}
+.map circle.v{fill:#d2491c}.map circle.u{fill:#fff;stroke:#a89a80;stroke-width:.3;vector-effect:non-scaling-stroke}
+.map text{font-size:2px;fill:#3a2c22;font-family:var(--font);font-weight:700}
+.map .me{fill:#2f7fb0;stroke:#fff;stroke-width:2;vector-effect:non-scaling-stroke}
+.map .me2{fill:none;stroke:#2f7fb0;stroke-width:2;vector-effect:non-scaling-stroke;animation:ping 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ping{to{transform:scale(3);opacity:0}}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:8px}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid #d2491c;vertical-align:middle;margin-right:4px}
+.legend .l-ahead{border-top:2px dashed #e8743b}.legend .l-alt{border-top:2px dashed #9a8e7a}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.grid .card{display:flex;flex-direction:column;gap:2px;padding:10px}
+.grid .em{font-size:30px}.grid b{font-size:14px}.grid small{font-size:11px;color:var(--ink2);line-height:1.4}
+.grid .card.no{opacity:.5;align-items:center;justify-content:center;min-height:90px}
+.grid small.m{color:var(--accent)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 12px;font-size:14px}
+.list div{padding:6px 0;border-bottom:1px dashed var(--line)}.list small{display:block;color:var(--ink2);font-size:11px;padding-left:26px}
+.list .no{color:var(--ink2)}
+.stamps{display:flex;flex-wrap:wrap;gap:6px}
+.stamp{border:2px solid #d2491c;color:#b23a1a;border-radius:10px;padding:5px 9px;font-weight:900;font-size:13px;transform:rotate(-2deg);background:#fff;cursor:pointer}
+.stamp:nth-child(2n){transform:rotate(2deg)}
+.stamp small{font-size:10px;margin-left:3px}
+.stamp.no{border-color:var(--line);color:var(--line);cursor:default}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv div{background:var(--wall);border-radius:14px;padding:10px 12px}.kv span{display:block;font-size:12px;color:var(--ink2)}.kv b{font-size:20px}
+.letter{background:#fbf3df;border-radius:16px;padding:18px;text-align:center;border:1px dashed #c8a878}
+.letter .em{font-size:40px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="l"><div id="place">　</div><div id="addr">　</div></div>
+    <div class="r"><div id="clock"></div><div id="wx"></div></div>
+  </header>
+  <div id="winwrap">
+    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div></div>
+    <div id="sill"><span style="left:8%">☕</span><span style="right:8%">🪴</span></div>
+  </div>
+  <section id="panel">
+    <div class="card">
+      <div class="route"><span id="from"></span><div id="bar"><i></i><b>🚐</b></div><span id="to"></span></div>
+      <div id="next"></div>
+      <div id="nextlm"></div>
+    </div>
+    <button id="fork" hidden></button>
+    <div class="stats"><div>走ったきょり<b id="total">0km</b></div><div>世界一周<b id="lap">1周目</b></div><div>速さ<b id="spd"></b></div></div>
+    <nav>
+      <button id="b-map"><span>🗺</span>地図</button>
+      <button id="b-rec"><span>📖</span>記録</button>
+      <button id="b-photo"><span>📷</span>絵はがき</button>
+      <button id="b-set"><span>⚙️</span>設定</button>
+    </nav>
+  </section>
+</div>
+<div id="modal" class="modal" hidden><div id="sheet"></div></div>
+<script>
+// ルートのデータ。各区間(leg)は「止まる町」の並び。町: [名前, 緯度, 経度, 町のまわりの景色, そこまでの道の景色, 'r'=道/'s'=船, 海域, 名所]
+const LEGS = {
+  L0: { name: '日本〜韓国〜中国', stops: [
+    ['東京',35.68,139.76,'city','city','r',0,'tokyo'],
+    ['富士山のふもと',35.31,138.93,'farm','farm','r',0,'fuji'],
+    ['名古屋',35.18,136.91,'city','forest','r',0,'jcastle'],
+    ['京都',35.01,135.77,'city','farm','r',0,'pagoda'],
+    ['大阪',34.69,135.50,'city','city','r',0,'jcastle'],
+    ['広島',34.39,132.46,'coast','coast','r',0,'torii'],
+    ['福岡',33.59,130.40,'city','coast','r'],
+    ['釜山',35.10,129.04,'city','sea','s','japan','bridge'],
+    ['ソウル',37.57,126.98,'city','mount','r',0,'seoultower'],
+    ['仁川',37.46,126.70,'city','city','r'],
+    ['天津',39.08,117.20,'city','sea','s','asia'],
+    ['北京',39.90,116.40,'city','farm','r',0,'greatwall'],
+  ]},
+  L1a: { name: 'シルクロード', desc: '砂漠とオアシス、青いタイルの町をぬけてイスタンブールへ。ラクダや気球に会えるかも。', icon: '🐫🕌🎈', key: [40.14,94.66], keyName: '敦煌', stops: [
+    ['西安',34.34,108.94,'city','farm','r',0,'pagoda'],
+    ['蘭州',36.06,103.83,'city','mount','r'],
+    ['敦煌',40.14,94.66,'desert','desert','r',0,'dunes'],
+    ['トルファン',42.95,89.19,'desert','desert','r'],
+    ['ウルムチ',43.83,87.62,'city','steppe','r'],
+    ['アルマトイ',43.24,76.89,'city','steppe','r',0,'snowpeaks'],
+    ['タシケント',41.30,69.24,'city','steppe','r'],
+    ['サマルカンド',39.65,66.96,'city','farm','r',0,'registan'],
+    ['ブハラ',39.77,64.42,'desert','desert','r'],
+    ['アシガバート',37.95,58.38,'city','desert','r'],
+    ['マシュハド',36.30,59.60,'city','desert','r'],
+    ['テヘラン',35.69,51.39,'city','desert','r',0,'snowpeaks'],
+    ['タブリーズ',38.08,46.29,'city','mount','r'],
+    ['カッパドキア',38.64,34.83,'desert','steppe','r',0,'cappadocia'],
+    ['イスタンブール',41.01,28.98,'city','farm','r',0,'mosque'],
+    ['ソフィア',42.70,23.32,'city','forest','r'],
+    ['ベオグラード',44.79,20.45,'city','farm','r'],
+    ['ブダペスト',47.50,19.04,'city','farm','r'],
+    ['ウィーン',48.21,16.37,'city','farm','r'],
+  ]},
+  L1b: { name: 'シベリアと草原', desc: 'モンゴルの大草原、世界一深いバイカル湖、どこまでも続く森をぬけてモスクワへ。', icon: '🐎🌲❄️', key: [52.29,104.30], keyName: 'イルクーツク', stops: [
+    ['エレンホト',43.65,111.98,'desert','steppe','r'],
+    ['ウランバートル',47.92,106.92,'city','desert','r',0,'ger'],
+    ['ウランウデ',51.83,107.58,'city','steppe','r'],
+    ['バイカル湖',51.52,104.15,'coast','forest','r'],
+    ['イルクーツク',52.29,104.30,'city','forest','r'],
+    ['クラスノヤルスク',56.01,92.89,'city','forest','r'],
+    ['ノヴォシビルスク',55.03,82.92,'city','forest','r'],
+    ['オムスク',54.99,73.37,'city','steppe','r'],
+    ['エカテリンブルク',56.84,60.61,'city','forest','r',0,'obelisk'],
+    ['カザン',55.79,49.12,'city','forest','r'],
+    ['モスクワ',55.76,37.62,'city','forest','r',0,'onion'],
+    ['ミンスク',53.90,27.56,'city','forest','r'],
+    ['ワルシャワ',52.23,21.01,'city','farm','r'],
+    ['クラクフ',50.06,19.94,'city','farm','r'],
+    ['プラハ',50.08,14.44,'city','farm','r',0,'hillcastle'],
+    ['ウィーン',48.21,16.37,'city','farm','r'],
+  ]},
+  L2a: { name: '地中海', desc: '水の都ベネチア、ローマのコロッセオ。そしてフェリーで海をわたってスペインへ。', icon: '🍕🏛⛴', key: [41.90,12.50], keyName: 'ローマ', stops: [
+    ['ベネチア',45.44,12.32,'coast','mount','r',0,'campanile'],
+    ['フィレンツェ',43.77,11.26,'city','farm','r',0,'duomo'],
+    ['ローマ',41.90,12.50,'city','farm','r',0,'colosseum'],
+    ['チビタベッキア',42.09,11.80,'coast','coast','r'],
+    ['バルセロナ',41.39,2.17,'city','sea','s','med','sagrada'],
+    ['サラゴサ',41.65,-0.89,'city','steppe','r'],
+    ['マドリード',40.42,-3.70,'city','steppe','r'],
+  ]},
+  L2b: { name: 'アルプスとパリ', desc: '雪のアルプスの山々を越えて、エッフェル塔の町パリへ。ぶどう畑のボルドーも。', icon: '🏔🗼🍷', key: [48.86,2.35], keyName: 'パリ', stops: [
+    ['ザルツブルク',47.81,13.04,'city','farm','r',0,'hillcastle'],
+    ['ミュンヘン',48.14,11.58,'city','mount','r'],
+    ['チューリッヒ',47.37,8.54,'city','mount','r',0,'snowpeaks'],
+    ['パリ',48.86,2.35,'city','farm','r',0,'eiffel'],
+    ['ボルドー',44.84,-0.58,'farm','farm','r'],
+    ['ビルバオ',43.26,-2.93,'city','mount','r'],
+    ['マドリード',40.42,-3.70,'city','steppe','r'],
+  ]},
+  L3: { name: 'イベリア半島', stops: [
+    ['リスボン',38.72,-9.14,'coast','steppe','r',0,'belem'],
+  ]},
+  L4a: { name: '北大西洋とアメリカ横断', desc: 'クジラの島アゾレスを通ってニューヨークへ。大平原とロッキー山脈、赤い岩の大地。', icon: '🐋🗽🏔', key: [40.71,-74.01], keyName: 'ニューヨーク', stops: [
+    ['アゾレス諸島',37.74,-25.67,'coast','sea','s','atlantic','volcano'],
+    ['ニューヨーク',40.71,-74.01,'city','sea','s','atlantic','liberty'],
+    ['ピッツバーグ',40.44,-80.00,'city','forest','r'],
+    ['シカゴ',41.88,-87.63,'city','farm','r',0,'skyscraper'],
+    ['オマハ',41.26,-95.94,'city','farm','r'],
+    ['デンバー',39.74,-104.99,'city','steppe','r'],
+    ['ロッキー山脈',39.64,-106.37,'mount','mount','r',0,'snowpeaks'],
+    ['モアブ',38.57,-109.55,'desert','desert','r',0,'arch'],
+    ['モニュメントバレー',36.98,-110.10,'desert','desert','r',0,'buttes'],
+    ['グランドキャニオン',36.06,-112.14,'desert','desert','r',0,'canyon'],
+  ]},
+  L4b: { name: '南の海とカリブ', desc: 'カナリア諸島からカリブ海へ。ウミガメやトビウオ、マイアミのビーチ、白い砂漠。', icon: '🐢🌴🏜', key: [25.76,-80.19], keyName: 'マイアミ', stops: [
+    ['カナリア諸島',28.12,-15.43,'coast','sea','s','atlantic','volcano'],
+    ['サンフアン',18.47,-66.11,'coast','sea','s','tropic'],
+    ['マイアミ',25.76,-80.19,'coast','sea','s','tropic'],
+    ['ニューオーリンズ',29.95,-90.07,'city','coast','r'],
+    ['ヒューストン',29.76,-95.37,'city','farm','r'],
+    ['エルパソ',31.76,-106.49,'city','desert','r'],
+    ['ホワイトサンズ',32.78,-106.17,'desert','desert','r',0,'whitesands'],
+    ['アルバカーキ',35.08,-106.65,'city','desert','r',0,'balloons'],
+    ['セドナ',34.87,-111.76,'desert','desert','r',0,'buttes'],
+    ['グランドキャニオン',36.06,-112.14,'desert','forest','r',0,'canyon'],
+  ]},
+  L5: { name: 'アメリカ西部', stops: [
+    ['ラスベガス',36.17,-115.14,'city','desert','r',0,'vegas'],
+    ['ロサンゼルス',34.05,-118.24,'city','desert','r',0,'hollywood'],
+  ]},
+  L6a: { name: '南の島ハワイ', desc: '青い太平洋をハワイ経由で日本へ。ウミガメやマンタ、ザトウクジラに会えるかも。', icon: '🌺🐢🌊', key: [21.31,-157.86], keyName: 'ホノルル', stops: [
+    ['ホノルル',21.31,-157.86,'coast','sea','s','pacific','diamondhead'],
+    ['東京',35.68,139.76,'city','sea','s','pacific','tokyo'],
+  ]},
+  L6b: { name: '北の海', desc: 'シアトルからアリューシャン列島をぬけて北海道へ。シャチやラッコ、夜はオーロラも？', icon: '🐋🦦🌌', key: [53.89,-166.54], keyName: 'アリューシャン列島', stops: [
+    ['サンフランシスコ',37.77,-122.42,'city','coast','r',0,'goldengate'],
+    ['シアトル',47.61,-122.33,'city','forest','r',0,'needle'],
+    ['バンクーバー',49.28,-123.12,'city','forest','r'],
+    ['ダッチハーバー',53.89,-166.54,'coast','sea','s','north'],
+    ['釧路',42.98,144.38,'coast','sea','s','north'],
+    ['札幌',43.06,141.35,'city','forest','r'],
+    ['函館',41.77,140.73,'coast','forest','r'],
+    ['青森',40.82,140.74,'city','sea','s','japan'],
+    ['仙台',38.27,140.87,'city','farm','r'],
+    ['東京',35.68,139.76,'city','farm','r',0,'tokyo'],
+  ]},
+};
+// 1周の流れ。配列は分かれ道（どちらか1つを選ぶ）
+const PLAN = ['L0', ['L1a','L1b'], ['L2a','L2b'], 'L3', ['L4a','L4b'], 'L5', ['L6a','L6b']];
+const FORK_AT = { 1: '北京', 2: 'ウィーン', 4: 'リスボン', 6: 'ロサンゼルス' };
+
+// 町に着いたとき・ボトルの手紙で読める豆知識
+const FACTS = {
+  '東京':'世界でいちばん人が多い都市圏。世界一周のスタートでゴール！',
+  '富士山のふもと':'富士山は日本でいちばん高い山（3776m）。晴れていると大きく見えます。',
+  '名古屋':'名古屋城の屋根には金のしゃちほこがのっています。',
+  '京都':'1000年以上も日本の都だった町。お寺や神社がとても多い。',
+  '大阪':'「天下の台所」と呼ばれた、食いだおれの町。',
+  '広島':'海に浮かぶ宮島の大鳥居が有名。もみじまんじゅうも名物。',
+  '福岡':'屋台がたくさん並ぶ町。ここからフェリーで韓国へ。',
+  '釜山':'韓国でいちばん大きな港町。海にかかる光安大橋が夜に光ります。',
+  'ソウル':'韓国の首都。山の上のNソウルタワーから町が見わたせます。',
+  '仁川':'大きな港と空港がある町。ここから船で中国へ。',
+  '天津':'北京の玄関口にあたる港町。',
+  '北京':'中国の首都。近くの山には万里の長城がつづきます。ここが分かれ道！',
+  '西安':'昔は長安と呼ばれた、シルクロードの出発点。',
+  '蘭州':'黄河のほとりの町。蘭州ラーメンが名物。',
+  '敦煌':'砂の山「鳴沙山」とオアシスの町。ラクダに乗れます。',
+  'トルファン':'夏はとても暑い盆地。ぶどうの産地です。',
+  'ウルムチ':'世界で海からいちばん遠い大都市といわれます。',
+  'アルマトイ':'カザフスタンの町。雪をかぶった天山山脈が見えます。',
+  'タシケント':'ウズベキスタンの首都。中央アジアでいちばん大きな町。',
+  'サマルカンド':'青いタイルのレギスタン広場で有名なシルクロードの町。',
+  'ブハラ':'2000年以上の歴史がある、土色の古い町並み。',
+  'アシガバート':'トルクメニスタンの首都。白い大理石の建物がいっぱい。',
+  'マシュハド':'イランで2番目に大きな町。',
+  'テヘラン':'イランの首都。北に雪をかぶったアルボルズ山脈がそびえます。',
+  'タブリーズ':'世界最古級の屋根つき市場（バザール）がある町。',
+  'カッパドキア':'キノコのような岩の大地。朝はたくさんの気球が空に浮かびます。',
+  'イスタンブール':'アジアとヨーロッパにまたがる町。ここからヨーロッパ！',
+  'ソフィア':'ブルガリアの首都。ヨーグルトの国です。',
+  'ベオグラード':'ドナウ川とサヴァ川、2つの大きな川が出会う町。',
+  'ブダペスト':'ドナウ川をはさんだ「ブダ」と「ペスト」が合わさった町。',
+  'ウィーン':'音楽の都。モーツァルトも暮らしていました。ここが分かれ道！',
+  'エレンホト':'中国とモンゴルの国境の町。恐竜の化石が多く見つかります。',
+  'ウランバートル':'モンゴルの首都。まわりの草原にはゲル（丸いテント）が。',
+  'ウランウデ':'バイカル湖の近くの町。とても大きなレーニンの頭の像があります。',
+  'バイカル湖':'世界でいちばん深い湖（約1600m）。冬は湖が凍ります。',
+  'イルクーツク':'「シベリアのパリ」と呼ばれた、木の家が残る町。',
+  'クラスノヤルスク':'大きなエニセイ川が流れるシベリアの町。',
+  'ノヴォシビルスク':'シベリアでいちばん大きな町。',
+  'オムスク':'シベリアの草原の中にある町。',
+  'エカテリンブルク':'ここはアジアとヨーロッパのさかい目。記念の柱が立っています。',
+  'カザン':'ヴォルガ川のほとりの町。白い城壁のクレムリンがあります。',
+  'モスクワ':'ロシアの首都。玉ねぎのような屋根の聖ワシリイ大聖堂が有名。',
+  'ミンスク':'ベラルーシの首都。広い大通りの町。',
+  'ワルシャワ':'ポーランドの首都。ショパンが育った町。',
+  'クラクフ':'ポーランドの古い都。中世の町並みが残ります。',
+  'プラハ':'丘の上のプラハ城と、石の橋カレル橋が有名。',
+  'ベネチア':'水の都。車は入れないので、町の中の移動は船です。',
+  'フィレンツェ':'赤いドームの大聖堂が目印の、ルネサンスの町。',
+  'ローマ':'2000年前のコロッセオが今も残る町。',
+  'チビタベッキア':'ローマの港。ここからフェリーでスペインへ。',
+  'バルセロナ':'140年以上建てているサグラダ・ファミリアがある町。',
+  'サラゴサ':'エブロ川のほとりの、スペインの古い町。',
+  'マドリード':'スペインの首都。ヨーロッパで標高がいちばん高いところにある首都のひとつ。',
+  'ザルツブルク':'モーツァルトが生まれた町。丘の上にお城があります。',
+  'ミュンヘン':'ドイツ南部の町。秋のビール祭りが有名。',
+  'チューリッヒ':'スイスでいちばん大きな町。遠くにアルプスの山々。',
+  'パリ':'エッフェル塔の町。パン屋さんがあちこちに。',
+  'ボルドー':'まわりは一面のぶどう畑。ワインの町です。',
+  'ビルバオ':'スペイン北部の港町。銀色にかがやく美術館が有名。',
+  'リスボン':'坂道を黄色い路面電車が走る港町。ここが分かれ道！',
+  'アゾレス諸島':'大西洋のまん中の火山の島々。クジラがよく見られます。',
+  'ニューヨーク':'自由の女神がむかえてくれる大都会。アメリカ大陸に上陸！',
+  'ピッツバーグ':'川と橋がとても多い町。',
+  'シカゴ':'超高層ビルが生まれた町。「風の町」とも呼ばれます。',
+  'オマハ':'とうもろこし畑が広がる大平原の町。',
+  'デンバー':'標高がちょうど1マイル（約1600m）の「マイル・ハイ・シティ」。',
+  'ロッキー山脈':'北アメリカの背骨のような大きな山脈。',
+  'モアブ':'天然の岩のアーチが2000以上ある「アーチーズ国立公園」の町。',
+  'モニュメントバレー':'西部劇の舞台になった、赤い岩の大地。',
+  'グランドキャニオン':'コロラド川が何百万年もかけてけずった大峡谷。',
+  'カナリア諸島':'アフリカの沖に浮かぶスペインの島々。カナリアという鳥の名前のもと。',
+  'サンフアン':'カリブ海の島プエルトリコの、カラフルな港町。',
+  'マイアミ':'ヤシの木と白い砂浜のビーチの町。',
+  'ニューオーリンズ':'ジャズが生まれた町。',
+  'ヒューストン':'宇宙飛行士を見守るNASAの管制センターがある町。',
+  'エルパソ':'メキシコとの国境にある町。',
+  'ホワイトサンズ':'真っ白な砂の砂漠。雪景色のように見えます。',
+  'アルバカーキ':'毎年10月、世界最大級の熱気球のお祭りがあります。',
+  'セドナ':'赤い岩山にかこまれた町。',
+  'ラスベガス':'砂漠の中のネオンの町。',
+  'ロサンゼルス':'丘の上のHOLLYWOODの看板が目印。ここが分かれ道！',
+  'ホノルル':'ハワイの町。ダイヤモンドヘッドとワイキキの海。',
+  'サンフランシスコ':'赤いゴールデン・ゲート・ブリッジと坂道とケーブルカーの町。',
+  'シアトル':'宇宙船のような塔「スペース・ニードル」が目印。',
+  'バンクーバー':'海と山にかこまれたカナダの町。',
+  'ダッチハーバー':'アリューシャン列島の港。カニ漁の船の基地です。',
+  '釧路':'北海道の東の港町。タンチョウ（ツル）のふるさと。',
+  '札幌':'北海道でいちばん大きな町。冬は雪まつり。',
+  '函館':'夜景で有名な港町。ここからフェリーで本州へ。',
+  '青森':'りんごとねぶた祭りの町。',
+  '仙台':'「杜の都」と呼ばれる、緑の多い町。',
+};
+
+'use strict';
+/* ===== 小道具 ===== */
+const $ = s => document.querySelector(s);
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const sstep = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+function hash(n) { n = (n | 0) ^ 0x9e3779b9; n = Math.imul(n ^ (n >>> 16), 0x85ebca6b); n = Math.imul(n ^ (n >>> 13), 0xc2b2ae35); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; }
+const h2 = (a, b) => hash(Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263));
+function vnoise(x, s) { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return lerp(h2(i, s), h2(i + 1, s), u); }
+function fbm(x, s) { return vnoise(x, s) * 0.55 + vnoise(x * 2.1, s + 7) * 0.28 + vnoise(x * 4.3, s + 13) * 0.17; }
+const mix = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+const css = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+const fmt = n => Math.round(n).toLocaleString('ja-JP');
+const R_E = 6371, D2R = Math.PI / 180;
+function hav(a, b) { const dLa = (b[0] - a[0]) * D2R, dLo = (b[1] - a[1]) * D2R; const x = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * D2R) * Math.cos(b[0] * D2R) * Math.sin(dLo / 2) ** 2; return 2 * R_E * Math.asin(Math.sqrt(x)); }
+function slerp(a, b, t) {
+  const v = p => [Math.cos(p[0] * D2R) * Math.cos(p[1] * D2R), Math.cos(p[0] * D2R) * Math.sin(p[1] * D2R), Math.sin(p[0] * D2R)];
+  const A = v(a), B = v(b); const d = Math.acos(clamp(A[0] * B[0] + A[1] * B[1] + A[2] * B[2], -1, 1));
+  if (d < 1e-9) return [a[0], a[1]];
+  const s = Math.sin(d), k1 = Math.sin((1 - t) * d) / s, k2 = Math.sin(t * d) / s;
+  const x = k1 * A[0] + k2 * B[0], y = k1 * A[1] + k2 * B[1], z = k1 * A[2] + k2 * B[2];
+  return [Math.atan2(z, Math.hypot(x, y)) / D2R, Math.atan2(y, x) / D2R];
+}
+function durText(h) {
+  if (h < 1 / 60) return '1分未満';
+  if (h < 1) return Math.round(h * 60) + '分';
+  if (h < 24) { const m = Math.round((h % 1) * 60); return Math.floor(h) + '時間' + (m ? m + '分' : ''); }
+  const d = Math.floor(h / 24), hh = Math.round(h % 24); return d + '日' + (hh ? hh + '時間' : '');
+}
+
+/* ===== ルートの組み立て ===== */
+const PORTS = new Set();
+const LEG = {};
+(function compile() {
+  const startOf = {};
+  PLAN.forEach((p, i) => {
+    const prev = PLAN[(i + PLAN.length - 1) % PLAN.length];
+    const prevId = typeof prev === 'string' ? prev : prev[0];
+    (typeof p === 'string' ? [p] : p).forEach(id => { startOf[id] = i === 0 ? null : prevId; });
+  });
+  const mk = s => ({ name: s[0], ll: [s[1], s[2]], town: s[3], way: s[4], mode: s[5], region: s[6] || '', lm: s[7] || '' });
+  for (const id in LEGS) {
+    const L = LEGS[id]; let stops = L.stops.map(mk);
+    let start;
+    if (startOf[id] === null) { start = stops[0]; stops = stops.slice(1); }
+    else { const ps = LEGS[startOf[id]].stops; start = mk(ps[ps.length - 1]); }
+    const segs = []; let a = start, km = 0;
+    for (const b of stops) {
+      const d = hav(a.ll, b.ll) * (b.mode === 's' ? 1.05 : 1.18);
+      segs.push({ a, b, len: d, start: km, mode: b.mode, region: b.region });
+      if (b.mode === 's') { PORTS.add(a.name); PORTS.add(b.name); }
+      km += d; a = b;
+    }
+    LEG[id] = { id, name: L.name, desc: L.desc, icon: L.icon, key: L.key, keyName: L.keyName, start, segs, len: km };
+  }
+})();
+
+/* ===== 保存データ ===== */
+const KEY = 'camper-trip-v1';
+const QS = new URLSearchParams(location.search);
+let st = null;
+function load() { try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { st = null; } }
+function save() { if (!st || st.preview || QS.has('km')) return; try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } }
+function newState(speed) { return { v: 1, km: 0, t: Date.now(), speed, started: Date.now(), choices: {}, auto: {}, stamps: { '東京': 1 }, lm: {}, dex: {}, bottles: 0 }; }
+
+/* ===== 道のり計算 ===== */
+// 1周目から順に区間を並べ、指定した距離にある区間を探す
+function walk(fn) {
+  let km = 0;
+  for (let lap = 0; lap < 999; lap++) {
+    for (let i = 0; i < PLAN.length; i++) {
+      const p = PLAN[i]; const key = lap + ':' + i;
+      const id = typeof p === 'string' ? p : (st.choices[key] || null);
+      if (fn({ lap, i, key, id, start: km, fork: typeof p !== 'string', options: typeof p === 'string' ? null : p }) === false) return;
+      const id2 = typeof p === 'string' ? p : (st.choices[key] || null);
+      if (!id2) return;
+      km += LEG[id2].len;
+    }
+  }
+}
+function autoPick(lap, i) {
+  const opts = PLAN[i]; const prev = lap > 0 ? st.choices[(lap - 1) + ':' + i] : null;
+  if (prev) return opts.find(o => o !== prev) || opts[0];
+  return opts[Math.random() < 0.5 ? 0 : 1];
+}
+// 距離を進め、通過した町・分かれ道の結果を返す
+function advance(toKm) {
+  const from = st.km; const passed = [], forks = [];
+  walk(L => {
+    if (L.start > toKm) return false;
+    if (!L.id) {
+      const id = autoPick(L.lap, L.i); st.choices[L.key] = id; st.auto[L.key] = 1; L.id = id;
+      forks.push({ at: FORK_AT[L.i], id });
+    }
+    const leg = LEG[L.id];
+    if (L.start + leg.len < from) return;
+    for (const s of leg.segs) {
+      const k = L.start + s.start + s.len;
+      if (k > from && k <= toKm) passed.push({ name: s.b.name, sea: s.mode === 's', km: k, lap: L.lap });
+    }
+  });
+  for (const p of passed) st.stamps[p.name] = (st.stamps[p.name] || 0) + 1;
+  st.km = toKm;
+  return { passed, forks };
+}
+function posAt(km) {
+  let res = null, last = null;
+  const at = (L, k) => {
+    const leg = LEG[L.id];
+    let si = leg.segs.findIndex(s => k < s.start + s.len); if (si < 0) si = leg.segs.length - 1;
+    const s = leg.segs[si]; const sk = clamp(k - s.start, 0, s.len);
+    return { lap: L.lap, legIdx: L.i, leg, legStart: L.start, si, seg: s, segKm: sk, segAbs: L.start + s.start, ll: slerp(s.a.ll, s.b.ll, sk / s.len) };
+  };
+  walk(L => {
+    if (!L.id) return false;
+    last = L;
+    if (km < L.start + LEG[L.id].len) { res = at(L, km - L.start); return false; }
+  });
+  return res || at(last, LEG[last.id].len);
+}
+function nextFork() {
+  let f = null;
+  walk(L => { if (L.fork && L.start > st.km) { f = L; return false; } if (!L.id) return false; });
+  return f;
+}
+function biomeOf(P) {
+  const s = P.seg; if (s.mode === 's') return 'sea';
+  const R = Math.min(25, s.len * 0.3);
+  if (P.segKm < R) return s.a.town;
+  if (s.len - P.segKm < R) return s.b.town;
+  return s.b.way;
+}
+function seaRegion(P) {
+  const s = P.seg, dA = P.segKm, dB = s.len - P.segKm;
+  const near = (n, d, r) => (s.a.name === n && dA < r) || (s.b.name === n && dB < r);
+  if (near('ホノルル', 0, 450)) return 'hawaii';
+  if (near('東京', 0, 600) || near('釧路', 0, 400)) return 'japan';
+  if (near('アゾレス諸島', 0, 700)) return 'azores';
+  return s.region || 'pacific';
+}
+// 今の区間の前後にある町（名所・港の判定用）
+function nearbyStops(P) {
+  const out = [];
+  const add = (stop, km, port) => out.push({ stop, d: km - st.km, port });
+  const s = P.seg;
+  add(s.a, P.segAbs, PORTS.has(s.a.name));
+  add(s.b, P.segAbs + s.len, PORTS.has(s.b.name));
+  const nx = P.leg.segs[P.si + 1]; if (nx) add(nx.b, P.legStart + nx.start + nx.len, PORTS.has(nx.b.name));
+  const pv = P.leg.segs[P.si - 1]; if (pv) add(pv.a, P.legStart + pv.start, PORTS.has(pv.a.name));
+  return out;
+}
+
+/* ===== 太陽と月 ===== */
+function sunAlt(lat, lon, ms) {
+  const d = ms / 864e5 - 10957.5;
+  const g = (357.529 + 0.98560028 * d) * D2R, q = 280.459 + 0.98564736 * d;
+  const L = (q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * D2R, e = (23.439 - 0.00000036 * d) * D2R;
+  const ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L)), dec = Math.asin(Math.sin(e) * Math.sin(L));
+  const gmst = (18.697374558 + 24.06570982441908 * d) % 24;
+  const lha = gmst * 15 * D2R + lon * D2R - ra;
+  return Math.asin(Math.sin(lat * D2R) * Math.sin(dec) + Math.cos(lat * D2R) * Math.cos(dec) * Math.cos(lha)) / D2R;
+}
+const moonAge = ms => (((ms / 864e5 - 10962.76) % 29.530588) + 29.530588) % 29.530588;
+
+/* ===== 天気 ===== */
+const WX = {
+  0: ['はれ', '☀️'], 1: ['ほぼはれ', '🌤'], 2: ['ときどきくもり', '⛅'], 3: ['くもり', '☁️'], 45: ['きり', '🌫'], 48: ['きり', '🌫'],
+  51: ['きりさめ', '🌦'], 53: ['きりさめ', '🌦'], 55: ['きりさめ', '🌦'], 56: ['こおる雨', '🌧'], 57: ['こおる雨', '🌧'],
+  61: ['小雨', '🌧'], 63: ['雨', '🌧'], 65: ['大雨', '🌧'], 66: ['こおる雨', '🌧'], 67: ['こおる雨', '🌧'],
+  71: ['小雪', '🌨'], 73: ['雪', '🌨'], 75: ['大雪', '❄️'], 77: ['雪', '🌨'], 80: ['にわか雨', '🌦'], 81: ['にわか雨', '🌧'], 82: ['はげしいにわか雨', '⛈'],
+  85: ['にわか雪', '🌨'], 86: ['はげしいにわか雪', '❄️'], 95: ['かみなり雨', '⛈'], 96: ['ひょうとかみなり', '⛈'], 99: ['ひょうとかみなり', '⛈'],
+};
+const RAIN = { 51: .2, 53: .3, 55: .4, 56: .3, 57: .4, 61: .4, 63: .6, 65: .9, 66: .5, 67: .7, 80: .4, 81: .6, 82: .9, 95: .8, 96: .8, 99: .9 };
+const SNOW = { 71: .35, 73: .6, 75: .9, 77: .3, 85: .5, 86: .8 };
+let wx = null, wxBusy = false, geo = null, geoBusy = false;
+async function getJSON(url, ms = 8000) {
+  const ac = new AbortController(); const tm = setTimeout(() => ac.abort(), ms);
+  try { const r = await fetch(url, { signal: ac.signal }); if (!r.ok) throw new Error(r.status); return await r.json(); } finally { clearTimeout(tm); }
+}
+async function fetchWx(ll) {
+  const u = `https://api.open-meteo.com/v1/forecast?latitude=${ll[0].toFixed(3)}&longitude=${ll[1].toFixed(3)}&current=temperature_2m,weather_code,cloud_cover,wind_speed_10m&timezone=auto`;
+  const j = await getJSON(u);
+  return { temp: j.current.temperature_2m, code: j.current.weather_code, cloud: j.current.cloud_cover, wind: j.current.wind_speed_10m, off: j.utc_offset_seconds, ll, at: Date.now(), real: true };
+}
+// 天気が取れないときの「それっぽい」天気
+function fakeWx(ll) {
+  const now = Date.now(), lat = ll[0], hr = Math.floor(now / 36e5);
+  const mon = new Date().getUTCMonth(); const north = lat >= 0;
+  const season = Math.cos(((mon + 0.5) / 12 * 2 - (north ? 1.1 : 0.1)) * Math.PI); // 夏で+1
+  const temp = 28 - Math.abs(lat) * 0.45 + season * Math.min(16, Math.abs(lat) * 0.35) + clamp(sunAlt(lat, ll[1], now) / 10, -1, 1) * 4;
+  const n = vnoise(hr / 7 + ll[1] * 0.3, Math.round(lat));
+  const cloud = Math.round(clamp(n * 1.3 - 0.1) * 100);
+  let code = cloud < 20 ? 0 : cloud < 45 ? 1 : cloud < 70 ? 2 : 3;
+  if (n > 0.82) code = temp < 1 ? 73 : 61;
+  return { temp, code, cloud, wind: 8 + n * 25, off: Math.round(ll[1] / 15) * 3600, ll, at: now, real: false };
+}
+async function refreshWx(force) {
+  if (wxBusy || !P) return;
+  const ll = P.ll;
+  if (!force && wx && Date.now() - wx.at < 10 * 60e3 && hav(wx.ll, ll) < 40) return;
+  wxBusy = true;
+  try { wx = await fetchWx(ll); try { localStorage.setItem('camper-wx', JSON.stringify(wx)); } catch (e) { } }
+  catch (e) { if (!wx || !wx.real || hav(wx.ll, ll) > 80) wx = fakeWx(ll); else wx.at = Date.now(); }
+  wxBusy = false; applyTest(); updateHud();
+}
+async function refreshGeo(force) {
+  if (geoBusy || !P) return;
+  const ll = P.ll;
+  if (!force && geo && Date.now() - geo.at < 10 * 60e3 && hav(geo.ll, ll) < 15) return;
+  geoBusy = true;
+  try {
+    const j = await getJSON(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${ll[0].toFixed(4)}&longitude=${ll[1].toFixed(4)}&localityLanguage=ja`);
+    let t = [j.countryName, j.principalSubdivision, j.city || j.locality].filter(Boolean);
+    t = t.filter((x, i) => t.indexOf(x) === i);
+    if (!j.countryName) { const inf = (j.localityInfo && j.localityInfo.informative) || []; const sea = inf.find(x => /洋|海|湾|Ocean|Sea/.test(x.name || '')); t = sea ? [sea.name] : (j.locality ? [j.locality] : []); }
+    geo = { text: t.join(' '), ll, at: Date.now() };
+  } catch (e) { geo = { text: '', ll, at: Date.now() }; }
+  geoBusy = false; updateHud();
+}
+function applyTest() {
+  if (!wx) return;
+  if (QS.has('wx')) { wx.code = +QS.get('wx'); wx.cloud = wx.code >= 3 ? 95 : wx.code * 30; }
+  if (QS.has('temp')) wx.temp = +QS.get('temp');
+  if (QS.has('wind')) wx.wind = +QS.get('wind');
+}
+function wxState() {
+  const w = wx || fakeWx(P.ll);
+  const rain = RAIN[w.code] || 0, snow = SNOW[w.code] || 0;
+  return { temp: w.temp, code: w.code, cloud: Math.max(w.cloud, rain || snow ? 85 : 0), rain, snow, fog: (w.code === 45 || w.code === 48) ? 0.6 : 0, thunder: w.code >= 95, wind: w.wind,
+    snowCover: (snow > 0 && w.temp < 2) || w.temp < -2, frost: w.temp < -6 };
+}
+const nowMs = () => Date.now() + (QS.has('h') ? +QS.get('h') * 36e5 : 0);
+function localDate() { const off = wx ? wx.off : Math.round(P.ll[1] / 15) * 3600; return new Date(nowMs() + off * 1000); }
+
+/* ===== 名所 ===== */
+const LMNAME = {
+  '東京': '東京タワーとスカイツリー', '富士山のふもと': '富士山', '名古屋': '名古屋城', '大阪': '大阪城', '京都': '東寺の五重塔', '西安': '大雁塔', '広島': '宮島の大鳥居', '釜山': '光安大橋',
+  'ソウル': 'Nソウルタワー', '北京': '万里の長城', '敦煌': '鳴沙山の砂丘', 'アルマトイ': '天山山脈', 'テヘラン': 'アルボルズ山脈', 'チューリッヒ': 'アルプスの山々', 'ロッキー山脈': 'ロッキーの山々',
+  'サマルカンド': 'レギスタン広場', 'カッパドキア': '奇岩と気球', 'イスタンブール': 'ブルーモスク', 'ウランバートル': 'ゲルの村', 'エカテリンブルク': 'アジアとヨーロッパの境界の柱',
+  'モスクワ': '聖ワシリイ大聖堂', 'プラハ': 'プラハ城', 'ザルツブルク': 'ホーエンザルツブルク城', 'ベネチア': 'サン・マルコの鐘楼', 'フィレンツェ': '花の大聖堂', 'ローマ': 'コロッセオ',
+  'バルセロナ': 'サグラダ・ファミリア', 'パリ': 'エッフェル塔', 'リスボン': 'ベレンの塔', 'アゾレス諸島': '火山の島', 'カナリア諸島': 'テイデ山の島', 'ニューヨーク': '自由の女神',
+  'シカゴ': 'シカゴの摩天楼', 'モアブ': 'デリケート・アーチ', 'モニュメントバレー': 'モニュメントバレーの岩山', 'セドナ': 'セドナの赤い岩山', 'グランドキャニオン': 'グランドキャニオン',
+  'ホワイトサンズ': '真っ白な砂丘', 'アルバカーキ': 'たくさんの熱気球', 'ラスベガス': 'ネオンの町', 'ロサンゼルス': 'ハリウッドサイン', 'ホノルル': 'ダイヤモンドヘッド',
+  'サンフランシスコ': 'ゴールデン・ゲート・ブリッジ', 'シアトル': 'スペース・ニードル',
+};
+const LMR = { fuji: 70, snowpeaks: 60, canyon: 40, buttes: 40, dunes: 40, whitesands: 30, greatwall: 35, volcano: 60, diamondhead: 45 };
+const ALL_LM = []; (function () { const seen = new Set(); for (const id in LEGS) for (const s of LEGS[id].stops) if (s[7] && !seen.has(s[0])) { seen.add(s[0]); ALL_LM.push({ key: s[0], name: LMNAME[s[0]] || s[0], type: s[7] }); } })();
+
+/* ===== 図鑑 ===== */
+const DEX = {
+  dolphin: ['🐬', 'イルカの群れ', '船と競争するように跳ねる'], flyingfish: ['🐟', 'トビウオ', '胸びれを広げて海の上をすべる'], whale: ['🐋', 'ザトウクジラ', '潮をふいて、しっぽを見せる'],
+  breach: ['💥', 'クジラの大ジャンプ', 'めったに見られない大ジャンプ'], sperm: ['🐳', 'マッコウクジラ', '四角い頭の大きなクジラ'], orca: ['🖤', 'シャチ', '背びれが高い海のギャング'],
+  turtle: ['🐢', 'ウミガメ', 'ぷかっと顔を出して息つぎ'], manta: ['🪁', 'マンタ', '海の中をつばさで飛ぶ大きなエイ'], sunfish: ['🐡', 'マンボウ', '横になってぷかぷか'],
+  albatross: ['🕊', 'アホウドリ', '長いつばさで風に乗る海の鳥'], gull: ['🐦', 'カモメ', '港の近くで船についてくる'], otter: ['🦦', 'ラッコ', 'あおむけでぷかぷか'],
+  puffin: ['🐧', 'エトピリカ', 'オレンジのくちばしの北の海鳥'], nightglow: ['✨', '夜光虫', '夜の波が青く光る'], rainbow: ['🌈', '虹', '雨上がりの空にかかる'],
+  shootingstar: ['🌠', '流れ星', '夜空をすっと横切る'], aurora: ['🌌', 'オーロラ', '北の夜空にゆれる光のカーテン'], birds: ['🪿', '渡り鳥の群れ', 'Vの字で空を飛んでいく'],
+  deer: ['🦌', 'シカ', '森のふちからこちらを見ている'], horses: ['🐎', '野を走る馬', '草原をかけていく'], camels: ['🐫', 'ラクダのキャラバン', '砂漠をゆっくり歩く'],
+  bison: ['🦬', 'バイソン', 'アメリカの大平原の主'], eagle: ['🦅', 'ワシ', '空高く輪をえがく'], balloon: ['🎈', '熱気球', '朝の空にふわり'], train: ['🚆', '並んで走る列車', 'しばらくいっしょに走る'],
+};
+
+/* ===== 画面 ===== */
+const cv = $('#cv'), c = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+function resize() {
+  const r = cv.getBoundingClientRect(); DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = Math.max(1, r.width); H = Math.max(1, r.height); cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+}
+let P = null; // 現在地
+const S = { t: 0, off: { cloud: 0, far: 0, hill: 0, mid: 0, near: 0, sea: 0 }, rp: null, tiles: new Map(), farTiles: new Map(), events: [], nextEv: 8, drops: [], parts: [], flash: 0, lmSeen: {} };
+const BIOME = {
+  city: { farAmp: .05, jag: .2, mesa: 0, hillAmp: .02, sea: 0, ground: [128, 130, 124], far: [112, 126, 150], hill: [96, 112, 96] },
+  farm: { farAmp: .07, jag: .1, mesa: 0, hillAmp: .035, sea: 0, ground: [122, 170, 82], far: [104, 132, 162], hill: [92, 142, 82] },
+  forest: { farAmp: .11, jag: .3, mesa: 0, hillAmp: .06, sea: 0, ground: [72, 122, 62], far: [84, 112, 134], hill: [52, 96, 62] },
+  mount: { farAmp: .3, jag: .95, mesa: 0, hillAmp: .09, sea: 0, ground: [104, 132, 82], far: [112, 122, 152], hill: [72, 102, 78] },
+  desert: { farAmp: .11, jag: 0, mesa: 1, hillAmp: .03, sea: 0, ground: [224, 190, 132], far: [204, 142, 102], hill: [212, 166, 112] },
+  steppe: { farAmp: .08, jag: .2, mesa: 0, hillAmp: .03, sea: 0, ground: [178, 172, 102], far: [142, 142, 152], hill: [162, 152, 92] },
+  coast: { farAmp: .03, jag: .2, mesa: 0, hillAmp: .02, sea: 1, ground: [132, 176, 92], far: [122, 142, 162], hill: [112, 152, 92] },
+  sea: { farAmp: 0, jag: 0, mesa: 0, hillAmp: 0, sea: 1, ground: [60, 110, 150], far: [120, 140, 160], hill: [100, 130, 150] },
+};
+// 季節・雪で色を変える
+function biomeTarget(b, W8) {
+  const B = Object.assign({}, BIOME[b]); B.ground = B.ground.slice(); B.hill = B.hill.slice();
+  const lat = P.ll[0], mon = localDate().getUTCMonth() + 1; const n = lat >= 0;
+  const autumn = Math.abs(lat) > 25 && (n ? (mon >= 10 && mon <= 11) : (mon >= 4 && mon <= 5));
+  const winter = Math.abs(lat) > 30 && (n ? (mon === 12 || mon <= 2) : (mon >= 6 && mon <= 8));
+  if (b === 'farm' || b === 'forest' || b === 'steppe' || b === 'coast' || b === 'mount') {
+    if (autumn) { B.ground = mix(B.ground, [196, 164, 86], .35); B.hill = mix(B.hill, [170, 120, 60], .3); }
+    if (winter) { B.ground = mix(B.ground, [150, 142, 112], .45); B.hill = mix(B.hill, [120, 112, 92], .4); }
+  }
+  const lm = nearLm('whitesands', 30); if (lm && b === 'desert') { B.ground = [242, 240, 232]; B.hill = [232, 230, 222]; }
+  if (W8.snowCover && b !== 'sea') { B.ground = mix(B.ground, [238, 242, 248], .88); B.hill = mix(B.hill, [228, 234, 244], .8); B.snow = 1; }
+  return B;
+}
+function nearLm(type, r) { if (!P) return null; for (const n of nearbyStops(P)) if (n.stop.lm === type && Math.abs(n.d) < r) return n; return null; }
+
+let L = {}; // 毎フレームの光
+function light(W8, alt) {
+  const dl = sstep(-8, 8, alt), tw = alt > -12 ? Math.exp(-((alt - 1) ** 2) / 40) : 0;
+  let top = mix([8, 14, 38], [62, 136, 216], dl), bot = mix([24, 34, 70], [172, 214, 240], dl);
+  bot = mix(bot, [252, 150, 92], tw * .72); top = mix(top, [92, 80, 150], tw * .45);
+  const k = clamp((W8.cloud - 35) / 65) * .82 + W8.rain * .15 + W8.snow * .1;
+  const grey = mix([36, 40, 50], [158, 164, 172], dl);
+  top = mix(top, grey, k); bot = mix(bot, mix(grey, [235, 238, 242], .12), k);
+  const lit = (0.22 + 0.78 * dl) * (1 - k * .32);
+  L = { dl, tw, top, bot, k, lit, haze: bot, fog: W8.fog, night: 1 - dl };
+}
+function sh(col, depth = 0) {
+  let r = [col[0] * L.lit, col[1] * L.lit, col[2] * L.lit];
+  r = mix(r, [col[0] * .25 + 10, col[1] * .25 + 18, col[2] * .3 + 40], L.night * .4);
+  r = mix(r, L.haze, clamp(depth * (0.55 + L.k * .2) + L.fog * depth * 1.2, 0, .92));
+  return r;
+}
+const shc = (col, depth, a) => css(sh(col, depth), a);
+
+/* ----- 空 ----- */
+const STARS = Array.from({ length: 110 }, (_, i) => [hash(i * 3 + 1), hash(i * 3 + 2) ** 1.4, hash(i * 3 + 3)]);
+function drawSky(hz, W8, alt) {
+  const g = c.createLinearGradient(0, 0, 0, hz); g.addColorStop(0, css(L.top)); g.addColorStop(1, css(L.bot));
+  c.fillStyle = g; c.fillRect(-W, -H, W * 3, hz + H + 2);
+  const sa = clamp(1 - L.dl * 2.5) * clamp(1 - L.k * 1.25);
+  if (sa > 0.02) for (const s of STARS) { c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)))})`; c.fillRect(s[0] * W, s[1] * hz * .9, s[2] > .85 ? 2 : 1.2, s[2] > .85 ? 2 : 1.2); }
+  // 月
+  const ma = clamp(1 - L.dl / .7) * clamp(1 - L.k * 1.1);
+  if (ma > 0.02) {
+    const mx = W * .24, my = hz * .26, mr = Math.max(9, H * .028), f = moonAge(nowMs()) / 29.53;
+    c.save(); c.globalAlpha = ma;
+    const gl = c.createRadialGradient(mx, my, mr * .5, mx, my, mr * 4); gl.addColorStop(0, 'rgba(255,250,220,.25)'); gl.addColorStop(1, 'rgba(255,250,220,0)');
+    c.fillStyle = gl; c.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8);
+    c.fillStyle = '#fff6d8'; c.beginPath(); c.arc(mx, my, mr, 0, 7); c.fill();
+    const ill = (1 - Math.cos(f * 2 * Math.PI)) / 2;
+    c.beginPath(); c.arc(mx, my, mr + .5, 0, 7); c.clip();
+    c.fillStyle = css(mix(L.top, [40, 46, 70], .3), .93); c.beginPath(); c.arc(mx + (f < .5 ? -1 : 1) * mr * 2 * ill, my, mr * 1.04, 0, 7); c.fill();
+    c.restore();
+  }
+  // 太陽
+  if (alt > -4) {
+    const sx = W * .74, sy = clamp(hz - (alt / 50) * hz * .9, hz * .1, hz + 20), sr = Math.max(10, H * .03);
+    const col = mix([255, 238, 170], [255, 140, 70], L.tw);
+    c.save(); c.globalAlpha = clamp(1 - L.k * 1.15) * sstep(-4, 0, alt);
+    const gl = c.createRadialGradient(sx, sy, sr * .4, sx, sy, sr * 6); gl.addColorStop(0, css(col, .55)); gl.addColorStop(1, css(col, 0));
+    c.fillStyle = gl; c.fillRect(sx - sr * 6, sy - sr * 6, sr * 12, sr * 12);
+    c.fillStyle = css(col); c.beginPath(); c.arc(sx, sy, sr, 0, 7); c.fill(); c.restore();
+  }
+}
+function drawClouds(hz, W8) {
+  const tw = 320, o = S.off.cloud, p = 0.12 + W8.cloud / 100 * .85;
+  const base = mix([255, 255, 255], [150, 156, 166], L.k);
+  for (let i = Math.floor(o / tw) - 1; i <= Math.floor((o + W) / tw) + 1; i++) {
+    if (h2(i, 11) > p) continue;
+    const x0 = i * tw - o + h2(i, 12) * tw * .5, y0 = hz * (0.12 + h2(i, 13) * .5), sc = (0.6 + h2(i, 14)) * Math.max(1, H / 500);
+    const n = 4 + Math.floor(h2(i, 15) * 4);
+    const col = sh(mix(base, [255, 170, 130], L.tw * .45), .15);
+    c.fillStyle = css(col, .92 - L.k * .2);
+    c.beginPath();
+    for (let j = 0; j < n; j++) { const cx = x0 + (j - n / 2) * 22 * sc, cy = y0 - Math.sin(j / (n - 1) * Math.PI) * 14 * sc + h2(i, 20 + j) * 6; c.moveTo(cx + 22 * sc, cy); c.arc(cx, cy, (16 + h2(i, 30 + j) * 12) * sc, 0, 7); }
+    c.fill();
+  }
+}
+/* ----- 山なみ ----- */
+function ridgeY(wx, B, seed, freq) {
+  let n = fbm(wx * freq, seed);
+  const jg = 1 - Math.abs(2 * fbm(wx * freq * 1.3, seed + 3) - 1);
+  n = lerp(n, n * .4 + jg * .7, B.jag);
+  const m = sstep(.45, .55, n) * .8 + n * .2; n = lerp(n, m, B.mesa);
+  return n;
+}
+function drawRidge(off, baseY, amp, B, col, depth, seed, freq, snowAt) {
+  if (amp < 1) return;
+  c.beginPath(); c.moveTo(-10, H + 10);
+  for (let x = -10; x <= W + 10; x += 6) c.lineTo(x, baseY - amp * ridgeY(x + off, B, seed, freq));
+  c.lineTo(W + 10, H + 10); c.closePath(); c.fillStyle = shc(col, depth); c.fill();
+  if (snowAt != null) {
+    c.save(); c.clip(); c.fillStyle = shc([240, 244, 252], depth * .8);
+    c.beginPath(); c.moveTo(-10, -10);
+    for (let x = -10; x <= W + 10; x += 6) c.lineTo(x, baseY - amp * (snowAt + 0.04 * Math.sin((x + off) * .07)));
+    c.lineTo(W + 10, -10); c.fill(); c.restore();
+  }
+}
+/* ----- 中景の小物 ----- */
+function tileProps(i, b, P0) {
+  const r = k => h2(i, k), out = [];
+  const lat = P0.ll[0], lon = P0.ll[1];
+  const asia = lon > 60, us = lon < -50, japan = lon > 128 && lat > 30 && lat < 46, trop = Math.abs(lat) < 31;
+  const put = (type, x, extra) => out.push(Object.assign({ type, x, s: 0.8 + r(90 + out.length) * .5, z: r(70 + out.length) }, extra || {}));
+  if (b === 'city') { const n = 1 + Math.floor(r(1) * 2.5); for (let k = 0; k < n; k++) put(r(5 + k) < .12 ? 'tree' : 'bldg', k * 40 + r(9 + k) * 20, { h: .3 + r(20 + k) ** 1.6 * 1.6, w: 26 + r(30 + k) * 34, c: Math.floor(r(40 + k) * 5), seed: i * 7 + k }); }
+  else if (b === 'farm') {
+    if (r(1) < .5) put(r(2) < .7 ? 'tree' : 'conifer', r(3) * 60);
+    if (r(4) < .25) put(japan ? 'jhouse' : us ? 'barn' : 'house', r(5) * 50 + 20, { c: Math.floor(r(6) * 4) });
+    if (r(7) < .12) put(r(8) < .5 ? 'cow' : 'sheep', r(9) * 70);
+    if (!japan && r(10) < .08) put('hay', r(11) * 60);
+    if (us && r(12) < .05) put('windmill', 40);
+  } else if (b === 'forest') { const n = 2 + Math.floor(r(1) * 3); for (let k = 0; k < n; k++) put(r(10 + k) < (asia && lat > 48 ? .25 : .55) ? 'tree' : 'conifer', k * 28 + r(20 + k) * 14); }
+  else if (b === 'mount') { if (r(1) < .7) put('conifer', r(2) * 40); if (r(3) < .5) put('conifer', 50 + r(4) * 40); if (r(5) < .3) put('rock', r(6) * 80); }
+  else if (b === 'desert') {
+    if (r(1) < .35) put(us ? 'cactus' : 'bush', r(2) * 70);
+    if (r(3) < .25) put('rock', r(4) * 80);
+    if (!us && asia && r(5) < .03) put('camel', 30);
+  } else if (b === 'steppe') {
+    if (r(1) < .4) put('bush', r(2) * 80);
+    if (lon > 85 && lon < 120 && lat > 40 && r(3) < .1) put('ger', r(4) * 60);
+    if (r(5) < .07) put(us ? 'cow' : 'horse', r(6) * 60);
+    if (us && r(7) < .05) put('windmill', 50);
+  } else if (b === 'coast') { if (r(1) < .55) put(trop || lat < 34 && lon < -60 ? 'palm' : (japan ? 'pine' : 'tree'), r(2) * 60); if (r(3) < .15) put(japan ? 'jhouse' : 'house', r(4) * 60, { c: Math.floor(r(5) * 4) }); }
+  return out;
+}
+const HOUSE = [[236, 226, 206], [214, 196, 172], [240, 240, 236], [206, 180, 150]], ROOF = [[160, 70, 56], [80, 86, 100], [120, 80, 60], [60, 70, 80]];
+const BLDG = [[150, 156, 166], [196, 190, 180], [120, 130, 146], [176, 168, 150], [100, 112, 128]];
+function treeCol(lat, mon, seed) {
+  const n = lat >= 0; const autumn = Math.abs(lat) > 25 && (n ? (mon >= 10 && mon <= 11) : (mon >= 4 && mon <= 5));
+  const winter = Math.abs(lat) > 33 && (n ? (mon === 12 || mon <= 2) : (mon >= 6 && mon <= 8));
+  if (winter) return null; // 葉が落ちた木
+  if (autumn) return [[214, 120, 48], [196, 70, 44], [222, 176, 60], [120, 140, 60]][Math.floor(hash(seed) * 4)];
+  return mix([70, 132, 64], [96, 150, 70], hash(seed));
+}
+function drawProp(p, x, gy, sc, ctx) {
+  const shc = (col, d, a) => css(sh(col, d * .45), a);
+  const s = sc * p.s; const night = L.night > .55;
+  switch (p.type) {
+    case 'tree': {
+      const tc = treeCol(ctx.lat, ctx.mon, p.x * 13 + p.z * 99);
+      c.fillStyle = shc([92, 70, 52], .25); c.fillRect(x - 2 * s, gy - 18 * s, 4 * s, 18 * s);
+      if (!tc) { c.strokeStyle = shc([92, 74, 60], .25); c.lineWidth = 1.5 * s; c.beginPath(); for (let k = 0; k < 5; k++) { c.moveTo(x, gy - 14 * s); c.lineTo(x + (k - 2) * 7 * s, gy - (30 + (k % 2) * 6) * s); } c.stroke(); if (ctx.snow) { c.fillStyle = shc([240, 244, 250], .2); c.fillRect(x - 12 * s, gy - 32 * s, 24 * s, 3 * s); } break; }
+      c.fillStyle = shc(tc, .25); c.beginPath(); c.arc(x, gy - 30 * s, 14 * s, 0, 7); c.moveTo(x + s, gy - 22 * s); c.arc(x - 9 * s, gy - 22 * s, 10 * s, 0, 7); c.moveTo(x + 19 * s, gy - 22 * s); c.arc(x + 9 * s, gy - 22 * s, 10 * s, 0, 7); c.fill();
+      if (ctx.snow) { c.fillStyle = shc([240, 244, 250], .2); c.beginPath(); c.arc(x, gy - 38 * s, 9 * s, Math.PI, 0); c.fill(); }
+      break;
+    }
+    case 'conifer': case 'pine': {
+      const col = p.type === 'pine' ? [60, 110, 70] : [44, 92, 62];
+      c.fillStyle = shc([80, 62, 48], .25); c.fillRect(x - 1.5 * s, gy - 8 * s, 3 * s, 8 * s);
+      c.fillStyle = shc(col, .25); c.beginPath();
+      for (let k = 0; k < 3; k++) { const yb = gy - 6 * s - k * 12 * s, w = (14 - k * 3.5) * s; c.moveTo(x - w, yb); c.lineTo(x, yb - 20 * s); c.lineTo(x + w, yb); }
+      c.fill();
+      if (ctx.snow) { c.fillStyle = shc([242, 246, 252], .2); c.beginPath(); for (let k = 0; k < 3; k++) { const yb = gy - 6 * s - k * 12 * s; c.moveTo(x - 5 * s, yb - 14 * s); c.lineTo(x, yb - 20 * s); c.lineTo(x + 5 * s, yb - 14 * s); } c.fill(); }
+      break;
+    }
+    case 'palm': {
+      c.strokeStyle = shc([120, 96, 66], .25); c.lineWidth = 3 * s; c.beginPath(); c.moveTo(x, gy); c.quadraticCurveTo(x + 6 * s, gy - 22 * s, x + 3 * s, gy - 44 * s); c.stroke();
+      c.strokeStyle = shc([60, 130, 70], .25); c.lineWidth = 3 * s; c.lineCap = 'round';
+      const sway = Math.sin(S.t * 1.3 + p.x) * 2 * s;
+      for (let k = 0; k < 6; k++) { const a = -Math.PI + k * Math.PI / 5; c.beginPath(); c.moveTo(x + 3 * s, gy - 44 * s); c.quadraticCurveTo(x + 3 * s + Math.cos(a) * 12 * s, gy - 52 * s + sway, x + 3 * s + Math.cos(a) * 20 * s, gy - 40 * s + Math.abs(Math.sin(a)) * 2 * s + sway); c.stroke(); }
+      c.lineCap = 'butt'; break;
+    }
+    case 'cactus': {
+      c.strokeStyle = shc([76, 130, 76], .25); c.lineCap = 'round'; c.lineWidth = 6 * s;
+      c.beginPath(); c.moveTo(x, gy); c.lineTo(x, gy - 34 * s); c.moveTo(x, gy - 16 * s); c.lineTo(x - 9 * s, gy - 16 * s); c.lineTo(x - 9 * s, gy - 26 * s); c.moveTo(x, gy - 20 * s); c.lineTo(x + 9 * s, gy - 20 * s); c.lineTo(x + 9 * s, gy - 30 * s); c.stroke(); c.lineCap = 'butt'; break;
+    }
+    case 'bush': c.fillStyle = shc(ctx.snow ? [230, 234, 240] : [130, 130, 76], .25); c.beginPath(); c.ellipse(x, gy - 4 * s, 9 * s, 6 * s, 0, 0, 7); c.ellipse(x + 7 * s, gy - 3 * s, 6 * s, 4 * s, 0, 0, 7); c.fill(); break;
+    case 'rock': c.fillStyle = shc(ctx.biome === 'desert' ? [180, 120, 86] : [120, 120, 116], .25); c.beginPath(); c.moveTo(x - 14 * s, gy); c.lineTo(x - 8 * s, gy - 12 * s); c.lineTo(x + 4 * s, gy - 15 * s); c.lineTo(x + 14 * s, gy); c.fill(); break;
+    case 'house': case 'jhouse': {
+      const w = 30 * s, h = 18 * s, wc = HOUSE[p.c || 0], rc = p.type === 'jhouse' ? [62, 70, 84] : ROOF[p.c || 0];
+      c.fillStyle = shc(wc, .25); c.fillRect(x - w / 2, gy - h, w, h);
+      c.fillStyle = shc(ctx.snow ? [236, 240, 246] : rc, .25); c.beginPath(); c.moveTo(x - w / 2 - 4 * s, gy - h); c.lineTo(x - w / 2 + (p.type === 'jhouse' ? 6 : 0) * s, gy - h - 12 * s); c.lineTo(x + w / 2 - (p.type === 'jhouse' ? 6 : 0) * s, gy - h - 12 * s); c.lineTo(x + w / 2 + 4 * s, gy - h); c.fill();
+      c.fillStyle = night ? 'rgba(255,214,120,.95)' : shc([90, 110, 130], .25); c.fillRect(x - w / 4 - 3 * s, gy - h * .7, 6 * s, 6 * s); c.fillRect(x + w / 4 - 3 * s, gy - h * .7, 6 * s, 6 * s);
+      break;
+    }
+    case 'barn': {
+      const w = 34 * s, h = 22 * s; c.fillStyle = shc([170, 52, 44], .25); c.beginPath(); c.moveTo(x - w / 2, gy); c.lineTo(x - w / 2, gy - h); c.lineTo(x, gy - h - 14 * s); c.lineTo(x + w / 2, gy - h); c.lineTo(x + w / 2, gy); c.fill();
+      c.strokeStyle = shc([240, 236, 230], .25); c.lineWidth = 1.5 * s; c.strokeRect(x - 6 * s, gy - 14 * s, 12 * s, 14 * s); break;
+    }
+    case 'hay': c.fillStyle = shc([214, 178, 92], .25); c.beginPath(); c.arc(x, gy - 6 * s, 6 * s, 0, 7); c.arc(x + 13 * s, gy - 6 * s, 6 * s, 0, 7); c.fill(); break;
+    case 'cow': case 'horse': case 'sheep': case 'camel': drawAnimal(p.type, x, gy, s * .9, 0); break;
+    case 'ger': for (let k = 0; k < 2; k++) { const gx = x + k * 26 * s; c.fillStyle = shc([244, 242, 234], .25); c.beginPath(); c.moveTo(gx - 11 * s, gy); c.lineTo(gx - 11 * s, gy - 8 * s); c.quadraticCurveTo(gx, gy - 18 * s, gx + 11 * s, gy - 8 * s); c.lineTo(gx + 11 * s, gy); c.fill(); c.fillStyle = shc([180, 70, 60], .25); c.fillRect(gx - 2.5 * s, gy - 7 * s, 5 * s, 7 * s); } break;
+    case 'windmill': {
+      c.strokeStyle = shc([150, 150, 150], .25); c.lineWidth = 1.5 * s; c.beginPath(); c.moveTo(x - 6 * s, gy); c.lineTo(x, gy - 40 * s); c.lineTo(x + 6 * s, gy); c.stroke();
+      const a = S.t * 2; c.beginPath(); for (let k = 0; k < 8; k++) { const aa = a + k * Math.PI / 4; c.moveTo(x, gy - 40 * s); c.lineTo(x + Math.cos(aa) * 9 * s, gy - 40 * s + Math.sin(aa) * 9 * s); } c.stroke(); break;
+    }
+    case 'bldg': {
+      const w = p.w * sc * .9, h = p.h * sc * 60; const bc = BLDG[p.c];
+      c.fillStyle = shc(bc, .25); c.fillRect(x - w / 2, gy - h, w, h);
+      const cols = Math.max(2, Math.floor(w / (7 * sc))), rows = Math.max(2, Math.floor(h / (9 * sc)));
+      const cw = w / cols, rh = h / rows;
+      for (let yy = 0; yy < rows - 0.5; yy++) for (let xx = 0; xx < cols; xx++) {
+        const on = h2(p.seed * 31 + xx, yy) < (night ? .55 : 0);
+        c.fillStyle = on ? 'rgba(255,220,140,.95)' : shc(mix(bc, [60, 80, 110], .5), .25);
+        c.fillRect(x - w / 2 + xx * cw + cw * .25, gy - h + yy * rh + rh * .3, cw * .5, rh * .45);
+      }
+      break;
+    }
+  }
+}
+function drawAnimal(type, x, gy, s, ph) {
+  const col = { cow: [90, 72, 60], horse: [120, 80, 50], sheep: [236, 232, 220], camel: [190, 150, 100], deer: [150, 104, 66], bison: [70, 52, 40] }[type] || [100, 90, 80];
+  c.fillStyle = shc(col, .2); c.strokeStyle = shc(col, .2); c.lineWidth = 1.6 * s;
+  const leg = Math.sin(ph) * 3 * s;
+  c.beginPath(); c.moveTo(x - 7 * s, gy - 7 * s); c.lineTo(x - 7 * s + leg, gy); c.moveTo(x + 7 * s, gy - 7 * s); c.lineTo(x + 7 * s - leg, gy); c.stroke();
+  if (type === 'camel') { c.beginPath(); c.ellipse(x, gy - 11 * s, 10 * s, 5 * s, 0, 0, 7); c.ellipse(x - 2 * s, gy - 15 * s, 5 * s, 4 * s, 0, 0, 7); c.fill(); c.lineWidth = 2.5 * s; c.beginPath(); c.moveTo(x - 9 * s, gy - 11 * s); c.lineTo(x - 13 * s, gy - 20 * s); c.stroke(); c.beginPath(); c.arc(x - 14 * s, gy - 20 * s, 2.5 * s, 0, 7); c.fill(); return; }
+  if (type === 'bison') { c.beginPath(); c.ellipse(x, gy - 10 * s, 10 * s, 6 * s, 0, 0, 7); c.ellipse(x - 7 * s, gy - 12 * s, 6 * s, 6 * s, 0, 0, 7); c.fill(); return; }
+  c.beginPath(); c.ellipse(x, gy - 10 * s, 9 * s, type === 'sheep' ? 5.5 * s : 4.5 * s, 0, 0, 7); c.fill();
+  c.lineWidth = 2.5 * s; c.beginPath(); c.moveTo(x - 7 * s, gy - 11 * s); c.lineTo(x - 11 * s, gy - (type === 'horse' || type === 'deer' ? 18 : 13) * s); c.stroke();
+  c.beginPath(); c.ellipse(x - 12 * s, gy - (type === 'horse' || type === 'deer' ? 18 : 13) * s, 3 * s, 2.2 * s, -0.4, 0, 7); c.fill();
+  if (type === 'deer') { c.lineWidth = 1 * s; c.beginPath(); c.moveTo(x - 12 * s, gy - 20 * s); c.lineTo(x - 15 * s, gy - 26 * s); c.moveTo(x - 12 * s, gy - 20 * s); c.lineTo(x - 9 * s, gy - 26 * s); c.stroke(); }
+}
+
+/* ----- 名所の絵 ----- */
+function poly(pts, col, depth) { c.fillStyle = shc(col, depth); c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); c.fill(); }
+function rect(x, y, w, h, col, d) { c.fillStyle = shc(col, d); c.fillRect(x, y, w, h); }
+function seaBand(x0, x1, gy, s, d) { c.fillStyle = shc([80, 130, 170], d); c.fillRect(x0, gy, x1 - x0, 10 * s); }
+const LMD = {
+  tokyo(x, g, s, d) {
+    c.strokeStyle = shc([214, 70, 50], d); c.lineWidth = 1.6 * s;
+    c.beginPath(); c.moveTo(x - 14 * s, g); c.lineTo(x - 1.5 * s, g - 90 * s); c.lineTo(x + 1.5 * s, g - 90 * s); c.lineTo(x + 14 * s, g); c.stroke();
+    for (let k = 1; k < 8; k++) { const y = g - k * 11 * s, w = 14 * s * (1 - k / 8.2); c.beginPath(); c.moveTo(x - w, y); c.lineTo(x + w, y - 5 * s); c.moveTo(x + w, y); c.lineTo(x - w, y - 5 * s); c.stroke(); }
+    rect(x - 6 * s, g - 40 * s, 12 * s, 4 * s, [240, 240, 240], d); rect(x - 4 * s, g - 66 * s, 8 * s, 3 * s, [240, 240, 240], d);
+    const sx = x + 60 * s; rect(sx - 3 * s, g - 150 * s, 6 * s, 150 * s, [210, 220, 230], d); rect(sx - 6 * s, g - 100 * s, 12 * s, 5 * s, [190, 200, 214], d); rect(sx - 5 * s, g - 125 * s, 10 * s, 4 * s, [190, 200, 214], d); rect(sx - .8 * s, g - 175 * s, 1.6 * s, 25 * s, [210, 220, 230], d);
+    if (L.night > .5) { c.fillStyle = 'rgba(255,150,80,.6)'; c.beginPath(); c.arc(x, g - 50 * s, 26 * s, 0, 7); c.fill(); c.fillStyle = 'rgba(140,190,255,.5)'; c.fillRect(sx - 4 * s, g - 150 * s, 8 * s, 150 * s); }
+  },
+  fuji(x, g, s, d) {
+    const w = 200 * s, h = 95 * s;
+    poly([[x - w, g], [x - 22 * s, g - h], [x + 22 * s, g - h], [x + w, g]], [96, 110, 150], d);
+    c.fillStyle = shc([246, 248, 252], d * .8); c.beginPath(); c.moveTo(x - 22 * s, g - h);
+    for (let k = 0; k <= 10; k++) { const t = k / 10; const xx = lerp(x - 58 * s, x + 58 * s, t); c.lineTo(xx, g - h + (30 + (k % 2 ? 11 : 0)) * s * (1 - Math.abs(t - .5) * .6)); }
+    c.lineTo(x + 22 * s, g - h); c.fill();
+  },
+  jcastle(x, g, s, d) {
+    poly([[x - 34 * s, g], [x - 28 * s, g - 20 * s], [x + 28 * s, g - 20 * s], [x + 34 * s, g]], [150, 146, 136], d);
+    const tiers = [[26, 14], [20, 12], [14, 11]]; let y = g - 20 * s;
+    for (const [w, h] of tiers) { rect(x - w * s, y - h * s, w * 2 * s, h * s, [244, 242, 236], d); y -= h * s; poly([[x - (w + 7) * s, y + 2 * s], [x - (w - 4) * s, y - 6 * s], [x + (w - 4) * s, y - 6 * s], [x + (w + 7) * s, y + 2 * s]], [64, 80, 86], d); y -= 6 * s; }
+    rect(x - 6 * s, y - 4 * s, 3 * s, 4 * s, [230, 190, 70], d); rect(x + 3 * s, y - 4 * s, 3 * s, 4 * s, [230, 190, 70], d);
+  },
+  pagoda(x, g, s, d) {
+    let y = g; rect(x - 3 * s, g - 110 * s, 6 * s, 110 * s, [90, 60, 50], d);
+    for (let k = 0; k < 5; k++) { const w = (28 - k * 3) * s; rect(x - w * .55, y - 14 * s, w * 1.1, 14 * s, [120, 60, 46], d); y -= 14 * s; poly([[x - w, y + 3 * s], [x - w * .6, y - 4 * s], [x + w * .6, y - 4 * s], [x + w, y + 3 * s]], [58, 60, 66], d); y -= 4 * s; }
+    rect(x - 1 * s, y - 26 * s, 2 * s, 26 * s, [190, 160, 80], d);
+  },
+  torii(x, g, s, d) {
+    seaBand(x - 80 * s, x + 80 * s, g, s, d);
+    c.fillStyle = shc([220, 60, 40], d * .6);
+    c.fillRect(x - 24 * s, g - 50 * s, 5 * s, 56 * s); c.fillRect(x + 19 * s, g - 50 * s, 5 * s, 56 * s);
+    c.fillRect(x - 30 * s, g - 40 * s, 60 * s, 4 * s);
+    c.beginPath(); c.moveTo(x - 38 * s, g - 50 * s); c.quadraticCurveTo(x, g - 46 * s, x + 38 * s, g - 50 * s); c.lineTo(x + 36 * s, g - 56 * s); c.quadraticCurveTo(x, g - 52 * s, x - 36 * s, g - 56 * s); c.fill();
+  },
+  bridge(x, g, s, d, red) {
+    seaBand(x - 160 * s, x + 160 * s, g, s, d);
+    const col = red ? [200, 70, 44] : [214, 220, 226];
+    rect(x - 90 * s, g - 70 * s, 5 * s, 72 * s, col, d); rect(x + 85 * s, g - 70 * s, 5 * s, 72 * s, col, d);
+    rect(x - 160 * s, g - 12 * s, 320 * s, 3 * s, col, d);
+    c.strokeStyle = shc(col, d); c.lineWidth = 1.2 * s; c.beginPath(); c.moveTo(x - 160 * s, g - 12 * s); c.quadraticCurveTo(x - 125 * s, g - 40 * s, x - 88 * s, g - 70 * s); c.quadraticCurveTo(x, g - 5 * s, x + 88 * s, g - 70 * s); c.quadraticCurveTo(x + 125 * s, g - 40 * s, x + 160 * s, g - 12 * s); c.stroke();
+    if (L.night > .5) { for (let k = -15; k <= 15; k++) { c.fillStyle = `hsla(${(k * 20 + S.t * 40) % 360},90%,65%,.9)`; c.fillRect(x + k * 10 * s, g - 12 * s, 2 * s, 2 * s); } }
+  },
+  goldengate(x, g, s, d) { LMD.bridge(x, g, s, d, true); },
+  seoultower(x, g, s, d) {
+    poly([[x - 70 * s, g], [x - 20 * s, g - 30 * s], [x + 20 * s, g - 34 * s], [x + 80 * s, g]], [70, 104, 76], d);
+    const tg = g - 32 * s; rect(x - 2.5 * s, tg - 60 * s, 5 * s, 60 * s, [230, 230, 236], d); rect(x - 7 * s, tg - 70 * s, 14 * s, 10 * s, [214, 214, 224], d); rect(x - 1 * s, tg - 92 * s, 2 * s, 22 * s, [230, 230, 236], d);
+    if (L.night > .5) { c.fillStyle = 'rgba(120,200,255,.7)'; c.fillRect(x - 7 * s, tg - 70 * s, 14 * s, 10 * s); }
+  },
+  needle(x, g, s, d) {
+    c.strokeStyle = shc([230, 230, 236], d); c.lineWidth = 2 * s; c.beginPath(); c.moveTo(x - 10 * s, g); c.lineTo(x - 2 * s, g - 70 * s); c.lineTo(x - 12 * s, g - 100 * s); c.moveTo(x + 10 * s, g); c.lineTo(x + 2 * s, g - 70 * s); c.lineTo(x + 12 * s, g - 100 * s); c.stroke();
+    c.fillStyle = shc([236, 236, 240], d); c.beginPath(); c.ellipse(x, g - 102 * s, 22 * s, 4 * s, 0, 0, 7); c.fill(); rect(x - 10 * s, g - 110 * s, 20 * s, 6 * s, [200, 120, 70], d); rect(x - .8 * s, g - 130 * s, 1.6 * s, 20 * s, [230, 230, 236], d);
+  },
+  greatwall(x, g, s, d) {
+    const w = 260 * s; c.fillStyle = shc([96, 120, 92], d); c.beginPath(); c.moveTo(x - w, g);
+    for (let k = 0; k <= 40; k++) { const t = k / 40; c.lineTo(x - w + t * 2 * w, g - (30 + 26 * Math.sin(t * 7)) * s); } c.lineTo(x + w, g); c.fill();
+    c.strokeStyle = shc([186, 170, 140], d); c.lineWidth = 4 * s; c.beginPath();
+    for (let k = 0; k <= 40; k++) { const t = k / 40; const xx = x - w + t * 2 * w, yy = g - (34 + 26 * Math.sin(t * 7)) * s; k ? c.lineTo(xx, yy) : c.moveTo(xx, yy); } c.stroke();
+    for (let k = 2; k < 40; k += 9) { const t = k / 40; const xx = x - w + t * 2 * w, yy = g - (34 + 26 * Math.sin(t * 7)) * s; rect(xx - 5 * s, yy - 12 * s, 10 * s, 12 * s, [176, 160, 132], d); }
+  },
+  dunes(x, g, s, d) {
+    c.fillStyle = shc([226, 176, 110], d); c.beginPath(); c.moveTo(x - 260 * s, g);
+    for (let k = 0; k <= 30; k++) { const t = k / 30; c.lineTo(x - 260 * s + t * 520 * s, g - (50 + 40 * Math.sin(t * 5 + 1) * Math.sin(t * 3)) * s); } c.lineTo(x + 260 * s, g); c.fill();
+    for (let k = 0; k < 5; k++) drawAnimal('camel', x - 40 * s + k * 18 * s, g + 4 * s, s * .7, S.t * 3 + k);
+  },
+  snowpeaks(x, g, s, d) {
+    const pk = [[-150, 110], [-60, 150], [40, 125], [140, 100]];
+    for (const [dx, h] of pk) { poly([[x + (dx - 110) * s, g], [x + dx * s, g - h * s], [x + (dx + 110) * s, g]], [104, 112, 142], d); poly([[x + (dx - 30) * s, g - (h - 34) * s], [x + dx * s, g - h * s], [x + (dx + 30) * s, g - (h - 34) * s], [x + (dx + 10) * s, g - (h - 26) * s], [x + (dx - 8) * s, g - (h - 38) * s]], [246, 248, 252], d * .8); }
+  },
+  registan(x, g, s, d) {
+    for (const [dx, w, h] of [[-60, 44, 46], [0, 54, 54], [60, 44, 46]]) {
+      const cx = x + dx * s; rect(cx - w / 2 * s, g - h * s, w * s, h * s, [214, 190, 150], d);
+      c.fillStyle = shc([50, 120, 170], d); c.beginPath(); c.moveTo(cx - 9 * s, g); c.lineTo(cx - 9 * s, g - h * .65 * s); c.quadraticCurveTo(cx, g - h * .9 * s, cx + 9 * s, g - h * .65 * s); c.lineTo(cx + 9 * s, g); c.fill();
+      rect(cx - w / 2 * s - 3 * s, g - (h + 14) * s, 5 * s, (h + 14) * s, [200, 176, 140], d); rect(cx + w / 2 * s - 2 * s, g - (h + 14) * s, 5 * s, (h + 14) * s, [200, 176, 140], d);
+    }
+    c.fillStyle = shc([40, 150, 190], d); c.beginPath(); c.ellipse(x - 30 * s, g - 56 * s, 11 * s, 13 * s, 0, Math.PI, 0); c.fill(); c.beginPath(); c.ellipse(x + 34 * s, g - 50 * s, 10 * s, 12 * s, 0, Math.PI, 0); c.fill();
+  },
+  cappadocia(x, g, s, d) {
+    for (let k = 0; k < 7; k++) { const cx = x + (k - 3) * 30 * s, h = (36 + h2(k, 3) * 30) * s; poly([[cx - 12 * s, g], [cx - 3 * s, g - h], [cx + 3 * s, g - h], [cx + 12 * s, g]], [214, 186, 150], d); c.fillStyle = shc([150, 120, 100], d); c.beginPath(); c.ellipse(cx, g - h, 6 * s, 4 * s, 0, 0, 7); c.fill(); }
+    LMD.balloons(x, g, s, d, 7);
+  },
+  balloons(x, g, s, d, n = 12) {
+    const sunUp = L.dl > .2;
+    for (let k = 0; k < n; k++) {
+      const bx = x + (h2(k, 9) - .5) * 400 * s + Math.sin(S.t * .2 + k) * 6 * s, by = g - (60 + h2(k, 8) * 120) * s - Math.sin(S.t * .3 + k) * 4 * s, r = (7 + h2(k, 7) * 6) * s;
+      const hue = Math.floor(h2(k, 6) * 360);
+      c.fillStyle = sunUp ? `hsl(${hue},70%,${55 * L.lit + 10}%)` : `hsl(${hue},40%,20%)`;
+      c.beginPath(); c.arc(bx, by, r, Math.PI * .85, Math.PI * 2.15); c.lineTo(bx, by + r * 1.5); c.fill();
+      c.fillStyle = shc([110, 80, 60], d); c.fillRect(bx - r * .25, by + r * 1.6, r * .5, r * .4);
+    }
+  },
+  mosque(x, g, s, d) {
+    const col = [200, 200, 206];
+    rect(x - 60 * s, g - 26 * s, 120 * s, 26 * s, col, d);
+    c.fillStyle = shc(col, d); for (const [dx, r, y] of [[0, 28, 26], [-38, 14, 26], [38, 14, 26], [-20, 10, 40], [20, 10, 40]]) { c.beginPath(); c.arc(x + dx * s, g - y * s, r * s, Math.PI, 0); c.fill(); }
+    c.beginPath(); c.arc(x, g - 40 * s, 24 * s, Math.PI, 0); c.fill();
+    for (const dx of [-74, -64, 64, 74]) { rect(x + dx * s - 2 * s, g - 92 * s, 4 * s, 92 * s, col, d); poly([[x + dx * s - 2.5 * s, g - 92 * s], [x + dx * s, g - 106 * s], [x + dx * s + 2.5 * s, g - 92 * s]], [120, 130, 150], d); }
+  },
+  ger(x, g, s, d) { for (let k = 0; k < 6; k++) drawProp({ type: 'ger', s: 1.2 }, x + (k - 3) * 60 * s, g, s, {}); for (let k = 0; k < 4; k++) drawAnimal('horse', x + (k - 1) * 30 * s + 120 * s, g, s, S.t * 2 + k); },
+  obelisk(x, g, s, d) { rect(x - 30 * s, g - 4 * s, 60 * s, 4 * s, [150, 150, 150], d); poly([[x - 6 * s, g - 4 * s], [x - 3 * s, g - 50 * s], [x, g - 56 * s], [x + 3 * s, g - 50 * s], [x + 6 * s, g - 4 * s]], [200, 196, 190], d); rect(x - 40 * s, g - 2 * s, 80 * s, 2 * s, [200, 60, 60], d); },
+  onion(x, g, s, d) {
+    rect(x - 50 * s, g - 30 * s, 100 * s, 30 * s, [180, 70, 60], d);
+    const cols = [[220, 60, 60], [50, 140, 90], [230, 190, 60], [60, 110, 190], [220, 120, 50]];
+    [[-36, 50, 9], [-16, 60, 10], [0, 84, 12], [18, 62, 10], [38, 48, 9]].forEach(([dx, h, r], k) => {
+      const cx = x + dx * s; rect(cx - r * .6 * s, g - h * s, r * 1.2 * s, (h - 28) * s, [214, 180, 150], d);
+      c.fillStyle = shc(cols[k], d); c.beginPath(); c.moveTo(cx - r * s, g - h * s); c.bezierCurveTo(cx - r * 1.4 * s, g - (h + r * 1.4) * s, cx, g - (h + r * 1.6) * s, cx, g - (h + r * 2.3) * s); c.bezierCurveTo(cx, g - (h + r * 1.6) * s, cx + r * 1.4 * s, g - (h + r * 1.4) * s, cx + r * s, g - h * s); c.fill();
+    });
+  },
+  hillcastle(x, g, s, d) {
+    poly([[x - 120 * s, g], [x - 40 * s, g - 40 * s], [x + 40 * s, g - 44 * s], [x + 120 * s, g]], [80, 110, 76], d);
+    const y = g - 42 * s; rect(x - 40 * s, y - 24 * s, 80 * s, 24 * s, [214, 206, 190], d);
+    for (const dx of [-36, -8, 20]) { rect(x + dx * s, y - 40 * s, 12 * s, 40 * s, [204, 196, 180], d); poly([[x + dx * s - 2 * s, y - 40 * s], [x + dx * s + 6 * s, y - 54 * s], [x + dx * s + 14 * s, y - 40 * s]], [70, 100, 96], d); }
+  },
+  campanile(x, g, s, d) {
+    seaBand(x - 120 * s, x + 120 * s, g, s, d);
+    rect(x - 80 * s, g - 20 * s, 70 * s, 20 * s, [220, 200, 170], d); c.fillStyle = shc([150, 160, 170], d); c.beginPath(); c.arc(x - 45 * s, g - 20 * s, 14 * s, Math.PI, 0); c.fill();
+    rect(x - 6 * s, g - 80 * s, 12 * s, 80 * s, [190, 100, 76], d); rect(x - 7 * s, g - 90 * s, 14 * s, 10 * s, [230, 220, 200], d); poly([[x - 7 * s, g - 90 * s], [x, g - 110 * s], [x + 7 * s, g - 90 * s]], [100, 140, 110], d);
+  },
+  duomo(x, g, s, d) {
+    rect(x - 60 * s, g - 26 * s, 100 * s, 26 * s, [234, 226, 210], d);
+    c.fillStyle = shc([200, 90, 60], d); c.beginPath(); c.moveTo(x - 30 * s, g - 34 * s); c.quadraticCurveTo(x - 28 * s, g - 74 * s, x, g - 78 * s); c.quadraticCurveTo(x + 28 * s, g - 74 * s, x + 30 * s, g - 34 * s); c.fill();
+    rect(x - 32 * s, g - 36 * s, 64 * s, 10 * s, [230, 222, 206], d); rect(x - 3 * s, g - 88 * s, 6 * s, 10 * s, [240, 236, 226], d);
+    rect(x + 50 * s, g - 84 * s, 12 * s, 84 * s, [236, 226, 210], d);
+  },
+  colosseum(x, g, s, d) {
+    const w = 80 * s, h = 50 * s; c.fillStyle = shc([206, 176, 130], d); c.beginPath(); c.moveTo(x - w, g); c.lineTo(x - w, g - h * .8); c.lineTo(x + w * .2, g - h); c.lineTo(x + w * .7, g - h * .85); c.lineTo(x + w, g - h * .45); c.lineTo(x + w, g); c.fill();
+    c.fillStyle = shc([120, 96, 70], d);
+    for (let r = 0; r < 3; r++) for (let k = 0; k < 14; k++) { const ax = x - w + 6 * s + k * 11 * s, ay = g - 6 * s - r * 15 * s; const top = r === 2 && ax > x + w * .5 ? 0 : 1; if (top && ay - 9 * s > g - h * (ax < x + w * .2 ? .8 + (ax - x + w) / (w * 1.2) * .2 : .85)) { c.beginPath(); c.moveTo(ax, ay); c.lineTo(ax, ay - 6 * s); c.arc(ax + 3 * s, ay - 6 * s, 3 * s, Math.PI, 0); c.lineTo(ax + 6 * s, ay); c.fill(); } }
+  },
+  sagrada(x, g, s, d) {
+    rect(x - 50 * s, g - 30 * s, 100 * s, 30 * s, [190, 170, 140], d);
+    for (const [dx, h] of [[-40, 90], [-26, 100], [-12, 108], [12, 108], [26, 100], [40, 90], [0, 140]]) { c.fillStyle = shc([196, 176, 146], d); c.beginPath(); c.moveTo(x + (dx - 6) * s, g - 30 * s); c.quadraticCurveTo(x + (dx - 5) * s, g - h * .7 * s, x + dx * s, g - h * s); c.quadraticCurveTo(x + (dx + 5) * s, g - h * .7 * s, x + (dx + 6) * s, g - 30 * s); c.fill(); }
+    for (let k = 0; k < 4; k++) { c.strokeStyle = shc([240, 200, 60], d); c.lineWidth = 2 * s; c.beginPath(); c.moveTo(x + 52 * s, g - 30 * s); c.lineTo(x + 70 * s, g - 150 * s); c.lineTo(x + 50 * s, g - 150 * s); c.stroke(); break; }
+  },
+  eiffel(x, g, s, d) {
+    c.fillStyle = shc([120, 100, 80], d); c.beginPath(); c.moveTo(x - 36 * s, g); c.quadraticCurveTo(x - 10 * s, g - 50 * s, x - 3 * s, g - 130 * s); c.lineTo(x + 3 * s, g - 130 * s); c.quadraticCurveTo(x + 10 * s, g - 50 * s, x + 36 * s, g); c.lineTo(x + 24 * s, g); c.quadraticCurveTo(x, g - 30 * s, x - 24 * s, g); c.fill();
+    rect(x - 20 * s, g - 32 * s, 40 * s, 3 * s, [120, 100, 80], d); rect(x - 11 * s, g - 70 * s, 22 * s, 3 * s, [120, 100, 80], d); rect(x - 1 * s, g - 145 * s, 2 * s, 15 * s, [120, 100, 80], d);
+    if (L.night > .5 && (S.t % 10) < 3) { for (let k = 0; k < 40; k++) { c.fillStyle = 'rgba(255,255,230,.9)'; c.fillRect(x + (h2(k, Math.floor(S.t * 8)) - .5) * 40 * s * (1 - h2(k, 2) * .9), g - h2(k, 2) * 130 * s, 1.5, 1.5); } }
+    else if (L.night > .5) { c.fillStyle = 'rgba(255,190,80,.25)'; c.beginPath(); c.moveTo(x - 36 * s, g); c.lineTo(x, g - 140 * s); c.lineTo(x + 36 * s, g); c.fill(); }
+  },
+  belem(x, g, s, d) { seaBand(x - 90 * s, x + 90 * s, g, s, d); rect(x - 14 * s, g - 54 * s, 28 * s, 60 * s, [230, 220, 200], d); rect(x - 26 * s, g - 22 * s, 52 * s, 28 * s, [226, 216, 196], d); for (let k = -3; k <= 3; k++) rect(x + k * 4 * s - 1.5 * s, g - 58 * s, 3 * s, 4 * s, [230, 220, 200], d); },
+  volcano(x, g, s, d) {
+    seaBand(x - 220 * s, x + 220 * s, g, s, d);
+    poly([[x - 200 * s, g], [x - 30 * s, g - 70 * s], [x + 10 * s, g - 74 * s], [x + 180 * s, g]], [80, 120, 80], d);
+    poly([[x - 30 * s, g - 70 * s], [x - 14 * s, g - 84 * s], [x + 10 * s, g - 74 * s]], [110, 110, 104], d);
+    for (let k = 0; k < 6; k++) rect(x - 120 * s + k * 26 * s, g - 10 * s - h2(k, 4) * 6 * s, 8 * s, 6 * s, [240, 240, 236], d);
+  },
+  liberty(x, g, s, d) {
+    seaBand(x - 260 * s, x + 260 * s, g, s, d);
+    for (let k = 0; k < 18; k++) { const bx = x + 70 * s + k * 11 * s, bh = (30 + h2(k, 5) ** 1.5 * 90) * s; rect(bx, g - bh, 10 * s, bh, [120, 130, 146], d + .1); if (L.night > .5) { c.fillStyle = 'rgba(255,220,140,.7)'; for (let yy = 6; yy < bh / s; yy += 7) if (h2(k, yy) < .5) c.fillRect(bx + 3 * s, g - bh + yy * s, 4 * s, 2 * s); } }
+    rect(x - 12 * s, g - 30 * s, 24 * s, 30 * s, [170, 150, 120], d);
+    const col = [110, 170, 150]; poly([[x - 7 * s, g - 30 * s], [x - 5 * s, g - 66 * s], [x + 5 * s, g - 66 * s], [x + 7 * s, g - 30 * s]], col, d);
+    c.fillStyle = shc(col, d); c.beginPath(); c.arc(x, g - 70 * s, 4.5 * s, 0, 7); c.fill();
+    c.strokeStyle = shc(col, d); c.lineWidth = 3 * s; c.beginPath(); c.moveTo(x + 4 * s, g - 62 * s); c.lineTo(x + 9 * s, g - 86 * s); c.stroke();
+    c.fillStyle = L.night > .5 ? 'rgba(255,200,90,1)' : shc([220, 180, 80], d); c.beginPath(); c.arc(x + 9.5 * s, g - 89 * s, 3 * s, 0, 7); c.fill();
+  },
+  skyscraper(x, g, s, d) {
+    for (let k = 0; k < 14; k++) { const bx = x + (k - 7) * 16 * s, bh = (40 + h2(k, 3) ** 1.3 * 110) * s; rect(bx, g - bh, 14 * s, bh, [110 + k * 3, 118, 134], d); }
+    rect(x - 10 * s, g - 190 * s, 22 * s, 190 * s, [50, 54, 62], d); rect(x - 6 * s, g - 214 * s, 2 * s, 24 * s, [50, 54, 62], d); rect(x + 6 * s, g - 214 * s, 2 * s, 24 * s, [50, 54, 62], d);
+    if (L.night > .5) for (let k = 0; k < 150; k++) { c.fillStyle = 'rgba(255,220,140,.8)'; c.fillRect(x + (h2(k, 1) - .5) * 220 * s, g - h2(k, 2) * 140 * s, 2 * s, 2 * s); }
+  },
+  arch(x, g, s, d) {
+    c.fillStyle = shc([200, 110, 70], d); c.beginPath(); c.moveTo(x - 26 * s, g); c.lineTo(x - 22 * s, g - 50 * s); c.quadraticCurveTo(x, g - 74 * s, x + 22 * s, g - 50 * s); c.lineTo(x + 26 * s, g); c.lineTo(x + 14 * s, g); c.lineTo(x + 12 * s, g - 42 * s); c.quadraticCurveTo(x, g - 56 * s, x - 12 * s, g - 42 * s); c.lineTo(x - 14 * s, g); c.fill();
+    poly([[x - 200 * s, g], [x - 180 * s, g - 30 * s], [x - 90 * s, g - 30 * s], [x - 70 * s, g]], [190, 100, 66], d + .1);
+  },
+  buttes(x, g, s, d) {
+    for (const [dx, w, h] of [[-140, 50, 70], [-20, 70, 60], [110, 40, 90], [180, 24, 50]]) {
+      poly([[x + (dx - w / 2 - 22) * s, g], [x + (dx - w / 2 - 4) * s, g - h * .4 * s], [x + (dx - w / 2) * s, g - h * s], [x + (dx + w / 2) * s, g - h * s], [x + (dx + w / 2 + 4) * s, g - h * .4 * s], [x + (dx + w / 2 + 22) * s, g]], [196, 96, 60], d);
+    }
+  },
+  canyon(x, g, s, d) {
+    for (let k = 0; k < 5; k++) { const y = g - (64 - k * 12) * s; c.fillStyle = shc(k % 2 ? [196, 110, 70] : [214, 150, 100], d + k * .02); c.beginPath(); c.moveTo(x - 300 * s, y); for (let t = 0; t <= 30; t++) c.lineTo(x - 300 * s + t * 20 * s, y + Math.sin(t * .9 + k) * 4 * s + (t % 7 === 0 ? 6 * s : 0)); c.lineTo(x + 300 * s, g); c.lineTo(x - 300 * s, g); c.fill(); }
+  },
+  whitesands(x, g, s, d) { c.fillStyle = shc([246, 244, 238], d); c.beginPath(); c.moveTo(x - 260 * s, g); for (let k = 0; k <= 30; k++) { const t = k / 30; c.lineTo(x - 260 * s + t * 520 * s, g - (16 + 12 * Math.sin(t * 9)) * s); } c.lineTo(x + 260 * s, g); c.fill(); },
+  vegas(x, g, s, d) {
+    for (let k = 0; k < 10; k++) rect(x + (k - 5) * 20 * s, g - (40 + h2(k, 4) * 60) * s, 16 * s, (40 + h2(k, 4) * 60) * s, [150, 140, 150], d);
+    rect(x + 80 * s, g - 150 * s, 6 * s, 150 * s, [200, 200, 206], d); rect(x + 74 * s, g - 156 * s, 18 * s, 10 * s, [200, 200, 206], d);
+    if (L.night > .3) for (let k = 0; k < 60; k++) { c.fillStyle = `hsla(${(k * 37 + S.t * 60) % 360},95%,60%,.9)`; c.fillRect(x + (h2(k, 1) - .5) * 200 * s, g - h2(k, 2) * 90 * s, 3 * s, 2 * s); }
+  },
+  hollywood(x, g, s, d) {
+    poly([[x - 200 * s, g], [x - 80 * s, g - 50 * s], [x + 40 * s, g - 56 * s], [x + 200 * s, g]], [150, 140, 100], d);
+    c.fillStyle = shc([250, 250, 250], d * .7); c.font = `900 ${14 * s}px sans-serif`; c.textAlign = 'center'; c.fillText('HOLLYWOOD', x - 20 * s, g - 34 * s);
+  },
+  diamondhead(x, g, s, d) {
+    seaBand(x - 260 * s, x + 260 * s, g, s, d);
+    c.fillStyle = shc([110, 120, 80], d); c.beginPath(); c.moveTo(x - 160 * s, g); c.lineTo(x - 60 * s, g - 50 * s); c.lineTo(x - 30 * s, g - 64 * s); c.lineTo(x + 10 * s, g - 52 * s); c.lineTo(x + 40 * s, g - 56 * s); c.lineTo(x + 140 * s, g); c.fill();
+    for (let k = 0; k < 8; k++) rect(x - 240 * s + k * 12 * s, g - (16 + h2(k, 2) * 30) * s, 10 * s, (16 + h2(k, 2) * 30) * s, [230, 230, 226], d);
+  },
+  port(x, g, s, d, side) {
+    // side: +1 陸が右側, -1 陸が左側
+    const x0 = side > 0 ? x : -W, x1 = side > 0 ? W * 2 : x;
+    rect(x0, g - 8 * s, x1 - x0, 8 * s, [110, 116, 120], d);
+    for (let k = 0; k < 12; k++) { const bx = x + side * (30 + k * 26) * s, bh = (14 + h2(k, 3) * 36) * s; rect(bx, g - 8 * s - bh, 20 * s, bh, BLDG[k % 5], d); }
+    for (let k = 0; k < 3; k++) { const cx = x + side * (40 + k * 60) * s; c.strokeStyle = shc([220, 80, 60], d); c.lineWidth = 2 * s; c.beginPath(); c.moveTo(cx, g - 8 * s); c.lineTo(cx, g - 56 * s); c.lineTo(cx - side * 34 * s, g - 56 * s); c.moveTo(cx, g - 50 * s); c.lineTo(cx + side * 14 * s, g - 50 * s); c.stroke(); }
+    rect(x - 3 * s, g - 34 * s, 6 * s, 26 * s, [240, 240, 240], d); rect(x - 3 * s, g - 26 * s, 6 * s, 5 * s, [210, 60, 50], d);
+    if (L.night > .4 && (S.t % 4) < 2) { c.fillStyle = 'rgba(255,240,180,.9)'; c.beginPath(); c.arc(x, g - 36 * s, 3 * s, 0, 7); c.fill(); }
+  },
+};
+function drawLandmarks(gy, sc, sea) {
+  for (const n of nearbyStops(P)) {
+    const lm = n.stop.lm;
+    if (lm && LMD[lm]) {
+      const r = LMR[lm] || 32; if (Math.abs(n.d) > r) continue;
+      const x = W * .5 + n.d / r * W * .8;
+      const s = sc * (0.75 + 0.35 * (1 - Math.abs(n.d) / r));
+      LMD[lm](x, gy, s, .42);
+      if (Math.abs(n.d) < r * .55) { S.lmSeen[n.stop.name] = (S.lmSeen[n.stop.name] || 0) + 1; }
+    }
+    if (sea && n.port && Math.abs(n.d) < 26) {
+      const x = W * .5 + n.d / 26 * W * .8; LMD.port(x, gy, sc * .9, .45, n.d > 0 ? 1 : -1);
+    }
+  }
+}
+
+/* ----- 陸の景色 ----- */
+function drawLand(dt, W8, alt, ctx) {
+  const hz = H * .56;
+  drawSky(hz, W8, alt); drawSkyEvents(hz);
+  drawClouds(hz, W8);
+  const B = S.rp, sc = Math.max(.7, Math.min(H, W * 1.6) / 360);
+  // 海が見える海岸
+  const seaH = H * .07 * B.sea;
+  if (B.sea > .02) { c.fillStyle = shc([70, 130, 175], .5); c.fillRect(0, hz, W, seaH + 2); c.fillStyle = shc([255, 255, 255], .4, .25 * B.sea); for (let k = 0; k < 18; k++) c.fillRect((h2(k, 1) * W * 1.3 - S.off.far * 2) % (W * 1.3) - 20, hz + h2(k, 2) * seaH, 14, 1); }
+  const gtop = hz + seaH;
+  drawRidge(S.off.far, hz + 1, H * B.farAmp, B, B.far, .62, 3, .004, B.jag > .6 ? .62 : null);
+  drawLandmarks(gtop, sc, false);
+  drawRidge(S.off.hill, gtop + H * .03, H * B.hillAmp, B, B.hill, .32, 9, .007, null);
+  // 地面（畑のすじ）
+  const gy0 = gtop + H * .03;
+  c.fillStyle = shc(B.ground, .12); c.fillRect(0, gy0, W, H - gy0);
+  if (ctx.biome === 'farm' && !W8.snowCover) { for (let k = 0; k < 6; k++) { const y = gy0 + (H * .82 - gy0) * (k / 6) ** 1.2; c.fillStyle = shc(mix(B.ground, k % 2 ? [150, 180, 70] : [100, 150, 60], .3), .1); c.fillRect(0, y, W, (H * .82 - gy0) / 9); } }
+  // 中景
+  const mg = gy0 + (H - gy0) * .32, tw = 100, o = S.off.mid;
+  for (let i = Math.floor(o / tw) - 1; i <= Math.floor((o + W) / tw) + 1; i++) {
+    let t = S.tiles.get(i); if (!t) { t = tileProps(i, ctx.biome, P); S.tiles.set(i, t); }
+    for (const p of t) drawProp(p, i * tw - o + p.x, mg + (p.z - .5) * 10 * sc, sc * (0.9 + p.z * .2), ctx);
+  }
+  if (S.tiles.size > 60) for (const k of S.tiles.keys()) if (k < Math.floor(o / tw) - 3) S.tiles.delete(k);
+  drawGroundEvents(mg, sc);
+  if (L.fog > 0) { c.fillStyle = css(mix(L.haze, [230, 232, 236], .3), L.fog * .75); c.fillRect(0, 0, W, H); }
+  // 近景：電柱や柵、道ばた
+  const ny = H * .86;
+  c.fillStyle = shc(mix(B.ground, [60, 90, 50], ctx.biome === 'desert' || W8.snowCover ? 0 : .3), 0); c.fillRect(0, ny, W, H - ny);
+  const asia = P.ll[1] > 60 && (ctx.biome === 'farm' || ctx.biome === 'city' || ctx.biome === 'coast');
+  const no = S.off.near;
+  if (asia) {
+    const gap = 520; for (let k = Math.floor(no / gap) - 1; k <= Math.floor((no + W) / gap) + 1; k++) {
+      const x = k * gap - no; c.fillStyle = shc([96, 92, 88], 0); c.fillRect(x - 5, -10, 10, ny + 20);
+      c.fillRect(x - 22, H * .1, 44, 4);
+      c.strokeStyle = shc([40, 40, 40], 0, .8); c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 20, H * .1); c.quadraticCurveTo(x - gap / 2, H * .18, x - gap + 20, H * .1); c.moveTo(x + 20, H * .1 + 2); c.quadraticCurveTo(x + gap / 2, H * .19, x + gap - 20, H * .1 + 2); c.stroke();
+    }
+  } else if (ctx.biome !== 'city') {
+    const gap = 70; c.fillStyle = shc([120, 96, 72], 0);
+    for (let k = Math.floor(no / gap) - 1; k <= Math.floor((no + W) / gap) + 1; k++) { const x = k * gap - no; c.fillRect(x - 2, ny - 22, 4, 26); }
+    c.fillRect(0, ny - 18, W, 2); c.fillRect(0, ny - 9, W, 2);
+  } else {
+    const gap = 300; for (let k = Math.floor(no / gap) - 1; k <= Math.floor((no + W) / gap) + 1; k++) {
+      const x = k * gap - no; c.fillStyle = shc([90, 96, 104], 0); c.fillRect(x - 3, H * .2, 6, ny - H * .2 + 10); c.fillRect(x, H * .2, 40, 4);
+      if (L.night > .5) { const gl = c.createRadialGradient(x + 38, H * .2 + 8, 2, x + 38, H * .2 + 8, 60); gl.addColorStop(0, 'rgba(255,220,150,.7)'); gl.addColorStop(1, 'rgba(255,220,150,0)'); c.fillStyle = gl; c.fillRect(x - 30, H * .2 - 50, 140, 120); }
+    }
+  }
+  // 草のすじ（速さが伝わる）
+  c.fillStyle = shc(mix(B.ground, [40, 60, 30], .35), 0, .6);
+  for (let k = 0; k < 40; k++) { const x = ((h2(k, 3) * W * 2 - no * 1.1) % (W * 2) + W * 2) % (W * 2) - W * .2; c.fillRect(x, ny + h2(k, 4) * (H - ny) * .5, 30 + h2(k, 5) * 30, 1.5); }
+  // 道路のはし
+  c.fillStyle = shc([70, 72, 76], 0); c.fillRect(0, H * .95, W, H * .05); c.fillStyle = shc([236, 236, 230], 0); c.fillRect(0, H * .953, W, 2);
+}
+
+/* ----- 海の景色 ----- */
+function drawSea(dt, W8, alt, ctx) {
+  const roll = Math.sin(S.t * .55) * (0.4 + clamp(W8.wind / 50) * 3.2) * D2R, bob = Math.sin(S.t * .8) * (2 + clamp(W8.wind / 50) * 10);
+  const hz = H * .47 + bob;
+  c.save(); c.translate(W / 2, H * .7); c.rotate(roll); c.translate(-W / 2, -H * .7);
+  drawSky(hz, W8, alt); drawSkyEvents(hz); drawClouds(hz, W8);
+  const sc = Math.max(.7, Math.min(H, W * 1.6) / 360);
+  // 遠くの島と船
+  const tw = 500, o = S.off.far;
+  for (let i = Math.floor(o / tw) - 1; i <= Math.floor((o + W) / tw) + 1; i++) {
+    const r = h2(i, 41), x = i * tw - o + h2(i, 42) * 200;
+    if (r < .06) { c.fillStyle = shc([90, 120, 110], .7); c.beginPath(); c.moveTo(x - 80 * sc, hz + 1); c.quadraticCurveTo(x, hz - (10 + h2(i, 43) * 22) * sc, x + 80 * sc, hz + 1); c.fill(); }
+    else if (r < .14) { const big = h2(i, 44) < .5; c.fillStyle = shc(big ? [70, 80, 96] : [240, 240, 240], .55); if (big) { c.fillRect(x - 30 * sc, hz - 6 * sc, 60 * sc, 6 * sc); for (let k = 0; k < 6; k++) { c.fillStyle = shc([[200, 80, 60], [60, 120, 170], [220, 180, 60]][k % 3], .55); c.fillRect(x - 24 * sc + k * 7 * sc, hz - 11 * sc, 6 * sc, 5 * sc); } c.fillStyle = shc([240, 240, 240], .55); c.fillRect(x + 20 * sc, hz - 15 * sc, 8 * sc, 9 * sc); } else { c.beginPath(); c.moveTo(x, hz - 20 * sc); c.lineTo(x, hz - 3 * sc); c.lineTo(x + 12 * sc, hz - 3 * sc); c.fill(); c.fillRect(x - 8 * sc, hz - 3 * sc, 24 * sc, 3 * sc); } }
+  }
+  // 海
+  const reg = ctx.region;
+  let far = [96, 146, 186], near = [24, 74, 124];
+  if (reg === 'hawaii' || reg === 'tropic') { far = [90, 180, 200]; near = [20, 110, 150]; }
+  if (reg === 'north') { far = [100, 130, 150]; near = [30, 60, 80]; }
+  const g = c.createLinearGradient(0, hz, 0, H); g.addColorStop(0, css(mix(sh(far, .3), L.haze, .35))); g.addColorStop(1, css(sh(near, 0)));
+  c.fillStyle = g; c.fillRect(-W, hz, W * 3, H * 2);
+  drawLandmarks(hz, sc, true);
+  // 太陽・月の光の道
+  const sunUp = alt > -1, mx = sunUp ? W * .74 : W * .24, ga = sunUp ? clamp(1 - L.k * 1.1) * (L.tw * .6 + .5) : clamp(1 - L.dl / .7) * clamp(1 - L.k) * .5;
+  if (ga > .03) for (let k = 0; k < 70; k++) { const y = hz + (h2(k, 1) ** 1.6) * (H * .8 - hz), sp = (y - hz) / (H - hz); if (h2(k, Math.floor(S.t * 4 + k)) < .5) { c.fillStyle = sunUp ? css(mix([255, 250, 220], [255, 160, 90], L.tw), ga) : `rgba(255,250,220,${ga})`; c.fillRect(mx + (h2(k, 2) - .5) * (20 + sp * 140), y, 6 + sp * 20, 1 + sp * 2); } }
+  // 波
+  const rows = 26, wv = 1 + clamp(W8.wind / 40) * 1.5;
+  for (let r = 0; r < rows; r++) {
+    const t = (r + 1) / rows, y = hz + (t ** 1.9) * (H - hz), sp = .05 + t * 1.6, len = (8 + t * 60) * wv, gap = 30 + t * 120;
+    const ox = (S.off.sea * sp + h2(r, 9) * 500) % gap;
+    for (let x = -ox - gap; x < W + gap; x += gap) {
+      const jx = x + h2(r * 100 + Math.floor((x + S.off.sea * sp) / gap), 2) * gap * .5;
+      c.fillStyle = shc(r % 2 ? [190, 220, 240] : [10, 50, 90], .2 * (1 - t), .35 + t * .2); c.fillRect(jx, y, len, 1 + t * 2.4);
+      if (W8.wind > 22 && h2(r, Math.floor((x + S.off.sea * sp) / gap)) < (W8.wind - 20) / 80) { c.fillStyle = shc([250, 252, 255], .2 * (1 - t), .8); c.fillRect(jx + len * .2, y - t * 2, len * .5, 1 + t * 1.6); }
+    }
+  }
+  drawSeaEvents(hz, sc);
+  if (L.fog > 0) { c.fillStyle = css(mix(L.haze, [230, 232, 236], .3), L.fog * .75); c.fillRect(-W, -H, W * 3, H * 3); }
+  // 船のつくる白い波
+  for (let k = 0; k < 26; k++) { const x = ((h2(k, 6) * W * 2 - S.off.near * 1.2) % (W * 2) + W * 2) % (W * 2) - W * .3; c.fillStyle = `rgba(255,255,255,${.25 + h2(k, 7) * .4})`; c.fillRect(x, H * (.74 + h2(k, 8) * .06), 40 + h2(k, 9) * 60, 2); }
+  c.restore();
+  // デッキの手すり（船といっしょに動くので回転しない）
+  const ry = H * .8;
+  c.fillStyle = shc([226, 230, 232], 0);
+  c.fillRect(0, ry, W, 5); c.fillRect(0, ry + H * .06, W, 4);
+  for (let x = 20; x < W; x += 90) c.fillRect(x, ry, 5, H * .14);
+  c.fillStyle = shc([60, 92, 86], 0); c.fillRect(0, H * .93, W, H * .07);
+  c.fillStyle = shc([255, 255, 255], 0, .25); c.fillRect(0, H * .93, W, 2);
+  // 浮き輪
+  const lx = Math.min(W * .14, 90), ly = ry + H * .055, lr = Math.max(14, H * .045);
+  c.lineWidth = lr * .45; c.strokeStyle = shc([240, 110, 50], 0); c.beginPath(); c.arc(lx, ly, lr, 0, 7); c.stroke();
+  c.strokeStyle = shc([250, 250, 250], 0); for (let k = 0; k < 4; k++) { c.beginPath(); c.arc(lx, ly, lr, k * Math.PI / 2 + .3, k * Math.PI / 2 + .75); c.stroke(); }
+  if (L.night > .5) { const gl = c.createRadialGradient(W * .8, ry, 4, W * .8, ry, 90); gl.addColorStop(0, 'rgba(255,214,140,.3)'); gl.addColorStop(1, 'rgba(255,214,140,0)'); c.fillStyle = gl; c.fillRect(W * .8 - 90, ry - 90, 180, 180); c.fillStyle = 'rgba(255,230,170,.95)'; c.fillRect(W * .8 - 4, ry - 6, 8, 6); }
+}
+
+/* ----- 雨・雪・窓 ----- */
+function drawWeather(dt, W8, sea) {
+  const vf = S.vf;
+  const want = Math.floor(W8.rain * 160 + W8.snow * 180);
+  while (S.parts.length < want) S.parts.push({ x: Math.random() * W * 1.4, y: Math.random() * H, z: .4 + Math.random() * .6 });
+  if (S.parts.length > want) S.parts.length = want;
+  const snow = W8.snow > 0;
+  c.strokeStyle = 'rgba(210,225,245,.55)'; c.fillStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 1;
+  c.beginPath();
+  for (const p of S.parts) {
+    if (snow) { p.x -= (60 * vf + 20) * p.z * dt; p.y += 50 * p.z * dt; p.x += Math.sin(S.t + p.z * 9) * .3; }
+    else { p.x -= 260 * vf * p.z * dt; p.y += 700 * p.z * dt; }
+    if (p.y > H || p.x < -20) { p.y = -10; p.x = Math.random() * W * 1.4; }
+    if (snow) { c.moveTo(p.x + 2 * p.z, p.y); c.arc(p.x, p.y, 2 * p.z + .5, 0, 7); } else { c.moveTo(p.x, p.y); c.lineTo(p.x + 10 * p.z * vf * .4, p.y - 18 * p.z); }
+  }
+  snow ? c.fill() : c.stroke();
+  // 窓ガラスの水滴
+  if (!sea && W8.rain > 0) {
+    if (S.drops.length < 70 * W8.rain && Math.random() < W8.rain * .6) S.drops.push({ x: Math.random() * W, y: Math.random() * H * .9, r: 1.5 + Math.random() * 3.5, v: 0 });
+    for (const d of S.drops) {
+      if (d.r > 3.2 && Math.random() < .02) d.v = 30 + Math.random() * 60; d.y += d.v * dt; d.x -= d.v * dt * .4 * vf; d.v *= .985;
+      c.fillStyle = 'rgba(220,235,250,.35)'; c.beginPath(); c.arc(d.x, d.y, d.r, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(d.x - d.r * .3, d.y - d.r * .5, d.r * .4, d.r * .4);
+    }
+    S.drops = S.drops.filter(d => d.y < H + 10 && d.x > -10);
+  } else if (S.drops.length) S.drops.length = Math.max(0, S.drops.length - 1);
+  if (W8.thunder) { if (Math.random() < dt * .08) S.flash = 1; }
+  if (S.flash > 0) { c.fillStyle = `rgba(255,255,255,${S.flash * .7})`; c.fillRect(0, 0, W, H); S.flash -= dt * 3; }
+  if (!sea && W8.frost) { for (const [x, y] of [[0, 0], [W, 0], [0, H], [W, H]]) { const g = c.createRadialGradient(x, y, 0, x, y, Math.min(W, H) * .45); g.addColorStop(0, 'rgba(240,248,255,.75)'); g.addColorStop(1, 'rgba(240,248,255,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H); } }
+  if (!sea) { const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.35, 'rgba(255,255,255,.06)'); g.addColorStop(.4, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H); }
+}
+
+/* ===== 生きもの・できごと ===== */
+function evPool(ctx, W8, alt) {
+  const night = alt < -6, out = [];
+  const add = (id, w) => { if (w > 0) out.push([id, w]); };
+  const clear = W8.cloud < 55 && !W8.rain && !W8.snow;
+  if (night) {
+    if (clear) add('shootingstar', 2);
+    if (clear && Math.abs(P.ll[0]) > 50) add('aurora', 2.5);
+    if (ctx.sea) add('nightglow', 2);
+    return out;
+  }
+  if (W8.rain > 0 && W8.rain < .7 && alt > 3 && alt < 42) add('rainbow', 1.5);
+  if (ctx.sea) {
+    const R = {
+      japan: { dolphin: 3, flyingfish: 2, sunfish: 1.2, gull: 1.5, whale: .5 }, asia: { gull: 3, dolphin: 1.2, flyingfish: 1 },
+      med: { dolphin: 3, turtle: 1.2, gull: 2, flyingfish: .8 }, atlantic: { dolphin: 3, whale: 1.6, flyingfish: 2, sperm: .5 }, azores: { sperm: 2.5, dolphin: 3, whale: 1.5 },
+      tropic: { flyingfish: 3, turtle: 2, dolphin: 2, manta: 1 }, pacific: { whale: 2, albatross: 2, flyingfish: 2, dolphin: 2, orca: .5, breach: .4 },
+      hawaii: { turtle: 3, manta: 2, whale: 2, breach: .8, dolphin: 2 }, north: { orca: 3, otter: 2, puffin: 2, whale: 2, breach: .5, albatross: 1 },
+    }[ctx.region] || { dolphin: 2 };
+    for (const k in R) add(k, R[k]);
+    add('bottle', 1.2);
+    if (nearbyStops(P).some(n => n.port && Math.abs(n.d) < 40)) add('gull', 4);
+    add('ship', .8);
+  } else {
+    const b = ctx.biome, lon = P.ll[1];
+    add('birds', 1.5);
+    if (b === 'forest' || b === 'mount') add('deer', 2);
+    if (b === 'steppe' && lon > -30) add('horses', 2.5);
+    if ((b === 'steppe' || b === 'farm') && lon < -95 && lon > -112) add('bison', 2);
+    if (b === 'desert' && lon > 30) add('camels', 2.5);
+    if (b === 'mount' || b === 'desert') add('eagle', 1.5);
+    if ((b === 'farm' || b === 'steppe' || b === 'forest') && lon > -20) add('train', 1);
+    if (nearLm('cappadocia', 60) || nearLm('balloons', 60)) add('balloon', alt < 35 ? 6 : 1.5);
+    else add('balloon', .15);
+  }
+  return out;
+}
+function spawnEvent(ctx, W8, alt) {
+  const pool = evPool(ctx, W8, alt); if (!pool.length) return;
+  let sum = pool.reduce((a, b) => a + b[1], 0), r = Math.random() * sum, id = pool[0][0];
+  for (const [k, w] of pool) { r -= w; if (r <= 0) { id = k; break; } }
+  const dur = { dolphin: 9, flyingfish: 6, whale: 14, breach: 6, sperm: 12, orca: 12, turtle: 12, manta: 12, sunfish: 12, albatross: 14, gull: 12, otter: 14, puffin: 10, nightglow: 22, rainbow: 40, shootingstar: 1.6, aurora: 45, birds: 14, deer: 10, horses: 10, camels: 16, bison: 12, eagle: 14, balloon: 40, train: 9, bottle: 22, ship: 30 }[id] || 10;
+  const ev = { id, t0: S.t, dur, x0: W * (.55 + Math.random() * .35), d: .22 + Math.random() * .4, seed: Math.random() * 1000 | 0 };
+  S.events.push(ev);
+  if (id !== 'ship' && id !== 'bottle' && DEX[id]) setTimeout(() => found(id, false), id === 'whale' ? 1500 : 600);
+}
+function found(id, away) {
+  const D = DEX[id]; if (!D) return;
+  const e = st.dex[id] || (st.dex[id] = { n: 0, first: Date.now(), place: placeName() });
+  e.n++; save();
+  if (!away) toast(`${D[0]} ${D[1]}！` + (e.n === 1 ? '<small>図鑑にのりました</small>' : ''));
+}
+function seaY(hz, d) { return hz + (H * .78 - hz) * d ** 1.3; }
+function drawSeaEvents(hz, sc) {
+  for (const e of S.events) {
+    const p = (S.t - e.t0) / e.dur; if (p < 0 || p > 1) continue;
+    const y = seaY(hz, e.d), s = sc * (.5 + e.d * 1.5), drift = (S.t - e.t0) * (10 + e.d * 50) * S.vf;
+    const x = e.x0 - drift;
+    const dark = shc([50, 62, 80], .2 * (1 - e.d));
+    switch (e.id) {
+      case 'dolphin': for (let k = 0; k < 4; k++) { const q = ((S.t - e.t0) * .9 - k * .35) % 1.6; if (q < 0 || q > 1) continue; const jx = x + k * 26 * s - q * 50 * s, jy = y - Math.sin(q * Math.PI) * 26 * s, ang = Math.cos(q * Math.PI) * -.9;
+        c.save(); c.translate(jx, jy); c.rotate(ang); c.fillStyle = shc([90, 110, 130], .2 * (1 - e.d)); c.beginPath(); c.ellipse(0, 0, 14 * s, 4 * s, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-1 * s, -3 * s); c.lineTo(3 * s, -9 * s); c.lineTo(5 * s, -3 * s); c.fill(); c.beginPath(); c.moveTo(13 * s, 0); c.lineTo(18 * s, -4 * s); c.lineTo(18 * s, 4 * s); c.fill(); c.restore();
+        if (q < .1 || q > .9) splash(jx, y, s * .6); } break;
+      case 'flyingfish': for (let k = 0; k < 5; k++) { const fx = x - p * 300 * s - k * 22 * s, fy = y - 8 * s - Math.sin(p * 9 + k) * 3 * s - k * 2 * s; c.fillStyle = 'rgba(220,230,240,.9)'; c.beginPath(); c.moveTo(fx - 7 * s, fy); c.lineTo(fx + 7 * s, fy); c.lineTo(fx + 1 * s, fy - 5 * s); c.closePath(); c.fill(); } break;
+      case 'whale': case 'sperm': {
+        if (p < .45) { const a = Math.sin(p / .45 * Math.PI); c.fillStyle = dark; c.beginPath(); c.ellipse(x, y, 34 * s, 7 * s * a, 0, Math.PI, 0); c.fill(); if (p > .08 && p < .3) for (let k = 0; k < 14; k++) { c.fillStyle = 'rgba(255,255,255,.65)'; c.beginPath(); c.arc(x + (e.id === 'sperm' ? -26 : -8) * s + (h2(k, 1) - .5) * 10 * s - (k * .8) * s, y - (8 + h2(k, 2) * 30 * ((p - .08) / .22)) * s, 2.5 * s, 0, 7); c.fill(); } }
+        else if (p < .85) { const q = (p - .45) / .4, ty = y - Math.sin(q * Math.PI) * 30 * s; c.fillStyle = dark; c.beginPath(); c.moveTo(x, y); c.lineTo(x - 2 * s, ty + 6 * s); c.quadraticCurveTo(x - 16 * s, ty, x - 22 * s, ty - 6 * s); c.quadraticCurveTo(x - 8 * s, ty + 2 * s, x, ty + 2 * s); c.quadraticCurveTo(x + 8 * s, ty + 2 * s, x + 22 * s, ty - 6 * s); c.quadraticCurveTo(x + 16 * s, ty, x + 2 * s, ty + 6 * s); c.lineTo(x, y); c.fill(); if (q > .8) splash(x, y, s); }
+        break;
+      }
+      case 'breach': { const q = p, by = y - Math.sin(q * Math.PI) * 70 * s; c.save(); c.translate(x, by); c.rotate(-1.2 + q * 1.6); c.fillStyle = dark; c.beginPath(); c.ellipse(0, 0, 40 * s, 10 * s, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(240,240,240,.8)'; c.beginPath(); c.ellipse(-10 * s, 5 * s, 22 * s, 4 * s, 0, 0, 7); c.fill(); c.restore(); if (q > .7) splash(x, y, s * 2.2); break; }
+      case 'orca': for (let k = 0; k < 3; k++) { const a = Math.max(0, Math.sin((p * 3 + k * .3) * Math.PI)); const ox = x + k * 40 * s; c.fillStyle = '#111'; c.beginPath(); c.moveTo(ox - 6 * s, y); c.lineTo(ox - 1 * s, y - (18 + k * 4) * s * a); c.lineTo(ox + 5 * s, y); c.fill(); c.beginPath(); c.ellipse(ox + 2 * s, y, 18 * s, 4 * s * a, 0, Math.PI, 0); c.fill(); c.fillStyle = '#eee'; c.beginPath(); c.ellipse(ox - 10 * s, y - 2 * s * a, 4 * s, 1.5 * s * a + .1, 0, 0, 7); c.fill(); } break;
+      case 'turtle': { const a = sstep(0, .15, p) * (1 - sstep(.85, 1, p)); c.fillStyle = shc([90, 110, 70], .1); c.beginPath(); c.ellipse(x, y + 2 * s - a * 3 * s, 12 * s, 6 * s * (.4 + a * .6), 0, Math.PI, 0); c.fill(); c.beginPath(); c.arc(x - 13 * s, y - a * 4 * s, 3 * s * a, 0, 7); c.fill(); break; }
+      case 'manta': { c.save(); c.globalAlpha = Math.sin(p * Math.PI) * .6; const f = Math.sin(S.t * 2) * 6 * s; c.fillStyle = 'rgba(20,40,60,1)'; c.beginPath(); c.moveTo(x - 4 * s, y + 6 * s); c.lineTo(x + 18 * s, y + 6 * s - f); c.lineTo(x + 8 * s, y + 14 * s); c.lineTo(x - 8 * s, y + 14 * s); c.lineTo(x - 26 * s, y + 6 * s - f); c.closePath(); c.fill(); c.restore(); break; }
+      case 'sunfish': { const a = Math.sin(p * Math.PI); const fl = Math.sin(S.t * 3) * .5; c.fillStyle = shc([150, 160, 170], .1); c.save(); c.translate(x, y); c.rotate(fl * .3); c.beginPath(); c.moveTo(-4 * s, 0); c.lineTo(0, -20 * s * a); c.lineTo(5 * s, 0); c.fill(); c.restore(); c.beginPath(); c.ellipse(x, y, 16 * s, 3 * s * a, 0, Math.PI, 0); c.fill(); break; }
+      case 'otter': { const a = sstep(0, .1, p) * (1 - sstep(.9, 1, p)); c.fillStyle = shc([110, 80, 60], .1); c.beginPath(); c.ellipse(x, y - 2 * s * a, 14 * s, 4 * s * a, 0, 0, 7); c.fill(); c.beginPath(); c.arc(x - 13 * s, y - 5 * s * a, 4.5 * s * a, 0, 7); c.fill(); c.fillStyle = shc([220, 210, 200], .1); c.beginPath(); c.arc(x - 13 * s, y - 4 * s * a, 2.5 * s * a, 0, 7); c.fill(); break; }
+      case 'puffin': for (let k = 0; k < 3; k++) { const bx = x - p * 120 * s + k * 20 * s, by = y - 6 * s; c.fillStyle = '#222'; c.beginPath(); c.ellipse(bx, by, 6 * s, 4 * s, 0, 0, 7); c.fill(); c.beginPath(); c.arc(bx - 5 * s, by - 4 * s, 3 * s, 0, 7); c.fill(); c.fillStyle = '#eee'; c.fillRect(bx - 7 * s, by - 5 * s, 2.5 * s, 2 * s); c.fillStyle = '#f07030'; c.beginPath(); c.moveTo(bx - 8 * s, by - 5 * s); c.lineTo(bx - 12 * s, by - 3 * s); c.lineTo(bx - 8 * s, by - 2 * s); c.fill(); } break;
+      case 'albatross': case 'gull': case 'birds': drawBirds(e, p, hz, sc); break;
+      case 'nightglow': { const a = Math.sin(p * Math.PI); for (let k = 0; k < 50; k++) { const yy = H * (.6 + h2(k, 1) * .18), xx = ((h2(k, 2) * W * 1.5 - S.off.sea * .8) % (W * 1.5) + W * 1.5) % (W * 1.5) - 30; c.fillStyle = `rgba(110,220,255,${a * (.3 + .5 * Math.abs(Math.sin(S.t * 2 + k)))})`; c.fillRect(xx, yy, 18 + h2(k, 3) * 30, 2); } break; }
+      case 'bottle': { const bx = x - p * W * .3, by = y + Math.sin(S.t * 2) * 2 * s; e.hit = [bx, by, 30 * Math.max(1, s)]; c.save(); c.translate(bx, by); c.rotate(.6 + Math.sin(S.t * 1.7) * .2); c.fillStyle = 'rgba(80,170,110,.9)'; c.fillRect(-8 * s, -3 * s, 14 * s, 6 * s); c.fillRect(6 * s, -1.5 * s, 5 * s, 3 * s); c.fillStyle = '#c8a070'; c.fillRect(11 * s, -1.5 * s, 2 * s, 3 * s); c.fillStyle = 'rgba(255,250,230,.9)'; c.fillRect(-5 * s, -1.5 * s, 8 * s, 3 * s); c.restore();
+        if (p < .9) { c.fillStyle = `rgba(255,255,255,${.5 + .5 * Math.sin(S.t * 5)})`; c.font = `700 ${Math.max(11, 11 * sc)}px sans-serif`; c.textAlign = 'center'; c.fillText('タッチ！', bx, by - 14 * Math.max(1, s)); } break; }
+      case 'ship': break;
+    }
+  }
+}
+function splash(x, y, s) { c.fillStyle = 'rgba(255,255,255,.75)'; for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(x + (h2(k, Math.floor(S.t * 10)) - .5) * 14 * s, y - h2(k, 3) * 8 * s, 1.8 * s, 0, 7); c.fill(); } }
+function drawBirds(e, p, hz, sc) {
+  const n = e.id === 'albatross' ? 1 : e.id === 'gull' ? 4 : 9;
+  const big = e.id === 'albatross' ? 2.2 : e.id === 'gull' ? 1.1 : .8;
+  const bx = W * 1.1 - p * W * 1.3, by = hz * (.35 + (e.seed % 30) / 100);
+  c.strokeStyle = e.id === 'gull' ? 'rgba(250,250,250,.95)' : shc([40, 40, 46], .3); c.lineWidth = 1.6 * sc;
+  for (let k = 0; k < n; k++) {
+    const ox = e.id === 'birds' ? Math.abs(k - 4) * 14 * sc : k * 26 * sc, oy = e.id === 'birds' ? Math.abs(k - 4) * 8 * sc : Math.sin(S.t + k) * 10 * sc;
+    const f = e.id === 'albatross' ? Math.sin(S.t * .8) * 2 : Math.sin(S.t * 8 + k) * 4; const w = 8 * big * sc;
+    const x = bx + ox, y = by + oy + (e.id === 'albatross' ? Math.sin(p * 9) * 20 * sc : 0);
+    c.beginPath(); c.moveTo(x - w, y - f); c.quadraticCurveTo(x - w / 2, y - f - 3, x, y); c.quadraticCurveTo(x + w / 2, y - f - 3, x + w, y - f); c.stroke();
+  }
+}
+function drawSkyEvents(hz) {
+  for (const e of S.events) {
+    const p = (S.t - e.t0) / e.dur; if (p < 0 || p > 1) continue;
+    if (e.id === 'shootingstar') { const x = W * (.8 - p * .5) + (e.seed % 100), y = hz * (.1 + p * .3); const g = c.createLinearGradient(x, y, x + 80, y - 40); g.addColorStop(0, `rgba(255,255,255,${1 - p})`); g.addColorStop(1, 'rgba(255,255,255,0)'); c.strokeStyle = g; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 80, y - 40); c.stroke(); }
+    if (e.id === 'aurora') { const a = Math.sin(p * Math.PI) * .55; for (let k = 0; k < 3; k++) { c.fillStyle = `rgba(${k === 1 ? '160,90,220' : '80,240,160'},${a * (k === 1 ? .4 : .5)})`; c.beginPath(); c.moveTo(0, hz * .6); for (let x = 0; x <= W; x += 20) c.lineTo(x, hz * (.2 + k * .08) + Math.sin(x * .01 + S.t * .4 + k) * 20); c.lineTo(W, hz * .6); for (let x = W; x >= 0; x -= 20) c.lineTo(x, hz * (.55 + k * .03) + Math.sin(x * .013 + S.t * .3 + k) * 14); c.fill(); } }
+    if (e.id === 'rainbow') { const a = Math.sin(p * Math.PI) * .35, cx = W * .3, r = Math.min(W, H) * .5; const cols = ['255,60,60', '255,160,40', '255,240,60', '80,220,80', '60,140,255', '140,80,220']; c.lineWidth = Math.max(4, r * .025); cols.forEach((cl, k) => { c.strokeStyle = `rgba(${cl},${a})`; c.beginPath(); c.arc(cx, hz + 10, r - k * c.lineWidth, Math.PI, 0); c.stroke(); }); }
+    if (e.id === 'balloon') { LMD.balloons(e.x0 - (S.t - e.t0) * 6, hz, Math.max(.7, H / 420) * .8, .3, 3); }
+    if (e.id === 'eagle') { const x = e.x0 + Math.cos(S.t * .5) * 60, y = hz * .35 + Math.sin(S.t * .5) * 20; c.strokeStyle = shc([50, 40, 34], .3); c.lineWidth = 2.5; c.beginPath(); c.moveTo(x - 18, y - 3); c.quadraticCurveTo(x - 8, y - 6, x, y); c.quadraticCurveTo(x + 8, y - 6, x + 18, y - 3); c.stroke(); }
+    if (e.id === 'birds') drawBirds(e, p, hz, Math.max(.7, H / 420));
+  }
+}
+function drawGroundEvents(gy, sc) {
+  for (const e of S.events) {
+    const p = (S.t - e.t0) / e.dur; if (p < 0 || p > 1) continue;
+    const s = sc * 1.2;
+    if (e.id === 'deer') { const x = e.x0 - (S.t - e.t0) * 70 * S.vf; drawAnimal('deer', x, gy, s, 0); }
+    if (e.id === 'horses' || e.id === 'bison' || e.id === 'camels') {
+      const n = e.id === 'camels' ? 5 : 6, sp = e.id === 'camels' ? 55 : e.id === 'horses' ? 20 : 45;
+      const type = e.id === 'horses' ? 'horse' : e.id === 'bison' ? 'bison' : 'camel';
+      for (let k = 0; k < n; k++) drawAnimal(type, e.x0 + 60 - (S.t - e.t0) * sp * S.vf + k * 26 * s + h2(k, 1) * 10, gy + h2(k, 2) * 8, s, S.t * (type === 'horse' ? 12 : 5) + k);
+    }
+    if (e.id === 'train') {
+      const x = W * (1.2 - p * 1.6) * 1, ty = gy - 4 * sc;
+      for (let k = 0; k < 8; k++) { const cx = x + k * 52 * sc; c.fillStyle = shc(k === 0 ? [210, 70, 60] : [230, 230, 226], .2); c.fillRect(cx, ty - 16 * sc, 50 * sc, 16 * sc); c.fillStyle = L.night > .5 ? 'rgba(255,220,140,.9)' : shc([70, 100, 130], .2); for (let w = 0; w < 5; w++) c.fillRect(cx + 5 * sc + w * 9 * sc, ty - 12 * sc, 6 * sc, 5 * sc); }
+    }
+  }
+}
+
+/* ===== 画面の文字 ===== */
+function placeName() { if (!P) return ''; const s = P.seg; return P.segKm < 8 ? s.a.name : s.len - P.segKm < 8 ? s.b.name : `${s.a.name}〜${s.b.name}`; }
+function updateHud() {
+  if (!P) return;
+  const s = P.seg, sea = s.mode === 's';
+  $('#place').textContent = P.segKm < 8 ? `${s.a.name}` : s.len - P.segKm < 8 ? `${s.b.name}に到着` : `${s.a.name} → ${s.b.name}`;
+  $('#addr').textContent = sea ? `⛴ ${s.len > 1500 ? '大型フェリー' : 'フェリー'}で航海中${geo && geo.text ? '・' + geo.text + 'のあたり' : ''}` : (geo && geo.text ? '📍 ' + geo.text : '📍 ' + (P.leg.name || ''));
+  const w = wx || fakeWx(P.ll), ld = localDate(), alt = sunAlt(P.ll[0], P.ll[1], nowMs());
+  const [wt, we] = WX[w.code] || ['', ''];
+  const emoji = (w.code <= 1 && alt < -3) ? '🌙' : we;
+  $('#clock').textContent = `現地 ${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}`;
+  $('#wx').innerHTML = `${emoji} ${Math.round(w.temp)}℃ <small>${wt}${w.real ? '' : '（予想）'}</small>`;
+  // 次の町
+  const remain = s.len - P.segKm, eta = remain / st.speed;
+  $('#from').textContent = s.a.name; $('#to').textContent = s.b.name;
+  $('#bar i').style.width = (P.segKm / s.len * 100).toFixed(2) + '%';
+  $('#bar b').textContent = sea ? '🚢' : '🚐';
+  $('#bar b').style.left = (P.segKm / s.len * 100).toFixed(2) + '%';
+  $('#next').innerHTML = remain < 1 ? `<b>まもなく${s.b.name}に到着</b>` : `${s.b.name}まで あと <b>${fmt(remain)}km</b>（約${durText(eta)}）`;
+  $('#total').textContent = fmt(st.km) + 'km';
+  $('#lap').textContent = P.lap + 1 + '周目';
+  $('#spd').textContent = '時速' + st.speed + 'km';
+  // 次の名所
+  let nl = null; walkStops((stop, km) => { if (km > st.km - 1 && stop.lm && !nl) { nl = { stop, km }; return false; } }, 30);
+  $('#nextlm').innerHTML = nl ? `🏛 次の名所 <b>${LMNAME[nl.stop.name] || nl.stop.name}</b> まで ${fmt(Math.max(0, nl.km - st.km))}km` : '';
+  // 分かれ道
+  const f = nextFork(), fe = $('#fork');
+  if (f) {
+    const ch = st.choices[f.key];
+    fe.hidden = false;
+    fe.innerHTML = `<span>🔀 ${FORK_AT[f.i]}の分かれ道まで ${fmt(f.start - st.km)}km</span><b>${ch ? 'えらんだ道：' + LEG[ch].name : 'どっちに行く？'}</b>`;
+    fe.classList.toggle('todo', !ch);
+  } else fe.hidden = true;
+  $('#win').classList.toggle('sea', sea); $('#winwrap').classList.toggle('sea', sea);
+}
+function walkStops(fn, maxLegs) {
+  let n = 0; let stop = false;
+  walk(L => { if (stop || ++n > maxLegs || !L.id) return false; for (const s of LEG[L.id].segs) if (fn(s.b, L.start + s.start + s.len) === false) { stop = true; return false; } });
+}
+let toastQ = [];
+function toast(html, ms = 3800) {
+  if (st && st.preview) return;
+  const el = document.createElement('div'); el.className = 'toast'; el.innerHTML = html; $('#toasts').appendChild(el);
+  setTimeout(() => el.classList.add('out'), ms); setTimeout(() => el.remove(), ms + 600);
+}
+
+/* ===== ダイアログ ===== */
+function modal(html, cls = '') {
+  const m = $('#modal'); m.className = 'modal ' + cls; $('#sheet').innerHTML = html; m.hidden = false; $('#sheet').scrollTop = 0;
+}
+function closeModal() { $('#modal').hidden = true; }
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal' || e.target.closest('[data-close]')) closeModal(); });
+
+const SPEEDS = [[20, 'のんびり', '自転車くらい'], [60, 'ふつう', '一般道くらい'], [100, 'はやい', '高速道路くらい'], [300, 'びゅーん', '新幹線くらい']];
+function speedButtons() { return `<div class="speeds">${SPEEDS.map(([v, n, d]) => `<button data-speed="${v}" class="${st && st.speed === v ? 'on' : ''}"><b>${n}</b><span>時速${v}km</span><small>${d}</small></button>`).join('')}</div>`; }
+function roughLap() { let km = 0; PLAN.forEach(p => { km += LEG[typeof p === 'string' ? p : p[0]].len; }); return km; }
+function showIntro() {
+  modal(`<h2>🚐 キャンピングカーで世界一周</h2>
+  <p>東京を出発して、キャンピングカーで世界をぐるっと一周します。</p>
+  <ul class="dots"><li>アプリを閉じているあいだも、車は走りつづけます。</li><li>次に開くと、進んだぶんだけ先の場所の<b>車窓の景色</b>が見られます。</li><li>景色はその場所の<b>いまの時刻・天気・気温</b>に合わせて変わります。</li><li>海は<b>フェリーにキャンピングカーごと乗って</b>わたります。</li><li>とちゅうの<b>分かれ道</b>では、どちらの道を行くか選べます。</li></ul>
+  <h3>どのくらいの速さで走る？</h3>${speedButtons()}
+  <p class="note" id="lapnote"></p>
+  <button class="big" id="go">出発する</button>`, 'intro');
+  let pick = 60;
+  const upd = () => { document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('on', +b.dataset.speed === pick)); $('#lapnote').textContent = `世界一周 約${fmt(roughLap())}km。この速さだと約${Math.round(roughLap() / pick / 24)}日で一周します。`; };
+  document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { pick = +b.dataset.speed; upd(); }); upd();
+  $('#go').onclick = () => { st = newState(pick); save(); closeModal(); startTrip(); toast('🚐 出発！ 世界一周の旅がはじまりました'); };
+}
+function showWelcome(hours, km, res, sights) {
+  const towns = res.passed.map(p => `<span class="chip">${p.sea ? '⚓' : '📍'} ${p.name}</span>`).join('');
+  const forks = res.forks.map(f => `<p>🔀 ${f.at}の分かれ道で、運転手が「<b>${LEG[f.id].name}</b>」を選びました。</p>`).join('');
+  const sg = Object.entries(sights).map(([id, n]) => `<span class="chip">${DEX[id][0]} ${DEX[id][1]}${n > 1 ? ' ×' + n : ''}</span>`).join('');
+  modal(`<h2>おかえりなさい！</h2>
+   <p class="big-num">前回から <b>${durText(hours)}</b><br>キャンピングカーは <b>${fmt(km)}km</b> 進みました</p>
+   ${towns ? `<h3>通った町（${res.passed.length}）</h3><div class="chips">${res.passed.length > 30 ? res.passed.slice(-30).map(p => `<span class="chip">${p.name}</span>`).join('') : towns}</div>` : ''}
+   ${forks}
+   ${sg ? `<h3>そのあいだに見たもの</h3><div class="chips">${sg}</div>` : ''}
+   <p>いまは <b>${placeName()}</b> ${P.seg.mode === 's' ? 'の海の上' : 'のあたり'}です。</p>
+   <button class="big" data-close>景色を見る</button>`);
+}
+// 留守のあいだに見かけた生きもの
+function awaySights(fromKm, toKm) {
+  const out = {};
+  const steps = Math.min(200, Math.ceil((toKm - fromKm) / st.speed));
+  for (let k = 0; k < steps; k++) {
+    const km = fromKm + (toKm - fromKm) * (k + .5) / steps; const Q = posAt(km); if (!Q) continue;
+    const sea = Q.seg.mode === 's'; if (Math.random() > (sea ? .45 : .12)) continue;
+    const saveP = P; P = Q;
+    const pool = evPool({ sea, region: sea ? seaRegion(Q) : '', biome: biomeOf(Q) }, { cloud: 30, rain: 0, snow: 0 }, 30).filter(([id]) => DEX[id] && !['rainbow', 'balloon', 'train'].includes(id));
+    P = saveP;
+    if (!pool.length) continue;
+    let sum = pool.reduce((a, b) => a + b[1], 0), r = Math.random() * sum, id = pool[0][0];
+    for (const [kk, w] of pool) { r -= w; if (r <= 0) { id = kk; break; } }
+    out[id] = (out[id] || 0) + 1;
+  }
+  for (const id in out) for (let n = 0; n < out[id]; n++) found(id, true);
+  return out;
+}
+function seasonHints(id) {
+  const m = new Date().getMonth() + 1, out = [];
+  const W = m === 12 || m <= 2, Sm = m >= 6 && m <= 8;
+  if (id === 'L1a') out.push(Sm ? '🔥 夏の砂漠はとても暑い' : W ? '🧣 砂漠の冬は朝晩冷えこむ' : '🌤 シルクロードは旅しやすい季節');
+  if (id === 'L1b') out.push(m >= 11 || m <= 3 ? '❄️ マイナス30℃にもなる、こおった世界' : '🌿 草原が緑いっぱいの季節');
+  if (id === 'L2a') out.push(Sm ? '🏖 地中海は海水浴の季節' : '🍋 おだやかな地中海');
+  if (id === 'L2b') out.push(m >= 11 || m <= 4 ? '⛷ アルプスは雪景色' : '🐄 アルプスの緑の牧場');
+  if (id === 'L4a') { if (m >= 4 && m <= 10) out.push('🐋 アゾレスはクジラの季節'); if (m >= 9 && m <= 11) out.push('🍁 アメリカの紅葉'); }
+  if (id === 'L4b') { out.push(m >= 6 && m <= 11 ? '🌀 カリブ海はハリケーンの季節かも' : '☀️ カリブ海のベストシーズン'); if (m === 10) out.push('🎈 アルバカーキで気球祭り'); }
+  if (id === 'L6a') out.push(m === 12 || m <= 4 ? '🐋 ハワイにザトウクジラが来る季節' : '🌺 いつでも暖かい南の島');
+  if (id === 'L6b') out.push(m >= 9 || m <= 3 ? '🌌 夜が長く、オーロラのチャンス' : '🦦 すずしい夏の北の海');
+  return out;
+}
+async function showFork() {
+  const f = nextFork(); if (!f) return;
+  const html = () => {
+    const ch = st.choices[f.key];
+    return `<h2>🔀 ${FORK_AT[f.i]}の分かれ道</h2><p>あと <b>${fmt(f.start - st.km)}km</b>（約${durText((f.start - st.km) / st.speed)}）で分かれ道に着きます。どっちの道を行く？<br><small>決めないまま着いたら、運転手のおまかせになります。着くまでは何度でも変えられます。</small></p>
+    <div class="opts">${f.options.map(id => { const Lg = LEG[id]; const w = forkWx[id]; return `<button class="opt ${ch === id ? 'on' : ''}" data-leg="${id}">
+      <div class="oi">${Lg.icon}</div><b>${Lg.name}</b><p>${Lg.desc}</p>
+      <div class="meta">約${fmt(Lg.len)}km・約${durText(Lg.len / st.speed)}</div>
+      <div class="meta wx">${w ? `${Lg.keyName}のいま：${(WX[w.code] || ['', ''])[1]} ${Math.round(w.temp)}℃ ${(WX[w.code] || [''])[0]}` : `${Lg.keyName}の天気を調べています…`}</div>
+      ${w && w.best ? '<div class="tag">☀️ 晴れているのはこっち</div>' : ''}
+      ${seasonHints(id).map(t => `<div class="tag soft">${t}</div>`).join('')}
+      ${ch === id ? '<div class="tag pick">✓ この道に決定</div>' : ''}
+    </button>`; }).join('')}</div>
+    <button class="big ghost" data-close>とじる</button>`;
+  };
+  const bind = () => document.querySelectorAll('[data-leg]').forEach(b => b.onclick = () => { st.choices[f.key] = b.dataset.leg; save(); $('#sheet').innerHTML = html(); bind(); updateHud(); toast(`🔀 ${FORK_AT[f.i]}から「${LEG[b.dataset.leg].name}」へ行きます`); });
+  modal(html(), 'fork'); bind();
+  if (!f.options.every(id => forkWx[id] && Date.now() - forkWx[id].at < 30 * 60e3)) {
+    await Promise.all(f.options.map(async id => { try { forkWx[id] = await fetchWx(LEG[id].key); } catch (e) { forkWx[id] = fakeWx(LEG[id].key); } }));
+    const sc = id => (forkWx[id].cloud || 0) + (RAIN[forkWx[id].code] || SNOW[forkWx[id].code] ? 100 : 0);
+    const [a, b] = f.options; if (Math.abs(sc(a) - sc(b)) > 25) forkWx[sc(a) < sc(b) ? a : b].best = true;
+    if (!$('#modal').hidden && $('#modal').classList.contains('fork')) { $('#sheet').innerHTML = html(); bind(); }
+  }
+}
+const forkWx = {};
+
+/* ----- 地図 ----- */
+const LAND = 'M224 288L227 289L230 289L229 290L227 290L226 290L225 291L224 291L222 291L220 290L218 290L215 289L213 288L211 286L212 286L215 287L218 288L219 287L219 286L221 285L223 285L223 286L224 288ZM243 282L245 283L244 284L241 284L240 284L239 285L238 284L240 283L242 283L243 282ZM501 279L497 280L497 278L498 278L498 277L499 278L501 278L501 279ZM651 262L653 262L654 262L655 262L657 262L657 264L656 265L656 266L655 266L654 267L653 267L652 267L651 265L651 264L649 262L649 261L651 262ZM706 262L706 263L708 262L708 263L708 264L706 266L705 267L706 268L705 268L703 268L702 270L701 272L700 273L699 273L697 273L696 273L693 272L694 270L697 268L698 268L699 267L701 266L702 265L703 264L704 263L704 262L706 261L706 262ZM709 252L711 254L711 253L712 254L712 255L714 256L715 256L716 255L717 255L717 257L716 258L714 258L714 259L714 260L713 261L712 263L710 263L709 263L710 261L710 260L708 259L708 258L709 258L709 256L709 255L709 253L708 252L706 250L705 249L706 249L707 250L709 251L709 252ZM694 224L693 225L692 224L691 223L690 222L688 221L688 220L689 220L690 221L691 222L692 222L693 223L694 224ZM717 215L717 216L716 217L715 216L715 215L716 215L717 215ZM0 213L719 214L717 214L717 213L718 213L719 213L0 212L0 213ZM696 213L695 213L694 212L696 213ZM694 210L695 211L694 211L693 211L693 209L694 210ZM460 207L460 210L461 210L461 211L460 212L460 211L459 211L460 213L460 214L459 214L459 216L458 218L457 221L456 225L455 228L454 230L453 230L451 231L450 231L448 230L448 229L447 227L447 226L447 224L447 223L448 222L449 220L449 219L448 218L448 217L448 215L449 214L449 212L450 212L451 212L452 212L453 212L454 210L455 209L456 208L456 207L457 208L458 206L458 205L458 204L459 205L460 206L460 207ZM647 208L648 209L649 208L650 209L651 210L651 211L651 213L651 214L652 214L652 216L652 217L653 218L655 219L656 220L658 221L657 221L659 223L659 225L660 224L661 225L662 227L663 228L664 229L666 231L666 232L666 233L666 235L667 236L667 238L667 239L666 241L666 242L666 243L665 245L663 246L663 248L662 249L661 250L661 251L660 253L660 254L660 255L659 256L657 256L655 256L654 257L653 258L651 257L650 257L650 256L649 256L647 258L645 257L644 257L643 257L641 256L640 255L640 253L639 252L638 251L636 251L637 250L636 249L635 250L634 251L635 249L635 248L636 247L636 246L634 248L633 248L632 250L630 249L630 248L629 246L628 246L629 245L626 244L625 244L623 243L619 243L616 244L614 245L612 244L610 245L608 246L608 247L607 248L606 248L604 248L603 248L601 248L600 248L599 249L598 249L597 249L596 250L595 250L593 250L591 249L590 248L590 247L591 247L591 246L592 244L591 243L590 241L590 240L590 239L589 238L589 237L588 236L588 235L587 233L587 232L588 233L587 231L588 232L588 233L588 232L587 230L587 229L587 228L587 227L588 226L587 225L588 224L588 225L589 224L591 223L592 222L593 221L594 221L595 221L596 221L598 221L598 220L599 220L600 220L602 219L603 218L603 217L604 216L605 216L605 215L606 213L607 215L608 214L607 213L608 212L609 213L609 211L610 210L610 209L611 209L611 208L612 209L612 208L613 208L614 208L616 209L617 210L618 210L619 210L619 209L620 207L621 207L620 206L621 205L622 204L623 205L625 204L625 203L624 203L625 202L626 203L627 204L629 204L631 204L632 204L633 204L634 205L633 206L633 207L632 207L632 208L631 209L631 210L633 211L634 212L635 212L637 214L638 214L639 215L640 215L642 215L642 214L643 213L643 212L643 210L643 209L643 207L643 206L644 205L643 205L644 204L644 203L644 202L645 201L646 202L646 204L646 205L647 206L647 207L647 208ZM684 201L685 202L683 202L683 200L684 201ZM601 200L601 201L598 199L600 199L601 199L602 200L601 200ZM682 200L681 200L680 200L679 199L679 198L681 199L682 200ZM683 199L683 200L682 198L681 197L682 197L683 198L683 199ZM609 200L607 201L607 200L608 199L610 198L610 197L612 197L613 197L614 197L615 197L614 197L612 198L610 199L609 200ZM596 196L597 197L598 197L596 198L595 198L593 198L594 197L595 197L596 196ZM606 196L606 197L603 198L600 198L600 197L601 196L603 197L604 197L606 196ZM680 197L678 196L677 196L676 195L677 195L678 195L679 196L680 197ZM675 195L674 194L673 194L673 193L674 194L675 195ZM577 194L581 194L582 193L585 194L586 195L589 196L591 197L589 198L587 197L585 197L583 197L581 196L579 195L577 195L577 196L573 195L573 194L571 194L572 192L575 192L576 193L577 193L577 194ZM629 192L628 194L628 192L629 192L629 191L629 192ZM672 194L671 194L670 193L669 192L669 190L670 191L671 192L672 193L672 194ZM664 191L663 191L663 192L662 192L660 193L659 193L658 192L657 191L659 191L660 191L660 190L660 191L662 191L662 190L663 190L663 188L664 188L665 189L665 190L664 191ZM614 187L614 188L612 187L612 186L614 186L614 187ZM621 186L622 188L620 187L618 187L617 187L616 187L616 186L619 186L621 186ZM666 189L666 190L665 188L664 187L663 186L661 185L662 185L663 186L664 186L665 187L666 188L666 189ZM628 182L629 186L631 187L633 185L635 183L637 183L638 184L640 185L642 185L645 187L649 188L651 189L652 190L652 191L655 192L656 193L654 193L654 195L656 196L657 198L659 198L659 199L660 199L659 200L662 201L661 201L660 201L658 201L656 200L654 199L653 198L652 196L649 195L648 196L647 196L647 198L645 199L644 198L642 198L640 197L638 196L638 197L635 197L636 195L637 195L637 192L636 191L632 189L630 189L627 187L627 188L626 188L626 187L624 186L626 185L628 185L627 184L624 184L624 183L622 183L621 182L624 181L625 181L628 182ZM610 177L609 179L607 180L605 179L602 179L600 180L600 181L602 183L603 182L607 181L607 182L606 182L605 183L603 184L605 186L605 187L606 189L606 191L605 191L604 191L605 189L603 190L603 189L603 188L602 187L602 185L601 186L601 188L601 191L600 191L599 191L599 189L599 187L598 187L598 186L598 184L599 183L600 180L600 179L602 177L603 178L606 178L608 178L610 177ZM617 178L617 179L616 179L616 181L617 182L616 182L615 181L615 178L615 176L616 176L616 177L617 177L617 178ZM572 192L569 192L568 190L565 188L564 187L563 186L562 184L560 181L559 180L558 178L557 176L555 175L554 173L553 172L551 170L551 169L552 169L555 170L557 171L558 173L559 174L561 176L563 176L565 177L566 179L568 180L567 181L568 182L569 182L569 184L570 185L571 185L572 186L572 189L572 192ZM596 176L598 178L596 178L595 180L595 182L593 183L593 185L592 188L592 187L590 188L589 187L588 187L587 186L584 187L583 186L582 186L580 186L580 183L579 183L578 181L578 179L578 177L579 176L581 177L582 176L583 175L584 174L586 174L587 172L588 171L589 170L591 169L592 168L593 166L594 166L595 167L595 168L597 169L598 169L598 170L597 170L597 171L596 172L595 174L596 175L596 176ZM613 163L613 164L613 166L612 167L612 165L611 166L611 168L611 169L608 168L608 166L608 165L607 164L607 165L606 165L604 166L605 164L606 163L607 163L608 164L609 163L610 162L611 162L611 160L612 161L613 162L613 163ZM522 168L521 168L520 166L519 164L520 160L522 161L523 163L524 165L523 167L522 168ZM238 160L236 160L237 159L237 158L238 158L238 160ZM608 159L607 160L607 161L606 162L605 161L605 160L606 159L606 158L607 158L607 159L608 158L608 159ZM597 161L594 163L595 162L597 161L598 159L599 157L599 159L598 160L597 161ZM604 156L605 157L606 157L606 158L605 159L604 159L604 158L604 157L604 156ZM611 156L612 158L610 157L610 158L611 159L610 160L610 158L609 158L609 157L610 157L610 156L609 155L610 155L611 156ZM603 154L603 156L602 155L601 153L602 153L603 154ZM603 143L604 144L604 143L605 144L604 144L605 146L605 147L603 148L603 150L603 151L605 152L605 151L608 152L608 154L608 155L607 154L606 153L605 154L604 152L602 153L601 152L601 151L602 151L601 150L601 151L600 150L600 149L600 147L601 148L601 145L601 143L603 143ZM229 144L228 144L227 144L226 144L226 143L227 143L228 143L229 144ZM206 144L206 145L204 144L203 144L204 143L205 143L206 143L207 144L208 144L206 144ZM215 140L217 141L217 140L218 140L220 141L222 141L221 142L222 142L223 143L223 144L222 143L221 143L220 143L220 144L219 144L219 143L218 143L217 145L217 144L215 144L214 144L213 144L212 144L211 143L213 143L215 143L214 142L214 141L213 141L214 140L215 140ZM581 143L579 144L577 143L577 141L578 140L580 140L582 140L582 141L581 141L581 143ZM49 142L48 142L48 141L48 140L48 139L48 140L49 140L50 140L50 141L50 142L49 142ZM48 139L47 139L47 138L48 138L48 139ZM46 138L45 138L46 138ZM45 137L44 137L43 137L44 137L45 137ZM41 136L40 136L41 136ZM201 134L201 135L203 135L204 135L206 137L207 138L208 138L209 138L209 139L210 139L212 139L211 140L210 140L209 140L207 140L204 140L206 139L205 139L204 139L203 138L203 137L201 137L200 136L199 136L196 136L196 135L194 135L193 136L192 136L191 136L190 136L191 136L192 135L192 134L193 134L195 134L197 134L199 134L201 134ZM205 132L204 133L204 131L203 131L204 130L205 131L205 132ZM602 134L601 136L600 134L600 133L601 131L603 129L604 130L604 131L602 134ZM204 127L202 127L202 126L203 126L204 126L204 127ZM206 127L206 128L205 128L205 127L204 126L206 127ZM629 112L630 112L628 114L628 113L627 113L626 115L625 114L625 113L626 112L627 112L628 111L629 112ZM429 109L428 110L426 111L425 111L425 110L426 110L426 109L427 109L429 109ZM407 109L408 109L410 109L412 109L411 110L413 109L412 110L409 110L407 109ZM391 104L390 105L391 106L390 107L389 106L388 106L385 105L385 104L387 104L390 104L391 104ZM378 98L380 99L379 102L378 102L377 102L377 99L376 98L377 98L378 98ZM642 106L641 107L642 108L641 110L638 111L634 111L632 113L630 112L630 111L627 111L624 112L622 112L624 114L623 117L621 118L620 117L621 115L620 115L619 113L621 113L622 112L624 110L625 109L629 109L631 109L633 105L635 106L638 104L639 104L640 101L640 99L641 98L643 97L644 100L644 102L642 104L642 106ZM379 96L378 97L377 95L379 94L379 96ZM648 92L649 92L651 91L651 93L648 94L646 96L643 95L642 97L640 97L640 95L641 93L643 93L643 90L644 89L646 91L648 92ZM233 87L234 87L236 87L235 88L234 88L232 87L231 87L232 86L233 87ZM236 82L235 82L233 81L231 80L232 80L234 81L236 81L236 82ZM113 83L112 83L109 82L108 82L106 81L106 80L104 80L103 79L103 78L105 79L107 79L108 79L109 80L110 81L112 82L113 83ZM248 79L246 80L248 80L249 80L248 81L250 81L251 81L253 82L252 83L254 83L254 84L255 85L254 87L253 87L252 86L252 85L252 84L249 86L248 86L249 85L247 85L245 85L241 85L241 84L242 83L243 82L245 79L247 77L248 77L249 77L248 79ZM95 72L97 72L96 74L98 76L97 76L96 75L95 74L94 73L94 72L95 72ZM647 79L649 82L646 81L645 84L647 86L647 88L645 87L644 88L644 86L644 84L644 82L644 81L644 78L643 76L643 73L645 72L644 72L645 71L646 73L647 75L646 76L647 79ZM346 75L343 77L340 76L342 74L341 72L343 71L345 70L347 70L349 71L348 72L348 74L346 75ZM385 69L384 70L382 69L382 68L385 68L385 69ZM54 66L52 67L51 66L51 65L52 64L54 64L55 64L56 65L54 66ZM354 63L352 65L354 65L356 65L356 66L354 68L356 68L358 71L359 71L360 73L361 74L363 75L363 76L362 76L363 77L361 78L358 78L355 79L354 79L353 80L351 79L350 80L348 80L351 78L353 77L350 77L349 76L352 75L350 74L351 73L354 73L354 72L353 71L350 70L351 69L350 68L349 69L349 67L348 66L348 64L350 63L352 63L354 63ZM29 60L28 60L26 60L25 60L27 59L29 59L29 60ZM201 56L201 57L200 57L199 56L200 55L201 55L201 56ZM196 55L194 56L192 56L192 55L194 54L196 54L196 55ZM17 52L18 53L19 53L21 53L23 53L22 54L21 54L19 54L19 53L17 53L16 53L17 52ZM190 49L190 50L191 49L192 50L194 50L197 51L197 52L198 52L200 53L198 53L195 53L194 52L192 53L189 54L188 53L186 53L187 52L188 50L188 49L190 49ZM331 47L331 48L333 50L330 51L324 53L323 53L320 53L314 52L316 51L312 50L316 50L316 49L311 49L313 47L316 47L319 49L322 47L324 48L328 47L331 47ZM208 46L206 46L206 45L206 44L208 43L210 44L210 45L208 46ZM0 42L5 44L10 46L10 47L11 47L11 46L16 46L20 48L18 49L15 49L15 51L14 51L12 51L11 51L8 50L8 49L6 49L3 49L2 49L3 48L0 48L1 49L0 50L720 50L717 51L715 51L717 52L718 53L719 54L719 55L718 55L715 55L709 56L707 57L704 58L701 59L701 60L698 59L693 60L692 60L690 61L687 60L686 62L684 64L686 65L686 68L684 68L683 69L684 70L681 71L680 74L677 74L676 76L674 78L673 77L672 74L671 69L672 66L674 65L674 64L677 64L680 61L684 59L687 58L689 55L687 55L685 57L680 59L679 56L673 57L668 60L670 62L666 62L663 62L663 61L660 61L657 62L651 61L644 62L638 66L630 71L633 71L634 72L636 72L638 71L640 72L643 74L643 76L641 78L641 80L640 83L637 86L636 87L634 90L631 92L630 93L627 94L626 94L625 93L622 95L622 96L621 95L620 96L619 97L619 98L618 99L617 100L616 100L615 100L615 101L615 102L616 102L617 103L618 105L619 106L619 109L618 110L616 110L615 111L613 111L613 110L613 109L612 107L614 106L612 105L611 104L611 105L610 104L609 104L610 103L610 102L611 101L609 101L609 100L606 101L604 102L602 102L603 101L603 100L604 99L603 98L602 99L599 100L598 101L596 102L595 103L596 104L598 104L598 105L599 106L602 104L603 105L605 105L605 106L602 107L601 108L599 109L598 110L600 111L601 113L602 115L604 117L604 118L603 119L603 120L604 120L604 122L603 124L602 124L601 126L599 129L597 131L595 133L592 134L590 135L588 136L588 135L586 136L584 137L582 137L581 139L580 139L579 138L580 137L577 137L576 137L573 139L572 140L571 142L573 144L575 147L577 148L578 149L579 153L578 157L577 158L574 159L573 161L570 163L570 162L570 160L569 159L567 159L566 158L565 156L563 155L562 155L562 153L560 153L560 155L559 158L558 160L558 162L560 162L561 163L561 165L562 166L563 167L564 168L565 168L566 169L567 170L567 172L567 173L567 174L568 175L568 177L567 178L565 176L563 174L563 173L561 172L561 170L560 169L561 168L560 167L559 166L559 165L558 164L557 163L557 164L556 163L557 162L557 160L557 159L558 157L557 156L557 154L556 153L556 150L555 148L554 146L553 147L551 149L550 148L548 148L549 145L549 144L547 141L546 140L545 139L544 138L544 137L544 136L543 134L541 134L541 135L541 136L540 136L539 136L538 136L538 137L536 137L534 137L534 139L533 140L530 141L528 143L526 145L524 146L524 147L523 147L522 148L521 148L520 150L520 152L521 154L520 156L520 159L519 159L518 161L518 162L517 162L516 163L515 164L513 162L512 159L511 157L511 156L510 155L509 152L509 151L507 148L506 144L506 142L506 139L505 137L502 138L501 138L498 136L499 135L499 134L496 133L495 132L494 131L493 129L489 130L486 130L483 130L479 129L477 129L475 129L474 126L473 126L471 126L469 127L467 126L465 125L463 124L462 122L460 120L459 120L458 119L457 120L456 120L456 121L457 123L458 125L459 125L459 126L460 127L460 128L460 129L461 129L461 130L462 130L461 129L462 128L463 128L463 130L463 131L463 132L464 131L464 132L465 132L467 132L468 132L469 130L471 129L472 128L473 127L473 128L473 129L473 130L474 132L475 132L476 133L477 133L478 134L479 135L480 135L479 137L478 138L477 139L476 139L476 140L475 141L476 142L475 142L474 142L473 143L473 144L471 144L471 145L471 146L470 146L468 146L467 147L466 147L465 147L464 148L464 149L462 150L459 151L457 152L456 152L455 153L453 153L452 153L451 153L451 154L450 154L450 155L449 155L448 155L447 155L446 154L447 152L446 152L446 150L445 150L446 149L445 149L446 148L446 147L445 146L445 145L444 144L442 143L442 141L440 140L440 139L438 137L438 136L438 135L437 133L436 132L435 131L434 130L434 129L433 128L433 127L431 125L430 124L429 124L430 123L430 122L430 121L429 122L429 123L428 124L428 125L427 124L426 123L425 120L425 123L427 125L428 128L429 129L430 130L431 132L431 134L433 136L434 136L434 138L434 140L435 143L436 143L437 144L438 146L439 148L440 149L442 151L443 152L445 153L445 154L446 155L447 155L447 156L445 157L446 157L447 157L447 158L448 159L449 159L451 159L453 158L455 158L456 158L457 157L458 157L459 157L461 157L461 156L462 156L462 157L462 158L462 159L461 162L460 164L459 166L457 169L455 172L453 174L451 176L448 178L446 179L444 182L444 183L443 183L442 184L441 185L440 187L439 189L438 189L437 192L438 193L439 194L438 195L439 196L438 197L439 198L440 200L441 201L441 202L441 204L441 205L441 208L442 209L441 211L440 212L439 213L437 214L435 215L433 217L432 218L430 219L430 220L429 221L430 223L431 224L431 226L431 227L431 228L430 229L428 230L426 231L425 231L425 232L426 232L426 233L425 235L425 237L424 238L423 239L422 240L421 241L420 242L418 244L416 246L415 246L413 247L412 247L412 248L410 248L409 248L407 248L406 248L405 248L403 249L401 249L400 250L399 250L398 249L397 248L396 248L397 247L396 245L396 243L395 241L394 240L393 237L391 236L390 234L390 232L389 231L389 228L389 225L389 224L388 223L387 222L386 219L385 218L384 216L383 215L383 213L384 212L384 210L384 209L385 207L385 206L387 205L387 204L387 203L387 201L386 200L386 198L386 197L386 195L385 194L384 193L385 192L384 192L384 190L382 188L380 186L379 184L378 182L378 181L379 179L379 178L379 175L380 174L379 173L378 172L377 171L377 170L375 171L374 171L373 172L372 171L371 170L370 169L369 167L367 167L365 167L364 168L362 168L359 169L358 170L356 171L354 170L353 170L352 170L351 170L348 170L347 171L345 171L344 171L342 170L340 169L338 168L337 166L335 165L334 164L334 162L333 161L332 160L331 160L331 159L330 158L329 157L328 157L327 156L327 155L326 154L327 153L326 151L325 151L326 150L327 149L327 148L327 147L327 146L328 144L327 142L327 141L327 140L327 139L326 138L326 137L326 136L327 136L327 135L327 134L328 133L329 131L330 131L330 130L330 129L331 127L332 127L334 125L335 124L337 124L338 122L339 122L341 120L340 118L341 116L341 115L343 114L345 113L346 112L348 110L348 108L350 108L351 109L353 109L355 110L356 110L358 109L360 108L361 107L363 107L366 106L370 106L371 107L373 106L375 106L377 106L379 105L380 106L380 107L382 106L381 107L381 108L382 109L382 110L380 111L381 112L382 112L382 113L383 114L385 114L386 114L388 115L390 115L391 117L393 118L396 118L398 119L399 119L400 118L400 116L402 115L403 114L406 115L406 116L407 116L408 116L410 116L410 117L413 117L415 117L417 118L418 118L419 118L420 117L422 117L423 117L424 118L424 117L426 118L428 118L429 118L429 117L430 116L430 114L431 112L432 111L432 109L432 108L432 107L431 107L429 106L428 108L425 108L423 107L421 107L419 108L417 107L415 107L414 105L413 104L414 102L412 101L415 99L418 99L418 98L422 98L425 97L427 96L430 96L434 97L437 98L439 98L441 98L443 97L443 96L443 95L442 94L441 94L440 93L437 91L435 91L433 90L435 89L436 88L435 87L438 86L438 85L436 86L435 86L434 87L432 87L430 87L430 89L431 89L433 89L433 90L430 90L428 91L427 91L427 90L425 89L427 88L423 87L421 87L421 88L419 89L419 90L418 90L417 93L416 93L415 95L416 96L416 97L418 97L418 98L415 98L414 99L413 100L412 99L412 98L411 98L410 98L407 99L409 100L408 100L407 100L406 99L405 99L406 101L407 102L406 102L407 103L408 104L408 105L406 104L407 105L406 105L406 107L405 107L403 106L403 105L402 103L401 102L400 101L400 100L399 99L399 97L399 96L398 96L398 95L397 95L395 94L394 94L392 93L390 92L391 91L390 91L390 90L389 90L388 90L387 90L387 89L388 89L386 89L385 89L385 90L385 91L385 92L387 93L388 94L390 96L392 96L392 97L394 98L395 98L397 99L397 100L395 99L394 99L393 100L394 101L394 102L393 102L392 104L391 104L392 102L391 101L391 100L390 100L389 99L388 98L387 98L386 97L384 97L382 95L381 94L380 92L379 92L378 91L377 92L376 92L375 93L373 94L369 93L366 94L366 95L366 96L364 98L362 98L361 99L360 100L359 101L360 103L359 103L359 105L357 105L356 107L353 107L351 107L350 107L349 108L348 108L348 107L347 106L345 106L344 106L343 106L342 106L343 105L342 103L341 103L341 101L342 100L342 98L342 97L342 96L342 95L341 94L344 93L346 93L349 93L351 93L353 93L356 93L357 92L358 88L356 86L354 85L351 84L351 83L353 82L357 83L356 80L358 81L363 80L363 78L365 78L367 77L368 77L369 74L372 73L374 73L376 73L378 72L377 71L377 70L376 69L376 67L377 66L379 66L380 65L381 65L381 66L381 67L382 67L381 68L379 69L380 70L380 71L382 71L382 72L384 72L385 71L387 72L388 72L390 72L393 71L395 70L397 71L399 71L400 70L403 70L402 68L402 66L403 65L405 64L407 66L408 66L409 64L409 63L408 63L407 63L407 62L409 61L412 61L414 61L416 61L418 60L416 59L413 59L409 60L406 60L405 59L403 59L403 57L402 55L403 54L405 52L409 50L411 50L411 49L408 48L404 49L402 50L403 51L400 53L396 55L394 57L396 59L398 60L396 62L394 63L393 66L392 68L389 68L388 69L386 69L385 67L384 65L382 62L381 61L377 63L374 64L371 63L371 61L370 56L372 55L377 53L381 51L385 48L390 44L393 43L398 40L403 39L406 40L409 38L413 38L416 38L423 39L420 40L422 41L424 40L428 41L433 42L441 44L442 45L442 46L440 47L437 48L428 46L426 47L430 48L430 51L432 52L434 52L434 51L433 50L434 50L439 51L441 50L440 49L444 47L446 47L448 48L449 46L447 45L448 44L447 43L453 44L454 45L451 45L451 46L453 47L456 46L456 45L460 44L467 42L469 42L467 44L469 44L471 43L475 43L478 42L480 43L482 42L480 41L481 40L487 41L490 42L497 44L498 43L496 42L496 41L494 41L495 40L493 39L493 38L497 36L498 34L500 34L505 34L506 36L504 37L505 38L506 39L505 42L507 43L506 45L503 47L505 48L506 47L508 46L508 45L510 44L509 43L510 42L508 42L507 41L509 39L506 37L510 36L509 34L510 34L511 35L511 37L513 38L512 36L515 35L519 35L523 37L521 35L521 33L525 32L529 32L534 32L532 31L534 30L537 30L541 29L546 28L552 28L553 28L558 27L562 27L562 26L564 25L569 25L572 25L569 26L574 26L574 27L576 27L582 27L587 28L588 28L588 29L586 30L580 31L579 32L581 32L584 32L586 32L587 33L588 33L591 32L598 33L598 34L606 34L607 33L611 33L614 33L617 34L618 35L617 36L619 38L623 38L625 36L628 37L631 37L635 37L636 37L640 37L638 35L641 34L659 36L661 37L666 38L674 38L678 38L680 39L679 41L682 41L685 41L688 41L692 41L696 41L699 43L702 42L700 41L701 40L707 40L711 40L717 41L0 42ZM458 97L459 99L460 99L461 99L459 100L459 101L458 102L458 103L458 105L460 105L462 106L465 107L468 106L467 104L468 102L466 101L467 100L465 100L466 98L468 99L469 98L468 97L467 96L466 96L466 98L465 96L465 95L465 94L463 94L462 92L461 91L463 91L463 90L464 89L466 89L466 88L466 86L464 86L462 86L460 87L458 87L457 88L455 89L453 91L455 93L455 94L457 96L458 97ZM169 42L167 42L165 42L163 42L160 41L162 41L164 40L166 40L167 41L169 42ZM0 37L720 38L718 38L717 38L0 37ZM0 37L2 37L5 37L5 38L3 38L0 38L0 37ZM179 41L179 43L182 41L184 43L183 44L185 46L187 44L189 42L189 40L192 40L195 41L197 42L198 43L196 44L197 45L197 46L193 47L191 47L188 47L188 48L186 50L185 50L183 52L180 52L179 53L178 54L176 54L174 56L172 58L171 60L171 62L174 62L174 64L175 66L178 65L182 66L184 67L185 68L188 69L190 69L193 70L195 70L195 71L196 73L197 76L200 78L202 77L203 75L202 72L200 71L204 70L206 68L207 67L207 66L205 64L203 62L205 60L204 58L204 55L205 55L209 55L211 56L212 55L214 56L217 57L217 58L221 58L221 60L221 62L223 62L225 64L228 62L230 60L231 59L232 61L235 64L237 66L236 67L239 68L241 70L244 70L245 71L246 72L248 73L249 76L247 76L246 77L242 78L240 80L237 80L232 79L229 79L227 80L226 81L223 82L220 85L218 86L219 86L223 83L227 82L230 82L232 83L230 84L230 86L231 88L234 89L237 88L239 86L239 87L240 88L238 89L233 91L232 91L229 93L228 93L228 91L231 89L228 89L226 90L224 91L222 92L220 93L219 94L218 94L218 95L219 96L220 96L220 97L219 97L218 97L216 97L215 97L214 98L213 98L216 98L213 99L212 99L212 98L211 99L212 99L212 101L210 102L209 101L209 102L210 102L210 103L209 104L208 106L208 105L209 104L208 103L207 102L207 103L207 104L206 104L207 104L207 106L208 106L208 107L209 109L207 110L205 111L204 112L203 112L202 113L202 114L199 115L198 116L197 117L197 119L197 120L198 122L199 123L199 124L200 126L200 128L199 130L198 130L197 129L197 128L196 127L195 125L194 124L195 123L194 122L193 120L192 120L190 121L189 121L188 120L187 119L185 119L183 119L182 119L181 120L181 121L182 121L181 122L180 121L180 122L178 122L177 121L175 121L174 120L172 121L171 121L169 123L167 123L166 124L165 125L165 127L165 128L166 128L165 130L165 131L164 134L164 135L165 136L165 137L166 139L167 140L167 141L168 142L170 143L171 144L173 143L174 143L176 143L177 142L178 141L179 140L179 139L179 138L181 137L183 137L185 137L186 137L186 138L185 139L185 141L185 142L184 143L183 143L184 143L184 144L183 145L184 145L183 146L184 146L183 147L183 148L182 148L183 149L183 148L184 149L184 148L185 148L186 148L187 148L188 148L189 148L190 148L191 148L192 149L193 149L194 150L193 151L194 151L193 152L193 153L193 154L193 155L193 156L193 157L192 157L192 158L193 158L193 159L194 160L195 161L196 162L197 162L198 162L199 162L200 161L201 161L202 161L203 161L204 162L205 162L205 163L206 163L208 161L209 161L209 160L209 159L210 158L211 158L212 157L213 158L215 157L216 156L216 155L217 155L218 156L217 156L217 157L216 157L217 158L217 159L216 160L217 162L218 160L217 160L217 158L220 157L219 156L220 156L221 157L222 157L224 158L224 159L225 159L228 159L229 160L230 160L231 159L234 159L236 159L235 159L235 160L237 160L238 161L239 163L240 163L242 164L243 165L243 166L244 166L245 167L246 168L248 168L250 168L252 168L253 169L254 169L256 171L257 172L258 173L259 176L260 177L260 178L259 180L263 180L263 182L264 181L267 182L270 183L271 184L271 185L273 185L277 186L280 186L283 187L286 190L287 190L289 190L290 191L290 193L291 195L290 198L289 199L286 202L285 204L283 206L282 208L282 211L282 214L281 216L281 217L280 219L278 222L278 224L276 225L276 226L274 226L271 227L269 228L267 228L265 230L263 232L263 233L263 234L263 236L262 237L261 238L259 242L257 244L255 244L255 246L253 248L252 249L250 250L249 250L248 250L246 249L244 249L243 248L243 249L246 251L245 252L247 253L246 254L245 256L242 257L238 258L235 258L236 259L235 260L236 261L235 262L232 262L231 262L230 262L230 264L231 265L232 264L233 265L231 266L230 267L229 269L229 270L227 270L225 271L225 273L227 274L229 274L228 276L226 277L224 280L223 281L222 281L222 284L224 285L223 285L221 285L220 285L218 286L218 288L217 288L215 287L213 286L210 285L209 283L210 282L209 281L209 277L210 275L212 274L209 273L211 272L211 268L214 269L215 265L213 264L213 267L211 266L212 264L213 260L214 259L213 257L213 254L214 254L215 251L216 248L217 245L217 242L217 240L217 238L218 235L219 231L219 227L220 223L220 220L219 217L217 216L217 215L213 213L210 211L208 209L207 208L207 207L206 204L204 201L202 197L201 196L200 194L199 193L197 192L198 191L197 189L198 188L199 187L200 185L200 184L199 185L198 184L198 182L199 182L199 181L200 179L200 178L201 178L202 177L203 176L203 175L204 175L205 173L206 172L205 172L205 171L205 169L205 168L205 167L204 166L204 165L203 164L204 163L203 163L202 162L201 162L200 163L199 163L199 164L200 165L199 165L198 166L198 164L198 165L197 165L197 164L196 164L195 163L194 163L194 164L193 163L193 162L192 161L191 161L191 160L190 160L190 161L189 160L188 160L188 159L189 158L188 158L189 158L188 157L187 156L186 155L185 154L185 153L184 153L184 154L183 154L182 153L181 153L180 153L179 152L178 152L177 152L176 151L173 149L172 148L171 148L169 148L168 148L167 149L165 148L164 148L162 147L161 147L158 146L157 145L156 144L155 144L153 143L152 143L150 141L149 140L149 139L149 138L149 137L149 136L149 135L148 134L146 132L144 131L143 130L141 129L141 128L141 127L140 127L139 126L139 124L138 124L136 123L136 122L135 121L134 120L134 118L132 117L130 116L130 117L130 118L131 120L133 122L134 123L134 124L135 125L136 126L137 127L137 129L138 129L139 130L139 131L140 131L140 132L141 133L141 134L140 134L139 133L138 132L137 131L136 131L136 129L135 128L134 127L133 126L133 127L132 126L131 126L130 125L130 124L131 125L132 124L132 123L130 121L129 121L128 120L127 118L127 117L126 115L125 114L124 113L123 113L123 112L122 112L121 111L119 111L119 110L117 108L115 105L115 104L114 104L113 102L112 100L111 99L112 98L112 96L111 94L112 93L112 89L112 86L111 85L111 84L111 83L114 84L115 86L115 85L115 84L114 82L110 80L109 79L105 78L104 77L104 75L102 74L101 73L99 71L99 70L98 70L96 69L96 67L93 66L92 64L90 64L87 64L84 63L80 61L78 61L75 60L72 60L68 59L66 58L64 59L64 60L63 60L61 61L59 61L57 62L56 61L57 59L59 58L59 57L56 59L55 60L52 61L53 62L52 64L49 65L47 65L47 66L44 67L43 68L41 69L39 69L38 69L36 70L34 71L30 71L32 70L34 69L36 68L39 68L40 67L43 66L45 65L45 63L46 62L44 63L43 62L42 63L41 62L40 63L39 62L37 63L36 63L36 61L35 60L32 60L31 59L29 59L29 58L28 57L29 56L30 55L31 54L32 54L34 54L35 53L37 53L38 52L37 51L38 50L37 50L35 51L34 51L33 51L30 51L27 51L26 50L24 49L27 48L31 47L33 47L32 48L37 48L35 47L33 46L31 45L29 44L26 43L28 42L31 42L34 41L34 40L36 39L38 39L42 38L44 38L47 37L50 38L51 39L52 38L56 38L55 39L59 39L61 39L65 40L69 40L70 40L73 40L76 40L78 41L82 41L85 42L87 42L89 41L91 41L94 41L97 40L100 40L102 40L103 40L104 39L105 39L108 41L111 40L111 41L114 41L115 40L117 40L120 41L125 42L128 42L130 42L132 43L129 44L133 45L138 44L140 44L142 45L144 44L142 43L144 43L146 43L148 42L149 43L151 44L154 44L157 45L160 44L163 44L163 43L165 43L168 44L168 45L169 44L171 44L172 42L169 41L167 40L167 38L170 36L172 36L174 37L177 40L175 41L179 41ZM132 34L131 35L135 34L138 35L140 34L142 35L144 37L145 36L143 34L145 34L147 34L149 35L150 37L151 38L154 39L158 40L158 41L155 41L156 42L155 42L152 42L148 42L146 42L142 42L136 43L133 43L132 42L130 41L128 42L125 40L127 40L130 40L133 40L135 39L131 39L127 39L124 39L123 38L128 37L125 37L121 37L123 35L124 35L130 33L132 34ZM151 33L149 34L146 33L147 33L149 33L151 33ZM207 34L205 34L203 34L201 35L200 34L198 33L199 32L204 33L207 34ZM187 34L188 35L190 33L195 32L199 35L198 36L202 35L204 34L209 36L212 36L212 37L216 37L218 38L222 39L224 40L226 42L222 43L227 44L230 44L233 46L236 46L236 48L232 50L230 49L227 47L224 47L224 49L226 50L229 51L231 53L230 55L227 54L222 53L225 54L227 55L228 56L222 55L218 54L216 53L213 52L210 51L205 52L203 51L204 49L208 49L212 49L211 48L212 47L215 45L214 45L213 44L210 43L206 42L208 42L205 40L204 40L202 40L201 40L197 41L190 40L186 39L183 39L181 38L183 38L180 38L180 36L181 34L183 33L188 32L187 34ZM159 32L162 33L165 32L166 33L164 34L167 35L167 37L163 37L161 37L160 37L155 35L155 34L159 35L157 33L159 32ZM647 34L644 34L640 33L642 32L644 32L647 33L647 34ZM174 34L171 36L169 36L168 34L168 33L169 32L171 32L175 32L179 32L176 34L174 34ZM119 37L114 38L113 37L108 36L109 36L110 34L112 33L110 31L117 31L120 32L125 32L127 32L129 33L126 34L122 35L119 36L119 37ZM661 30L659 31L656 30L652 30L653 29L656 29L661 30ZM173 30L172 31L169 31L166 30L167 29L170 29L172 29L173 30ZM650 29L649 30L641 30L638 31L634 29L635 28L638 28L643 28L650 29ZM163 27L165 27L165 29L164 30L160 30L158 30L158 29L155 29L155 27L157 27L160 27L163 27ZM144 28L146 28L148 28L149 29L147 30L141 30L136 31L133 31L132 31L136 30L127 30L125 30L127 28L129 27L135 28L138 29L142 29L139 27L141 26L143 27L144 28ZM475 39L474 39L467 38L463 37L463 36L465 36L465 34L469 33L467 32L472 31L471 30L476 29L482 27L489 27L492 26L496 26L498 27L496 28L489 29L483 29L477 31L474 33L471 35L471 37L475 39ZM171 26L173 26L177 26L179 27L178 28L180 28L182 29L184 29L187 29L190 29L194 28L198 29L200 29L200 30L199 31L196 31L194 31L188 31L184 31L180 31L175 30L174 29L174 28L172 27L168 27L166 26L167 26L171 26ZM128 25L127 26L126 27L124 27L120 28L117 28L114 28L118 26L122 25L125 25L128 25ZM172 25L171 25L168 25L167 24L171 24L173 25L172 25ZM140 25L136 25L133 25L135 24L137 24L140 24L140 25ZM409 24L405 25L401 25L403 24L402 23L406 23L407 24L409 24ZM141 23L138 23L135 23L137 22L138 22L141 23ZM168 24L165 24L164 24L163 23L163 22L165 22L166 22L169 23L168 24ZM160 23L161 24L157 24L154 23L150 23L152 23L149 22L149 21L153 22L158 22L160 23ZM570 23L559 24L563 22L564 21L566 21L571 23L570 23ZM397 21L403 22L398 23L397 24L395 25L394 26L392 26L388 25L389 25L386 24L382 22L381 21L386 20L387 21L390 21L391 20L394 20L397 21ZM411 19L415 20L412 21L406 21L400 21L400 20L397 20L395 19L401 19L404 19L406 19L411 19ZM462 19L460 19L458 19L458 20L455 20L453 20L454 19L450 19L454 18L457 18L457 19L458 18L460 18L463 19L462 19ZM560 22L556 22L550 22L547 21L545 20L542 19L548 18L552 17L556 19L560 20L560 22ZM186 21L188 21L186 22L182 23L178 24L174 23L172 22L174 21L170 21L168 21L167 20L168 19L169 18L171 18L175 17L178 19L181 19L184 19L186 21ZM223 14L228 14L233 14L236 15L231 16L226 17L225 17L229 17L224 18L221 19L218 20L214 21L212 21L206 21L209 22L208 22L209 23L207 24L204 24L203 25L200 26L201 26L204 26L199 28L194 27L188 27L185 27L181 27L181 26L184 26L183 24L185 24L190 25L187 24L184 23L186 22L189 22L190 21L187 21L186 19L192 20L193 20L196 19L192 19L185 19L181 18L180 17L177 17L177 16L180 16L182 16L186 15L189 15L191 15L194 15L195 14L198 14L201 14L207 14L209 14L214 14L219 14L223 14ZM306 13L318 15L315 15L307 15L296 16L297 16L304 16L310 16L314 16L316 17L314 18L319 17L328 16L334 17L336 17L327 19L326 19L320 20L325 20L322 21L321 22L321 25L323 26L320 26L317 27L320 28L321 30L319 30L321 31L317 32L319 32L318 33L316 33L313 33L315 35L315 36L311 35L310 35L313 36L316 37L316 39L313 39L311 38L309 37L310 38L307 40L313 40L315 40L310 41L305 43L299 44L296 44L294 45L292 47L287 48L286 48L283 49L280 49L279 50L279 52L278 53L274 55L275 56L274 58L273 60L270 60L267 58L263 58L262 57L260 55L257 53L256 51L255 50L253 48L253 46L252 46L254 43L257 43L258 42L258 40L256 41L255 41L253 41L251 41L250 39L251 38L253 38L257 39L254 38L252 37L250 37L248 37L251 35L249 34L248 33L245 31L243 30L243 29L237 28L233 28L228 28L223 28L221 27L217 26L222 25L226 25L218 25L213 24L214 23L221 22L229 21L229 20L224 20L226 19L233 18L236 17L235 16L239 16L246 16L252 16L254 16L259 15L264 16L267 16L271 17L266 16L266 15L273 14L280 14L283 13L290 13L306 13Z';
+const prj = ll => [(ll[1] + 180) * 2, (90 - ll[0]) * 2];
+function pathFor(segList) {
+  let d = '', last = null;
+  for (const [a, b, t0, t1] of segList) {
+    const n = Math.max(2, Math.ceil(hav(a, b) / 150 * (t1 - t0)));
+    for (let k = 0; k <= n; k++) {
+      const p = prj(slerp(a, b, lerp(t0, t1, k / n)));
+      if (!last || Math.abs(p[0] - last[0]) > 360) d += `M${p[0].toFixed(1)} ${p[1].toFixed(1)}`; else d += `L${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
+      last = p;
+    }
+  }
+  return d;
+}
+function legSegs(id, upto) { const out = []; for (const s of LEG[id].segs) { if (upto != null && s.start >= upto) break; const t1 = upto != null && s.start + s.len > upto ? (upto - s.start) / s.len : 1; out.push([s.a.ll, s.b.ll, 0, t1]); } return out; }
+function showMap(zoom) {
+  const done = [], ahead = [], alt = [];
+  const lapNow = P.lap;
+  walk(L => {
+    if (L.lap > lapNow) return false;
+    if (L.lap < lapNow) return;
+    if (L.fork && L.start > st.km) {
+      for (const o of L.options) (st.choices[L.key] === o ? ahead : alt).push(...legSegs(o));
+      return false;
+    }
+    if (!L.id) return false;
+    const k = st.km - L.start;
+    if (k >= LEG[L.id].len) done.push(...legSegs(L.id));
+    else { done.push(...legSegs(L.id, k)); const rest = []; for (const s of LEG[L.id].segs) { if (s.start + s.len <= k) continue; rest.push([s.a.ll, s.b.ll, s.start < k ? (k - s.start) / s.len : 0, 1]); } ahead.push(...rest); }
+  });
+  // 一度も通っていない道も薄く
+  const all = []; for (const id in LEG) all.push(...legSegs(id));
+  const me = prj(P.ll);
+  const vb = zoom ? `${me[0] - 45} ${me[1] - 25} 90 50` : '0 0 720 300';
+  const cities = new Map(); for (const id in LEG) for (const s of LEG[id].segs) cities.set(s.b.name, s.b.ll);
+  const dots = [...cities].map(([n, ll]) => { const p = prj(ll); return `<circle cx="${p[0]}" cy="${p[1]}" r="${zoom ? .7 : 1.6}" class="${st.stamps[n] ? 'v' : 'u'}"/>` + (zoom ? `<text x="${p[0] + 1}" y="${p[1] - 1}">${n}</text>` : ''); }).join('');
+  modal(`<h2>🗺 旅の地図</h2><div class="maptabs"><button data-z="0" class="${zoom ? '' : 'on'}">世界</button><button data-z="1" class="${zoom ? 'on' : ''}">ちかく</button></div>
+  <svg class="map" viewBox="${vb}" preserveAspectRatio="xMidYMid meet"><rect x="-400" y="-400" width="1600" height="1200" class="sea"/><path d="${LAND}" class="land"/>
+  <path d="${pathFor(all)}" class="r-all"/><path d="${pathFor(alt)}" class="r-alt"/><path d="${pathFor(ahead)}" class="r-ahead"/><path d="${pathFor(done)}" class="r-done"/>
+  ${dots}<circle cx="${me[0]}" cy="${me[1]}" r="${zoom ? 1.6 : 5}" class="me"/><circle cx="${me[0]}" cy="${me[1]}" r="${zoom ? 1.6 : 5}" class="me2"/></svg>
+  <div class="legend"><span><i class="l-done"></i>通ってきた道</span><span><i class="l-ahead"></i>これから</span><span><i class="l-alt"></i>えらばなかった道</span></div>
+  <button class="big ghost" data-close>とじる</button>`, 'mapm');
+  document.querySelectorAll('[data-z]').forEach(b => b.onclick = () => showMap(+b.dataset.z));
+}
+/* ----- 記録 ----- */
+function showRecord(tab = 'dex') {
+  const tabs = [['dex', '📖 図鑑'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['data', '📊 記録']];
+  let body = '';
+  if (tab === 'dex') { const ids = Object.keys(DEX); body = `<p class="note">${Object.keys(st.dex).length} / ${ids.length} 種類を見つけました</p><div class="grid">${ids.map(id => { const e = st.dex[id], D = DEX[id]; return e ? `<div class="card"><div class="em">${D[0]}</div><b>${D[1]}</b><small>${D[2]}</small><small class="m">${e.n}回・はじめて：${e.place || ''}</small></div>` : `<div class="card no"><div class="em">？</div><b>？？？</b></div>`; }).join('')}</div>`; }
+  if (tab === 'lm') { body = `<p class="note">窓から見えた名所 ${ALL_LM.filter(l => st.lm[l.key]).length} / ${ALL_LM.length}<br><small>アプリを開いているときに、近くを通ると記録されます</small></p><div class="list">${ALL_LM.map(l => `<div class="${st.lm[l.key] ? '' : 'no'}">${st.lm[l.key] ? '✅' : '⬜'} ${st.lm[l.key] ? l.name : '？？？'}<small>${l.key}</small></div>`).join('')}</div>`; }
+  if (tab === 'stamp') { const names = new Set(); for (const id in LEGS) for (const s of LEGS[id].stops) names.add(s[0]); const arr = [...names]; body = `<p class="note">通った町 ${arr.filter(n => st.stamps[n]).length} / ${arr.length}</p><div class="stamps">${arr.map(n => `<div class="stamp ${st.stamps[n] ? '' : 'no'}" ${st.stamps[n] ? `data-fact="${n}"` : ''}>${st.stamps[n] ? n : '？'}${st.stamps[n] > 1 ? `<small>×${st.stamps[n]}</small>` : ''}</div>`).join('')}</div><p class="note"><small>町をタッチすると豆知識が読めます</small></p>`; }
+  if (tab === 'data') { const days = (Date.now() - st.started) / 864e5; body = `<div class="kv"><div><span>走ったきょり</span><b>${fmt(st.km)}km</b></div><div><span>地球何周ぶん？</span><b>${(st.km / 40075).toFixed(2)}周</b></div><div><span>旅をはじめて</span><b>${Math.floor(days) + 1}日目</b></div><div><span>世界一周</span><b>${P.lap}回 達成</b></div><div><span>拾ったボトル</span><b>${st.bottles || 0}本</b></div><div><span>いまの速さ</span><b>時速${st.speed}km</b></div></div>`; }
+  modal(`<h2>旅の記録</h2><div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>とじる</button>`, 'rec');
+  document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showRecord(b.dataset.tab));
+  document.querySelectorAll('[data-fact]').forEach(b => b.onclick = () => toast(`📍 <b>${b.dataset.fact}</b><small>${FACTS[b.dataset.fact] || ''}</small>`, 6000));
+}
+function showSettings() {
+  modal(`<h2>⚙️ 設定</h2><h3>キャンピングカーの速さ</h3>${speedButtons()}<p class="note">速さを変えても、ここまで進んだ距離はそのままです。</p>
+  <h3>天気について</h3><p class="note">天気と気温は Open-Meteo（無料の天気サービス）から、その場所のいまの値を取ってきています。つながらないときは「（予想）」と表示して、季節と場所からそれらしい天気にします。</p>
+  <h3>はじめから</h3><button class="big ghost danger" id="reset">旅をリセットする</button>
+  <button class="big ghost" data-close>とじる</button>`);
+  document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { tick(); st.speed = +b.dataset.speed; save(); document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b)); updateHud(); });
+  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = 'もう一度押すとリセットします'; return; } localStorage.removeItem(KEY); location.reload(); };
+}
+function showBottle() {
+  // 次の港（または次の町）についての手紙
+  let tgt = null; walkStops((stop, km) => { if (km > st.km) { tgt = stop; return false; } }, 3);
+  const n = tgt ? tgt.name : '東京'; st.bottles = (st.bottles || 0) + 1; save();
+  modal(`<div class="letter"><div class="em">🍾✉️</div><h2>ボトルの中の手紙</h2><p>「この先の <b>${n}</b> は、こんなところだよ。<br>${FACTS[n] || ''}」</p><small>拾ったボトル ${st.bottles}本目</small></div><button class="big" data-close>とじる</button>`);
+}
+async function postcard() {
+  const pc = document.createElement('canvas'); pc.width = cv.width; pc.height = cv.height + 70 * DPR; const x = pc.getContext('2d');
+  x.fillStyle = '#fffaf0'; x.fillRect(0, 0, pc.width, pc.height); x.drawImage(cv, 0, 0);
+  x.fillStyle = '#3a2f25'; x.font = `700 ${20 * DPR}px sans-serif`; x.fillText(`${placeName()}より`, 16 * DPR, cv.height + 30 * DPR);
+  x.font = `${13 * DPR}px sans-serif`; const ld = localDate(); x.fillText(`${$('#wx').textContent}　${ld.getUTCMonth() + 1}月${ld.getUTCDate()}日 現地${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}　走行${fmt(st.km)}km`, 16 * DPR, cv.height + 54 * DPR);
+  pc.toBlob(async b => {
+    const file = new File([b], 'camper-postcard.png', { type: 'image/png' });
+    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: '旅の絵はがき' }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'camper-postcard.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, 'image/png');
+}
+
+/* ===== 時間の進み ===== */
+let lastFrame = 0, lastSave = 0, lastHud = 0, prevBiome = '';
+function tick() {
+  const now = Date.now(); const dtH = Math.max(0, now - st.t) / 36e5; st.t = now;
+  if (QS.has('km')) return { passed: [], forks: [] };
+  return advance(st.km + dtH * st.speed);
+}
+function arriveToasts(res) {
+  for (const p of res.passed) toast(`${p.sea ? '⚓' : '📍'} <b>${p.name}</b>に到着<small>${FACTS[p.name] || ''}</small>`, 7000);
+  for (const f of res.forks) toast(`🔀 ${f.at}から「${LEG[f.id].name}」へ`);
+}
+function back() {
+  const before = st.km, hrs = Math.max(0, Date.now() - st.t) / 36e5;
+  const res = tick(); P = posAt(st.km);
+  const km = st.km - before;
+  if (hrs > 2 / 60 && km > 0.5) { const sights = awaySights(before, st.km); showWelcome(hrs, km, res, sights); }
+  else arriveToasts(res);
+  save(); S.tiles.clear(); S.events = []; refreshWx(); refreshGeo(); updateHud();
+}
+function frame(ts) {
+  requestAnimationFrame(frame);
+  if (!st || document.hidden) return;
+  const dt = Math.min(.1, (ts - lastFrame) / 1000 || 0); lastFrame = ts; S.t += dt;
+  const res = tick(); if (res.passed.length || res.forks.length) { arriveToasts(res); S.tiles.clear(); }
+  P = posAt(st.km);
+  const W8 = wxState(), alt = sunAlt(P.ll[0], P.ll[1], nowMs()); light(W8, alt);
+  const ctx = { biome: biomeOf(P), sea: P.seg.mode === 's', region: P.seg.mode === 's' ? seaRegion(P) : '', lat: P.ll[0], mon: localDate().getUTCMonth() + 1, snow: W8.snowCover };
+  // 景色の色・形はゆっくり切りかえる
+  const T = biomeTarget(ctx.biome, W8);
+  if (!S.rp || prevBiome === '') S.rp = JSON.parse(JSON.stringify(T));
+  const k = Math.min(1, dt / 3);
+  for (const key of ['farAmp', 'jag', 'mesa', 'hillAmp', 'sea']) S.rp[key] = lerp(S.rp[key], T[key], k);
+  for (const key of ['ground', 'far', 'hill']) S.rp[key] = mix(S.rp[key], T[key], k);
+  prevBiome = ctx.biome;
+  const vf = clamp(Math.sqrt(st.speed / 60), .6, 2.2); S.vf = vf;
+  S.off.cloud += dt * (5 * vf + (W8.wind || 0) * .25); S.off.far += dt * 9 * vf; S.off.hill += dt * 22 * vf; S.off.mid += dt * 75 * vf; S.off.near += dt * 480 * vf; S.off.sea += dt * 60 * vf;
+  if (S.t > S.nextEv) { spawnEvent(ctx, W8, alt); S.nextEv = S.t + 18 + Math.random() * 30; }
+  S.events = S.events.filter(e => S.t - e.t0 < e.dur);
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const bump = ctx.sea ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0);
+  c.save(); c.translate(0, bump);
+  if (ctx.sea) drawSea(dt, W8, alt, ctx); else drawLand(dt, W8, alt, ctx);
+  c.restore();
+  drawWeather(dt, W8, ctx.sea);
+  if (!st.preview) for (const n in S.lmSeen) if (S.lmSeen[n] > 90 && !st.lm[n]) { st.lm[n] = Date.now(); save(); toast(`🏛 <b>${LMNAME[n] || n}</b>が見えた！<small>名所の記録にのりました</small>`, 5000); }
+  if (ts - lastHud > 1000) { lastHud = ts; updateHud(); refreshWx(); refreshGeo(); }
+  if (ts - lastSave > 10000) { lastSave = ts; save(); }
+}
+cv.addEventListener('click', e => {
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  for (const ev of S.events) if (ev.id === 'bottle' && ev.hit && Math.hypot(x - ev.hit[0], y - ev.hit[1]) < ev.hit[2] + 12) { ev.dur = 0; showBottle(); return; }
+});
+document.addEventListener('visibilitychange', () => { if (!st) return; if (document.hidden) { tick(); save(); } else back(); });
+window.addEventListener('pagehide', () => { if (st) { tick(); save(); } });
+window.addEventListener('resize', resize);
+$('#b-map').onclick = () => showMap(0); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-photo').onclick = postcard; $('#fork').onclick = showFork;
+
+function startTrip() {
+  try { const c0 = JSON.parse(localStorage.getItem('camper-wx') || 'null'); if (c0 && Date.now() - c0.at < 30 * 60e3) wx = c0; } catch (e) { }
+  P = posAt(st.km); resize(); refreshWx(true); refreshGeo(true); updateHud();
+}
+load();
+resize();
+if (QS.has('km')) { st = newState(60); if (QS.get('pick')) QS.get('pick').split(',').forEach((v, i) => st.choices['0:' + [1, 2, 4, 6][i]] = v); advance(+QS.get('km')); P = posAt(st.km); startTrip(); if (QS.get('ev')) setTimeout(() => { S.events.push({ id: QS.get('ev'), t0: S.t, dur: 30, x0: W * .6, d: .3, seed: 5 }); }, 300); }
+else if (!st) { st = newState(60); st.preview = true; startTrip(); showIntro(); }
+else { const before = st.km; P = posAt(st.km); startTrip(); back(); }
+requestAnimationFrame(frame);
+
+</script>
+</body>
+</html>
