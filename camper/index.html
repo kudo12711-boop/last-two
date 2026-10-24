@@ -37,22 +37,43 @@ header .r{text-align:right;white-space:nowrap}
 #wx small{display:block;font-size:12px;font-weight:700;color:var(--ink2)}
 /* 窓 */
 #winwrap{position:relative;min-height:0;padding:6px 12px 22px}
-#win{position:relative;height:100%;border-radius:28px;overflow:hidden;background:#89b;
-  box-shadow:0 0 0 10px var(--wood),0 0 0 13px var(--wood2),0 10px 26px 12px rgba(60,40,20,.35);
-  margin:10px}
+#winwrap{--fr:#8a5b3c;--fr2:#6b4a33;--bw:10px;--c1:#c9543e;--c2:#b2412f;--c3:#d8664c;--tie:#e8c27a;--rad:28px;--s1:#9a6a48;--s2:#7a5236}
+/* 窓のデザイン */
+#winwrap.f-white{--fr:#f6f3ec;--fr2:#cfc6b6;--c1:#f1e9da;--c2:#e2d6c0;--c3:#f8f2e6;--tie:#b9a37a;--s1:#f3efe6;--s2:#d6cdbd;--rad:20px}
+#winwrap.f-retro{--fr:#e0782f;--fr2:#a8521c;--c1:#f2c14e;--c2:#e39a35;--c3:#f7d77a;--tie:#7a4a20;--s1:#e9a23b;--s2:#b8721c;--rad:56px}
+#winwrap.f-log{--fr:#5a3b26;--fr2:#2f1e12;--bw:16px;--c1:#3f7a4f;--c2:#2a5236;--c3:#5a9a6a;--tie:#c8a060;--s1:#6a4a30;--s2:#4a3220;--rad:12px}
+#winwrap.f-round{--fr:#c9a35a;--fr2:#7a5c22;--bw:14px;--rad:50%;--s1:#b08a44;--s2:#7a5c22}
+#winwrap.f-shoji{--fr:#b88a5a;--fr2:#7a5634;--rad:4px;--s1:#b88a5a;--s2:#8a6440}
+#win{position:relative;height:100%;border-radius:var(--rad);overflow:hidden;background:#89b;
+  box-shadow:0 0 0 var(--bw) var(--fr),0 0 0 calc(var(--bw) + 3px) var(--fr2),0 10px 26px 12px rgba(60,40,20,.35);
+  margin:calc(var(--bw) + 2px)}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-#win::after{content:"";position:absolute;inset:0;border-radius:28px;box-shadow:inset 0 0 0 3px rgba(0,0,0,.25),inset 0 8px 18px rgba(0,0,0,.25);pointer-events:none}
+#win::after{content:"";position:absolute;inset:0;border-radius:var(--rad);box-shadow:inset 0 0 0 3px rgba(0,0,0,.25),inset 0 8px 18px rgba(0,0,0,.25);pointer-events:none}
 .curtain{position:absolute;top:0;bottom:0;width:11%;max-width:70px;pointer-events:none;z-index:2;
-  background:repeating-linear-gradient(90deg,#c9543e 0 8px,#b2412f 8px 12px,#d8664c 12px 20px);
+  background:repeating-linear-gradient(90deg,var(--c1) 0 8px,var(--c2) 8px 12px,var(--c3) 12px 20px);
   box-shadow:inset -6px 0 10px rgba(0,0,0,.25);clip-path:polygon(0 0,100% 0,60% 45%,85% 52%,100% 100%,0 100%)}
+.f-retro .curtain{background:repeating-conic-gradient(var(--c1) 0 25%,var(--c3) 0 50%) 0 0/16px 16px}
+.f-log .curtain{background:repeating-linear-gradient(90deg,rgba(0,0,0,.18) 0 4px,transparent 4px 14px),repeating-linear-gradient(0deg,var(--c2) 0 5px,var(--c1) 5px 14px)}
+.f-round .curtain{display:none}
+.f-shoji .curtain{width:13%;max-width:80px;clip-path:none;box-shadow:inset -3px 0 6px rgba(0,0,0,.2),0 0 0 3px var(--fr);
+  background:linear-gradient(90deg,var(--fr) 0 3px,transparent 3px) 0 0/33.3% 100%,linear-gradient(var(--fr) 0 3px,transparent 3px) 0 0/100% 18%,#f7f2e6}
+.f-shoji .curtain::after{display:none}
 .curtain.l{left:0}
 .curtain.r{right:0;transform:scaleX(-1)}
-.curtain::after{content:"";position:absolute;left:0;right:20%;top:46%;height:9px;background:#e8c27a;border-radius:4px}
-#sill{position:absolute;left:28px;right:28px;bottom:-4px;height:18px;background:linear-gradient(#9a6a48,#7a5236);border-radius:6px;z-index:3;box-shadow:0 4px 8px rgba(0,0,0,.25)}
-#sill span{position:absolute;bottom:10px;font-size:26px;line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
-#win.sea{box-shadow:0 0 0 10px #f2f4f5,0 0 0 13px #9fb3bf,0 10px 26px 12px rgba(30,60,90,.3)}
+.curtain::after{content:"";position:absolute;left:0;right:20%;top:46%;height:9px;background:var(--tie);border-radius:4px}
+#sill{position:absolute;left:28px;right:28px;bottom:-4px;height:18px;background:linear-gradient(var(--s1),var(--s2));border-radius:6px;z-index:3;box-shadow:0 4px 8px rgba(0,0,0,.25)}
+#sill span{position:absolute;bottom:10px;font-size:26px;line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));animation:pop .5s ease both}
+@keyframes pop{from{transform:translateY(6px);opacity:0}}
+#winwrap.night #sill::before{content:"";position:absolute;left:-10%;right:-10%;bottom:4px;height:60px;background:radial-gradient(ellipse at 50% 100%,rgba(255,200,110,.35),transparent 70%);pointer-events:none}
+#win.sea{box-shadow:0 0 0 10px #f2f4f5,0 0 0 13px #9fb3bf,0 10px 26px 12px rgba(30,60,90,.3);border-radius:28px}
+#win.sea::after{border-radius:28px}
 #win.sea .curtain{display:none}
 #winwrap.sea #sill{display:none}
+.frames{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.frames button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:700;font-size:13px}
+.frames button.on{border-color:var(--accent);background:var(--accent2)}
+.frames i{display:block;width:46px;height:32px;border-radius:8px;background:linear-gradient(#8fc3ea,#cfe7f5 60%,#9cc87a 60%);box-shadow:0 0 0 4px #8a5b3c}
+.fp-white{box-shadow:0 0 0 4px #e6e0d4!important}.fp-retro{border-radius:14px!important;box-shadow:0 0 0 4px #e0782f!important}.fp-log{box-shadow:0 0 0 5px #5a3b26!important}.fp-round{border-radius:50%!important;box-shadow:0 0 0 4px #c9a35a!important}.fp-shoji{border-radius:2px!important;box-shadow:0 0 0 4px #b88a5a!important;background:linear-gradient(90deg,#f7f2e6 22%,transparent 22% 78%,#f7f2e6 78%),linear-gradient(#8fc3ea,#cfe7f5 60%,#9cc87a 60%)!important}
 #toasts{position:absolute;left:0;right:0;top:12px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:5;pointer-events:none;padding:0 14%}
 .toast{background:rgba(255,250,242,.94);color:var(--ink);border-radius:16px;padding:9px 14px;font-weight:700;font-size:15px;box-shadow:0 6px 18px rgba(0,0,0,.25);text-align:center;max-width:420px;animation:tin .4s ease both}
 .toast small{display:block;font-weight:500;font-size:12px;color:var(--ink2);margin-top:2px}
@@ -171,7 +192,7 @@ svg.map{width:100%;aspect-ratio:2.4/1;border-radius:14px;display:block;backgroun
   </header>
   <div id="winwrap">
     <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div></div>
-    <div id="sill"><span style="left:8%">☕</span><span style="right:8%">🪴</span></div>
+    <div id="sill"></div>
   </div>
   <section id="panel">
     <div class="card">
@@ -1439,8 +1460,31 @@ function updateHud() {
     fe.innerHTML = `<span>🔀 ${FORK_AT[f.i]}の分かれ道まで ${fmt(f.start - st.km)}km</span><b>${ch ? 'えらんだ道：' + LEG[ch].name : 'どっちに行く？'}</b>`;
     fe.classList.toggle('todo', !ch);
   } else fe.hidden = true;
-  $('#win').classList.toggle('sea', sea); $('#winwrap').classList.toggle('sea', sea);
+  updateSill(); $('#win').classList.toggle('sea', sea); $('#winwrap').classList.toggle('sea', sea);
 }
+// 窓辺の小物：現地の時間帯と気温で入れかわる
+function updateSill() {
+  const hr = localDate().getUTCHours(), w = wx || fakeWx(P.ll), t = w.temp;
+  const drink = t >= 28 ? '🥤' : t <= 5 ? '🍵' : '☕';
+  let items;
+  if (hr >= 5 && hr < 8) items = [drink, '🥐', '🪴'];
+  else if (hr < 11 && hr >= 8) items = ['🗺', '🧭', '🪴'];
+  else if (hr < 14 && hr >= 11) items = ['🍙', t >= 28 ? '🧃' : drink, '🪴'];
+  else if (hr < 17 && hr >= 14) items = [drink, '🍪', '📖'];
+  else if (hr < 19 && hr >= 17) items = ['📷', '🍊', '🪴'];
+  else if (hr < 22 && hr >= 19) items = ['🍜', '🕯', '🪴'];
+  else items = ['🕯', '💤', '🧸'];
+  if ((RAIN[w.code] || 0) > 0) items[2] = '☂️';
+  if (t <= 0) items[1] = '🧤';
+  const key = items.join('');
+  $('#winwrap').classList.toggle('night', hr >= 19 || hr < 5);
+  if ($('#sill').dataset.k === key) return;
+  $('#sill').dataset.k = key;
+  $('#sill').innerHTML = items.map((e, i) => `<span style="${['left:7%', 'left:22%', 'right:7%'][i]}">${e}</span>`).join('');
+}
+const FRAMES = [['wood', '木のまど'], ['white', '白いカフェ'], ['retro', 'レトロ'], ['log', 'ログハウス'], ['round', 'まるまど'], ['shoji', '和風（障子）']];
+function setFrame(f) { const ww = $('#winwrap'); FRAMES.forEach(([k]) => ww.classList.toggle('f-' + k, k === f)); try { localStorage.setItem('camper-frame', f); } catch (e) { } }
+try { setFrame(localStorage.getItem('camper-frame') || 'wood'); } catch (e) { setFrame('wood'); }
 function walkStops(fn, maxLegs) {
   let n = 0; let stop = false;
   walk(L => { if (stop || ++n > maxLegs || !L.id) return false; for (const s of LEG[L.id].segs) if (fn(s.b, L.start + s.start + s.len) === false) { stop = true; return false; } });
@@ -1619,11 +1663,14 @@ function showRecord(tab = 'dex') {
   document.querySelectorAll('[data-fact]').forEach(b => b.onclick = () => toast(`📍 <b>${b.dataset.fact}</b><small>${FACTS[b.dataset.fact] || ''}</small>`, 6000));
 }
 function showSettings() {
-  modal(`<h2>⚙️ 設定</h2><h3>キャンピングカーの速さ</h3>${speedButtons()}<p class="note">速さを変えても、ここまで進んだ距離はそのままです。</p>
+  const cur = (() => { try { return localStorage.getItem('camper-frame') || 'wood'; } catch (e) { return 'wood'; } })();
+  modal(`<h2>⚙️ 設定</h2><h3>窓のデザイン</h3><div class="frames">${FRAMES.map(([k, n]) => `<button data-frame="${k}" class="${k === cur ? 'on' : ''}"><i class="fp-${k}"></i>${n}</button>`).join('')}</div><p class="note">窓辺の小物は、その場所の時間帯（朝・昼・夕方・夜）や天気で入れかわります。</p>
+  <h3>キャンピングカーの速さ</h3>${speedButtons()}<p class="note">速さを変えても、ここまで進んだ距離はそのままです。</p>
   <h3>天気について</h3><p class="note">天気と気温は Open-Meteo（無料の天気サービス）から、その場所のいまの値を取ってきています。つながらないときは「（予想）」と表示して、季節と場所からそれらしい天気にします。</p>
   <h3>はじめから</h3><p class="note">出発地を選びなおしたいときは、旅をリセットしてください。図鑑や記録も消えます。</p><button class="big ghost danger" id="reset">旅をリセットする</button>
   <button class="big ghost" data-close>とじる</button>`);
   document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { tick(); st.speed = +b.dataset.speed; save(); document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b)); updateHud(); });
+  document.querySelectorAll('[data-frame]').forEach(b => b.onclick = () => { setFrame(b.dataset.frame); document.querySelectorAll('[data-frame]').forEach(x => x.classList.toggle('on', x === b)); });
   let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = 'もう一度押すとリセットします'; return; } localStorage.removeItem(KEY); location.reload(); };
 }
 function showBottle() {
