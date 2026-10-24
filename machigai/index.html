@@ -165,10 +165,10 @@ input[type=file]{display:none}
   ・見つからないときは 💡 で場所がふんわり光ります。<br>
   ・同じ写真でも「つぎの もんだい」で違う間違いになります。
   <h3>🎙️ ほめる こえ</h3>
-  <div class="note">おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。同じ場面に いくつも録音すると、毎回ランダムに えらばれます。録音はこの端末の中だけに保存されます。ひとつでも録音すると、機械の声は使わなくなります（録音していない「ぜんぶ」「ヒント」は「あたり」の録音でほめます）。録音がないときは、下で選んだ端末の声が話します。</div>
+  <div class="note">おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。同じ場面に いくつも録音すると、毎回ランダムに えらばれます。録音はこの端末の中だけに保存されます。ひとつでも録音すると、機械の声は使わなくなります（録音していない「ぜんぶ」「ヒント」は「あたり」の録音でほめます）。録音がないときは、下で選んだ声が話します。</div>
   <div id="recList"></div>
   <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest">▶ ためす</button></div>
-  <div class="note">端末の声がロボットっぽいときは、iPhoneなら「設定 → アクセシビリティ → 読み上げコンテンツ → 声 → 日本語」で「Kyoko（拡張）」や「O-ren（拡張）」をダウンロードすると、ずっと自然になります。</div>
+  <div class="note">「AIのこえ」は、あらかじめ AI で作っておいた自然な声です（Kokoro-82M／Apache-2.0）。</div>
   <button class="big" id="btnHelpClose" style="justify-content:center;margin-top:14px">とじる</button>
 </div></div>
 
@@ -206,7 +206,34 @@ const sfx = {
   clear() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i * .12, i === 6 ? .8 : .2, 'square', .1)); },
   tap() { tone(880, 0, .06, 'sine', .08); }
 };
-/* こえ：①おうちの人の録音 → ②端末の いちばん自然な声 の順に使う */
+/* こえ：①おうちの人の録音 → ②AIで作っておいた声（voice/フォルダ）→ ③端末の読み上げ の順に使う */
+const AI_VOICES = [
+  { id: 'jf_alpha', name: 'AIのこえ 1' }, { id: 'jf_gongitsune', name: 'AIのこえ 2' },
+  { id: 'jf_nezumi', name: 'AIのこえ 3' }, { id: 'jf_tebukuro', name: 'AIのこえ 4' }
+];
+const AI_COUNT = { ok: 6, miss: 4, hint: 2, clear: 3, start: 2 };
+const aiBuf = {}; // 'jf_alpha/ok0' -> AudioBuffer
+let aiSrc = null;
+function aiLoad(id) {
+  const a = audio(); if (!a) return;
+  for (const [cat, n] of Object.entries(AI_COUNT)) for (let i = 0; i < n; i++) {
+    const k = `${id}/${cat}${i}`;
+    if (aiBuf[k]) continue;
+    aiBuf[k] = 'loading';
+    fetch(`voice/${k}.mp3`).then(r => r.arrayBuffer()).then(b => new Promise((res, rej) => a.decodeAudioData(b, res, rej)))
+      .then(buf => { aiBuf[k] = buf; }).catch(() => { delete aiBuf[k]; });
+  }
+}
+function aiPlay(id, cat) {
+  const a = audio(); if (!a) return;
+  aiLoad(id);
+  const ready = [];
+  for (let i = 0; i < AI_COUNT[cat]; i++) { const b = aiBuf[`${id}/${cat}${i}`]; if (b && b !== 'loading') ready.push(`${id}/${cat}${i}`); }
+  if (!ready.length) return;
+  try { if (aiSrc) aiSrc.stop(); } catch (e) {}
+  const src = a.createBufferSource(); src.buffer = aiBuf[pickTake('ai-' + cat, ready)];
+  src.connect(a.destination); src.start(); aiSrc = src;
+}
 const VOICE_CATS = [
   { cat: 'ok', label: 'あたり', ex: ['あった！', 'みーつけた！', 'すごいね！', 'やったね！'] },
   { cat: 'miss', label: 'はずれ', ex: ['あれれ？', 'そこじゃないかも', 'おしい！'] },
@@ -264,9 +291,11 @@ function pickTake(cat, list) { // おなじ声が つづかないように
   const c = list.length > 1 ? list.filter(k => k !== lastTake[cat]) : list;
   return (lastTake[cat] = pick(c));
 }
-let voiceMode = store.get('machigai-voicemode', 'auto'); // auto / off
+// 'ai:jf_alpha' / 'dev'（端末の読み上げ）/ 'off'
+let voiceMode = store.get('machigai-voice3', 'ai:jf_alpha');
+if (store.get('machigai-voicemode', '') === 'off' && store.get('machigai-voice3', null) == null) voiceMode = 'off';
 function speak(cat) {
-  if (!soundOn || voiceMode === 'off') return;
+  if (!soundOn) return;
   const mine = takesOf(cat);
   if (mine.length) return playBlob(recs[pickTake(cat, mine)]);
   // ひとつでも録音があれば、機械の声は まぜない（ぜんぶ・ヒントは「あたり」の録音でかわりにほめる）
@@ -275,7 +304,8 @@ function speak(cat) {
     if ((cat === 'clear' || cat === 'hint') && alt.length) playBlob(recs[pickTake('ok', alt)]);
     return;
   }
-  tts(pick(TTS_TEXT[cat]));
+  if (voiceMode.startsWith('ai:')) aiPlay(voiceMode.slice(3), cat);
+  else if (voiceMode === 'dev' && TTS_TEXT[cat]) tts(pick(TTS_TEXT[cat]));
 }
 
 /* 録音は この端末の中(IndexedDB)にだけ保存 */
@@ -326,19 +356,23 @@ document.addEventListener('click', async e => {
 });
 function renderVoiceSel() {
   const sel = $('#voiceSel'); if (!sel) return;
-  sel.innerHTML = `<option value="__off">こえ なし（音だけ）</option>` +
-    voiceList.map(v => `<option value="${v.name.replace(/"/g, '&quot;')}">${v.name}</option>`).join('');
-  sel.value = voiceMode === 'off' ? '__off' : (jaVoice ? jaVoice.name : '__off');
+  sel.innerHTML = AI_VOICES.map(v => `<option value="ai:${v.id}">${v.name}</option>`).join('') +
+    (voiceList.length ? `<option value="dev">スマホの読み上げ（${jaVoice ? jaVoice.name : ''}）</option>` : '') +
+    `<option value="off">こえ なし（音だけ）</option>`;
+  sel.value = voiceMode;
+  if (sel.value !== voiceMode) sel.value = 'ai:jf_alpha';
 }
 function initVoiceUI() {
   renderVoiceSel(); renderRecs();
   $('#voiceSel').onchange = e => {
-    const v = e.target.value;
-    if (v === '__off') { voiceMode = 'off'; }
-    else { voiceMode = 'auto'; jaVoice = voiceList.find(x => x.name === v) || jaVoice; store.set('machigai-voice', v); }
-    store.set('machigai-voicemode', voiceMode);
+    voiceMode = e.target.value; store.set('machigai-voice3', voiceMode);
+    if (voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3));
   };
-  $('#voiceTest').onclick = () => { audio(); tts('みーつけた！ すごいね！'); };
+  $('#voiceTest').onclick = async () => {
+    audio();
+    if (voiceMode.startsWith('ai:')) { const id = voiceMode.slice(3); aiLoad(id); for (let i = 0; i < 20 && !(aiBuf[`${id}/ok1`] instanceof AudioBuffer); i++) await new Promise(r => setTimeout(r, 100)); aiPlay(id, 'ok'); }
+    else if (voiceMode === 'dev') tts('みーつけた！ すごいね！');
+  };
 }
 function updSndBtn() { $('#btnSnd').textContent = soundOn ? '🔊 おと あり' : '🔇 おと なし'; }
 $('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('machigai-sound', soundOn); updSndBtn(); if (soundOn) sfx.tap(); };
@@ -631,6 +665,7 @@ function makePhotoPuzzle(base, n) {
 }
 
 /* ---------- ゲーム ---------- */
+document.addEventListener('pointerdown', () => { if (voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3)); }, { once: true, capture: true });
 let N = 3, cur = null, src = null; // src = {theme} or {base}
 const cvA = $('#cvA'), cvB = $('#cvB'), picA = $('#picA'), picB = $('#picB');
 let lastFind = 0;
@@ -665,6 +700,7 @@ async function newRound() {
   $('#stars').innerHTML = cur.diffs.map(() => '<i>⭐</i>').join('');
   $('#clear').classList.remove('on');
   show('game'); layout(); lastFind = Date.now();
+  if (!Object.keys(recs).length) speak('start');
 }
 
 function layout() {
