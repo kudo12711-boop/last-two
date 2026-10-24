@@ -94,6 +94,8 @@ header .r{text-align:right;white-space:nowrap}
 #nextlm b{color:var(--ink)}
 #fork{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:9px 14px;font-size:13px;text-align:left}
 #fork b{font-size:14px;white-space:nowrap}
+#depart{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:#2f7fb0;color:#fff;border-radius:16px;padding:12px 16px;font-size:14px;font-weight:700;box-shadow:0 3px 0 #1f5a80}
+#depart b{font-size:17px}
 #fork.todo{background:var(--accent);color:#fff;border-color:var(--accent);animation:pulse 2.4s ease-in-out infinite}
 @keyframes pulse{50%{transform:scale(1.015)}}
 .stats{display:flex;gap:6px;justify-content:space-between;font-size:12px;color:var(--ink2)}
@@ -200,6 +202,7 @@ svg.map{width:100%;aspect-ratio:2.4/1;border-radius:14px;display:block;backgroun
       <div id="next"></div>
       <div id="nextlm"></div>
     </div>
+    <button id="depart" hidden></button>
     <button id="fork" hidden></button>
     <div class="stats"><div>走ったきょり<b id="total">0km</b></div><div>世界一周<b id="lap">1周目</b></div><div>速さ<b id="spd"></b></div></div>
     <nav>
@@ -538,8 +541,13 @@ function autoPick(lap, i) {
   return opts[Math.random() < 0.5 ? 0 : 1];
 }
 // 距離を進め、通過した町・分かれ道の結果を返す
+function nextStopKm(after) { let k = null; walkStops((stop, km) => { if (km > after + 1e-6) { k = km; return false; } }, 400); return k; }
 function advance(toKm) {
   const from = st.km; const passed = [], forks = [];
+  if (st.stopMode && st.stopMode !== 'none' && !st.parked) {
+    const k = nextStopKm(from);
+    if (k != null && k <= toKm) { toKm = k; st.parkPending = true; }
+  }
   walk(L => {
     if (L.start > toKm) return false;
     if (!L.id) {
@@ -555,6 +563,11 @@ function advance(toKm) {
   });
   for (const p of passed) { st.stamps[p.name] = (st.stamps[p.name] || 0) + 1; if (p.name === (st.startName || '東京')) st.laps = (st.laps || 0) + 1; }
   st.km = toKm;
+  if (st.parkPending) {
+    st.parkPending = false; const p = passed[passed.length - 1];
+    st.parked = p ? p.name : placeName(); st.parkedAt = Date.now();
+    if (st.stopMode === 'next') st.stopMode = 'none';
+  }
   return { passed, forks };
 }
 function posAt(km) {
@@ -1432,7 +1445,7 @@ function placeName() { if (!P) return ''; const s = P.seg; return P.segKm < 8 ? 
 function updateHud() {
   if (!P) return;
   const s = P.seg, sea = s.mode === 's';
-  $('#place').textContent = P.segKm < 8 ? `${s.a.name}` : s.len - P.segKm < 8 ? `${s.b.name}に到着` : `${s.a.name} → ${s.b.name}`;
+  $('#place').textContent = st.parked ? `${st.parked}で停車中` : P.segKm < 8 ? `${s.a.name}` : s.len - P.segKm < 8 ? `${s.b.name}に到着` : `${s.a.name} → ${s.b.name}`;
   $('#addr').textContent = sea ? `⛴ ${s.len > 1500 ? '大型フェリー' : 'フェリー'}で航海中${geo && geo.text ? '・' + geo.text + 'のあたり' : ''}` : (geo && geo.text ? '📍 ' + geo.text : '📍 ' + (P.leg.name || ''));
   const w = wx || fakeWx(P.ll), ld = localDate(), alt = sunAlt(P.ll[0], P.ll[1], nowMs());
   const [wt, we] = WX[w.code] || ['', ''];
@@ -1445,7 +1458,9 @@ function updateHud() {
   $('#bar i').style.width = (P.segKm / s.len * 100).toFixed(2) + '%';
   $('#bar b').textContent = sea ? '🚢' : '🚐';
   $('#bar b').style.left = (P.segKm / s.len * 100).toFixed(2) + '%';
-  $('#next').innerHTML = remain < 1 ? `<b>まもなく${s.b.name}に到着</b>` : `${s.b.name}まで あと <b>${fmt(remain)}km</b>（約${durText(eta)}）`;
+  const dep = $('#depart'); dep.hidden = !st.parked; if (st.parked) dep.innerHTML = `🅿️ ${st.parked}で停車中<b>▶ 出発する</b>`;
+  const stopNote = st.parked ? '' : st.stopMode === 'next' ? '<br><small>🅿️ 次の町で止まります</small>' : st.stopMode === 'every' ? '<br><small>🅿️ 町に着くたびに止まります</small>' : '';
+  $('#next').innerHTML = (st.parked ? `次は${(() => { let n = ''; walkStops((stop, km) => { if (km > st.km + 1e-6) { n = stop.name; return false; } }, 400); return n; })()}へ` : remain < 1 ? `<b>まもなく${s.b.name}に到着</b>` : `${s.b.name}まで あと <b>${fmt(remain)}km</b>（約${durText(eta)}）`) + stopNote;
   $('#total').textContent = fmt(traveled()) + 'km';
   $('#lap').textContent = (st.laps || 0) + 1 + '周目';
   $('#spd').textContent = '時速' + st.speed + 'km';
@@ -1538,8 +1553,9 @@ function showWelcome(hours, km, res, sights) {
    ${towns ? `<h3>通った町（${res.passed.length}）</h3><div class="chips">${res.passed.length > 30 ? res.passed.slice(-30).map(p => `<span class="chip">${p.name}</span>`).join('') : towns}</div>` : ''}
    ${forks}
    ${sg ? `<h3>そのあいだに見たもの</h3><div class="chips">${sg}</div>` : ''}
-   <p>いまは <b>${placeName()}</b> ${P.seg.mode === 's' ? 'の海の上' : 'のあたり'}です。</p>
-   <button class="big" data-close>景色を見る</button>`);
+   ${st.parked ? `<p>🅿️ <b>${st.parked}</b>に着いて、停車しています。（${durText((Date.now() - (st.parkedAt || Date.now())) / 36e5)}前に到着）</p><button class="big" id="w-go">▶ 出発する</button>` : `<p>いまは <b>${placeName()}</b> ${P.seg.mode === 's' ? 'の海の上' : 'のあたり'}です。</p>`}
+   <button class="big ${st.parked ? 'ghost' : ''}" data-close>景色を見る</button>`);
+  const g = $('#w-go'); if (g) g.onclick = () => { depart(); closeModal(); };
 }
 // 留守のあいだに見かけた生きもの
 function awaySights(fromKm, toKm) {
@@ -1666,12 +1682,14 @@ function showRecord(tab = 'dex') {
 function showSettings() {
   const cur = (() => { try { return localStorage.getItem('camper-frame') || 'wood'; } catch (e) { return 'wood'; } })();
   modal(`<h2>⚙️ 設定</h2><h3>窓のデザイン</h3><div class="frames">${FRAMES.map(([k, n]) => `<button data-frame="${k}" class="${k === cur ? 'on' : ''}"><i class="fp-${k}"></i>${n}</button>`).join('')}</div><p class="note">窓辺の小物は、その場所の時間帯（朝・昼・夕方・夜）や天気で入れかわります。</p>
+  <h3>町に着いたら</h3><div class="frames">${[['none', '🚐 止まらない'], ['next', '🅿️ 次の町で1回止まる'], ['every', '🅿️ 毎回止まる']].map(([k, n]) => `<button data-stop="${k}" class="${(st.stopMode || 'none') === k ? 'on' : ''}">${n}</button>`).join('')}</div><p class="note">止まっているあいだは進みません。「出発する」を押すと、また走り出します。</p>
   <h3>電柱と電線</h3><div class="frames"><button data-poles="on" class="${POLES ? 'on' : ''}">⚡️ 表示する</button><button data-poles="off" class="${POLES ? '' : 'on'}">🚫 表示しない</button></div><p class="note">日本やアジアの道ばたに出てくる電柱です。表示しないときは、低い柵や街灯になります。</p>
   <h3>キャンピングカーの速さ</h3>${speedButtons()}<p class="note">速さを変えても、ここまで進んだ距離はそのままです。</p>
   <h3>天気について</h3><p class="note">天気と気温は Open-Meteo（無料の天気サービス）から、その場所のいまの値を取ってきています。つながらないときは「（予想）」と表示して、季節と場所からそれらしい天気にします。</p>
   <h3>はじめから</h3><p class="note">出発地を選びなおしたいときは、旅をリセットしてください。図鑑や記録も消えます。</p><button class="big ghost danger" id="reset">旅をリセットする</button>
   <button class="big ghost" data-close>とじる</button>`);
   document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { tick(); st.speed = +b.dataset.speed; save(); document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b)); updateHud(); });
+  document.querySelectorAll('[data-stop]').forEach(b => b.onclick = () => { tick(); st.stopMode = b.dataset.stop; save(); document.querySelectorAll('[data-stop]').forEach(x => x.classList.toggle('on', x === b)); updateHud(); });
   document.querySelectorAll('[data-poles]').forEach(b => b.onclick = () => { POLES = b.dataset.poles === 'on'; try { localStorage.setItem('camper-poles', b.dataset.poles); } catch (e) { } document.querySelectorAll('[data-poles]').forEach(x => x.classList.toggle('on', x === b)); });
   document.querySelectorAll('[data-frame]').forEach(b => b.onclick = () => { setFrame(b.dataset.frame); document.querySelectorAll('[data-frame]').forEach(x => x.classList.toggle('on', x === b)); });
   let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = 'もう一度押すとリセットします'; return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } location.reload(); };
@@ -1697,17 +1715,22 @@ async function postcard() {
 /* ===== 時間の進み ===== */
 let lastFrame = 0, lastSave = 0, lastHud = 0, prevBiome = '';
 function tick() {
-  const now = Date.now(); const dtH = Math.max(0, now - st.t) / 36e5; st.t = now;
-  if (QS.has('km')) return { passed: [], forks: [] };
-  return advance(st.km + dtH * st.speed);
+  const now = Date.now(), t0 = st.t; const dtH = Math.max(0, now - t0) / 36e5; st.t = now;
+  if (QS.has('km') || st.parked) return { passed: [], forks: [] };
+  const from = st.km, res = advance(st.km + dtH * st.speed);
+  if (st.parked) { st.parkedAt = t0 + (st.km - from) / st.speed * 36e5; }
+  return res;
 }
+// 停車中は、着いた町の手前（来た道の終わり）を現在地にする
+const curPos = () => posAt(st.parked ? Math.max(0, st.km - 0.05) : st.km);
+function depart() { if (!st.parked) return; const n = st.parked; st.parked = null; st.t = Date.now(); save(); toast(`🚐 ${n}を出発！`); updateHud(); }
 function arriveToasts(res) {
   for (const p of res.passed) toast(`${p.sea ? '⚓' : '📍'} <b>${p.name}</b>に到着<small>${FACTS[p.name] || ''}</small>`, 7000);
   for (const f of res.forks) toast(`🔀 ${f.at}から「${LEG[f.id].name}」へ`);
 }
 function back() {
   const before = st.km, hrs = Math.max(0, Date.now() - st.t) / 36e5;
-  const res = tick(); P = posAt(st.km);
+  const res = tick(); P = curPos();
   const km = st.km - before;
   if (hrs > 2 / 60 && km > 0.5) { const sights = awaySights(before, st.km); showWelcome(hrs, km, res, sights); }
   else arriveToasts(res);
@@ -1717,8 +1740,8 @@ function frame(ts) {
   requestAnimationFrame(frame);
   if (!st || document.hidden) return;
   const dt = Math.min(.1, (ts - lastFrame) / 1000 || 0); lastFrame = ts; S.t += dt;
-  const res = tick(); if (res.passed.length || res.forks.length) { arriveToasts(res); S.tiles.clear(); }
-  P = posAt(st.km);
+  const res = tick(); if (res.passed.length || res.forks.length) { arriveToasts(res); S.tiles.clear(); if (st.parked) toast(`🅿️ <b>${st.parked}</b>で停車しました<small>「出発する」を押すと、また走り出します</small>`, 6000); }
+  P = curPos();
   const W8 = wxState(), alt = sunAlt(P.ll[0], P.ll[1], nowMs()); light(W8, alt);
   const ctx = { biome: biomeOf(P), sea: P.seg.mode === 's', region: P.seg.mode === 's' ? seaRegion(P) : '', lat: P.ll[0], mon: localDate().getUTCMonth() + 1, snow: W8.snowCover };
   // 景色の色・形はゆっくり切りかえる
@@ -1728,12 +1751,12 @@ function frame(ts) {
   for (const key of ['farAmp', 'jag', 'mesa', 'hillAmp', 'sea']) S.rp[key] = lerp(S.rp[key], T[key], k);
   for (const key of ['ground', 'far', 'hill']) S.rp[key] = mix(S.rp[key], T[key], k);
   prevBiome = ctx.biome;
-  const vf = clamp(Math.sqrt(st.speed / 60), .6, 2.2); S.vf = vf;
+  const vf = st.parked ? 0 : clamp(Math.sqrt(st.speed / 60), .6, 2.2); S.vf = vf;
   S.off.cloud += dt * (5 * vf + (W8.wind || 0) * .25); S.off.far += dt * 9 * vf; S.off.hill += dt * 22 * vf; S.off.mid += dt * 75 * vf; S.off.near += dt * 480 * vf; S.off.sea += dt * 60 * vf;
   if (S.t > S.nextEv) { spawnEvent(ctx, W8, alt); S.nextEv = S.t + 18 + Math.random() * 30; }
   S.events = S.events.filter(e => S.t - e.t0 < e.dur);
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const bump = ctx.sea ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0);
+  const bump = ctx.sea || st.parked ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0);
   c.save(); c.translate(0, bump);
   if (ctx.sea) drawSea(dt, W8, alt, ctx); else drawLand(dt, W8, alt, ctx);
   c.restore();
@@ -1749,17 +1772,17 @@ cv.addEventListener('click', e => {
 document.addEventListener('visibilitychange', () => { if (!st) return; if (document.hidden) { tick(); save(); } else back(); });
 window.addEventListener('pagehide', () => { if (st) { tick(); save(); } });
 window.addEventListener('resize', resize);
-$('#b-map').onclick = () => showMap(0); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-photo').onclick = postcard; $('#fork').onclick = showFork;
+$('#b-map').onclick = () => showMap(0); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-photo').onclick = postcard; $('#fork').onclick = showFork; $('#depart').onclick = depart;
 
 function startTrip() {
   try { const c0 = JSON.parse(localStorage.getItem('camper-wx') || 'null'); if (c0 && Date.now() - c0.at < 30 * 60e3) wx = c0; } catch (e) { }
-  P = posAt(st.km); resize(); refreshWx(true); refreshGeo(true); updateHud();
+  P = curPos(); resize(); refreshWx(true); refreshGeo(true); updateHud();
 }
 load();
 resize();
 if (QS.has('km')) { st = newState(60); if (QS.get('pick')) QS.get('pick').split(',').forEach((v, i) => st.choices['0:' + [1, 2, 4, 6][i]] = v); advance(+QS.get('km')); P = posAt(st.km); startTrip(); if (QS.get('ev')) setTimeout(() => { S.events.push({ id: QS.get('ev'), t0: S.t, dur: 30, x0: W * .6, d: .3, seed: 5 }); }, 300); }
 else if (!st) { st = newState(60); st.preview = true; startTrip(); showIntro(); }
-else { const before = st.km; P = posAt(st.km); startTrip(); back(); }
+else { P = curPos(); startTrip(); back(); }
 requestAnimationFrame(frame);
 
 </script>
