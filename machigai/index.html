@@ -160,7 +160,7 @@ input[type=file]{display:none}
   ・見つからないときは 💡 で場所がふんわり光ります。<br>
   ・同じ写真でも「つぎの もんだい」で違う間違いになります。
   <h3>🎙️ ほめる こえ</h3>
-  <div class="note">おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。録音はこの端末の中だけに保存されます。録音していない言葉は、下で選んだ端末の声が話します。</div>
+  <div class="note">おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。録音はこの端末の中だけに保存されます。ひとつでも録音すると、機械の声は使わなくなります（録音していない「ぜんぶ」「ヒント」は「あたり」の録音でほめます）。録音がないときは、下で選んだ端末の声が話します。</div>
   <div id="recList"></div>
   <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest">▶ ためす</button></div>
   <div class="note">端末の声がロボットっぽいときは、iPhoneなら「設定 → アクセシビリティ → 読み上げコンテンツ → 声 → 日本語」で「Kyoko（拡張）」や「O-ren（拡張）」をダウンロードすると、ずっと自然になります。</div>
@@ -255,6 +255,12 @@ function speak(cat) {
   if (!soundOn || voiceMode === 'off') return;
   const mine = VOICE_SLOTS.filter(v => v.cat === cat && recs[v.id]);
   if (mine.length) return playBlob(recs[pick(mine).id]);
+  // ひとつでも録音があれば、機械の声は まぜない（ぜんぶ・ヒントは「あたり」の録音でかわりにほめる）
+  if (VOICE_SLOTS.some(v => recs[v.id])) {
+    const alt = VOICE_SLOTS.filter(v => v.cat === 'ok' && recs[v.id]);
+    if ((cat === 'clear' || cat === 'hint') && alt.length) playBlob(recs[pick(alt).id]);
+    return;
+  }
   tts(pick(TTS_TEXT[cat]));
 }
 
