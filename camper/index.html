@@ -1191,7 +1191,7 @@ function drawLand(dt, W8, alt, ctx) {
   // 近景：電柱や柵、道ばた
   const ny = H * .86;
   c.fillStyle = shc(mix(B.ground, [60, 90, 50], ctx.biome === 'desert' || W8.snowCover ? 0 : .3), 0); c.fillRect(0, ny, W, H - ny);
-  const asia = P.ll[1] > 60 && (ctx.biome === 'farm' || ctx.biome === 'city' || ctx.biome === 'coast');
+  const asia = POLES && P.ll[1] > 60 && (ctx.biome === 'farm' || ctx.biome === 'city' || ctx.biome === 'coast');
   const no = S.off.near;
   if (asia) {
     const gap = 520; for (let k = Math.floor(no / gap) - 1; k <= Math.floor((no + W) / gap) + 1; k++) {
@@ -1482,6 +1482,7 @@ function updateSill() {
   $('#sill').dataset.k = key;
   $('#sill').innerHTML = items.map((e, i) => `<span style="${['left:7%', 'left:22%', 'right:7%'][i]}">${e}</span>`).join('');
 }
+let POLES = true; try { POLES = localStorage.getItem('camper-poles') !== 'off'; } catch (e) { }
 const FRAMES = [['wood', '木のまど'], ['white', '白いカフェ'], ['retro', 'レトロ'], ['log', 'ログハウス'], ['round', 'まるまど'], ['shoji', '和風（障子）']];
 function setFrame(f) { const ww = $('#winwrap'); FRAMES.forEach(([k]) => ww.classList.toggle('f-' + k, k === f)); try { localStorage.setItem('camper-frame', f); } catch (e) { } }
 try { setFrame(localStorage.getItem('camper-frame') || 'wood'); } catch (e) { setFrame('wood'); }
@@ -1665,11 +1666,13 @@ function showRecord(tab = 'dex') {
 function showSettings() {
   const cur = (() => { try { return localStorage.getItem('camper-frame') || 'wood'; } catch (e) { return 'wood'; } })();
   modal(`<h2>⚙️ 設定</h2><h3>窓のデザイン</h3><div class="frames">${FRAMES.map(([k, n]) => `<button data-frame="${k}" class="${k === cur ? 'on' : ''}"><i class="fp-${k}"></i>${n}</button>`).join('')}</div><p class="note">窓辺の小物は、その場所の時間帯（朝・昼・夕方・夜）や天気で入れかわります。</p>
+  <h3>電柱と電線</h3><div class="frames"><button data-poles="on" class="${POLES ? 'on' : ''}">⚡️ 表示する</button><button data-poles="off" class="${POLES ? '' : 'on'}">🚫 表示しない</button></div><p class="note">日本やアジアの道ばたに出てくる電柱です。表示しないときは、低い柵や街灯になります。</p>
   <h3>キャンピングカーの速さ</h3>${speedButtons()}<p class="note">速さを変えても、ここまで進んだ距離はそのままです。</p>
   <h3>天気について</h3><p class="note">天気と気温は Open-Meteo（無料の天気サービス）から、その場所のいまの値を取ってきています。つながらないときは「（予想）」と表示して、季節と場所からそれらしい天気にします。</p>
   <h3>はじめから</h3><p class="note">出発地を選びなおしたいときは、旅をリセットしてください。図鑑や記録も消えます。</p><button class="big ghost danger" id="reset">旅をリセットする</button>
   <button class="big ghost" data-close>とじる</button>`);
   document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { tick(); st.speed = +b.dataset.speed; save(); document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b)); updateHud(); });
+  document.querySelectorAll('[data-poles]').forEach(b => b.onclick = () => { POLES = b.dataset.poles === 'on'; try { localStorage.setItem('camper-poles', b.dataset.poles); } catch (e) { } document.querySelectorAll('[data-poles]').forEach(x => x.classList.toggle('on', x === b)); });
   document.querySelectorAll('[data-frame]').forEach(b => b.onclick = () => { setFrame(b.dataset.frame); document.querySelectorAll('[data-frame]').forEach(x => x.classList.toggle('on', x === b)); });
   let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = 'もう一度押すとリセットします'; return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } location.reload(); };
 }
