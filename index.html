@@ -255,7 +255,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 <div class="wrap">
   <header>
     <div class="inapp" id="inapp" hidden><p><b>アプリの中で開いています。</b>ここではカメラが使えないことがあります。ChromeやSafariで開き直してください。</p><div><a id="extOpen" href="#">ブラウザで開く</a><button id="extCopy">URLをコピー</button></div><p class="lnote" id="extNote">うまく開かないときは「URLをコピー」を押して、ChromeやSafariのアドレス欄に貼りつけてください。</p></div>
-    <h1>ラスト・ツー<small>試作 v1.0・1対1、ババの読み合い（1ゲーム約1分）</small></h1>
+    <h1>ラスト・ツー<small>試作 v1.1・1対1、ババの読み合い（1ゲーム約1分）</small></h1>
     <div class="controls">
       <div class="modes"><button id="modeCpu" aria-pressed="true">CPUと</button><button id="modeOn" aria-pressed="false">友だちと</button></div>
       <label for="level" class="lv" id="levelLab">相手</label>
@@ -299,17 +299,12 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
       </div>
     </div>
     <div class="hand you" id="youHand" aria-label="あなたの手札"></div>
-    <div class="talk" id="stamps" hidden></div>
-    <div class="talk" id="ask" hidden><button id="askBtn">「それ、ババ？」と聞く</button></div>
+    <div class="tools" id="readyBox" hidden><button class="primary" id="readyBtn">準備OK！</button></div>
     <div class="tools" id="tools" hidden>
       <button id="mix">まぜる</button>
       <button id="go">これでどうぞ</button>
     </div>
     <div class="fbtns" id="faceBtns" hidden aria-label="表情ボタン"></div>
-    <div class="talk" id="talk" hidden>
-      <button data-say="baba">「それ、ババだよ」</button>
-      <button data-say="safe">「それはババじゃないよ」</button>
-    </div>
     <p class="hint" id="hint"></p>
     <div class="meseat">
       <div class="myface av" aria-hidden="true"><svg id="avatar" viewBox="0 0 64 64"></svg><video id="cam" playsinline muted autoplay hidden></video></div>
@@ -342,7 +337,6 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
       <li><b>じっくり見る</b>：相手がババを持っているとき、あなたが引く番になると、指が相手のカードを1枚ずつ自動で指していきます。そのたびに相手の顔が変わるのを見て、ババの場所を読みましょう。カードが少ないほど1枚あたりの時間が長くなります（2枚なら約2.6秒ずつ）。途中でカードをタップすると、そこで止まります。</li>
       <li><b>にらみ合い</b>：相手が引く番は「並べかえタイム」と「にらみ合いタイム」に分かれます。にらみ合いの間はカードを動かせないかわりに、<b>表情ボタン</b>（にやり・ドキッ・すまし・びっくり・ウインク）で顔を作れます。相手はその顔も読んでくるので、わざとちがうカードであせってみせるのが作戦です。</li>
       <li><b>ドキッ</b>：相手の指があなたのババの上に来ると、心臓の音がして、スマホがブルッとふるえます（ふるえるのはAndroidのみ。「音 オフ」で止まります）。</li>
-      <li><b>話しかける</b>：相手の指があなたのカードの上にあるとき「それ、ババだよ」「それはババじゃないよ」と言えます。ウソでもOK。自分が引くときは「それ、ババ？」と聞けます（相手もウソをつきます）。</li>
       <li><b>カメラ</b>（パソコンのChromeで開いたとき）：「カメラで表情を映す」を押すと、あなたの表情をキャラクターがまねします。相手はその表情も読んでくるので、ポーカーフェイスが大事になります。</li>
     </ol>
   </details>
@@ -471,10 +465,7 @@ function render(){
   $("pairs").textContent = S.pairs;
   $("tools").hidden = !["guard", "oguard", "stare"].includes(S.phase); $("go").hidden = S.phase === "oguard"; $("mix").hidden = S.phase === "stare";
   $("go").textContent = S.phase === "guard" ? "並べかえ完了" : "これでどうぞ";
-  $("talk").hidden = S.phase !== "stare";
   $("faceBtns").hidden = !(S.phase === "stare" || (ON.active && ON.open && ["pick", "oguard"].includes(S.phase)));
-  $("stamps").hidden = !(ON.active && ON.open);
-  $("ask").hidden = !(S.phase === "pick" && holdsBaba(S.cpu) && S.aimCpu >= 0);
   $("cpuName").innerHTML = ON.active ? `${esc(ON.oppName || "ともだち")}<span>${ON.open ? "ともだち" : "まだいません"}</span>` : `${name()}<span>${LVTXT[S.lv]}</span>`;
 }
 function renderPair(n){
@@ -692,7 +683,7 @@ async function cpuTurn(g){
     if (g !== gen) return;
     S.phase = "stare"; S.sel = -1; S.aimYou = wanderIdx(); if (!CAM.on) noteHover();
     setTimer(STARE_MS[S.lv]); say("think");
-    msg(`<b>にらみ合いタイム</b>　${name()}の指がうろうろします。顔で勝負！${CAM.on && S.lv > 0 ? "<br>あなたの本当の表情も見られています。" : ""}`, "表情ボタンや話しかけで、指をババから遠ざけよう");
+    msg(`<b>にらみ合いタイム</b>　${name()}の指がうろうろします。顔で勝負！${CAM.on && S.lv > 0 ? "<br>あなたの本当の表情も見られています。" : ""}`, "表情ボタンで、指をババから遠ざけよう");
     render(); SFX.aim();
     const wander = setInterval(() => { if (g === gen && S.phase === "stare" && performance.now() > S.pauseUntil){ flushHover(); S.aimYou = wanderIdx(); if (!CAM.on) noteHover(); render(); SFX.aim(); } }, CAM.on ? 800 : 1000);
     await new Promise(r => { guardDone = r; guardTimer = setTimeout(r, STARE_MS[S.lv]); });
@@ -847,8 +838,8 @@ const ITEMS = {
 };
 const KIND_TXT = { skin: "キャラ", back: "カード柄", stamp: "スタンプ", fx: "マンガ効果" };
 const SEASON = { name: "シーズン1　はじまりの卓", ends: "2026年12月31日", rows: [
-  [2, { coins: 50 }, { item: ["back", "stars"] }], [4, { coins: 50 }, { item: ["fx", "heart"] }], [6, { item: ["back", "dots"] }, { item: ["stamp", "kansai"] }],
-  [8, { coins: 100 }, { coins: 200 }], [10, { item: ["stamp", "polite"] }, { item: ["skin", "obake"] }], [12, { coins: 100 }, { item: ["fx", "note"] }],
+  [2, { coins: 50 }, { item: ["back", "stars"] }], [4, { coins: 50 }, { item: ["fx", "heart"] }], [6, { item: ["back", "dots"] }, { coins: 100 }],
+  [8, { coins: 100 }, { coins: 200 }], [10, { coins: 150 }, { item: ["skin", "obake"] }], [12, { coins: 100 }, { item: ["fx", "note"] }],
   [14, { coins: 100 }, { item: ["back", "neon"] }], [16, { coins: 150 }, { coins: 300 }], [18, { coins: 150 }, { item: ["fx", "flower"] }],
   [20, { item: ["skin", "usagi"] }, { item: ["back", "gold"] }]] };
 const INV = { coins: 100, xp: 0, pass: false, owned: { skin: ["hito", "neko"], back: ["classic"], stamp: ["basic"], fx: ["star"] },
@@ -1015,33 +1006,6 @@ function mySay(t){
   const el = $("myBubble"); el.textContent = t; el.hidden = false;
   clearTimeout(mySay.t); mySay.t = setTimeout(() => { el.hidden = true; }, 2600);
 }
-$("talk").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b || S.phase !== "stare" || S.aimYou < 0) return;
-  const c = S.you[S.aimYou], kind = b.dataset.say;
-  S.claims[c.id] = kind; S.pauseUntil = performance.now() + 1300; SFX.tap();
-  mySay(kind === "baba" ? "それ、ババだよ" : "それはババじゃないよ");
-  const t = trust();
-  setTimeout(() => {
-    if (S.phase !== "stare") return;
-    if (S.lv === 0) say("sweat", kind === "baba" ? "えっ、そうなの！？" : "ほんと？じゃあ…");
-    else if (t > .62) say("think", "…信じてみようかな");
-    else if (t < .38) say("grin", "その手には乗らないよ");
-    else say("think", "ほんとに〜？");
-  }, 500);
-});
-$("askBtn").addEventListener("click", () => {
-  if (S.phase !== "pick" || S.aimCpu < 0) return;
-  const c = S.cpu[S.aimCpu]; if (S.asked[c.id]) return;
-  S.asked[c.id] = true; SFX.tap(); mySay("それ、ババ？");
-  const isB = c.n === 0;
-  const honest = S.lv === 0 ? .8 : S.lv === 1 ? .6 : { honest: .85, reverse: .15, random: .5 }[S.style];
-  const yes = Math.random() < honest ? isB : !isB;
-  setTimeout(() => {
-    if (S.phase !== "pick") return;
-    if (Math.random() < .15) say(reactTo(c), "ないしょ♪");
-    else say(reactTo(c), yes ? "…うん、ババだよ" : "ちがうよ");
-  }, 600);
-});
 function camLoop(){
   if (!CAM.on) return;
   const vid = $("cam"), now = performance.now();
@@ -1190,12 +1154,13 @@ function bindConn(c){
   c.on("open", () => {
     clearTimeout(timer); ON.open = true; ON.called = false;
     sendHello();
-    if (ON.host){ hostDeal(); }
+    // nobody gets dealt in until both players say they are ready
+    ON.ready = { me: false, opp: false }; showReady();
     onVideo();
   });
   c.on("data", onData);
   c.on("close", () => {
-    ON.open = false; S.phase = "idle"; ON.oppFace = null; ON.oppVideo = false; drawOpp();
+    ON.open = false; S.phase = "idle"; $("readyBox").hidden = true; ON.oppFace = null; ON.oppVideo = false; drawOpp();
     msg("相手との接続が切れました。", "もう一度遊ぶときは、部屋を作り直してください。"); render();
     lobbyMsg("相手との接続が切れました。");
   });
@@ -1212,9 +1177,22 @@ function onData(m){
   if (m.t === "mode"){ ON.oppVideo = !!m.video; drawOpp(); return; }
   if (m.t === "say"){ const t = String(m.text || "").slice(0, 20); $("bubble").textContent = t; const f = $("face"); f.classList.remove("bump"); void f.offsetWidth; f.classList.add("bump"); SFX.tap(); return; }
   if (m.t === "view"){ applyView(m.v); return; }
+  if (m.t === "ready"){ ON.ready.opp = true; showReady(); return; }
   if (ON.host) hostAct("guest", m);
 }
 // host keeps the real game; each side only ever sees its own cards
+function showReady(){
+  const r = ON.ready, who = esc(ON.oppName || "ともだち");
+  $("readyBox").hidden = false; $("readyBtn").disabled = r.me;
+  $("readyBtn").textContent = r.me ? "相手を待っています…" : "準備OK！";
+  msg(`<b>2人そろいました！</b>　${r.opp ? `${who}さんは準備OKです。` : ""}`, r.me ? `${who}さんが「準備OK」を押すと始まります` : "カメラなどの用意ができたら「準備OK！」を押してください。2人とも押すと始まります");
+  if (!r.me && !r.opp) setTimeout(() => $("readyBtn").scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+  if (r.me && r.opp && ON.host){ $("readyBox").hidden = true; hostDeal(); }
+}
+$("readyBtn").addEventListener("click", () => {
+  if (!ON.open || ON.ready.me) return;
+  ON.ready.me = true; ON.conn.send({ t: "ready" }); SFX.tap(); showReady();
+});
 function hostDeal(){
   let id = 0; const h = [], g = [];
   for (let n = 1; n <= 7; n++){ h.push({ id: id++, n }); g.push({ id: id++, n }); }
@@ -1256,7 +1234,7 @@ function hostSend(){
   if (ON.open) ON.conn.send({ t: "view", v: viewFor("guest") });
 }
 function applyView(v){
-  ON.lastView = v;
+  ON.lastView = v; $("readyBox").hidden = true;
   const was = S.phase;
   S.you = v.me.map(c => ({ id: c.id, n: c.n })); S.cpu = v.opp;
   S.youStick = v.myStick; S.cpuStick = v.oppStick >= 0 ? 1000 + v.oppStick : null;
@@ -1361,16 +1339,11 @@ function fillSkinSelect(){
   $("skin").innerHTML = ITEMS.skin.filter(x => owns("skin", x.id)).map(x => `<option value="${x.id}">${x.name}</option>`).join("");
   $("skin").value = INV.equip.skin;
 }
-function fillStamps(){
-  const set = itemOf("stamp", INV.equip.stamp) || ITEMS.stamp[0];
-  $("stamps").innerHTML = set.lines.map(t => `<button data-t="${esc(t)}">${esc(t)}</button>`).join("");
-}
 function sendHello(){ if (ON.open) ON.conn.send({ t: "hello", pid: PID, name: nick(), skin: INV.equip.skin, back: INV.equip.back, fx: INV.equip.fx }); }
 function equip(kind, id){
   if (!owns(kind, id)) return;
   INV.equip[kind] = id; saveInv();
   if (kind === "skin"){ fillSkinSelect(); if (CAM.on && CAM.v) drawAvatar(exaggerate(CAM.v)); }
-  if (kind === "stamp") fillStamps();
   if (kind === "back" && S) render();
   sendHello();
 }
@@ -1414,7 +1387,7 @@ function openShop(tab){
   if (tab) shopTab = tab;
   $("overlayHost").innerHTML = `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="shopT"><div class="shop">
     <header><h2 id="shopT">きせかえ</h2><span><span class="coins" id="shopCoins"></span> コイン</span><button id="shopClose">閉じる</button></header>
-    <div class="tabs" role="tablist">${["skin", "back", "stamp", "fx"].map(k => `<button role="tab" data-tab="${k}">${KIND_TXT[k]}</button>`).join("")}<button role="tab" data-tab="pass">シーズンパス</button></div>
+    <div class="tabs" role="tablist">${["skin", "back", "fx"].map(k => `<button role="tab" data-tab="${k}">${KIND_TXT[k]}</button>`).join("")}<button role="tab" data-tab="pass">シーズンパス</button></div>
     <div id="shopBody"></div></div></div>`;
   renderShop();
   $("shopClose").focus();
@@ -1437,7 +1410,7 @@ $("overlayHost").addEventListener("click", e => {
   }
 });
 $("shopBtn").addEventListener("click", () => openShop());
-fillSkinSelect(); fillStamps(); updateCoins();
+fillSkinSelect(); updateCoins();
 
 // --- inviting friends: share sheet, LINE, QR code, and a local list of people you have played ---
 let PID = "";
@@ -1536,10 +1509,6 @@ $("roomIn").addEventListener("keydown", e => { if (e.key === "Enter") joinRoom($
 $("copyUrl").addEventListener("click", () => {
   const t = $("inviteUrl").textContent;
   navigator.clipboard?.writeText(t).then(() => { $("copyUrl").textContent = "コピーしました"; }, () => { getSelection().selectAllChildren($("inviteUrl")); });
-});
-$("stamps").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b || !ON.open) return;
-  mySay(b.dataset.t); ON.conn.send({ t: "say", text: b.dataset.t }); SFX.tap();
 });
 try { const n = localStorage.getItem("lasttwo-nick"); if (n) $("nick").value = n; } catch (e) {}
 $("nick").addEventListener("change", () => { try { localStorage.setItem("lasttwo-nick", nick()); } catch (e) {} sendHello(); });
