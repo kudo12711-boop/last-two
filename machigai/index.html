@@ -89,7 +89,18 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 @keyframes spin{to{transform:rotate(360deg)}}
 #help{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:30;padding:16px}
 #help.on{display:flex}
-#help .panel{text-align:left;font-size:15px;line-height:1.7}
+#help .panel{text-align:left;font-size:15px;line-height:1.7;max-height:calc(100dvh - 32px);overflow:auto}
+#help h3{margin:16px 0 4px;font-size:18px}
+#help .note{font-size:13px;opacity:.75;line-height:1.6;margin:4px 0 8px}
+.recRow{display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px dashed var(--line)}
+.recLbl{flex:1;font-size:12px;line-height:1.3;min-width:0}
+.recLbl b{display:block;font-size:15px}
+.rb{padding:8px 10px;border-radius:12px;background:var(--soft);font-weight:700;font-size:14px;white-space:nowrap}
+.rb.on{background:#ff3b5c;color:#fff;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.6}}
+.rb:disabled{opacity:.35}
+.vrow{display:flex;gap:6px;margin-top:10px}
+.vrow select{flex:1;min-width:0;font:inherit;font-size:14px;padding:8px;border-radius:12px;border:2px solid var(--line);background:#fff;color:var(--ink)}
 input[type=file]{display:none}
 </style>
 </head>
@@ -117,7 +128,7 @@ input[type=file]{display:none}
   <input type="file" id="fileCam" accept="image/*" capture="environment">
 
   <div id="book"><b>あつめた シール</b> <span id="bookCount"></span><div id="bookList"></div></div>
-  <div class="foot"><button id="btnHelp">おうちのかたへ</button><button id="btnSnd">🔊 おと あり</button></div>
+  <div class="foot"><button id="btnHelp">おうちのかたへ・こえの録音</button><button id="btnSnd">🔊 おと あり</button></div>
 </section>
 
 <section id="game" class="screen">
@@ -148,6 +159,11 @@ input[type=file]{display:none}
   ・「しゃしんで あそぶ」を選ぶと、スマホの写真から自動で「色がかわる・物が消える・さかさまになる・大きくなる・シールがふえる」などの違いを作ります。写真はこの端末の中だけで使い、どこにも送りません。<br>
   ・見つからないときは 💡 で場所がふんわり光ります。<br>
   ・同じ写真でも「つぎの もんだい」で違う間違いになります。
+  <h3>🎙️ ほめる こえ</h3>
+  <div class="note">おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。録音はこの端末の中だけに保存されます。録音していない言葉は、下で選んだ端末の声が話します。</div>
+  <div id="recList"></div>
+  <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest">▶ ためす</button></div>
+  <div class="note">端末の声がロボットっぽいときは、iPhoneなら「設定 → アクセシビリティ → 読み上げコンテンツ → 声 → 日本語」で「Kyoko（拡張）」や「O-ren（拡張）」をダウンロードすると、ずっと自然になります。</div>
   <button class="big" id="btnHelpClose" style="justify-content:center;margin-top:14px">とじる</button>
 </div></div>
 
@@ -185,17 +201,123 @@ const sfx = {
   clear() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i * .12, i === 6 ? .8 : .2, 'square', .1)); },
   tap() { tone(880, 0, .06, 'sine', .08); }
 };
-let jaVoice = null;
-function loadVoice() { try { jaVoice = speechSynthesis.getVoices().find(v => /ja/i.test(v.lang)) || null; } catch (e) {} }
+/* こえ：①おうちの人の録音 → ②端末の いちばん自然な声 の順に使う */
+const VOICE_SLOTS = [
+  { id: 'ok1', cat: 'ok', text: 'あった！' }, { id: 'ok2', cat: 'ok', text: 'みーつけた！' }, { id: 'ok3', cat: 'ok', text: 'すごいね！' },
+  { id: 'miss1', cat: 'miss', text: 'あれれ？' }, { id: 'miss2', cat: 'miss', text: 'そこじゃないかも' },
+  { id: 'hint1', cat: 'hint', text: 'このへん みてごらん' },
+  { id: 'clear1', cat: 'clear', text: 'ぜんぶ みつけたね！ すごーい！' }
+];
+const TTS_TEXT = {
+  ok: ['あった！', 'みーつけた！', 'すごいね！', 'やったね！', 'あたり！'],
+  miss: ['あれれ？', 'そこじゃないかも', 'うーん、ちがうかな'],
+  hint: ['このへん、みてごらん'],
+  clear: ['ぜんぶ、みつけたね！すごーい！']
+};
+const recs = {}; // slot id -> Blob
+let voiceList = [], jaVoice = null;
+// 自然に聞こえやすい声を上にする（iPhoneの「拡張」、Googleの声、Windowsの「Natural」など）
+function voiceScore(v) {
+  const n = v.name;
+  let s = 0;
+  if (/拡張|Enhanced|Premium|プレミアム/i.test(n)) s += 50;
+  if (/Natural|Neural|Online/i.test(n)) s += 45;
+  if (/Google/i.test(n)) s += 30;
+  if (/Kyoko|O-ren|Nanami|Hattori|Ayumi|Haruka/i.test(n)) s += 10;
+  if (/Otoya|Ichiro|Keita/i.test(n)) s += 5;
+  if (/Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley/i.test(n)) s -= 40; // おもしろ声
+  return s;
+}
+function loadVoice() {
+  try {
+    voiceList = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
+    const saved = store.get('machigai-voice', '');
+    jaVoice = voiceList.find(v => v.name === saved) || voiceList[0] || null;
+    renderVoiceSel();
+  } catch (e) {}
+}
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
-function speak(text) {
-  if (!soundOn || !('speechSynthesis' in window)) return;
+function tts(text) {
+  if (!('speechSynthesis' in window)) return;
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP'; u.pitch = 1.5; u.rate = 1.05; if (jaVoice) u.voice = jaVoice;
+    u.lang = 'ja-JP'; u.pitch = 1.15; u.rate = .95; u.volume = 1; if (jaVoice) u.voice = jaVoice;
     speechSynthesis.speak(u);
   } catch (e) {}
+}
+let recAudio = null;
+function playBlob(b) {
+  try { if (recAudio) { recAudio.pause(); URL.revokeObjectURL(recAudio.src); } recAudio = new Audio(URL.createObjectURL(b)); recAudio.play().catch(() => {}); } catch (e) {}
+}
+let voiceMode = store.get('machigai-voicemode', 'auto'); // auto / off
+function speak(cat) {
+  if (!soundOn || voiceMode === 'off') return;
+  const mine = VOICE_SLOTS.filter(v => v.cat === cat && recs[v.id]);
+  if (mine.length) return playBlob(recs[pick(mine).id]);
+  tts(pick(TTS_TEXT[cat]));
+}
+
+/* 録音は この端末の中(IndexedDB)にだけ保存 */
+const vdb = {
+  open() { return new Promise((res, rej) => { const r = indexedDB.open('machigai', 1); r.onupgradeneeded = () => r.result.createObjectStore('voice'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  async run(mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction('voice', mode), st = t.objectStore('voice'); const r = fn(st); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error); }); },
+  put(k, v) { return this.run('readwrite', st => st.put(v, k)); },
+  del(k) { return this.run('readwrite', st => st.delete(k)); },
+  async all() { const out = {}; await this.run('readonly', st => { const c = st.openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } }; return null; }); return out; }
+};
+vdb.all().then(o => { Object.assign(recs, o); renderRecs(); }).catch(() => {});
+
+let recording = null;
+async function toggleRec(id) {
+  if (recording) { const same = recording.id === id; recording.stop(); if (same) return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) { alert('このブラウザでは録音できません。SafariかChromeで開いてください。'); return; }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch (e) { alert('マイクが使えませんでした。マイクの使用を「許可」してください。'); return; }
+  const mr = new MediaRecorder(stream), chunks = [];
+  mr.ondataavailable = e => e.data.size && chunks.push(e.data);
+  mr.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop()); clearTimeout(timer); recording = null;
+    const blob = new Blob(chunks, { type: mr.mimeType || 'audio/mp4' });
+    if (blob.size > 800) { recs[id] = blob; try { await vdb.put(id, blob); } catch (e) {} playBlob(blob); }
+    renderRecs();
+  };
+  const timer = setTimeout(() => mr.state !== 'inactive' && mr.stop(), 4000);
+  recording = { id, stop: () => mr.state !== 'inactive' && mr.stop() };
+  mr.start(); renderRecs();
+}
+function renderRecs() {
+  const box = $('#recList'); if (!box) return;
+  box.innerHTML = VOICE_SLOTS.map(v => {
+    const isRec = recording && recording.id === v.id, has = !!recs[v.id];
+    return `<div class="recRow"><span class="recLbl">${{ ok: 'あたり', miss: 'はずれ', hint: 'ヒント', clear: 'ぜんぶ' }[v.cat]}<b>「${v.text}」</b></span>
+      <button class="rb ${isRec ? 'on' : ''}" data-rec="${v.id}">${isRec ? '■ とめる' : '● ろくおん'}</button>
+      <button class="rb" data-play="${v.id}" ${has ? '' : 'disabled'}>▶</button>
+      <button class="rb" data-del="${v.id}" ${has ? '' : 'disabled'}>🗑</button></div>`;
+  }).join('');
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-rec],[data-play],[data-del]'); if (!t) return;
+  if (t.dataset.rec) toggleRec(t.dataset.rec);
+  else if (t.dataset.play) recs[t.dataset.play] && playBlob(recs[t.dataset.play]);
+  else if (t.dataset.del) { delete recs[t.dataset.del]; try { await vdb.del(t.dataset.del); } catch (err) {} renderRecs(); }
+});
+function renderVoiceSel() {
+  const sel = $('#voiceSel'); if (!sel) return;
+  sel.innerHTML = `<option value="__off">こえ なし（音だけ）</option>` +
+    voiceList.map(v => `<option value="${v.name.replace(/"/g, '&quot;')}">${v.name}</option>`).join('');
+  sel.value = voiceMode === 'off' ? '__off' : (jaVoice ? jaVoice.name : '__off');
+}
+function initVoiceUI() {
+  renderVoiceSel(); renderRecs();
+  $('#voiceSel').onchange = e => {
+    const v = e.target.value;
+    if (v === '__off') { voiceMode = 'off'; }
+    else { voiceMode = 'auto'; jaVoice = voiceList.find(x => x.name === v) || jaVoice; store.set('machigai-voice', v); }
+    store.set('machigai-voicemode', voiceMode);
+  };
+  $('#voiceTest').onclick = () => { audio(); tts('みーつけた！ すごいね！'); };
 }
 function updSndBtn() { $('#btnSnd').textContent = soundOn ? '🔊 おと あり' : '🔇 おと なし'; }
 $('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('machigai-sound', soundOn); updSndBtn(); if (soundOn) sfx.tap(); };
@@ -563,7 +685,6 @@ for (const p of [picA, picB]) p.addEventListener('pointerdown', e => onTap(e, p)
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 const OK_WORDS = ['あった！', 'みつけた！', 'すごい！', 'やったね！', 'あたり！'];
-const MISS_WORDS = ['ちがうかな？', 'おしい！', 'ここかな？', 'うーん？'];
 function found(i) {
   cur.found[i] = true; lastFind = Date.now();
   const d = cur.diffs[i];
@@ -582,22 +703,22 @@ function found(i) {
   const got = cur.found.filter(Boolean).length;
   $('#stars').children[got - 1].classList.add('got');
   sfx.ok(); if (navigator.vibrate) navigator.vibrate(30);
-  if (got === cur.diffs.length) { setTimeout(win, 700); speak('ぜんぶ みつけたね！ すごーい！'); }
-  else { const w = pick(OK_WORDS); sayText(w); speak(w); }
+  if (got === cur.diffs.length) { setTimeout(win, 700); speak('clear'); }
+  else { sayText(pick(OK_WORDS)); speak('ok'); }
 }
 function miss(pic, px, py) {
   const m = document.createElement('div'); m.className = 'miss'; m.textContent = pick(['❓', '🙈', '💭']);
   m.style.left = px * 100 + '%'; m.style.top = py * 100 + '%';
   pic.appendChild(m); setTimeout(() => m.remove(), 1000);
   pic.classList.remove('shake'); void pic.offsetWidth; pic.classList.add('shake');
-  sfx.miss(); speak(pick(MISS_WORDS));
+  sfx.miss(); speak('miss');
 }
 function sayText(t) { const s = $('#say'); s.textContent = t; s.classList.remove('go'); void s.offsetWidth; s.classList.add('go'); }
 
 $('#btnHint').onclick = () => {
   if (!cur) return;
   const i = cur.found.findIndex(f => !f); if (i < 0) return;
-  sfx.tap(); speak('ここらへんを みてごらん');
+  sfx.tap(); speak('hint');
   const d = cur.diffs[i], ox = rnd(-.5, .5) * d.r, oy = rnd(-.5, .5) * d.r * cur.w / cur.h;
   for (const p of [picA, picB]) {
     const rc = p.getBoundingClientRect(), size = d.r * 5 * rc.width;
@@ -638,8 +759,8 @@ function confetti() {
 }
 $('#btnNext').onclick = () => { sfx.tap(); newRound(); };
 $('#btnBack').onclick = $('#btnHome').onclick = () => { sfx.tap(); $('#clear').classList.remove('on'); show('title'); renderBook(); };
-$('#btnHelp').onclick = () => $('#help').classList.add('on');
-$('#btnHelpClose').onclick = () => $('#help').classList.remove('on');
+$('#btnHelp').onclick = () => { $('#help').classList.add('on'); initVoiceUI(); };
+$('#btnHelpClose').onclick = () => { if (recording) recording.stop(); $('#help').classList.remove('on'); };
 
 function renderBook() {
   const book = store.get('machigai-book', []);
