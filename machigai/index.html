@@ -220,7 +220,7 @@ function aiLoad(id) {
     const k = `${id}/${cat}${i}`;
     if (aiBuf[k]) continue;
     aiBuf[k] = 'loading';
-    fetch(`voice/${k}.mp3`).then(r => r.arrayBuffer()).then(b => new Promise((res, rej) => a.decodeAudioData(b, res, rej)))
+    fetch(`voice/${k}.mp3?v=2`).then(r => r.arrayBuffer()).then(b => new Promise((res, rej) => a.decodeAudioData(b, res, rej)))
       .then(buf => { aiBuf[k] = buf; }).catch(() => { delete aiBuf[k]; });
   }
 }
