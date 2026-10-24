@@ -175,6 +175,9 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 .invite code{display:block;overflow-wrap:anywhere;background:var(--felt);border-radius:8px;padding:6px 10px;font-size:.85rem;user-select:all}
 .invite b{font-family:var(--display);font-weight:400;font-size:1.4rem;letter-spacing:.15em;color:var(--brass)}
 .lnote{margin:0;font-size:.85rem;color:var(--muted)}
+.inapp{background:var(--rail);border:2px solid var(--brass);border-radius:14px;padding:10px 14px;display:grid;gap:8px;font-size:.88rem}
+.inapp p{margin:0}.inapp div{display:flex;flex-wrap:wrap;gap:8px}
+.inapp a{color:var(--cardInk);background:var(--brass);border-radius:999px;padding:6px 14px;font-weight:700;text-decoration:none}
 /* with a friend, their face is the point of the game, so it gets the stage */
 .face.av{width:min(44vw,170px);height:min(44vw,170px)}
 .table.mypick .face.av{width:min(76vw,300px);height:min(76vw,300px)}
@@ -251,7 +254,8 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 
 <div class="wrap">
   <header>
-    <h1>ラスト・ツー<small>試作 v0.9・1対1、ババの読み合い（1ゲーム約1分）</small></h1>
+    <div class="inapp" id="inapp" hidden><p><b>アプリの中で開いています。</b>ここではカメラが使えないことがあります。ChromeやSafariで開き直してください。</p><div><a id="extOpen" href="#">ブラウザで開く</a><button id="extCopy">URLをコピー</button></div><p class="lnote" id="extNote">うまく開かないときは「URLをコピー」を押して、ChromeやSafariのアドレス欄に貼りつけてください。</p></div>
+    <h1>ラスト・ツー<small>試作 v1.0・1対1、ババの読み合い（1ゲーム約1分）</small></h1>
     <div class="controls">
       <div class="modes"><button id="modeCpu" aria-pressed="true">CPUと</button><button id="modeOn" aria-pressed="false">友だちと</button></div>
       <label for="level" class="lv" id="levelLab">相手</label>
@@ -335,6 +339,7 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
       <li><b>引くとき</b>：相手のカードを1回タップすると指さします。相手の<b>顔色</b>が変わるので、それを読んで、もう一度タップで引きます。顔色は正直とは限りません。</li>
       <li><b>引かれるとき</b>：自分のカードを2枚タップすると<b>入れかえ</b>、同じカードを2回タップすると1枚だけ<b>つき出せ</b>ます。「まぜる」でシャッフルも。引いたカードは右はしに入るので、そのままだと場所がバレます。</li>
       <li>相手が強くなるほど、顔色でウソをつき、あなたのクセ（つき出し方やババを置く場所）を覚えてきます。</li>
+      <li><b>じっくり見る</b>：相手がババを持っているとき、あなたが引く番になると、指が相手のカードを1枚ずつ自動で指していきます。そのたびに相手の顔が変わるのを見て、ババの場所を読みましょう。カードが少ないほど1枚あたりの時間が長くなります（2枚なら約2.6秒ずつ）。途中でカードをタップすると、そこで止まります。</li>
       <li><b>にらみ合い</b>：相手が引く番は「並べかえタイム」と「にらみ合いタイム」に分かれます。にらみ合いの間はカードを動かせないかわりに、<b>表情ボタン</b>（にやり・ドキッ・すまし・びっくり・ウインク）で顔を作れます。相手はその顔も読んでくるので、わざとちがうカードであせってみせるのが作戦です。</li>
       <li><b>ドキッ</b>：相手の指があなたのババの上に来ると、心臓の音がして、スマホがブルッとふるえます（ふるえるのはAndroidのみ。「音 オフ」で止まります）。</li>
       <li><b>話しかける</b>：相手の指があなたのカードの上にあるとき「それ、ババだよ」「それはババじゃないよ」と言えます。ウソでもOK。自分が引くときは「それ、ババ？」と聞けます（相手もウソをつきます）。</li>
@@ -547,21 +552,51 @@ async function yourTurn(g){
     }
   }
   S.phase = "pick"; say("calm", holdsBaba(S.cpu) ? "どれにする？" : "好きなのどうぞ");
-  msg(`<b>あなたの番</b>　${name()}の手札から1枚引こう。`,
-    holdsBaba(S.cpu) ? "1回タップで指さす → 顔色を読んで、もう一度タップで引く" : "ババはあなたの手にあります。どれを引いてもそろいます");
+  const after = () => {
+    if (g !== gen || S.phase !== "pick") return;
+    S.aimCpu = -1; say("calm", "さあ、どれ？");
+    msg(`<b>あなたの番</b>　${name()}の手札から1枚引こう。`, "1回タップで指さす → 顔色を読んで、もう一度タップで引く");
+    setTimer(PICK_MS); render();
+  };
+  if (holdsBaba(S.cpu) && S.cpu.length >= 2){
+    stopTimer(); render();
+    startScan(i => { if (g !== gen || S.phase !== "pick") return; S.aimCpu = i; SFX.aim(); say(reactTo(S.cpu[i])); scanMsg(); render(); }, after);
+    return;
+  }
+  msg(`<b>あなたの番</b>　${name()}の手札から1枚引こう。`, "ババはあなたの手にあります。どれを引いてもそろいます");
   setTimer(PICK_MS); render();
+}
+// --- じっくり見る: before you pick, your finger visits every card in turn so you can study the face.
+// Fewer cards means a likelier ババ, so each card gets a longer look.
+const scanMs = n => n <= 2 ? 2600 : n === 3 ? 2000 : n === 4 ? 1600 : 1300;
+let SCAN = null;
+function startScan(step, done){
+  stopScan();
+  SCAN = { i: -1, n: S.cpu.length, ms: scanMs(S.cpu.length), t: 0, done };
+  const next = () => {
+    if (!SCAN) return;
+    if (++SCAN.i >= SCAN.n){ const d = SCAN.done; stopScan(); d(); return; }
+    step(SCAN.i); SCAN.t = setTimeout(next, SCAN.ms);
+  };
+  next();
+}
+function stopScan(){ if (SCAN){ clearTimeout(SCAN.t); SCAN = null; } }
+function scanMsg(){
+  const who = ON.active ? esc(ON.oppName || "ともだち") + "さん" : name();
+  msg(`<b>じっくり見る</b>　${SCAN.i + 1}枚目／${SCAN.n}枚　${who}の顔をよく見て！`, "指が1枚ずつ動きます（カードをタップすると、そこで止まります）");
 }
 $("cpuHand").addEventListener("click", e => {
   const b = e.target.closest(".card"); if (!b || b.disabled || S.phase !== "pick") return;
-  const i = +b.dataset.i;
-  if (ON.active){ SFX.aim(); onSend(S.aimCpu === i ? { t: "draw", i } : { t: "aim", i }); return; }
-  if (S.aimCpu === i){ youDraw(i); return; }
+  const i = +b.dataset.i, scanning = !!SCAN;
+  if (scanning){ stopScan(); if (!ON.active) setTimer(PICK_MS); }
+  if (ON.active){ SFX.aim(); onSend(S.aimCpu === i && !scanning ? { t: "draw", i } : { t: "aim", i }); return; }
+  if (S.aimCpu === i && !scanning){ youDraw(i); return; }
   S.aimCpu = i; SFX.aim();
   const st = reactTo(S.cpu[i]); say(st);
   render();
 });
 async function youDraw(i){
-  const g = gen; S.phase = "anim"; stopTimer();
+  const g = gen; S.phase = "anim"; stopTimer(); stopScan();
   const c = S.cpu[i];
   S.aimCpu = -1; S.fx = { takenId: c.id }; render(); await wait(280); if (g !== gen) return;
   S.cpu.splice(i, 1); S.cpuStick = null; S.sel = -1;
@@ -752,7 +787,7 @@ function finish(win){
 
 // --- start ---
 function startGame(){
-  gen++; const g = gen;
+  gen++; const g = gen; stopScan();
   if (guardDone){ clearTimeout(guardTimer); guardDone = null; }
   $("overlayHost").innerHTML = ""; $("lastPair").innerHTML = "";
   S = newState(); S.t0 = performance.now();
@@ -764,7 +799,7 @@ function startGame(){
   setTimeout(() => { if (g === gen) youFirst ? yourTurn(g) : cpuTurn(g); }, 1200);
 }
 function idle(){
-  gen++;
+  gen++; stopScan();
   if (guardDone){ clearTimeout(guardTimer); guardDone = null; }
   S = newState(); say("calm", "よろしくね");
   msg("スタートを押すとゲームが始まります。", "下に並んでいるのは配られる手札の例です");
@@ -1038,7 +1073,8 @@ async function startCam(){
     CAM.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
   } catch (e) {
     btn.disabled = false;
-    camNote(e && e.name === "NotAllowedError" ? "カメラが許可されませんでした。ここでは使えないか、ブラウザで「許可」が必要です。" : "この画面ではカメラが使えません。");
+    camNote(INAPP ? "アプリの中ではカメラが使えません。上の「ブラウザで開く」から開き直してください。" : e && e.name === "NotAllowedError" ? "カメラが許可されませんでした。ブラウザのアドレス欄の左のマークから、カメラを「許可」にしてください。" : "この画面ではカメラが使えません。");
+    if (INAPP){ $("inapp").hidden = false; $("inapp").scrollIntoView({ behavior: "smooth" }); }
     $("camHelp").hidden = false; return;
   }
   const vid = $("cam"); vid.srcObject = CAM.stream; vid.hidden = false; await vid.play().catch(() => {});
@@ -1089,7 +1125,7 @@ function setMode(online){
   $("modeCpu").setAttribute("aria-pressed", !online); $("modeOn").setAttribute("aria-pressed", online);
   $("lobby").hidden = !online; $("level").hidden = $("levelLab").hidden = online;
   if (online){
-    gen++; stopTimer(); if (guardDone){ clearTimeout(guardTimer); guardDone = null; }
+    gen++; stopTimer(); stopScan(); if (guardDone){ clearTimeout(guardTimer); guardDone = null; }
     $("overlayHost").innerHTML = ""; $("lastPair").innerHTML = "";
     ON.active = true; S = newState(); S.you = []; S.cpu = []; S.phase = "idle";
     $("face").classList.add("av"); $("start").hidden = true;
@@ -1105,6 +1141,12 @@ function onLeave(){
   Object.assign(ON, { peer: null, conn: null, open: false, host: false, code: "", oppFace: null, oppVideo: false, oppStream: null, H: null, called: false });
   $("invite").hidden = true;
 }
+const PAGE = "https://kudo12711-boop.github.io/last-two/";
+const INAPP = /\bLine\/|FBAN|FBAV|Instagram|MicroMessenger|Twitter|KAKAOTALK|; wv\)/i.test(navigator.userAgent);
+// phones drop the signalling socket while you are off in LINE sending the invite; reconnect with the same room id when you come back
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && ON.peer && ON.peer.disconnected && !ON.peer.destroyed){ try { ON.peer.reconnect(); } catch (e) {} }
+});
 async function mkRoom(){
   onLeave();
   try { await loadPeer(); } catch (e) { lobbyMsg("つなぐ仕組みを読み込めませんでした。ネットにつながっているか確かめてください。Claudeの画面の中では使えないので、https://kudo12711-boop.github.io/last-two/ で開いてください。"); return; }
@@ -1113,7 +1155,7 @@ async function mkRoom(){
   ON.host = true; ON.code = code; lobbyMsg("部屋を準備しています…");
   const peer = ON.peer = new Peer("lasttwo-" + code);
   peer.on("open", () => {
-    const url = location.href.split("#")[0] + "#room-" + code;
+    const url = PAGE + "?room=" + code + "&openExternalBrowser=1";
     $("roomCode").textContent = code; $("inviteUrl").textContent = url; $("invite").hidden = false;
     lobbyMsg(ON.inviteFor ? `${ON.inviteFor}さんにURLを送って、入ってくるのを待ちましょう。` : "友だちが入ってくるのを待っています…");
     setShare(url, code);
@@ -1132,13 +1174,19 @@ async function joinRoom(code){
   try { await loadPeer(); } catch (e) { lobbyMsg("つなぐ仕組みを読み込めませんでした。ネットにつながっているか確かめてください。Claudeの画面の中では使えないので、https://kudo12711-boop.github.io/last-two/ で開いてください。"); return; }
   ON.host = false; ON.code = code; lobbyMsg("部屋に入っています…");
   const peer = ON.peer = new Peer();
-  peer.on("open", () => bindConn(peer.connect("lasttwo-" + code, { reliable: true })));
+  let tries = 0;
+  const knock = () => { if (ON.peer === peer && !ON.open) bindConn(peer.connect("lasttwo-" + code, { reliable: true })); };
+  peer.on("open", knock);
   peer.on("call", onCall);
-  peer.on("error", e => lobbyMsg(e.type === "peer-unavailable" ? "部屋が見つかりませんでした。コードを確かめるか、友だちに部屋を作り直してもらってください。" : "つながりませんでした。少し待ってから、もう一度ためしてください。"));
+  peer.on("error", e => {
+    // the host may still be in LINE with the game in the background; keep knocking for about a minute
+    if (e.type === "peer-unavailable" && ++tries < 20){ lobbyMsg(`部屋をさがしています…（${tries}）　部屋を作った人に、ゲームの画面を開いたままにしてもらってください。`); setTimeout(knock, 3000); return; }
+    lobbyMsg(e.type === "peer-unavailable" ? "部屋が見つかりませんでした。部屋を作った人にゲームの画面に戻ってもらうか、部屋を作り直してもらってください。" : "つながりませんでした。少し待ってから、もう一度ためしてください。");
+  });
 }
 function bindConn(c){
   ON.conn = c;
-  const timer = setTimeout(() => { if (!ON.open) lobbyMsg("つながるのに時間がかかっています。お互いの通信環境によってはつながらないことがあります（Wi-Fiを切りかえると直ることがあります）。"); }, 12000);
+  const timer = setTimeout(() => { if (!ON.open && ON.conn === c) lobbyMsg("つながるのに時間がかかっています。お互いの通信環境によってはつながらないことがあります（Wi-Fiを切りかえると直ることがあります）。"); }, 12000);
   c.on("open", () => {
     clearTimeout(timer); ON.open = true; ON.called = false;
     sendHello();
@@ -1186,7 +1234,7 @@ function hostAct(side, m){
     if (m.order.length === mine.length && m.order.every(x => byId.has(x))) H.hands[side] = m.order.map(x => byId.get(x));
     H.stick[side] = byId.has(m.stick) ? m.stick : null;
   } else if (m.t === "aim" && side === H.turn){
-    H.aim = Math.max(0, Math.min(H.hands[other(side)].length - 1, m.i | 0));
+    H.aim = m.i < 0 ? -1 : Math.max(0, Math.min(H.hands[other(side)].length - 1, m.i | 0));
   } else if (m.t === "draw" && side === H.turn){
     const from = H.hands[other(side)], i = Math.max(0, Math.min(from.length - 1, m.i | 0)), c = from.splice(i, 1)[0];
     H.stick[other(side)] = null; H.aim = -1; ON.seq++;
@@ -1212,7 +1260,7 @@ function applyView(v){
   const was = S.phase;
   S.you = v.me.map(c => ({ id: c.id, n: c.n })); S.cpu = v.opp;
   S.youStick = v.myStick; S.cpuStick = v.oppStick >= 0 ? 1000 + v.oppStick : null;
-  S.pairs = v.pairs; S.phase = v.over ? "over" : v.myTurn ? "pick" : "oguard";
+  S.pairs = v.pairs; S.phase = v.over ? "over" : v.myTurn ? "pick" : "oguard"; if (S.phase !== "pick") stopScan();
   S.aimCpu = v.myTurn ? v.aim : -1; S.aimYou = v.myTurn ? -1 : v.aim;
   if (S.phase !== "oguard") S.sel = -1;
   if (S.sel >= S.you.length) S.sel = -1;
@@ -1231,6 +1279,11 @@ function applyView(v){
       setTimeout(() => showOnlineResult(v, earned), 900);
     }
     msg(v.win ? `<b>あなたの勝ち！</b>　ババは${who}さんの手に残りました。` : `<b>負け…</b>　ババがあなたの手に残りました。`, "");
+  } else if (S.phase === "pick" && was !== "pick" && !holdsBaba(S.you) && S.cpu.length >= 2){
+    startScan(i => { if (S.phase !== "pick") return; onSend({ t: "aim", i }); SFX.aim(); scanMsg(); },
+      () => { if (S.phase === "pick") onSend({ t: "aim", i: -1 }), msg(`<b>あなたの番</b>　${who}さんの手札から1枚引こう。`, "1回タップで指さす → 顔を見て、もう一度タップで引く"); });
+  } else if (S.phase === "pick" && SCAN){
+    scanMsg();
   } else if (S.phase === "pick"){
     msg(`<b>あなたの番</b>　${who}さんの手札から1枚引こう。`, holdsBaba(S.you) ? "ババはあなたの手にあります。どれを引いてもそろいます" : "1回タップで指さす → 顔を見て、もう一度タップで引く");
   } else {
@@ -1491,9 +1544,18 @@ $("stamps").addEventListener("click", e => {
 try { const n = localStorage.getItem("lasttwo-nick"); if (n) $("nick").value = n; } catch (e) {}
 $("nick").addEventListener("change", () => { try { localStorage.setItem("lasttwo-nick", nick()); } catch (e) {} sendHello(); });
 
+if (INAPP){
+  const room = (location.search.match(/[?&]room=([a-z0-9]{5})/) || location.hash.match(/^#room-([a-z0-9]{5})$/) || [])[1];
+  const url = PAGE + (room ? "?room=" + room : "");
+  $("inapp").hidden = false;
+  $("extOpen").href = /Android/i.test(navigator.userAgent)
+    ? "intent://" + url.replace(/^https:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent(url) + ";end"
+    : url + (room ? "&" : "?") + "openExternalBrowser=1";
+  $("extCopy").addEventListener("click", () => navigator.clipboard?.writeText(url).then(() => { $("extCopy").textContent = "コピーしました"; }, () => { $("extNote").textContent = url; }));
+}
 idle();
 requestAnimationFrame(frame);
-{ const m = location.hash.match(/^#room-([a-z0-9]{5})$/); if (m){ setMode(true); $("roomIn").value = m[1]; joinRoom(m[1]); } }
+{ const m = location.hash.match(/^#room-([a-z0-9]{5})$/) || location.search.match(/[?&]room=([a-z0-9]{5})/); if (m){ setMode(true); $("roomIn").value = m[1]; joinRoom(m[1]); } }
 })();
 </script>
 
