@@ -71,6 +71,7 @@ header .r{text-align:right;white-space:nowrap}
 #winwrap.sea #sill{display:none}
 .frames{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .frames button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:700;font-size:13px}
+.frames.two{grid-template-columns:1fr 1fr}
 .frames button.on{border-color:var(--accent);background:var(--accent2)}
 .frames i{display:block;width:46px;height:32px;border-radius:8px;background:linear-gradient(#8fc3ea,#cfe7f5 60%,#9cc87a 60%);box-shadow:0 0 0 4px #8a5b3c}
 .fp-white{box-shadow:0 0 0 4px #e6e0d4!important}.fp-retro{border-radius:14px!important;box-shadow:0 0 0 4px #e0782f!important}.fp-log{box-shadow:0 0 0 5px #5a3b26!important}.fp-round{border-radius:50%!important;box-shadow:0 0 0 4px #c9a35a!important}.fp-shoji{border-radius:2px!important;box-shadow:0 0 0 4px #b88a5a!important;background:linear-gradient(90deg,#f7f2e6 22%,transparent 22% 78%,#f7f2e6 78%),linear-gradient(#8fc3ea,#cfe7f5 60%,#9cc87a 60%)!important}
@@ -100,6 +101,10 @@ header .r{text-align:right;white-space:nowrap}
 .pk-b.sight{background:#ffd36b;color:#5a3a00}.pk-b.ghost{background:rgba(255,255,255,.2);color:#fff}
 .mini{border:1px solid var(--line);background:var(--wall);border-radius:99px;padding:4px 10px;font-size:12px;font-weight:700;margin-top:4px}
 .mini:disabled{opacity:.6}
+.modal textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.4 monospace;background:#fff;word-break:break-all;resize:vertical}
+.filebtn{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--line);background:#fff;border-radius:14px;padding:10px 12px;font-weight:700;font-size:14px;cursor:pointer}
+#b-snd{position:absolute;left:10px;bottom:10px;z-index:5;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:18px;backdrop-filter:blur(4px)}
+#s-vol{width:100%;margin:6px 0;accent-color:var(--accent)}
 .sps{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
 .sp{border:2px solid var(--line);background:#fff;border-radius:16px;padding:10px;text-align:left;display:flex;flex-direction:column;gap:2px}
 .sp.wide{width:100%}
@@ -163,6 +168,10 @@ button.chip{border:2px solid transparent;font-size:14px;padding:6px 12px}button.
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 @media (max-width:420px){.opts{grid-template-columns:1fr}}
 .opt{border:2px solid var(--line);background:#fff;border-radius:18px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.opt.locked{background:#f6f2ea;border-style:dashed}.opt.locked .oi,.opt.locked b{opacity:.75}
+.tag.lock{background:#5a4a3a;color:#fff}
+.shop{border:2px solid var(--line);background:#fff;border-radius:18px;padding:12px;margin:10px 0;display:flex;flex-direction:column;gap:4px}.shop.focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2)}
+.shop .oi{font-size:28px;letter-spacing:2px}.shop b{font-size:18px}.shop p{font-size:13px;margin:0!important;line-height:1.55!important}.shop .meta{font-size:12px;color:var(--ink2)}
 .opt.on{border-color:var(--accent);background:var(--accent2)}
 .opt .oi{font-size:28px;letter-spacing:2px}
 .opt b{font-size:18px}
@@ -214,7 +223,7 @@ svg.map{width:100%;aspect-ratio:2.4/1;border-radius:14px;display:block;backgroun
     <div class="r"><div id="clock"></div><div id="wx"></div></div>
   </header>
   <div id="winwrap">
-    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div></div>
+    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button></div>
     <div id="sill"></div>
   </div>
   <section id="panel">
@@ -309,6 +318,17 @@ const LEGS = {
     ['ビルバオ',43.26,-2.93,'city','mount','r'],
     ['マドリード',40.42,-3.70,'city','steppe','r'],
   ]},
+  L2c: { name: '北欧とオーロラ', paid: 1, desc: '北極圏の町トロムソでオーロラを、サンタクロース村やフィヨルドの絶景を。北のはてまで行く大回りのルート。', icon: '🌌🦌🎅', key: [69.65,18.96], keyName: 'トロムソ', stops: [
+    ['ベルリン',52.52,13.40,'city','farm','r',0,'gate'],
+    ['コペンハーゲン',55.68,12.57,'city','farm','r'],
+    ['ストックホルム',59.33,18.07,'city','forest','r'],
+    ['ロヴァニエミ',66.50,25.73,'forest','forest','r'],
+    ['トロムソ',69.65,18.96,'coast','forest','r',0,'snowpeaks'],
+    ['ロフォーテン諸島',68.23,14.57,'coast','mount','r',0,'fjord'],
+    ['ベルゲン',60.39,5.32,'coast','mount','r',0,'fjord'],
+    ['ビルバオ',43.26,-2.93,'city','sea','s','north'],
+    ['マドリード',40.42,-3.70,'city','steppe','r'],
+  ]},
   L3: { name: 'イベリア半島', stops: [
     ['リスボン',38.72,-9.14,'coast','steppe','r',0,'belem'],
   ]},
@@ -336,6 +356,29 @@ const LEGS = {
     ['セドナ',34.87,-111.76,'desert','desert','r',0,'buttes'],
     ['グランドキャニオン',36.06,-112.14,'desert','forest','r',0,'canyon'],
   ]},
+  L4c: { name: 'アフリカと南アメリカ', paid: 1, desc: 'サハラ砂漠をラクダとならんで走り、大西洋をわたってリオへ。イグアスの滝、ウユニ塩湖、マチュピチュをめぐる大冒険。', icon: '🐪🗿🦙', key: [-20.13,-67.49], keyName: 'ウユニ塩湖', stops: [
+    ['カサブランカ',33.57,-7.59,'city','sea','s','atlantic','mosque'],
+    ['マラケシュ',31.63,-7.99,'city','desert','r'],
+    ['サハラ砂漠',31.10,-4.01,'desert','desert','r',0,'dunes'],
+    ['ダカール',14.72,-17.47,'coast','desert','r'],
+    ['フェルナンド・デ・ノローニャ',-3.85,-32.42,'coast','sea','s','tropic'],
+    ['リオデジャネイロ',-22.91,-43.17,'city','sea','s','tropic','christ'],
+    ['イグアスの滝',-25.69,-54.44,'forest','forest','r',0,'falls'],
+    ['ブエノスアイレス',-34.60,-58.38,'city','farm','r'],
+    ['メンドーサ',-32.89,-68.83,'farm','steppe','r',0,'snowpeaks'],
+    ['サンティアゴ',-33.45,-70.67,'city','mount','r',0,'snowpeaks'],
+    ['アタカマ砂漠',-22.91,-68.20,'desert','desert','r',0,'dunes'],
+    ['ウユニ塩湖',-20.13,-67.49,'desert','desert','r',0,'salt'],
+    ['クスコ',-13.53,-71.97,'city','mount','r',0,'machu'],
+    ['リマ',-12.05,-77.04,'city','desert','r'],
+    ['ガラパゴス諸島',-0.74,-90.31,'coast','sea','s','pacific','volcano'],
+    ['パナマ',8.98,-79.52,'city','sea','s','tropic'],
+    ['グアテマラ',14.63,-90.51,'city','forest','r',0,'volcano'],
+    ['メキシコシティ',19.43,-99.13,'city','forest','r',0,'pyramid'],
+    ['チワワ',28.63,-106.07,'city','desert','r'],
+    ['ツーソン',32.22,-110.97,'desert','desert','r'],
+    ['グランドキャニオン',36.06,-112.14,'desert','desert','r',0,'canyon'],
+  ]},
   L5: { name: 'アメリカ西部', stops: [
     ['ラスベガス',36.17,-115.14,'city','desert','r',0,'vegas'],
     ['ロサンゼルス',34.05,-118.24,'city','desert','r',0,'hollywood'],
@@ -356,13 +399,61 @@ const LEGS = {
     ['仙台',38.27,140.87,'city','farm','r'],
     ['東京',35.68,139.76,'city','farm','r',0,'tokyo'],
   ]},
+  L6c: { name: '南太平洋とオーストラリア', paid: 1, desc: 'タヒチやフィジーの青い海をわたってオーストラリアへ。オペラハウス、赤い大岩ウルル、カンガルーにも会えるかも。', icon: '🐨🦘🌺', key: [-33.87,151.21], keyName: 'シドニー', stops: [
+    ['タヒチ',-17.53,-149.57,'coast','sea','s','tropic','volcano'],
+    ['フィジー',-18.14,178.44,'coast','sea','s','tropic'],
+    ['オークランド',-36.85,174.76,'city','sea','s','pacific','needle'],
+    ['シドニー',-33.87,151.21,'city','sea','s','pacific','opera'],
+    ['ブルーマウンテンズ',-33.72,150.31,'forest','forest','r'],
+    ['ウルル',-25.34,131.04,'desert','desert','r',0,'uluru'],
+    ['アリススプリングス',-23.70,133.88,'desert','desert','r'],
+    ['ケアンズ',-16.92,145.77,'coast','steppe','r'],
+    ['グアム',13.44,144.79,'coast','sea','s','tropic'],
+    ['東京',35.68,139.76,'city','sea','s','pacific','tokyo'],
+  ]},
 };
 // 1周の流れ。配列は分かれ道（どちらか1つを選ぶ）
-const PLAN = ['L0', ['L1a','L1b'], ['L2a','L2b'], 'L3', ['L4a','L4b'], 'L5', ['L6a','L6b']];
+const PLAN = ['L0', ['L1a','L1b'], ['L2a','L2b','L2c'], 'L3', ['L4a','L4b','L4c'], 'L5', ['L6a','L6b','L6c']];
 const FORK_AT = { 1: '北京', 2: 'ウィーン', 4: 'リスボン', 6: 'ロサンゼルス' };
 
 // 町に着いたとき・ボトルの手紙で読める豆知識
 const FACTS = {
+  'ベルリン':'ブランデンブルク門は、東西に分かれていたドイツがひとつになった象徴。',
+  'コペンハーゲン':'人魚姫の像と、カラフルな家が並ぶニューハウン運河の町。',
+  'ストックホルム':'14の島の上にできた「北のベネチア」。ノーベル賞の授賞式の町。',
+  'ロヴァニエミ':'北極圏のすぐ上。サンタクロース村があり、一年中サンタに会えます。',
+  'トロムソ':'北極圏の町。冬は太陽がのぼらない「極夜」、夏は沈まない「白夜」。オーロラの名所。',
+  'ロフォーテン諸島':'海からとがった岩山がそびえる島々。赤い漁師小屋と干しダラが名物。',
+  'ベルゲン':'フィヨルドへの入り口。カラフルな木の倉庫ブリッゲンは世界遺産。',
+  'カサブランカ':'海の上に建つハッサン2世モスクの塔は、高さ210m。',
+  'マラケシュ':'赤い壁の町。夜のジャマ・エル・フナ広場はヘビ使いや屋台でにぎやか。',
+  'サハラ砂漠':'日本が25こ入るほど広い、世界最大の暑い砂漠。夜は星がふるよう。',
+  'ダカール':'アフリカ大陸のいちばん西のはし。昔はパリ・ダカール・ラリーのゴール。',
+  'フェルナンド・デ・ノローニャ':'イルカがたくさん集まるブラジルの島。1日に入れる人数が決まっている。',
+  'リオデジャネイロ':'山の上から両手を広げたキリスト像が町を見守る。カーニバルが有名。',
+  'イグアスの滝':'275本もの滝が集まる世界最大級の滝。「悪魔ののど笛」はすごい迫力。',
+  'ブエノスアイレス':'タンゴが生まれた町。世界でいちばん幅が広い大通りがある。',
+  'メンドーサ':'南北アメリカでいちばん高いアコンカグア山（6961m）のふもと。',
+  'サンティアゴ':'アンデス山脈の雪山がすぐうしろに見える、チリの首都。',
+  'アタカマ砂漠':'世界でいちばん雨がふらない砂漠。星空観測の聖地。',
+  'ウユニ塩湖':'一面まっ白な塩の大地。雨のあとは空をうつす「天空の鏡」になる。',
+  'クスコ':'標高3400mのインカ帝国の都。近くの山の上に天空の都市マチュピチュ。',
+  'リマ':'ペルーの首都。セビーチェなど、おいしい料理で世界的に有名。',
+  'ガラパゴス諸島':'ゾウガメやウミイグアナなど、ここにしかいない生きものの島。',
+  'パナマ':'太平洋と大西洋をつなぐパナマ運河。船が階段のように水門をのぼる。',
+  'グアテマラ':'火山にかこまれた国。マヤ文明の遺跡ティカルもある。',
+  'メキシコシティ':'近くに太陽のピラミッドがある古代都市テオティワカン。',
+  'チワワ':'小さな犬「チワワ」の名前は、この町から。',
+  'ツーソン':'人の背より高いサワロサボテンの森が広がる。',
+  'タヒチ':'南太平洋の楽園。画家ゴーギャンが愛した島。',
+  'フィジー':'333の島からなる国。あいさつは元気に「ブラ！」。',
+  'オークランド':'ヨットの町。スカイタワーは高さ328m。',
+  'シドニー':'貝がらのようなオペラハウスと、ハーバーブリッジの港町。',
+  'ブルーマウンテンズ':'ユーカリの森から出る油で、山が青くかすんで見える。',
+  'ウルル':'高さ348mの一枚岩。先住民アボリジニの聖地で、夕日で赤くもえる。',
+  'アリススプリングス':'オーストラリアのまんなか。カンガルーに注意の道路標識がいっぱい。',
+  'ケアンズ':'世界最大のサンゴ礁グレートバリアリーフへの入り口。',
+  'グアム':'日本から飛行機で約4時間。青い海とヤシの木の島。',
   '東京':'世界でいちばん人が多い都市圏。世界一周のスタートでゴール！',
   '富士山のふもと':'富士山は日本でいちばん高い山（3776m）。晴れていると大きく見えます。',
   '名古屋':'名古屋城の屋根には金のしゃちほこがのっています。',
@@ -569,6 +660,56 @@ const ONSEN = ['♨️', '温泉', 1, '山を見ながら露天風呂'];
 const LODGING = { camp: ['🏕', 'キャンプ場', 'たき火をかこんで、星を見ながら'], hotel: ['🏨', 'ホテル', 'ふかふかのベッドとお風呂'], car: ['🚐', '車中泊', 'いつものキャンピングカーで'] };
 const LODGE_SILL = { camp: ['🔥', '🏕', '🌌'], hotel: ['🛏', '🛁', '🪴'], car: ['🕯', '💤', '🧸'] };
 
+// 有料ルート（北欧・アフリカと南米・南太平洋）の国と町
+Object.assign(COUNTRY, {
+  DK: { name: 'デンマーク', words: ['Hej', 'ハイ', 'Tak', 'ターク', 'デンマーク語'], food: [['🥪', 'スモーブロー', 'パンに具をのせたオープンサンド']], gift: [['🧱', 'ブロックのおもちゃ', 'デンマーク生まれの組み立てブロック']] },
+  SE: { name: 'スウェーデン', words: ['Hej', 'ヘイ', 'Tack', 'タック', 'スウェーデン語'], food: [['🧆', 'ミートボール', 'こけももジャムをそえて']], gift: [['🐴', 'ダーラナホース', '赤くぬった木の馬']] },
+  FI: { name: 'フィンランド', words: ['Hei', 'ヘイ', 'Kiitos', 'キートス', 'フィンランド語'], food: [['🫐', 'ブルーベリーパイ', '森でつんだベリーのパイ']], gift: [['🎅', 'サンタからの手紙', 'サンタクロース村から届く']] },
+  NO: { name: 'ノルウェー', words: ['Hei', 'ハイ', 'Takk', 'タック', 'ノルウェー語'], food: [['🍣', 'サーモン', 'ノルウェーの海で育ったサーモン']], gift: [['🧌', 'トロールの人形', '森にすむいたずら好きの妖精']] },
+  MA: { name: 'モロッコ', words: ['السلام عليكم', 'アッサラーム・アライクム', 'شكرا', 'シュクラン', 'アラビア語'], food: [['🍲', 'タジン', 'とんがり帽子のなべで蒸し煮']], gift: [['🏮', 'モロッコランプ', 'すかしもようの光がきれい']] },
+  SN: { name: 'セネガル', words: ['Nanga def', 'ナンガデフ', 'Jërëjëf', 'ジェレジェフ', 'ウォロフ語'], food: [['🍚', 'チェブジェン', '魚と野菜の炊きこみごはん']], gift: [['🥁', 'ジャンベ', '手でたたく木の太鼓']] },
+  BR: { name: 'ブラジル', words: ['Olá', 'オラ', 'Obrigado', 'オブリガード', 'ポルトガル語'], food: [['🍖', 'シュラスコ', '大きな串で焼いた肉']], gift: [['🦜', 'オウムの置物', 'カラフルな森の鳥']] },
+  AR: { name: 'アルゼンチン', words: ['Hola', 'オラ', 'Gracias', 'グラシアス', 'スペイン語'], food: [['🥩', 'アサード', '炭火でじっくり焼く牛肉']], gift: [['🧉', 'マテ茶のカップ', 'ストローで飲むお茶の入れもの']] },
+  CL: { name: 'チリ', words: ['Hola', 'オラ', 'Gracias', 'グラシアス', 'スペイン語'], food: [['🥟', 'エンパナーダ', '具をつつんで焼いたパイ']], gift: [['🗿', 'モアイの置物', 'チリのイースター島の石像']] },
+  BO: { name: 'ボリビア', words: ['Hola', 'オラ', 'Gracias', 'グラシアス', 'スペイン語'], food: [['🥟', 'サルテーニャ', 'スープ入りのあまからパイ']], gift: [['🧂', 'ウユニの塩', '塩湖でとれたまっ白な塩']] },
+  PE: { name: 'ペルー', words: ['Hola', 'オラ', 'Gracias', 'グラシアス', 'スペイン語'], food: [['🐟', 'セビーチェ', '魚をレモンでしめたマリネ']], gift: [['🦙', 'アルパカのセーター', 'ふわふわであたたかい']] },
+  EC: { name: 'エクアドル', words: ['Hola', 'オラ', 'Gracias', 'グラシアス', 'スペイン語'], food: [['🍌', 'パタコン', '青いバナナを揚げたもの']], gift: [['🐢', 'ゾウガメの置物', 'ガラパゴスの大きなカメ']] },
+  PA: { name: 'パナマ', words: ['Hola', 'オラ', 'Gracias', 'グラシアス', 'スペイン語'], food: [['🍲', 'サンコーチョ', '鶏肉といもの煮こみスープ']], gift: [['👒', 'パナマ帽', '草であんだ夏の帽子']] },
+  GT: { name: 'グアテマラ', words: ['Hola', 'オラ', 'Gracias', 'グラシアス', 'スペイン語'], food: [['🫔', 'タマレス', 'とうもろこしの生地をバナナの葉で蒸す']], gift: [['🧵', 'カラフルな織物', 'マヤの人たちの手織り']] },
+  MX: { name: 'メキシコ', words: ['Hola', 'オラ', 'Gracias', 'グラシアス', 'スペイン語'], food: [['🌮', 'タコス', 'とうもろこしの皮で具をはさむ']], gift: [['🪅', 'ピニャータ', 'たたいて割るとお菓子が出てくる']] },
+  PF: { name: 'タヒチ（フランス領ポリネシア）', words: ['Ia ora na', 'イアオラナ', 'Māuruuru', 'マウルール', 'タヒチ語'], food: [['🐟', 'ポワソン・クリュ', '魚をココナッツミルクであえたもの']], gift: [['⚫', '黒真珠', 'タヒチの海で育つ黒い真珠']] },
+  FJ: { name: 'フィジー', words: ['Bula', 'ブラ', 'Vinaka', 'ヴィナカ', 'フィジー語'], food: [['🥥', 'ロボ料理', '土の中で蒸し焼きにするごちそう']], gift: [['🐚', '貝のネックレス', '南の島の貝がら']] },
+  NZ: { name: 'ニュージーランド', words: ['Kia ora', 'キアオラ', 'Ngā mihi', 'ナーミーヒ', 'マオリ語'], food: [['🥝', 'キウイフルーツ', 'あまずっぱい緑の果物']], gift: [['🐑', 'ひつじのぬいぐるみ', '人より羊のほうが多い国']] },
+  AU: { name: 'オーストラリア', words: ["G'day", 'グッダイ', 'Thanks, mate', 'サンクス・メイト', '英語（オーストラリア）'], food: [['🥧', 'ミートパイ', '手で持って食べるパイ']], gift: [['🐨', 'コアラのぬいぐるみ', 'ユーカリの木にしがみつく']] },
+  GU: { name: 'グアム', words: ['Håfa adai', 'ハファデイ', "Si Yu'os ma'åse'", 'シーユースマアセ', 'チャモロ語'], food: [['🍗', 'チキンケラグエン', 'レモン味のチキン料理']], gift: [['🌴', 'ヤシの実の置物', '南の島のおみやげ']] },
+});
+for (const [c, n] of Object.entries({
+  DE: 'ベルリン', DK: 'コペンハーゲン', SE: 'ストックホルム', FI: 'ロヴァニエミ', NO: 'トロムソ ロフォーテン諸島 ベルゲン', MA: 'カサブランカ マラケシュ サハラ砂漠', SN: 'ダカール',
+  BR: 'フェルナンド・デ・ノローニャ リオデジャネイロ イグアスの滝', AR: 'ブエノスアイレス メンドーサ', CL: 'サンティアゴ アタカマ砂漠', BO: 'ウユニ塩湖', PE: 'クスコ リマ', EC: 'ガラパゴス諸島',
+  PA: 'パナマ', GT: 'グアテマラ', MX: 'メキシコシティ チワワ', US: 'ツーソン', PF: 'タヒチ', FJ: 'フィジー', NZ: 'オークランド', AU: 'シドニー ブルーマウンテンズ ウルル アリススプリングス ケアンズ', GU: 'グアム',
+})) CITY_C[c] = (CITY_C[c] ? CITY_C[c] + ' ' : '') + n;
+Object.assign(CITY, {
+  'ベルリン': { spots: [['🏛', 'ブランデンブルク門', 1, '平和の象徴の大きな門'], ['🧱', 'ベルリンの壁', 2, '絵がかかれた壁が残っている'], ['🏝', '博物館島', 3, '川の中の島に5つの博物館']] },
+  'ストックホルム': { spots: [['🏰', 'ガムラスタン', 2, '石だたみの古い町並み'], ['🚢', 'ヴァーサ号博物館', 2, '370年前に沈んだ大きな船'], ['🏛', '市庁舎', 1, 'ノーベル賞の晩さん会の会場']] },
+  'ロヴァニエミ': { spots: [['🎅', 'サンタクロース村', 2, 'サンタと握手。北極線をまたげる'], ['🦌', 'トナカイのそり', 2, '雪の森をトナカイがひく'], ['🐕', '犬ぞり', 1, 'ハスキー犬といっしょに走る']] },
+  'トロムソ': { spots: [['🌌', 'オーロラ鑑賞ツアー', 3, '町の明かりをはなれて空を見上げる'], ['🚡', 'ロープウェイ', 1, '山の上からフィヨルドと町を一望'], ['⛪', '北極教会', 1, '三角形が重なった白い教会']], food: [['🦀', 'タラバガニ', '北の海の大きなカニ']] },
+  'ベルゲン': { spots: [['🏘', 'ブリッゲン', 1, 'カラフルな木の倉庫が並ぶ港'], ['⛴', 'フィヨルドクルーズ', 3, '切り立つ崖のあいだを船で進む'], ['🐟', '魚市場', 1, 'サーモンやエビがずらり']] },
+  'マラケシュ': { spots: [['🐍', 'ジャマ・エル・フナ広場', 2, 'ヘビ使いと屋台でにぎやか'], ['🌿', 'マジョレル庭園', 1, 'あざやかな青い建物の庭'], ['🧺', 'スーク（市場）', 2, '迷路のような市場でお買いもの']] },
+  'サハラ砂漠': { spots: [['🐪', 'ラクダに乗る', 2, '砂丘の上をゆらゆら進む'], ['🌅', '砂丘の夕日', 1, '砂が赤くそまる時間'], ['⭐', '砂漠の星空', 2, '天の川がくっきり見える']] },
+  'リオデジャネイロ': { spots: [['✝️', 'コルコバードのキリスト像', 2, '高さ30mの像と町の絶景'], ['🚡', 'ポン・ジ・アスーカル', 2, 'ロープウェイで岩山の上へ'], ['🏖', 'コパカバーナ海岸', 2, '波もようの歩道とビーチ']] },
+  'イグアスの滝': { spots: [['💦', '悪魔ののど笛', 2, '滝の上の展望台。ずぶぬれ注意'], ['🚤', 'ボートで滝の下へ', 1, '滝のしぶきの中につっこむ'], ['🦋', 'ジャングルの遊歩道', 2, 'チョウやハナグマに会える']] },
+  'ブエノスアイレス': { spots: [['💃', 'タンゴショー', 2, '情熱的なダンスを見る'], ['🎨', 'カミニート', 1, 'カラフルな家が並ぶ小道'], ['📚', '劇場を改造した本屋さん', 1, '世界一美しいといわれる書店']] },
+  'ウユニ塩湖': { spots: [['🪞', '天空の鏡', 2, '空と大地がひとつになる'], ['📸', 'トリック写真', 1, '遠近感がなくなる不思議な写真'], ['🚂', '列車の墓場', 1, '古い機関車が並ぶ']] },
+  'クスコ': { spots: [['⛰', 'マチュピチュ', 3, '山の上のインカの都市'], ['🧱', 'インカの石組み', 1, 'カミソリも通らない石垣'], ['🦙', 'アルパカ牧場', 1, 'ふわふわのアルパカとふれあう']], words: ['Allillanchu', 'アイリャンチュ', 'Sulpayki', 'スルパイキ', 'ケチュア語'] },
+  'ガラパゴス諸島': { spots: [['🐢', 'ゾウガメ保護区', 2, '100歳をこえるカメも'], ['🦎', 'ウミイグアナの浜', 1, '海で泳ぐイグアナ'], ['🤿', 'アシカとシュノーケル', 2, 'アシカがいっしょに泳いでくれる']] },
+  'メキシコシティ': { spots: [['🔺', 'テオティワカン', 3, '太陽のピラミッドにのぼる'], ['🎨', 'フリーダ・カーロの青い家', 1, '画家が暮らした家'], ['🚣', 'ソチミルコの小舟', 2, 'カラフルな舟で運河めぐり']] },
+  'タヒチ': { spots: [['🏝', '水上コテージの海', 2, '透明な青いラグーン'], ['🐢', 'ウミガメとシュノーケル', 2, 'サンゴの海でカメと泳ぐ'], ['💃', 'タヒチアンダンス', 1, '腰をふる力強いおどり']] },
+  'オークランド': { spots: [['🗼', 'スカイタワー', 1, '高さ328m。展望台の床がガラス'], ['⛵', 'ヨットクルーズ', 2, '「帆の町」の海へ'], ['🌋', 'マウント・イーデン', 1, '町のまんなかの火山']] },
+  'シドニー': { spots: [['🎭', 'オペラハウス', 1, '貝がらの形の屋根'], ['🌉', 'ハーバーブリッジ', 2, '橋のてっぺんまでのぼれる'], ['🏄', 'ボンダイビーチ', 2, 'サーファーが集まる海']] },
+  'ウルル': { spots: [['🪨', 'ウルルの夕日', 1, '岩が赤からむらさきに変わる'], ['🚶', 'ウルルのまわりを一周', 3, '1周10km。聖なる場所の話を聞く'], ['✨', '光の野原', 1, '5万個のライトがかがやく']] },
+  'ケアンズ': { spots: [['🐠', 'グレートバリアリーフ', 3, 'カラフルな魚とサンゴの海'], ['🐨', 'コアラだっこ', 1, '動物園でコアラとふれあう'], ['🚞', 'キュランダ高原列車', 2, '熱帯雨林の中を走る']] },
+});
+
 'use strict';
 /* ===== 小道具 ===== */
 const $ = s => document.querySelector(s);
@@ -622,12 +763,13 @@ const LEG = {};
       if (b.mode === 's') { PORTS.add(a.name); PORTS.add(b.name); }
       km += d; a = b;
     }
-    LEG[id] = { id, name: L.name, desc: L.desc, icon: L.icon, key: L.key, keyName: L.keyName, start, segs, len: km };
+    LEG[id] = { id, paid: !!L.paid, name: L.name, desc: L.desc, icon: L.icon, key: L.key, keyName: L.keyName, start, segs, len: km };
   }
 })();
 
 /* ===== 保存データ ===== */
 const KEY = 'camper-trip-v1';
+let OWNED = (() => { try { return JSON.parse(localStorage.getItem('camper-owned') || '[]'); } catch (e) { return []; } })();
 const QS = new URLSearchParams(location.search);
 let st = null;
 function load() { try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { st = null; } }
@@ -670,9 +812,33 @@ function walk(fn) {
   }
 }
 function autoPick(lap, i) {
-  const opts = PLAN[i]; const prev = lap > 0 ? st.choices[(lap - 1) + ':' + i] : null;
-  if (prev) return opts.find(o => o !== prev) || opts[0];
-  return opts[Math.random() < 0.5 ? 0 : 1];
+  const opts = PLAN[i].filter(owns); const prev = lap > 0 ? st.choices[(lap - 1) + ':' + i] : null;
+  const pool = opts.filter(o => o !== prev); const from = pool.length ? pool : opts;
+  return from[Math.floor(Math.random() * from.length)];
+}
+// 追加ルート（いまはお試し版なので、買っても本物のお金はかかりません）
+const PRICE = 480, BUNDLE = 980;
+function owns(id) { return !LEG[id].paid || OWNED.includes(id) || QS.has('allroutes'); }
+const PAID = () => Object.keys(LEG).filter(id => LEG[id].paid);
+function buyRoutes(ids) { OWNED = [...new Set([...OWNED, ...ids])]; try { localStorage.setItem('camper-owned', JSON.stringify(OWNED)); } catch (e) { } }
+function showShop(focus, back) {
+  const ids = PAID(), left = ids.filter(id => !owns(id));
+  modal(`<h2>🛒 追加ルート</h2><p class="note">いつもの道に、新しい分かれ道が増えます。買ったルートは、分かれ道で選べるようになります。</p>
+   ${ids.map(id => { const Lg = LEG[id], has = owns(id); return `<div class="shop ${focus === id ? 'focus' : ''}"><div class="oi">${Lg.icon}</div><b>${Lg.name}</b><p>${Lg.desc}</p>
+     <div class="meta">分かれ道：${FORK_AT[PLAN.findIndex(p => Array.isArray(p) && p.includes(id))]}から・約${fmt(Lg.len)}km・約${durText(Lg.len / st.speed)}</div>
+     ${has ? '<div class="tag pick">✓ 持っています</div>' : `<button class="big" data-buyr="${id}">¥${PRICE} で買う</button>`}</div>`; }).join('')}
+   ${left.length > 1 ? `<button class="big" data-buyr="all">🎁 ぜんぶセット ¥${BUNDLE}（${left.length}ルート）</button>` : ''}
+   <p class="note">※ いまはお試し版です。ボタンを押しても本物のお金はかかりません。</p>
+   <button class="big ghost" id="shop-close">とじる</button>`);
+  $('#shop-close').onclick = () => back ? back() : closeModal();
+  document.querySelectorAll('[data-buyr]').forEach(b => b.onclick = () => {
+    const want = b.dataset.buyr === 'all' ? left : [b.dataset.buyr];
+    modal(`<h2>お買いもの（お試し）</h2><p>${want.map(id => `${LEG[id].icon} <b>${LEG[id].name}</b>`).join('<br>')}</p><p class="big-num">¥${want.length > 1 ? BUNDLE : PRICE}</p>
+      <p class="note">お試し版なので、本物のお金はかかりません。アプリになったら、ここが本当のお支払いになります。</p>
+      <button class="big" id="buy-ok">買う（お試し）</button><button class="big ghost" id="buy-no">やめる</button>`);
+    $('#buy-no').onclick = () => showShop(focus, back);
+    $('#buy-ok').onclick = () => { buyRoutes(want); toast(`🎉 ${want.map(id => LEG[id].name).join('・')}が選べるようになりました！`, 5000); back ? back() : showShop(focus); };
+  });
 }
 // 距離を進め、通過した町・分かれ道の結果を返す
 function nextStopKm(after) { let k = null; walkStops((stop, km) => { if (km > after + 1e-6) { k = km; return false; } }, 400); return k; }
@@ -843,8 +1009,12 @@ const LMNAME = {
   'シカゴ': 'シカゴの摩天楼', 'モアブ': 'デリケート・アーチ', 'モニュメントバレー': 'モニュメントバレーの岩山', 'セドナ': 'セドナの赤い岩山', 'グランドキャニオン': 'グランドキャニオン',
   'ホワイトサンズ': '真っ白な砂丘', 'アルバカーキ': 'たくさんの熱気球', 'ラスベガス': 'ネオンの町', 'ロサンゼルス': 'ハリウッドサイン', 'ホノルル': 'ダイヤモンドヘッド',
   'サンフランシスコ': 'ゴールデン・ゲート・ブリッジ', 'シアトル': 'スペース・ニードル',
+  'ベルリン': 'ブランデンブルク門', 'トロムソ': '北極圏の雪山', 'ロフォーテン諸島': '海にそびえる岩山', 'ベルゲン': 'フィヨルド', 'カサブランカ': 'ハッサン2世モスク', 'サハラ砂漠': 'サハラの大砂丘',
+  'リオデジャネイロ': 'コルコバードのキリスト像', 'イグアスの滝': 'イグアスの滝', 'メンドーサ': 'アコンカグア山', 'サンティアゴ': 'アンデス山脈', 'アタカマ砂漠': '月の谷', 'ウユニ塩湖': '天空の鏡',
+  'クスコ': 'マチュピチュ', 'ガラパゴス諸島': '火山の島々', 'グアテマラ': 'アグア火山', 'メキシコシティ': '太陽のピラミッド', 'タヒチ': 'タヒチの山', 'オークランド': 'スカイタワー',
+  'シドニー': 'オペラハウス', 'ウルル': 'ウルル（エアーズロック）',
 };
-const LMR = { fuji: 70, snowpeaks: 60, canyon: 40, buttes: 40, dunes: 40, whitesands: 30, greatwall: 35, volcano: 60, diamondhead: 45 };
+const LMR = { uluru: 55, salt: 45, falls: 35, machu: 40, fjord: 60, christ: 45, opera: 30, fuji: 70, snowpeaks: 60, canyon: 40, buttes: 40, dunes: 40, whitesands: 30, greatwall: 35, volcano: 60, diamondhead: 45 };
 const ALL_LM = []; (function () { const seen = new Set(); for (const id in LEGS) for (const s of LEGS[id].stops) if (s[7] && !seen.has(s[0])) { seen.add(s[0]); ALL_LM.push({ key: s[0], name: LMNAME[s[0]] || s[0], type: s[7] }); } })();
 
 /* ===== 図鑑 ===== */
@@ -855,7 +1025,7 @@ const DEX = {
   albatross: ['🕊', 'アホウドリ', '長いつばさで風に乗る海の鳥'], gull: ['🐦', 'カモメ', '港の近くで船についてくる'], otter: ['🦦', 'ラッコ', 'あおむけでぷかぷか'],
   puffin: ['🐧', 'エトピリカ', 'オレンジのくちばしの北の海鳥'], nightglow: ['✨', '夜光虫', '夜の波が青く光る'], rainbow: ['🌈', '虹', '雨上がりの空にかかる'],
   shootingstar: ['🌠', '流れ星', '夜空をすっと横切る'], aurora: ['🌌', 'オーロラ', '北の夜空にゆれる光のカーテン'], birds: ['🪿', '渡り鳥の群れ', 'Vの字で空を飛んでいく'],
-  deer: ['🦌', 'シカ', '森のふちからこちらを見ている'], horses: ['🐎', '野を走る馬', '草原をかけていく'], camels: ['🐫', 'ラクダのキャラバン', '砂漠をゆっくり歩く'],
+  deer: ['🦌', 'シカ', '森のふちからこちらを見ている'], reindeer: ['🦌', 'トナカイ', '北の森をゆっくり歩く'], kangaroo: ['🦘', 'カンガルー', 'ぴょんぴょん跳ねて道を横切る'], llama: ['🦙', 'リャマ', 'アンデスの高原でもぐもぐ'], horses: ['🐎', '野を走る馬', '草原をかけていく'], camels: ['🐫', 'ラクダのキャラバン', '砂漠をゆっくり歩く'],
   bison: ['🦬', 'バイソン', 'アメリカの大平原の主'], eagle: ['🦅', 'ワシ', '空高く輪をえがく'], balloon: ['🎈', '熱気球', '朝の空にふわり'], train: ['🚆', '並んで走る列車', 'しばらくいっしょに走る'],
 };
 
@@ -1080,15 +1250,22 @@ function drawProp(p, x, gy, sc, ctx) {
   }
 }
 function drawAnimal(type, x, gy, s, ph) {
-  const col = { cow: [90, 72, 60], horse: [120, 80, 50], sheep: [236, 232, 220], camel: [190, 150, 100], deer: [150, 104, 66], bison: [70, 52, 40] }[type] || [100, 90, 80];
+  const col = { llama: [236, 226, 206], reindeer: [130, 100, 76], cow: [90, 72, 60], horse: [120, 80, 50], sheep: [236, 232, 220], camel: [190, 150, 100], deer: [150, 104, 66], bison: [70, 52, 40] }[type] || [100, 90, 80];
   c.fillStyle = shc(col, .2); c.strokeStyle = shc(col, .2); c.lineWidth = 1.6 * s;
   const leg = Math.sin(ph) * 3 * s;
   c.beginPath(); c.moveTo(x - 7 * s, gy - 7 * s); c.lineTo(x - 7 * s + leg, gy); c.moveTo(x + 7 * s, gy - 7 * s); c.lineTo(x + 7 * s - leg, gy); c.stroke();
   if (type === 'camel') { c.beginPath(); c.ellipse(x, gy - 11 * s, 10 * s, 5 * s, 0, 0, 7); c.ellipse(x - 2 * s, gy - 15 * s, 5 * s, 4 * s, 0, 0, 7); c.fill(); c.lineWidth = 2.5 * s; c.beginPath(); c.moveTo(x - 9 * s, gy - 11 * s); c.lineTo(x - 13 * s, gy - 20 * s); c.stroke(); c.beginPath(); c.arc(x - 14 * s, gy - 20 * s, 2.5 * s, 0, 7); c.fill(); return; }
+  if (type === 'kangaroo') {
+    c.fillStyle = shc([176, 120, 80], .2); c.beginPath(); c.ellipse(x, gy - 12 * s, 6 * s, 10 * s, -.3, 0, 7); c.fill();
+    c.beginPath(); c.ellipse(x - 5 * s, gy - 24 * s, 3.5 * s, 3 * s, 0, 0, 7); c.fill(); c.fillRect(x - 5 * s, gy - 30 * s, 1.6 * s, 5 * s);
+    c.lineWidth = 2.5 * s; c.strokeStyle = shc([176, 120, 80], .2); c.beginPath(); c.moveTo(x + 4 * s, gy - 6 * s); c.quadraticCurveTo(x + 16 * s, gy - 2 * s, x + 20 * s, gy); c.stroke(); c.beginPath(); c.moveTo(x, gy - 4 * s); c.lineTo(x - 6 * s, gy); c.stroke(); return;
+  }
+  if (type === 'llama') { c.beginPath(); c.ellipse(x, gy - 10 * s, 8 * s, 5 * s, 0, 0, 7); c.fill(); c.lineWidth = 3 * s; c.beginPath(); c.moveTo(x - 6 * s, gy - 12 * s); c.lineTo(x - 8 * s, gy - 24 * s); c.stroke(); c.beginPath(); c.ellipse(x - 10 * s, gy - 25 * s, 3.5 * s, 2.2 * s, 0, 0, 7); c.fill(); c.fillRect(x - 9 * s, gy - 30 * s, 1.4 * s, 4 * s); return; }
   if (type === 'bison') { c.beginPath(); c.ellipse(x, gy - 10 * s, 10 * s, 6 * s, 0, 0, 7); c.ellipse(x - 7 * s, gy - 12 * s, 6 * s, 6 * s, 0, 0, 7); c.fill(); return; }
   c.beginPath(); c.ellipse(x, gy - 10 * s, 9 * s, type === 'sheep' ? 5.5 * s : 4.5 * s, 0, 0, 7); c.fill();
-  c.lineWidth = 2.5 * s; c.beginPath(); c.moveTo(x - 7 * s, gy - 11 * s); c.lineTo(x - 11 * s, gy - (type === 'horse' || type === 'deer' ? 18 : 13) * s); c.stroke();
-  c.beginPath(); c.ellipse(x - 12 * s, gy - (type === 'horse' || type === 'deer' ? 18 : 13) * s, 3 * s, 2.2 * s, -0.4, 0, 7); c.fill();
+  c.lineWidth = 2.5 * s; c.beginPath(); c.moveTo(x - 7 * s, gy - 11 * s); c.lineTo(x - 11 * s, gy - (type === 'horse' || type === 'deer' || type === 'reindeer' ? 18 : 13) * s); c.stroke();
+  c.beginPath(); c.ellipse(x - 12 * s, gy - (type === 'horse' || type === 'deer' || type === 'reindeer' ? 18 : 13) * s, 3 * s, 2.2 * s, -0.4, 0, 7); c.fill();
+  if (type === 'reindeer') { c.lineWidth = 1.2 * s; c.beginPath(); for (const sx of [-1, 1]) { c.moveTo(x - 12 * s, gy - 20 * s); c.quadraticCurveTo(x - 12 * s + sx * 8 * s, gy - 26 * s, x - 12 * s + sx * 4 * s, gy - 32 * s); c.moveTo(x - 12 * s + sx * 5 * s, gy - 25 * s); c.lineTo(x - 12 * s + sx * 9 * s, gy - 28 * s); } c.stroke(); }
   if (type === 'deer') { c.lineWidth = 1 * s; c.beginPath(); c.moveTo(x - 12 * s, gy - 20 * s); c.lineTo(x - 15 * s, gy - 26 * s); c.moveTo(x - 12 * s, gy - 20 * s); c.lineTo(x - 9 * s, gy - 26 * s); c.stroke(); }
 }
 
@@ -1278,6 +1455,53 @@ const LMD = {
     poly([[x - 200 * s, g], [x - 80 * s, g - 50 * s], [x + 40 * s, g - 56 * s], [x + 200 * s, g]], [150, 140, 100], d);
     c.fillStyle = shc([250, 250, 250], d * .7); c.font = `900 ${14 * s}px sans-serif`; c.textAlign = 'center'; c.fillText('HOLLYWOOD', x - 20 * s, g - 34 * s);
   },
+  gate(x, g, s, d) {
+    const col = [214, 200, 170]; rect(x - 40 * s, g - 44 * s, 80 * s, 8 * s, col, d); rect(x - 34 * s, g - 50 * s, 68 * s, 6 * s, col, d);
+    for (let k = 0; k < 6; k++) rect(x - 36 * s + k * 13.5 * s, g - 36 * s, 4.5 * s, 36 * s, col, d);
+    poly([[x - 8 * s, g - 50 * s], [x - 6 * s, g - 60 * s], [x + 6 * s, g - 60 * s], [x + 8 * s, g - 50 * s]], [90, 120, 100], d);
+  },
+  fjord(x, g, s, d) {
+    for (const [dx, h] of [[-170, 120], [-70, 160], [60, 140], [170, 110]]) poly([[x + (dx - 60) * s, g], [x + (dx - 10) * s, g - h * s], [x + (dx + 15) * s, g - (h - 8) * s], [x + (dx + 60) * s, g]], [80, 96, 100], d);
+    for (const [dx, h] of [[-70, 160], [60, 140]]) poly([[x + (dx - 18) * s, g - (h - 40) * s], [x + (dx - 10) * s, g - h * s], [x + (dx + 15) * s, g - (h - 8) * s], [x + (dx + 22) * s, g - (h - 34) * s]], [244, 246, 250], d * .8);
+    seaBand(x - 220 * s, x + 220 * s, g, s, d);
+  },
+  christ(x, g, s, d) {
+    poly([[x - 90 * s, g], [x - 20 * s, g - 70 * s], [x + 12 * s, g - 76 * s], [x + 80 * s, g]], [80, 120, 76], d);
+    rect(x - 2 * s, g - 104 * s, 4 * s, 30 * s, [236, 236, 230], d); rect(x - 14 * s, g - 98 * s, 28 * s, 3.5 * s, [236, 236, 230], d);
+    c.fillStyle = shc([236, 236, 230], d); c.beginPath(); c.arc(x, g - 107 * s, 3 * s, 0, 7); c.fill();
+    c.fillStyle = shc([90, 110, 90], d); c.beginPath(); c.ellipse(x + 130 * s, g, 22 * s, 56 * s, 0, Math.PI, 0); c.fill();
+    seaBand(x + 90 * s, x + 200 * s, g, s, d);
+  },
+  falls(x, g, s, d) {
+    rect(x - 140 * s, g - 46 * s, 280 * s, 46 * s, [96, 84, 70], d); rect(x - 150 * s, g - 54 * s, 300 * s, 10 * s, [64, 120, 60], d);
+    for (let k = -6; k <= 6; k++) { c.fillStyle = `rgba(240,248,255,${.55 + .3 * Math.sin(S.t * 6 + k)})`; c.fillRect(x + k * 20 * s, g - 46 * s, 9 * s, 46 * s); }
+    c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(x, g - 4 * s, 160 * s, 16 * s, 0, 0, 7); c.fill();
+  },
+  salt(x, g, s, d) {
+    c.fillStyle = 'rgba(236,244,252,.85)'; c.fillRect(x - 320 * s, g - 3 * s, 640 * s, 14 * s);
+    c.fillStyle = 'rgba(150,190,230,.35)'; c.fillRect(x - 320 * s, g + 2 * s, 640 * s, 5 * s);
+    for (let k = -4; k <= 4; k++) { c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.moveTo(x + k * 70 * s - 30 * s, g + 8 * s); c.lineTo(x + k * 70 * s, g + 5 * s); c.lineTo(x + k * 70 * s + 30 * s, g + 8 * s); c.fill(); }
+  },
+  machu(x, g, s, d) {
+    poly([[x - 40 * s, g], [x - 10 * s, g - 110 * s], [x + 6 * s, g - 116 * s], [x + 36 * s, g - 40 * s], [x + 60 * s, g]], [70, 110, 70], d);
+    poly([[x - 160 * s, g], [x - 110 * s, g - 60 * s], [x - 40 * s, g]], [80, 116, 76], d);
+    for (let k = 0; k < 5; k++) rect(x - 100 * s + k * 8 * s, g - (14 + k * 7) * s, 60 * s - k * 12 * s, 3 * s, [170, 160, 140], d);
+    for (let k = 0; k < 4; k++) rect(x - 90 * s + k * 14 * s, g - 50 * s + k * 2 * s, 8 * s, 6 * s, [180, 170, 150], d);
+  },
+  pyramid(x, g, s, d) {
+    for (let k = 0; k < 5; k++) rect(x - (70 - k * 13) * s, g - (k + 1) * 13 * s, (140 - k * 26) * s, 13 * s, [180 - k * 4, 150 - k * 4, 110], d);
+    rect(x - 4 * s, g - 65 * s, 8 * s, 65 * s, [160, 130, 96], d);
+  },
+  opera(x, g, s, d) {
+    seaBand(x - 150 * s, x + 150 * s, g, s, d); rect(x - 70 * s, g - 8 * s, 140 * s, 8 * s, [210, 190, 160], d);
+    for (const [dx, h, w] of [[-50, 46, 30], [-20, 60, 34], [14, 52, 30], [44, 40, 26]]) { c.fillStyle = shc([250, 250, 246], d); c.beginPath(); c.moveTo(x + dx * s, g - 8 * s); c.quadraticCurveTo(x + (dx + w * .1) * s, g - h * s, x + (dx + w) * s, g - (h + 6) * s); c.lineTo(x + (dx + w) * s, g - 8 * s); c.fill(); }
+    c.strokeStyle = shc([120, 120, 130], d); c.lineWidth = 3 * s; c.beginPath(); c.arc(x + 160 * s, g + 40 * s, 80 * s, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
+  },
+  uluru(x, g, s, d) {
+    const red = L.night > .5 ? [110, 60, 50] : [196, 96, 52];
+    c.fillStyle = shc(red, d); c.beginPath(); c.moveTo(x - 170 * s, g); c.quadraticCurveTo(x - 160 * s, g - 60 * s, x - 100 * s, g - 64 * s); c.lineTo(x + 110 * s, g - 60 * s); c.quadraticCurveTo(x + 170 * s, g - 50 * s, x + 180 * s, g); c.fill();
+    c.strokeStyle = shc([150, 70, 40], d); c.lineWidth = 2 * s; for (let k = -4; k <= 4; k++) { c.beginPath(); c.moveTo(x + k * 30 * s, g - 60 * s); c.lineTo(x + k * 32 * s, g - 10 * s); c.stroke(); }
+  },
   diamondhead(x, g, s, d) {
     seaBand(x - 260 * s, x + 260 * s, g, s, d);
     c.fillStyle = shc([110, 120, 80], d); c.beginPath(); c.moveTo(x - 160 * s, g); c.lineTo(x - 60 * s, g - 50 * s); c.lineTo(x - 30 * s, g - 64 * s); c.lineTo(x + 10 * s, g - 52 * s); c.lineTo(x + 40 * s, g - 56 * s); c.lineTo(x + 140 * s, g); c.fill();
@@ -1443,7 +1667,7 @@ function drawWeather(dt, W8, sea) {
     }
     S.drops = S.drops.filter(d => d.y < H + 10 && d.x > -10);
   } else if (S.drops.length) S.drops.length = Math.max(0, S.drops.length - 1);
-  if (W8.thunder) { if (Math.random() < dt * .08) S.flash = 1; }
+  if (W8.thunder) { if (Math.random() < dt * .08) { S.flash = 1; auThunder(); } }
   if (S.flash > 0) { c.fillStyle = `rgba(255,255,255,${S.flash * .7})`; c.fillRect(0, 0, W, H); S.flash -= dt * 3; }
   if (!sea && W8.frost) { for (const [x, y] of [[0, 0], [W, 0], [0, H], [W, H]]) { const g = c.createRadialGradient(x, y, 0, x, y, Math.min(W, H) * .45); g.addColorStop(0, 'rgba(240,248,255,.75)'); g.addColorStop(1, 'rgba(240,248,255,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H); } }
   if (!sea) { const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.35, 'rgba(255,255,255,.06)'); g.addColorStop(.4, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H); }
@@ -1475,10 +1699,14 @@ function evPool(ctx, W8, alt) {
   } else {
     const b = ctx.biome, lon = P.ll[1];
     add('birds', 1.5);
-    if (b === 'forest' || b === 'mount') add('deer', 2);
+    const lat = P.ll[0];
+    if ((b === 'forest' || b === 'mount') && lat < 62 && !(lon > 110 && lat < -10)) add('deer', 2);
+    if ((b === 'forest' || b === 'mount' || b === 'coast') && lat >= 62) add('reindeer', 3);
+    if (lon > 110 && lat < -10 && b !== 'city') add('kangaroo', 3);
+    if (lat < 0 && lon < -60 && lon > -80 && (b === 'mount' || b === 'desert')) add('llama', 3);
     if (b === 'steppe' && lon > -30) add('horses', 2.5);
     if ((b === 'steppe' || b === 'farm') && lon < -95 && lon > -112) add('bison', 2);
-    if (b === 'desert' && lon > 30) add('camels', 2.5);
+    if (b === 'desert' && (lon > 30 || (lon > -20 && lat > 10))) add('camels', 2.5);
     if (b === 'mount' || b === 'desert') add('eagle', 1.5);
     if ((b === 'farm' || b === 'steppe' || b === 'forest') && lon > -20) add('train', 1);
     if (nearLm('cappadocia', 60) || nearLm('balloons', 60)) add('balloon', alt < 35 ? 6 : 1.5);
@@ -1490,7 +1718,7 @@ function spawnEvent(ctx, W8, alt) {
   const pool = evPool(ctx, W8, alt); if (!pool.length) return;
   let sum = pool.reduce((a, b) => a + b[1], 0), r = Math.random() * sum, id = pool[0][0];
   for (const [k, w] of pool) { r -= w; if (r <= 0) { id = k; break; } }
-  const dur = { dolphin: 9, flyingfish: 6, whale: 14, breach: 6, sperm: 12, orca: 12, turtle: 12, manta: 12, sunfish: 12, albatross: 14, gull: 12, otter: 14, puffin: 10, nightglow: 22, rainbow: 40, shootingstar: 1.6, aurora: 45, birds: 14, deer: 10, horses: 10, camels: 16, bison: 12, eagle: 14, balloon: 40, train: 9, bottle: 22, ship: 30 }[id] || 10;
+  const dur = { dolphin: 9, flyingfish: 6, whale: 14, breach: 6, sperm: 12, orca: 12, turtle: 12, manta: 12, sunfish: 12, albatross: 14, gull: 12, otter: 14, puffin: 10, nightglow: 22, rainbow: 40, shootingstar: 1.6, aurora: 45, birds: 14, deer: 10, reindeer: 12, kangaroo: 8, llama: 12, horses: 10, camels: 16, bison: 12, eagle: 14, balloon: 40, train: 9, bottle: 22, ship: 30 }[id] || 10;
   const ev = { id, t0: S.t, dur, x0: W * (.55 + Math.random() * .35), d: .22 + Math.random() * .4, seed: Math.random() * 1000 | 0 };
   S.events.push(ev);
   if (id !== 'ship' && id !== 'bottle' && DEX[id]) setTimeout(() => found(id, false), id === 'whale' ? 1500 : 600);
@@ -1562,6 +1790,8 @@ function drawGroundEvents(gy, sc) {
     const p = (S.t - e.t0) / e.dur; if (p < 0 || p > 1) continue;
     const s = sc * 1.2;
     if (e.id === 'deer') { const x = e.x0 - (S.t - e.t0) * 70 * S.vf; drawAnimal('deer', x, gy, s, 0); }
+    if (e.id === 'reindeer' || e.id === 'llama') for (let k = 0; k < 3; k++) drawAnimal(e.id, e.x0 + k * 30 * s - (S.t - e.t0) * 40 * S.vf, gy + h2(k, 3) * 6, s, S.t * 4 + k);
+    if (e.id === 'kangaroo') for (let k = 0; k < 2; k++) { const t = S.t - e.t0, hop = Math.abs(Math.sin(t * 5 + k)) * 14 * s; drawAnimal('kangaroo', W * (1.1 - p * 1.3) + k * 40 * s - t * 20 * S.vf, gy - hop, s, 0); }
     if (e.id === 'horses' || e.id === 'bison' || e.id === 'camels') {
       const n = e.id === 'camels' ? 5 : 6, sp = e.id === 'camels' ? 55 : e.id === 'horses' ? 20 : 45;
       const type = e.id === 'horses' ? 'horse' : e.id === 'bison' ? 'bison' : 'camel';
@@ -1696,7 +1926,9 @@ function showWelcome(hours, km, res, sights) {
    ${forks}
    ${sg ? `<h3>そのあいだに見たもの</h3><div class="chips">${sg}</div>` : ''}
    ${st.parked ? `<p>🅿️ <b>${st.parked}</b>に着いて、停車しています。（${durText((Date.now() - (st.parkedAt || Date.now())) / 36e5)}前に到着）</p><button class="big" id="w-go">▶ 出発する</button>` : `<p>いまは <b>${placeName()}</b> ${P.seg.mode === 's' ? 'の海の上' : 'のあたり'}です。</p>`}
+   ${Date.now() - (st.backupAt || st.started) > 7 * 864e5 ? '<p class="note">💾 しばらく旅を保存していません。<button class="mini" id="w-bk">引き継ぎコードを作る</button></p>' : ''}
    <button class="big ${st.parked ? 'ghost' : ''}" data-close>景色を見る</button>`);
+  const wb = $('#w-bk'); if (wb) wb.onclick = showBackup;
   const g = $('#w-go'); if (g) g.onclick = () => { depart(); closeModal(); };
 }
 // 留守のあいだに見かけた生きもの
@@ -1727,6 +1959,9 @@ function seasonHints(id) {
   if (id === 'L4a') { if (m >= 4 && m <= 10) out.push('🐋 アゾレスはクジラの季節'); if (m >= 9 && m <= 11) out.push('🍁 アメリカの紅葉'); }
   if (id === 'L4b') { out.push(m >= 6 && m <= 11 ? '🌀 カリブ海はハリケーンの季節かも' : '☀️ カリブ海のベストシーズン'); if (m === 10) out.push('🎈 アルバカーキで気球祭り'); }
   if (id === 'L6a') out.push(m === 12 || m <= 4 ? '🐋 ハワイにザトウクジラが来る季節' : '🌺 いつでも暖かい南の島');
+  if (id === 'L2c') out.push(m >= 9 || m <= 3 ? '🌌 夜が長く、オーロラのチャンス大' : '☀️ 夜も明るい白夜の季節');
+  if (id === 'L4c') out.push(m >= 12 || m <= 3 ? '🪞 ウユニは雨季。天空の鏡が見られるかも' : '🦙 アンデスは乾いた晴れの季節');
+  if (id === 'L6c') out.push(m >= 11 || m <= 3 ? '🏖 南半球は夏まっさかり' : '🐋 オーストラリアにクジラが来る季節');
   if (id === 'L6b') out.push(m >= 9 || m <= 3 ? '🌌 夜が長く、オーロラのチャンス' : '🦦 すずしい夏の北の海');
   return out;
 }
@@ -1735,7 +1970,8 @@ async function showFork() {
   const html = () => {
     const ch = st.choices[f.key];
     return `<h2>🔀 ${FORK_AT[f.i]}の分かれ道</h2><p>あと <b>${fmt(f.start - st.km)}km</b>（約${durText((f.start - st.km) / st.speed)}）で分かれ道に着きます。どっちの道を行く？<br><small>決めないまま着いたら、運転手のおまかせになります。着くまでは何度でも変えられます。</small></p>
-    <div class="opts">${f.options.map(id => { const Lg = LEG[id]; const w = forkWx[id]; return `<button class="opt ${ch === id ? 'on' : ''}" data-leg="${id}">
+    <div class="opts">${f.options.map(id => { const Lg = LEG[id]; const w = forkWx[id]; const lk = !owns(id); return `<button class="opt ${ch === id ? 'on' : ''} ${lk ? 'locked' : ''}" ${lk ? `data-buy="${id}"` : `data-leg="${id}"`}>
+      ${lk ? `<div class="tag lock">🔒 追加ルート ¥${PRICE}</div>` : Lg.paid ? '<div class="tag soft">⭐ 追加ルート</div>' : ''}
       <div class="oi">${Lg.icon}</div><b>${Lg.name}</b><p>${Lg.desc}</p>
       <div class="meta">約${fmt(Lg.len)}km・約${durText(Lg.len / st.speed)}</div>
       <div class="meta wx">${w ? `${Lg.keyName}のいま：${(WX[w.code] || ['', ''])[1]} ${Math.round(w.temp)}℃ ${(WX[w.code] || [''])[0]}` : `${Lg.keyName}の天気を調べています…`}</div>
@@ -1745,12 +1981,13 @@ async function showFork() {
     </button>`; }).join('')}</div>
     <button class="big ghost" data-close>とじる</button>`;
   };
-  const bind = () => document.querySelectorAll('[data-leg]').forEach(b => b.onclick = () => { st.choices[f.key] = b.dataset.leg; save(); $('#sheet').innerHTML = html(); bind(); updateHud(); toast(`🔀 ${FORK_AT[f.i]}から「${LEG[b.dataset.leg].name}」へ行きます`); });
+  const bind = () => { document.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => showShop(b.dataset.buy, showFork)); bind2(); };
+  const bind2 = () => document.querySelectorAll('[data-leg]').forEach(b => b.onclick = () => { st.choices[f.key] = b.dataset.leg; save(); $('#sheet').innerHTML = html(); bind(); updateHud(); toast(`🔀 ${FORK_AT[f.i]}から「${LEG[b.dataset.leg].name}」へ行きます`); });
   modal(html(), 'fork'); bind();
   if (!f.options.every(id => forkWx[id] && Date.now() - forkWx[id].at < 30 * 60e3)) {
     await Promise.all(f.options.map(async id => { try { forkWx[id] = await fetchWx(LEG[id].key); } catch (e) { forkWx[id] = fakeWx(LEG[id].key); } }));
     const sc = id => (forkWx[id].cloud || 0) + (RAIN[forkWx[id].code] || SNOW[forkWx[id].code] ? 100 : 0);
-    const [a, b] = f.options; if (Math.abs(sc(a) - sc(b)) > 25) forkWx[sc(a) < sc(b) ? a : b].best = true;
+    f.options.forEach(id => { forkWx[id].best = false; }); const so = [...f.options].sort((a, b) => sc(a) - sc(b)); if (sc(so[1]) - sc(so[0]) > 25) forkWx[so[0]].best = true;
     if (!$('#modal').hidden && $('#modal').classList.contains('fork')) { $('#sheet').innerHTML = html(); bind(); }
   }
 }
@@ -1833,14 +2070,21 @@ function showSettings() {
   modal(`<h2>⚙️ 設定</h2><h3>窓のデザイン</h3><div class="frames">${FRAMES.map(([k, n]) => `<button data-frame="${k}" class="${k === cur ? 'on' : ''}"><i class="fp-${k}"></i>${n}</button>`).join('')}</div><p class="note">窓辺の小物は、その場所の時間帯（朝・昼・夕方・夜）や天気で入れかわります。</p>
   <h3>町に着いたら</h3><div class="frames">${[['none', '🚐 止まらない'], ['next', '🅿️ 次の町で1回止まる'], ['every', '🅿️ 毎回止まる']].map(([k, n]) => `<button data-stop="${k}" class="${(st.stopMode || 'none') === k ? 'on' : ''}">${n}</button>`).join('')}</div><p class="note">止まっているあいだは進みません。「出発する」を押すと、また走り出します。</p>
   <h3>電柱と電線</h3><div class="frames"><button data-poles="on" class="${POLES ? 'on' : ''}">⚡️ 表示する</button><button data-poles="off" class="${POLES ? '' : 'on'}">🚫 表示しない</button></div><p class="note">日本やアジアの道ばたに出てくる電柱です。表示しないときは、低い柵や街灯になります。</p>
+  <h3>音</h3><div class="frames"><button data-snd="on" class="${SOUND ? 'on' : ''}">🔊 鳴らす</button><button data-snd="off" class="${SOUND ? '' : 'on'}">🔇 消す</button></div>
+  <input type="range" id="s-vol" min="0.1" max="1" step="0.05" value="${SVOL}" aria-label="音の大きさ"><p class="note">エンジン、雨、風、波、町のざわめき、鳥や虫の声、たき火の音が、その場所と天気に合わせて流れます。マナーモードだと鳴らないことがあります。</p>
   <h3>キャンピングカーの速さ</h3>${speedButtons()}<p class="note">速さを変えても、ここまで進んだ距離はそのままです。</p>
   <h3>天気について</h3><p class="note">天気と気温は Open-Meteo（無料の天気サービス）から、その場所のいまの値を取ってきています。つながらないときは「（予想）」と表示して、季節と場所からそれらしい天気にします。</p>
+  <h3>追加ルート</h3><p class="note">${PAID().filter(owns).length ? '持っているルート：' + PAID().filter(owns).map(id => LEG[id].icon + ' ' + LEG[id].name).join('、') : '北欧とオーロラ、アフリカと南アメリカ、南太平洋とオーストラリアの3つがあります。'}</p><button class="big" id="b-shop">🛒 追加ルートを見る</button>
+  <h3>旅の引き継ぎ</h3><p class="note">機種変更やデータが消えたときのために、旅を「引き継ぎコード」で保存できます。${st.backupAt ? `前回の保存：${durText((Date.now() - st.backupAt) / 36e5)}前` : 'まだ一度も保存していません。'}</p><button class="big" id="b-backup">💾 引き継ぎコードを作る・使う</button>
   <h3>はじめから</h3><p class="note">出発地を選びなおしたいときは、旅をリセットしてください。図鑑や記録も消えます。</p><button class="big ghost danger" id="reset">旅をリセットする</button>
   <button class="big ghost" data-close>とじる</button>`);
   document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { tick(); st.speed = +b.dataset.speed; save(); document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b)); updateHud(); });
   document.querySelectorAll('[data-stop]').forEach(b => b.onclick = () => { tick(); st.stopMode = b.dataset.stop; save(); document.querySelectorAll('[data-stop]').forEach(x => x.classList.toggle('on', x === b)); updateHud(); });
   document.querySelectorAll('[data-poles]').forEach(b => b.onclick = () => { POLES = b.dataset.poles === 'on'; try { localStorage.setItem('camper-poles', b.dataset.poles); } catch (e) { } document.querySelectorAll('[data-poles]').forEach(x => x.classList.toggle('on', x === b)); });
   document.querySelectorAll('[data-frame]').forEach(b => b.onclick = () => { setFrame(b.dataset.frame); document.querySelectorAll('[data-frame]').forEach(x => x.classList.toggle('on', x === b)); });
+  $('#b-backup').onclick = showBackup; $('#b-shop').onclick = () => showShop(null, showSettings);
+  document.querySelectorAll('[data-snd]').forEach(b => b.onclick = () => { setSound(b.dataset.snd === 'on'); document.querySelectorAll('[data-snd]').forEach(x => x.classList.toggle('on', x === b)); });
+  $('#s-vol').oninput = e => { SVOL = +e.target.value; try { localStorage.setItem('camper-vol', SVOL); } catch (er) { } if (!SOUND) setSound(true); auVolume(); };
   let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = 'もう一度押すとリセットします'; return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } location.reload(); };
 }
 function showBottle() {
@@ -1860,6 +2104,162 @@ async function postcard() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'camper-postcard.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }, 'image/png');
 }
+
+/* ===== 音（その場の景色に合わせた環境音。すべてその場で合成） ===== */
+let SOUND = (() => { try { return localStorage.getItem('camper-sound') !== 'off'; } catch (e) { return true; } })();
+let SVOL = (() => { try { return +(localStorage.getItem('camper-vol') || .7); } catch (e) { return .7; } })();
+const AU = { ac: null, master: null, L: {}, next: {} };
+function noiseBuf(ac, kind) {
+  const n = ac.sampleRate * 4, b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+  let last = 0, b0 = 0, b1 = 0, b2 = 0;
+  for (let i = 0; i < n; i++) {
+    const w = Math.random() * 2 - 1;
+    if (kind === 'brown') { last = (last + .02 * w) / 1.02; d[i] = last * 3.5; }
+    else if (kind === 'pink') { b0 = .99765 * b0 + w * .099; b1 = .963 * b1 + w * .2965; b2 = .57 * b2 + w * 1.0526; d[i] = (b0 + b1 + b2 + w * .1848) * .2; }
+    else d[i] = w * .5;
+  }
+  return b;
+}
+function auBuild() {
+  const ac = AU.ac = new (window.AudioContext || window.webkitAudioContext)();
+  AU.master = ac.createGain(); AU.master.gain.value = SVOL * .8; AU.master.connect(ac.destination);
+  AU.buf = { white: noiseBuf(ac, 'white'), pink: noiseBuf(ac, 'pink'), brown: noiseBuf(ac, 'brown') };
+  const layer = (name, buf, filters, lfo) => {
+    const src = ac.createBufferSource(); src.buffer = AU.buf[buf]; src.loop = true; src.loopStart = Math.random();
+    let node = src; const fs = filters.map(([type, f, q]) => { const bq = ac.createBiquadFilter(); bq.type = type; bq.frequency.value = f; bq.Q.value = q || .7; node.connect(bq); node = bq; return bq; });
+    const g = ac.createGain(); g.gain.value = 0; node.connect(g);
+    let out = g;
+    if (lfo) { // ゆっくり大きく・小さく（波のうねりなど）
+      const sw = ac.createGain(); sw.gain.value = 1 - lfo[1]; const o = ac.createOscillator(); o.frequency.value = lfo[0]; const og = ac.createGain(); og.gain.value = lfo[1]; o.connect(og); og.connect(sw.gain); o.start(); g.connect(sw); out = sw;
+    }
+    out.connect(AU.master); src.start(); AU.L[name] = { g, fs };
+  };
+  layer('engine', 'brown', [['lowpass', 320]]);
+  layer('road', 'pink', [['bandpass', 700, .5], ['lowpass', 1800]]);
+  layer('waves', 'brown', [['lowpass', 700]], [.11, .7]);
+  layer('surf', 'pink', [['highpass', 900], ['lowpass', 3500]], [.11, .85]);
+  layer('rain', 'white', [['highpass', 1200], ['lowpass', 7000]]);
+  layer('wind', 'pink', [['bandpass', 500, 1.8]], [.07, .5]);
+  layer('city', 'brown', [['bandpass', 260, .6]]);
+}
+function auStart() {
+  if (!SOUND) return;
+  try { if (!AU.ac) auBuild(); if (AU.ac.state !== 'running') AU.ac.resume(); } catch (e) { }
+}
+function auSet(name, v) { const l = AU.L[name]; if (l) l.g.gain.setTargetAtTime(v, AU.ac.currentTime, 1.2); }
+function auVolume() { if (AU.master) AU.master.gain.setTargetAtTime(SOUND ? SVOL * .8 : 0, AU.ac.currentTime, .2); }
+// ちょっとした音（鳥・カモメ・虫・たき火・雷）
+function blip(f0, f1, dur, vol, type = 'sine', at = 0) {
+  const ac = AU.ac, t = ac.currentTime + at, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + Math.min(.02, dur / 4)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g); g.connect(AU.master); o.start(t); o.stop(t + dur + .05);
+}
+function burst(dur, vol, type, f, at = 0, q = .7) {
+  const ac = AU.ac, t = ac.currentTime + at, src = ac.createBufferSource(), bq = ac.createBiquadFilter(), g = ac.createGain();
+  src.buffer = AU.buf[type === 'lowpass' ? 'brown' : 'white']; src.loopStart = Math.random() * 3; src.loop = true; bq.type = type; bq.frequency.value = f; bq.Q.value = q;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  src.connect(bq); bq.connect(g); g.connect(AU.master); src.start(t, Math.random() * 3); src.stop(t + dur + .05);
+}
+const SFX = {
+  bird() { const n = 2 + (Math.random() * 4 | 0), f = 2600 + Math.random() * 1600; for (let k = 0; k < n; k++) blip(f * (1 + Math.random() * .2), f * (1.3 + Math.random() * .4), .07 + Math.random() * .06, .05, 'sine', k * (.11 + Math.random() * .06)); },
+  gull() { for (let k = 0; k < 2 + (Math.random() * 2 | 0); k++) blip(1900, 1100, .28, .03, 'sawtooth', k * .34); },
+  cricket() { for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) blip(4400, 4300, .035, .03, 'sine', r * .45 + k * .055); },
+  frog() { for (let k = 0; k < 3; k++) blip(420, 300, .12, .06, 'square', k * .22); },
+  crackle() { for (let k = 0; k < 6; k++) if (Math.random() < .7) burst(.04 + Math.random() * .05, .12 + Math.random() * .1, 'highpass', 2000 + Math.random() * 3000, k * (.08 + Math.random() * .2)); },
+  thunder() { burst(4.5, .5, 'lowpass', 140, 1 + Math.random() * 2, 1); burst(2.2, .25, 'lowpass', 380, 1.1 + Math.random() * 1.5, 1); },
+  horn() { blip(440, 430, .5, .025, 'sawtooth'); blip(554, 545, .5, .02, 'sawtooth'); },
+  bell() { blip(523, 520, 1.6, .03, 'triangle'); blip(659, 655, 1.6, .02, 'triangle', .02); },
+};
+function auThunder() { if (SOUND && AU.ac && AU.ac.state === 'running') SFX.thunder(); }
+function auMaybe(name, every) { // 平均 every 秒に1回くらい鳴らす
+  const now = AU.ac.currentTime; if (AU.next[name] == null) AU.next[name] = now + Math.random() * every;
+  if (now >= AU.next[name]) { SFX[name](); AU.next[name] = now + every * (.4 + Math.random() * 1.2); }
+}
+function auUpdate(W8, ctx) {
+  if (!AU.ac || !SOUND || AU.ac.state !== 'running') return;
+  const moving = !st.parked, sea = ctx.sea, b = ctx.biome, hr = localDate().getUTCHours(), night = L.night > .5;
+  const lodge = st.parked && st.stay && st.stay.lodge, indoors = night && lodge === 'hotel';
+  const wind = clamp(((W8.wind || 0) - 8) / 40, 0, 1);
+  auSet('engine', moving && !sea ? .5 : sea && moving ? .22 : 0);
+  auSet('road', moving && !sea ? .05 * clamp(st.speed / 60, .5, 2) : 0);
+  auSet('waves', indoors ? 0 : sea ? .55 : b === 'coast' ? .35 : 0);
+  auSet('surf', indoors ? 0 : sea ? .12 : b === 'coast' ? .1 : 0);
+  auSet('rain', (W8.rain || 0) * (indoors ? .08 : lodge === 'car' || moving ? .3 : .22));
+  auSet('wind', indoors ? 0 : (.04 + wind * .3) * (W8.snow ? 1.3 : 1));
+  auSet('city', b === 'city' && !sea ? (night ? .05 : .16) : 0);
+  if (indoors) return;
+  const dry = !(W8.rain > .3);
+  if (dry && !sea && !night && b !== 'city' && b !== 'desert' && hr >= 5 && hr < 18) auMaybe('bird', b === 'forest' ? 6 : 12);
+  if (dry && !sea && b === 'city' && !night && hr >= 6) auMaybe('bird', 30);
+  if ((sea || b === 'coast') && !night) auMaybe('gull', 25);
+  if (!sea && night && W8.temp > 14 && b !== 'city') auMaybe('cricket', 4);
+  if (!sea && night && W8.temp > 18 && (b === 'farm' || b === 'forest') && dry) auMaybe('frog', 14);
+  if (lodge === 'camp' && night) auMaybe('crackle', 1.5);
+  if (b === 'city' && !sea && !night && moving) auMaybe('horn', 70);
+  if (sea && moving) auMaybe('bell', 120);
+}
+document.addEventListener('pointerdown', () => auStart(), { passive: true });
+document.addEventListener('visibilitychange', () => { if (!AU.ac) return; if (document.hidden) AU.ac.suspend(); else if (SOUND) AU.ac.resume(); });
+function setSound(on) {
+  SOUND = on; try { localStorage.setItem('camper-sound', on ? 'on' : 'off'); } catch (e) { }
+  if (on) auStart(); auVolume(); const b = $('#b-snd'); if (b) b.textContent = on ? '🔊' : '🔇';
+}
+
+/* ===== 旅の引き継ぎ（バックアップ） ===== */
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const b64 = u8 => { let t = ''; for (let i = 0; i < u8.length; i += 8192) t += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const unb64 = t => { t = t.replace(/-/g, '+').replace(/_/g, '/'); const bin = atob(t + '==='.slice((t.length + 3) % 4)); return Uint8Array.from(bin, ch => ch.charCodeAt(0)); };
+async function pipe(u8, Stream) { return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new Stream('deflate-raw'))).arrayBuffer()); }
+async function makeCode() {
+  tick(); st.backupAt = Date.now(); save();
+  const data = new TextEncoder().encode(JSON.stringify({ s: st, f: lsGet('camper-frame'), p: lsGet('camper-poles'), o: OWNED, snd: lsGet('camper-sound') }));
+  if (window.CompressionStream) { try { return 'CAMPER1-' + b64(await pipe(data, CompressionStream)); } catch (e) { } }
+  return 'CAMPER0-' + b64(data);
+}
+async function readCode(code) {
+  code = (code || '').replace(/\s+/g, ''); const m = code.match(/CAMPER([01])-([A-Za-z0-9_-]+)/); if (!m) throw new Error('コードの形がちがいます');
+  let u8 = unb64(m[2]); if (m[1] === '1') u8 = await pipe(u8, DecompressionStream);
+  const o = JSON.parse(new TextDecoder().decode(u8)); if (!o.s || typeof o.s.km !== 'number') throw new Error('旅のデータが見つかりません'); return o;
+}
+function applyBackup(o) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(o.s));
+    for (const [k, v] of [['camper-frame', o.f], ['camper-poles', o.p], ['camper-sound', o.snd]]) if (v != null) localStorage.setItem(k, v);
+    if (o.o) localStorage.setItem('camper-owned', JSON.stringify([...new Set([...OWNED, ...o.o])]));
+  } catch (e) { }
+  st = null; location.reload();
+}
+async function showBackup() {
+  modal(`<h2>💾 旅の引き継ぎ</h2><p class="note">旅の記録は、このスマホのブラウザの中だけに保存されています。ブラウザのデータを消したり機種を変えたりすると消えてしまうので、ときどき「引き継ぎコード」を保存しておきましょう。</p>
+   <h3>いまの旅を保存する</h3><textarea id="bk-code" readonly rows="4">コードを作っています…</textarea>
+   <div class="frames two"><button id="bk-copy">📋 コードをコピー</button><button id="bk-file">💾 ファイルで保存・送る</button></div>
+   <p class="note">LINEの自分あてトークやメモ帳に貼っておくと安心です。図鑑・スタンプ・買ったルートもいっしょに入ります。</p>
+   <h3>コードから旅を続ける</h3><textarea id="bk-in" rows="3" placeholder="CAMPER1- ではじまるコードを貼りつけ"></textarea>
+   <div class="frames two"><button id="bk-load">📥 このコードで引き継ぐ</button><label class="filebtn">📂 ファイルから<input type="file" id="bk-pick" accept=".txt,text/plain" hidden></label></div>
+   <p class="note" id="bk-msg"></p>
+   <button class="big ghost" data-close>とじる</button>`);
+  const code = await makeCode(); $('#bk-code').value = code;
+  $('#bk-copy').onclick = async () => { try { await navigator.clipboard.writeText(code); } catch (e) { $('#bk-code').select(); document.execCommand('copy'); } $('#bk-copy').textContent = '✓ コピーしました'; };
+  $('#bk-file').onclick = async () => {
+    const d = new Date(), name = `camper-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.txt`;
+    const file = new File([code], name, { type: 'text/plain' });
+    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'キャンピングカーの旅の引き継ぎコード' }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  };
+  let armed = null;
+  const tryLoad = async text => {
+    const msg = $('#bk-msg');
+    try {
+      const o = await readCode(text);
+      if (armed !== text) { armed = text; msg.innerHTML = `<b>${o.s.startName || '東京'}出発・${fmt(o.s.km - (o.s.startKm || 0))}km走った旅</b>が見つかりました。いまの旅は上書きされます。もう一度「引き継ぐ」を押すと切りかえます。`; $('#bk-load').textContent = '📥 本当に引き継ぐ'; return; }
+      applyBackup(o);
+    } catch (e) { msg.textContent = '⚠️ 読みこめませんでした（' + e.message + '）。コードを全部コピーできているか確かめてください。'; }
+  };
+  $('#bk-load').onclick = () => tryLoad($('#bk-in').value);
+  $('#bk-pick').onchange = async e => { const f = e.target.files[0]; if (!f) return; const t = await f.text(); $('#bk-in').value = t; armed = null; tryLoad(t); };
+}
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
 
 /* ===== 観光モード ===== */
 const CITY_COUNTRY = {}; for (const c in CITY_C) for (const n of CITY_C[c].split(' ')) CITY_COUNTRY[n] = c;
@@ -1912,7 +2312,7 @@ function bindShelf() {
   });
 }
 // あいさつの読み上げ（スマホの読み上げ機能。その国の声がなければカタカナを日本語の声で）
-const LANG = { JP: 'ja-JP', KR: 'ko-KR', CN: 'zh-CN', MN: 'mn-MN', RU: 'ru-RU', KZ: 'kk-KZ', UZ: 'uz-UZ', TM: 'tk-TM', IR: 'fa-IR', TR: 'tr-TR', BG: 'bg-BG', RS: 'sr-RS', HU: 'hu-HU', AT: 'de-AT', BY: 'be-BY', PL: 'pl-PL', CZ: 'cs-CZ', IT: 'it-IT', ES: 'es-ES', DE: 'de-DE', CH: 'de-CH', FR: 'fr-FR', PT: 'pt-PT', US: 'en-US', HI: 'haw-US', PR: 'es-PR', CA: 'en-CA' };
+const LANG = { JP: 'ja-JP', KR: 'ko-KR', CN: 'zh-CN', MN: 'mn-MN', RU: 'ru-RU', KZ: 'kk-KZ', UZ: 'uz-UZ', TM: 'tk-TM', IR: 'fa-IR', TR: 'tr-TR', BG: 'bg-BG', RS: 'sr-RS', HU: 'hu-HU', AT: 'de-AT', BY: 'be-BY', PL: 'pl-PL', CZ: 'cs-CZ', IT: 'it-IT', ES: 'es-ES', DE: 'de-DE', CH: 'de-CH', FR: 'fr-FR', PT: 'pt-PT', US: 'en-US', HI: 'haw-US', PR: 'es-PR', CA: 'en-CA', DK: 'da-DK', SE: 'sv-SE', FI: 'fi-FI', NO: 'nb-NO', MA: 'ar-MA', SN: 'wo-SN', BR: 'pt-BR', AR: 'es-AR', CL: 'es-CL', BO: 'es-BO', PE: 'es-PE', EC: 'es-EC', PA: 'es-PA', GT: 'es-GT', MX: 'es-MX', PF: 'ty-PF', FJ: 'fj-FJ', NZ: 'mi-NZ', AU: 'en-AU', GU: 'ch-GU' };
 function voiceFor(lang) {
   const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [], n = l => (l || '').replace('_', '-').toLowerCase(), L2 = lang.toLowerCase();
   return vs.find(v => n(v.lang) === L2) || vs.find(v => n(v.lang).split('-')[0] === L2.split('-')[0]);
@@ -2025,6 +2425,7 @@ function frame(ts) {
   if (ctx.sea) drawSea(dt, W8, alt, ctx); else drawLand(dt, W8, alt, ctx);
   c.restore();
   drawWeather(dt, W8, ctx.sea); drawCamp();
+  if (S.t - (S.auT || 0) > .5) { S.auT = S.t; auUpdate(W8, ctx); }
   if (!st.preview) for (const n in S.lmSeen) if (S.lmSeen[n] > 90 && !st.lm[n]) { st.lm[n] = Date.now(); save(); toast(`🏛 <b>${LMNAME[n] || n}</b>が見えた！<small>名所の記録にのりました</small>`, 5000); }
   if (ts - lastHud > 1000) { lastHud = ts; checkAct(); updateHud(); refreshWx(); refreshGeo(); }
   if (ts - lastSave > 10000) { lastSave = ts; save(); }
@@ -2037,6 +2438,7 @@ document.addEventListener('visibilitychange', () => { if (!st) return; if (docum
 window.addEventListener('pagehide', () => { if (st) { tick(); save(); } });
 window.addEventListener('resize', resize);
 $('#b-map').onclick = () => showMap(0); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-photo').onclick = postcard; $('#fork').onclick = showFork;
+$('#b-snd').onclick = e => { e.stopPropagation(); setSound(!SOUND); toast(SOUND ? '🔊 音を鳴らします' : '🔇 音を消しました', 1800); }; $('#b-snd').textContent = SOUND ? '🔊' : '🔇';
 
 function startTrip() {
   try { const c0 = JSON.parse(localStorage.getItem('camper-wx') || 'null'); if (c0 && Date.now() - c0.at < 30 * 60e3) wx = c0; } catch (e) { }
