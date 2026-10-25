@@ -54,4 +54,4 @@
 - じぶんで つくる: 指描きは線をまびき（RDP）→ 角を丸め（チャイキン法）。写真は160pxに縮めて白黒にし、しきい値（大津の方法）→ すきまを少し太らせ → いちばん大きいかたまりのまわりをなぞる（ムーア近傍）。ふちの明るさで、どちらが「もの」かを自動で決める。
 - 録音: MediaRecorder で最長3秒、IndexedDB `tentsunagi`（ストア `voice`、キーは声ファイルと同じ key）。再生前に前後の無音を切る（`decodeRec`）。録音があれば AI の声より優先（`say`）。
 - 保存（localStorage）: `tentsu-book`（絵ごとの回数）、`tentsu-custom`（作った絵、写真は360pxのJPEG）、`tentsu-n` `tentsu-mode` `tentsu-guide` `tentsu-touch` `tentsu-voice` `tentsu-sound`。
-- 声の作り方は [ゆびで めいろ](meiro.md) と同じ（Kokoro fp16 で候補を作り、whisper-tiny で聞き取って一番合うものを選ぶ）。数字やアルファベットで聞き取られたときは読みに直してから比べる。道具は `/mnt/project-files/tentsunagi/tools/`（slots.py＝セリフ一覧, cand.py, asr.mjs, pick.py）。
+- 声の作り方は [ゆびで めいろ](meiro.md) と同じ（Kokoro fp16 で候補を作り、whisper-tiny で聞き取って一番合うものを選ぶ）。数字やアルファベットで聞き取られたときは読みに直してから比べる。1文字の読み（あ・に など）は whisper-tiny が聞きまちがえやすいので、最初の音が合っているものを優先し、合わなかった約130こは話し方を変えて作り直した（cand2.py）。それでも「にゃーん」などは AI が苦手なので、気になるときは録音で差しかえてもらう。道具は `/mnt/project-files/tentsunagi/tools/`（slots.py＝セリフ一覧, cand.py, asr.mjs, pick.py）。
