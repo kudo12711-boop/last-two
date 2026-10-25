@@ -16,6 +16,14 @@
 - 景色はその場所のいまの時刻・天気・気温に合わせて変わります（天気は Open-Meteo、地名は BigDataCloud から取得）。
 - 作り方: `/mnt/project-files/camper/tools/` の部品を `python3 build.py camper/index.html` でつなげています。
 
+## ゆびで めいろ（幼児向け）
+
+遊ぶ: https://kudo12711-boop.github.io/last-two/meiro/
+
+- キャラクターを指でなぞって、ゴールまで連れていく迷路です。かべは通りぬけられず、ぶつかると「ぽよん」と止まるだけです。
+- むずかしさは ★〜★★★★（2さい〜5さい向け）。毎回ちがう迷路が自動でできます。
+- 声は Kokoro-82M（Apache-2.0）で作った音声を `meiro/voice/` に入れています。作り方は `/mnt/project-files/meiro/tools/`。
+
 ## 開発の記録
 
 各ゲームの開発の経緯や作り方は [docs/README.md](docs/README.md) にまとめています。
