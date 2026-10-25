@@ -24,6 +24,14 @@
 - むずかしさは ★〜★★★★（2さい〜5さい向け）。毎回ちがう迷路が自動でできます。
 - 声は Kokoro-82M（Apache-2.0）で作った音声を `meiro/voice/` に入れています。作り方は `/mnt/project-files/meiro/tools/`。
 
+## すうじで てんつなぎ（幼児向け）
+
+遊ぶ: https://kudo12711-boop.github.io/last-two/tentsunagi/
+
+- 番号の順に点を指でつなぐと絵ができあがり、色がついて動き出します。点の数は3〜30こ、1・2・3／2・4・6／あいうえお／ABC の順でも遊べます。
+- おうちの人が描いた形や、写真・紙の絵のりんかくから、オリジナルの点つなぎを作れます。
+- 声は Kokoro-82M（Apache-2.0）で作った音声を `tentsunagi/voice/` に入れています。作り方は `/mnt/project-files/tentsunagi/tools/`。
+
 ## 開発の記録
 
 各ゲームの開発の経緯や作り方は [docs/README.md](docs/README.md) にまとめています。
