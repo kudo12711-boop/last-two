@@ -15,3 +15,7 @@
 - アプリを閉じているあいだもキャンピングカーが走り、次に開くと進んだ場所の車窓の景色が見られます。
 - 景色はその場所のいまの時刻・天気・気温に合わせて変わります（天気は Open-Meteo、地名は BigDataCloud から取得）。
 - 作り方: `/mnt/project-files/camper/tools/` の部品を `python3 build.py camper/index.html` でつなげています。
+
+## 開発の記録
+
+各ゲームの開発の経緯や作り方は [docs/README.md](docs/README.md) にまとめています。
