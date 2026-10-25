@@ -94,6 +94,24 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 #myList canvas{width:52px;height:52px}
 #myList button{position:absolute;right:-6px;top:-6px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:var(--shadow);font-size:13px;padding:0}
 
+/* ろくおん */
+#recTabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+#recTabs button{padding:8px 10px;border-radius:12px;background:var(--soft);font-weight:700;font-size:14px}
+#recTabs button.sel{background:var(--accent);color:#fff}
+#recGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px;margin:6px 0}
+#recGrid button{position:relative;min-height:48px;border-radius:12px;background:#f4efe4;font-weight:900;font-size:18px;padding:4px 2px;line-height:1.15}
+#recGrid.words{grid-template-columns:1fr 1fr}
+#recGrid.words button{font-size:13px;font-weight:700;text-align:left;padding:8px}
+#recGrid button.has{background:#d8f5e3}
+#recGrid button.has::after{content:'🎙';position:absolute;right:2px;top:0;font-size:11px}
+#recGrid button.cur{outline:3px solid var(--accent)}
+#recCtl{display:flex;gap:6px;align-items:center;flex-wrap:nowrap;position:sticky;bottom:-22px;background:var(--card);padding:8px 0}
+#recCtl b{flex:1;min-width:0;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#recCtl button{padding:10px 10px;white-space:nowrap;border-radius:14px;background:var(--soft);font-weight:700;font-size:15px}
+#recGo{background:#ff5a5a!important;color:#fff}
+#recGo.on{animation:blink .8s infinite}
+@keyframes blink{50%{opacity:.55}}
+
 /* つくる */
 #maker{padding-left:8px;padding-right:8px}
 #maker .bar b{flex:1;text-align:center;font-size:18px}
@@ -132,7 +150,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
     <div class="note" style="margin:2px 0 0">？の えも えらべるよ。なにが できるかな？</div>
     <div id="pics"></div>
   </div>
-  <div class="foot"><button id="btnMake">✏️ じぶんで つくる</button><button id="btnHelp">おうちのかたへ・せってい</button><button id="btnSnd">🔊 おと あり</button></div>
+  <div class="foot"><button id="btnMake">✏️ じぶんで つくる</button><button id="btnRec">🎙️ こえを ろくおん</button><button id="btnHelp">おうちのかたへ・せってい</button><button id="btnSnd">🔊 おと あり</button></div>
 </section>
 
 <section id="game" class="screen">
@@ -201,9 +219,20 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
   <h3>🗣️ こえ</h3>
   <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest">▶ ためす</button></div>
   <div class="note">「AIのこえ」は、あらかじめ AI で作っておいた声です（Kokoro-82M／Apache-2.0）。</div>
+  <button class="rb" id="btnRec2" style="margin-top:4px">🎙️ じぶんの こえを ろくおんする</button>
   <h3>✏️ じぶんで つくった え</h3>
   <div id="myList"></div>
   <button class="big" id="btnHelpClose">とじる</button>
+</div></div>
+
+<div id="recM" class="modal"><div class="panel">
+  <h2>🎙️ こえを ろくおん</h2>
+  <div class="note">おうちの人の声で「いち」「エー」などを録音すると、AIの声のかわりに その声で読みあげます。録音は この端末の中だけに保存され、どこにも送られません。</div>
+  <div id="recTabs"></div>
+  <div id="recGrid"></div>
+  <div id="recCtl"><b id="recCur"></b><button id="recGo">● ろくおん</button><button id="recPlay">▶ きく</button><button id="recDel">🗑</button></div>
+  <div class="note" id="recNote">ますを えらんで「● ろくおん」→ 言いおわったら「■ とめる」（3びょうで じどうで とまります）。録音すると つぎの ますに すすみます。</div>
+  <button class="big" id="recClose">とじる</button>
 </div></div>
 
 <script>
@@ -343,15 +372,19 @@ function say(key, force, onend) {
   lastSpeak = now;
   const tok = ++speakToken;
   const fin = () => { if (onend && tok === speakToken) onend(); };
+  const rb = recBuf[key];
+  if (rb && rb.buf && audio()) { // おうちの人の 録音
+    playBuf(rb.buf, rb.off, rb.dur);
+    if (onend) setTimeout(fin, rb.dur * 1000 + 120);
+    return;
+  }
   if (voiceMode.startsWith('ai:')) {
     const id = voiceMode.slice(3), a = audio();
     if (a) {
       aiLoad(id, [key]);
       const b = aiBuf[`${id}/${key}`];
       if (b && typeof b !== 'string') {
-        try { if (aiSrc) aiSrc.stop(); } catch (e) {}
-        try { speechSynthesis.cancel(); } catch (e) {}
-        const src = a.createBufferSource(); src.buffer = b; src.connect(a.destination); src.start(); aiSrc = src;
+        playBuf(b, 0, b.duration);
         if (onend) setTimeout(fin, b.duration * 1000 + 120);
         return;
       }
@@ -359,10 +392,44 @@ function say(key, force, onend) {
   }
   tts(voiceText(key), onend ? fin : null);
 }
-function sayCat(cat, force) { // start → start0 / start1 など
-  const keys = Object.keys(TTS_TEXT).filter(k => k.replace(/\d+$/, '') === cat);
-  if (keys.length) say(pick(keys), force);
+function playBuf(b, off, dur) {
+  const a = audio(); if (!a) return;
+  try { if (aiSrc) aiSrc.stop(); } catch (e) {}
+  try { speechSynthesis.cancel(); } catch (e) {}
+  const src = a.createBufferSource(); src.buffer = b; src.connect(a.destination); src.start(0, off, dur); aiSrc = src;
 }
+function sayCat(cat, force) { // start → start0 / start1 など（録音があれば そちらを）
+  const keys = Object.keys(TTS_TEXT).filter(k => k.replace(/\d+$/, '') === cat);
+  const mine = keys.filter(k => recBuf[k]);
+  if (keys.length) say(pick(mine.length ? mine : keys), force);
+}
+
+/* ---------- おうちの人の 録音（この端末の中 IndexedDB にだけ保存） ---------- */
+const recs = {}, recBuf = {}; // key -> Blob / { buf, off, dur }
+const vdb = {
+  open() { return new Promise((res, rej) => { const r = indexedDB.open('tentsunagi', 1); r.onupgradeneeded = () => r.result.createObjectStore('voice'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  async run(mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction('voice', mode), st = t.objectStore('voice'); const r = fn(st); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error); }); },
+  put(k, v) { return this.run('readwrite', st => st.put(v, k)); },
+  del(k) { return this.run('readwrite', st => st.delete(k)); },
+  async all() { const out = {}; await this.run('readonly', st => { const c = st.openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } }; return null; }); return out; }
+};
+// 録音を 音に もどして、まえと うしろの しずかな ところを けずる
+function decodeRec(key) {
+  const a = audio() || (window.OfflineAudioContext ? new OfflineAudioContext(1, 1, 44100) : null), blob = recs[key];
+  if (!a || !blob) return Promise.resolve();
+  recBuf[key] = { pending: true, busy: true };
+  return blob.arrayBuffer().then(ab => new Promise((res, rej) => a.decodeAudioData(ab, res, rej))).then(buf => {
+    const d = buf.getChannelData(0); let pk = 0; for (let i = 0; i < d.length; i++) pk = Math.max(pk, Math.abs(d[i]));
+    const th = Math.max(.02, pk * .12); let i0 = 0, i1 = d.length - 1;
+    while (i0 < d.length && Math.abs(d[i0]) < th) i0++;
+    while (i1 > i0 && Math.abs(d[i1]) < th) i1--;
+    const off = Math.max(0, i0 / buf.sampleRate - .04), end = Math.min(buf.duration, i1 / buf.sampleRate + .12);
+    if (recs[key] === blob) recBuf[key] = { buf, off, dur: Math.max(.1, end - off) };
+  }).catch(() => { delete recBuf[key]; });
+}
+function decodeAllRecs() { if (!actx) return; for (const k in recs) if (!recBuf[k] || (recBuf[k].pending && !recBuf[k].busy)) decodeRec(k); }
+vdb.all().then(o => { Object.assign(recs, o); for (const k in recs) recBuf[k] = { pending: true }; decodeAllRecs(); }).catch(() => {});
+document.addEventListener('pointerdown', () => { if (audio()) decodeAllRecs(); }, { passive: true });
 function prepVoice(keys) { if (voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3), keys); }
 
 /* ---------- え（りんかくの かきかた） ---------- */
@@ -553,6 +620,9 @@ const PICS = [
     } }
 ];
 const PIC_BY = Object.fromEntries(PICS.map(p => [p.id, p]));
+const CRY = { star: 'きらりん！', heart: 'どきどき！', fish: 'すいすい！', house: 'ただいまー！', apple: 'しゃりっ！', cat: 'にゃーん！', rocket: 'はっしゃー！', yacht: 'ざぶーん！', mush: 'ぽこっ！', whale: 'ぷしゅー！', bfly: 'ひらひら！', rabbit: 'ぴょん、ぴょん！', car: 'ぶっぶー！', custom: 'やったね！' };
+for (const p of PICS) { TTS_TEXT['done_' + p.id] = p.name + 'が、できたね！'; TTS_TEXT['cry_' + p.id] = CRY[p.id]; }
+TTS_TEXT.done_custom = 'えが、できたね！'; TTS_TEXT.cry_custom = CRY.custom;
 
 /* ---------- え（こまかいところを かく道具） ---------- */
 function ell(g, x, y, rx, ry, c) { g.fillStyle = c; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill(); }
@@ -1256,6 +1326,70 @@ $('#mkOk').onclick = () => {
   while (!ok && customs.length > 1) { customs.shift(); ok = store.set('tentsu-custom', customs); }
   sfx.tap();
   startGame(customPic(c));
+};
+
+/* ---------- こえを ろくおん ---------- */
+const REC_TABS = [
+  { id: 'num', label: '1・2・3', items: () => Array.from({ length: 30 }, (_, i) => ({ key: 'n' + (i + 1), t: String(i + 1) })) },
+  { id: 'skip', label: '2・4・6', items: () => Array.from({ length: 30 }, (_, i) => ({ key: 'n' + (i + 1) * 2, t: String((i + 1) * 2) })) },
+  { id: 'kana', label: 'あ・い・う', items: () => [...KANA].map((c, i) => ({ key: 'k' + i, t: c })) },
+  { id: 'abc', label: 'A・B・C', items: () => [...ABC].map((c, i) => ({ key: 'a' + i, t: c })) },
+  { id: 'word', label: 'ことば', words: true, items: () => [
+    ...['start0', 'start1', 'here0', 'here1', 'cheer0', 'cheer1', 'last0', 'close0', 'praise0', 'praise1'].map(k => ({ key: k, t: TTS_TEXT[k] })),
+    ...PICS.map(p => ({ key: 'done_' + p.id, t: TTS_TEXT['done_' + p.id] })), { key: 'done_custom', t: TTS_TEXT.done_custom },
+    ...PICS.map(p => ({ key: 'cry_' + p.id, t: `${p.emoji} ${TTS_TEXT['cry_' + p.id]}` }))
+  ] }
+];
+let recTab = 'num', recSel = 0, recording = null;
+const recItems = () => REC_TABS.find(t => t.id === recTab).items();
+function renderRecM() {
+  $('#recTabs').innerHTML = REC_TABS.map(t => `<button data-t="${t.id}" class="${t.id === recTab ? 'sel' : ''}">${t.label}</button>`).join('');
+  const items = recItems(), tab = REC_TABS.find(t => t.id === recTab);
+  recSel = clamp(recSel, 0, items.length - 1);
+  $('#recGrid').className = tab.words ? 'words' : '';
+  $('#recGrid').innerHTML = items.map((it, i) => `<button data-i="${i}" class="${recs[it.key] ? 'has' : ''} ${i === recSel ? 'cur' : ''}">${it.t}</button>`).join('');
+  const cur = items[recSel];
+  $('#recCur').textContent = tab.words ? '' : `「${cur.t}」`;
+  $('#recGo').textContent = recording ? '■ とめる' : (recs[cur.key] ? '● とりなおす' : '● ろくおん');
+  $('#recGo').classList.toggle('on', !!recording);
+  $('#recPlay').disabled = !recs[cur.key]; $('#recDel').disabled = !recs[cur.key];
+  $('#recPlay').style.opacity = $('#recDel').style.opacity = recs[cur.key] ? 1 : .4;
+}
+function openRec() { audio(); $('#help').classList.remove('on'); renderRecM(); $('#recM').classList.add('on'); }
+$('#btnRec').onclick = openRec; $('#btnRec2').onclick = openRec;
+$('#recClose').onclick = () => { if (recording) recording.stop(); $('#recM').classList.remove('on'); };
+$('#recTabs').onclick = e => { const b = e.target.closest('button'); if (!b || recording) return; recTab = b.dataset.t; recSel = 0; renderRecM(); };
+$('#recGrid').onclick = e => {
+  const b = e.target.closest('button'); if (!b || recording) return;
+  recSel = +b.dataset.i; renderRecM();
+  const k = recItems()[recSel].key; if (recBuf[k] && recBuf[k].buf) say(k, true);
+};
+$('#recPlay').onclick = () => { const k = recItems()[recSel].key; if (recs[k]) { audio(); if (recBuf[k] && recBuf[k].buf) say(k, true); else decodeRec(k).then(() => say(k, true)); } };
+$('#recDel').onclick = async () => { const k = recItems()[recSel].key; if (!recs[k]) return; delete recs[k]; delete recBuf[k]; try { await vdb.del(k); } catch (e) {} renderRecM(); };
+$('#recGo').onclick = async () => {
+  if (recording) { recording.stop(); return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) { $('#recNote').textContent = 'このブラウザでは録音できません。Safari か Chrome で開いてください。'; return; }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch (e) { $('#recNote').textContent = 'マイクが使えませんでした。マイクの使用を「許可」してください。'; return; }
+  const items = recItems(), idx = recSel, key = items[idx].key, tabAt = recTab;
+  const mr = new MediaRecorder(stream), chunks = [];
+  mr.ondataavailable = e => e.data.size && chunks.push(e.data);
+  mr.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop()); clearTimeout(timer); recording = null;
+    const blob = new Blob(chunks, { type: mr.mimeType || 'audio/mp4' });
+    if (blob.size > 800) {
+      recs[key] = blob; try { await vdb.put(key, blob); } catch (e) {}
+      await decodeRec(key); say(key, true);
+      // つぎの まだ 録音していない ますへ
+      let n = idx + 1; while (n < items.length && recs[items[n].key]) n++;
+      if (n < items.length && recTab === tabAt) recSel = n;
+    }
+    renderRecM();
+  };
+  const timer = setTimeout(() => mr.state !== 'inactive' && mr.stop(), 3000);
+  recording = { stop: () => mr.state !== 'inactive' && mr.stop() };
+  mr.start(); renderRecM();
 };
 
 renderTitle();
