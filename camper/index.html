@@ -94,8 +94,29 @@ header .r{text-align:right;white-space:nowrap}
 #nextlm b{color:var(--ink)}
 #fork{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:9px 14px;font-size:13px;text-align:left}
 #fork b{font-size:14px;white-space:nowrap}
-#depart{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:#2f7fb0;color:#fff;border-radius:16px;padding:12px 16px;font-size:14px;font-weight:700;box-shadow:0 3px 0 #1f5a80}
-#depart b{font-size:17px}
+#park{display:flex;align-items:center;gap:8px;background:#2f7fb0;color:#fff;border-radius:16px;padding:8px 8px 8px 14px;box-shadow:0 3px 0 #1f5a80}
+.pk-msg{flex:1;min-width:0;font-weight:700;font-size:14px}.pk-msg small{display:block;font-weight:500;font-size:12px;opacity:.85}
+.pk-b{border:0;border-radius:12px;padding:10px 12px;font-weight:900;font-size:15px;background:#fff;color:#2f7fb0;white-space:nowrap}
+.pk-b.sight{background:#ffd36b;color:#5a3a00}.pk-b.ghost{background:rgba(255,255,255,.2);color:#fff}
+.mini{border:1px solid var(--line);background:var(--wall);border-radius:99px;padding:4px 10px;font-size:12px;font-weight:700;margin-top:4px}
+.mini:disabled{opacity:.6}
+.sps{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.sp{border:2px solid var(--line);background:#fff;border-radius:16px;padding:10px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.sp.wide{width:100%}
+.sp .em{font-size:30px}.sp b{font-size:15px}.sp small{font-size:12px;color:var(--ink2);line-height:1.45}.sp i{font-style:normal;font-size:12px;color:var(--accent);font-weight:700;margin-top:2px}
+.sp.done{background:#f4fbf2;border-color:#bfe0b5}.sp:disabled{opacity:.5}
+.busy{background:#e8f3fb;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;color:#1f5a80}
+.lodges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lodges button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.lodges span{font-size:26px}.lodges b{font-size:14px}.lodges small{font-size:10px;color:var(--ink2);text-align:center}
+.lodges button.on{border-color:var(--accent);background:var(--accent2)}
+.sight-card{text-align:center;background:linear-gradient(#fff7e6,#fffaf2);border-radius:20px;padding:18px 14px;border:1px solid var(--line)}
+.big-em{font-size:84px;line-height:1.1;filter:drop-shadow(0 6px 8px rgba(0,0,0,.15));animation:pop .6s ease both}
+.phrase{background:var(--wall);border-radius:14px;padding:12px 14px;margin:8px 0}.phrase small{display:block;font-size:12px;color:var(--ink2)}
+.phrase b{display:block;font-size:24px}.phrase span{display:block;font-size:14px;color:var(--accent);font-weight:700}
+.phrase{position:relative}.phrase>.say{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:20px}
+.phrase.sm .say{position:static;transform:none;width:30px;height:30px;font-size:14px;margin-right:4px;vertical-align:middle}
+.phrase.sm b{font-size:17px;display:inline}.phrase.sm span{display:inline;margin:0 12px 0 6px;font-size:13px}
 #fork.todo{background:var(--accent);color:#fff;border-color:var(--accent);animation:pulse 2.4s ease-in-out infinite}
 @keyframes pulse{50%{transform:scale(1.015)}}
 .stats{display:flex;gap:6px;justify-content:space-between;font-size:12px;color:var(--ink2)}
@@ -202,7 +223,7 @@ svg.map{width:100%;aspect-ratio:2.4/1;border-radius:14px;display:block;backgroun
       <div id="next"></div>
       <div id="nextlm"></div>
     </div>
-    <button id="depart" hidden></button>
+    <div id="park" hidden></div>
     <button id="fork" hidden></button>
     <div class="stats"><div>走ったきょり<b id="total">0km</b></div><div>世界一周<b id="lap">1周目</b></div><div>速さ<b id="spd"></b></div></div>
     <nav>
@@ -434,6 +455,119 @@ const FACTS = {
   '青森':'りんごとねぶた祭りの町。',
   '仙台':'「杜の都」と呼ばれる、緑の多い町。',
 };
+
+// 観光モードのデータ。国ごと（ことば・グルメ・おみやげ）と、大きな町ごと（名所3か所など）
+// ことば: [こんにちは, 読み, ありがとう, 読み, 言語名]
+const COUNTRY = {
+  JP: { name: '日本', words: ['こんにちは', 'こんにちは', 'ありがとう', 'ありがとう', '日本語'], food: [['🍣', 'おすし', '新鮮な魚をのせたごはん']], gift: [['🎐', '風鈴', 'ちりんと鳴る夏の音']] },
+  KR: { name: '韓国', words: ['안녕하세요', 'アンニョンハセヨ', '감사합니다', 'カムサハムニダ', '韓国語'], food: [['🥘', 'ビビンバ', 'ごはんと野菜をまぜて食べる']], gift: [['🥢', '金属のおはし', '韓国のおはしは平たい金属']] },
+  CN: { name: '中国', words: ['你好', 'ニーハオ', '谢谢', 'シエシエ', '中国語'], food: [['🥟', '小籠包', 'なかに熱いスープ入り']], gift: [['🐼', 'パンダのぬいぐるみ', '中国の人気者']] },
+  MN: { name: 'モンゴル', words: ['Сайн байна уу', 'サインバイノー', 'Баярлалаа', 'バヤルラー', 'モンゴル語'], food: [['🥟', 'ボーズ', '羊肉の蒸しぎょうざ']], gift: [['🐎', '馬の置物', '馬とくらす国']] },
+  RU: { name: 'ロシア', words: ['Здравствуйте', 'ズドラーストヴィチェ', 'Спасибо', 'スパシーバ', 'ロシア語'], food: [['🥣', 'ボルシチ', '赤いビーツのスープ'], ['🥟', 'ペリメニ', 'シベリアの水ぎょうざ']], gift: [['🪆', 'マトリョーシカ', '中から小さな人形が次々出てくる']] },
+  KZ: { name: 'カザフスタン', words: ['Сәлеметсіз бе', 'サレメトスィズベ', 'Рахмет', 'ラフメット', 'カザフ語'], food: [['🍲', 'ベシュバルマク', '肉と平たい麺の料理']], gift: [['🍎', 'りんご', 'アルマトイはりんごのふるさと']] },
+  UZ: { name: 'ウズベキスタン', words: ['Assalomu alaykum', 'アッサローム・アレイクム', 'Rahmat', 'ラフマット', 'ウズベク語'], food: [['🍚', 'プロフ', 'にんじんと肉のピラフ'], ['🫓', 'ノン', 'スタンプもようの丸いパン']], gift: [['🏺', '青い陶器', 'シルクロードの青いもよう']] },
+  TM: { name: 'トルクメニスタン', words: ['Salam', 'サラム', 'Sag boluň', 'サグボルン', 'トルクメン語'], food: [['🍈', 'メロン', 'メロンの日がある国']], gift: [['🧶', 'じゅうたん', '赤い手織りのじゅうたん']] },
+  IR: { name: 'イラン', words: ['سلام', 'サラーム', 'مرسی', 'メルスィー', 'ペルシャ語'], food: [['🍢', 'キャバブ', 'サフランライスと串焼き']], gift: [['🧶', 'ペルシャじゅうたん', '細かいもようの手織り']] },
+  TR: { name: 'トルコ', words: ['Merhaba', 'メルハバ', 'Teşekkürler', 'テシェッキュルレル', 'トルコ語'], food: [['🥙', 'ケバブ', 'くるくる回して焼く肉'], ['🍦', 'のびるアイス', 'もちもちのドンドゥルマ']], gift: [['🧿', 'ナザール・ボンジュウ', '青い目玉のお守り']] },
+  BG: { name: 'ブルガリア', words: ['Здравейте', 'ズドラヴェイテ', 'Благодаря', 'ブラゴダリャ', 'ブルガリア語'], food: [['🥛', 'ヨーグルト', '本場のヨーグルト']], gift: [['🌹', 'バラのせっけん', 'バラの谷のかおり']] },
+  RS: { name: 'セルビア', words: ['Zdravo', 'ズドラーヴォ', 'Hvala', 'フヴァーラ', 'セルビア語'], food: [['🍖', 'チェバプチチ', '小さな焼き肉だんご']], gift: [['🏺', '手作りの器', '素朴な焼きもの']] },
+  HU: { name: 'ハンガリー', words: ['Szia', 'スィア', 'Köszönöm', 'ケセネム', 'ハンガリー語'], food: [['🍲', 'グヤーシュ', 'パプリカのスープ']], gift: [['🌶', 'パプリカの粉', '料理を赤くするスパイス']] },
+  AT: { name: 'オーストリア', words: ['Grüß Gott', 'グリュースゴット', 'Danke', 'ダンケ', 'ドイツ語'], food: [['🍰', 'ザッハトルテ', 'ウィーンのチョコケーキ'], ['🥩', 'シュニッツェル', 'うすいカツレツ']], gift: [['🍫', 'モーツァルトチョコ', 'モーツァルトの顔つきの丸いチョコ']] },
+  BY: { name: 'ベラルーシ', words: ['Добры дзень', 'ドブリ・ジェニ', 'Дзякуй', 'ジャークイ', 'ベラルーシ語'], food: [['🥔', 'ドラニキ', 'じゃがいものパンケーキ']], gift: [['🧺', 'わら細工', 'わらで編んだかざり']] },
+  PL: { name: 'ポーランド', words: ['Dzień dobry', 'ジェン・ドブリ', 'Dziękuję', 'ジェンクイェ', 'ポーランド語'], food: [['🥟', 'ピエロギ', 'ポーランドのぎょうざ']], gift: [['🏺', '水玉もようの陶器', 'ボレスワヴィエツ焼き']] },
+  CZ: { name: 'チェコ', words: ['Dobrý den', 'ドブリー・デン', 'Děkuji', 'ジェクイ', 'チェコ語'], food: [['🥐', 'トルデルニーク', '筒の形の焼き菓子']], gift: [['🔮', 'ボヘミアガラス', 'きらきらのガラス細工']] },
+  IT: { name: 'イタリア', words: ['Ciao', 'チャオ', 'Grazie', 'グラツィエ', 'イタリア語'], food: [['🍕', 'ピッツァ', '本場のマルゲリータ'], ['🍨', 'ジェラート', 'イタリアのアイス']], gift: [['🫒', 'オリーブオイル', '料理の味の決め手']] },
+  ES: { name: 'スペイン', words: ['Hola', 'オラ', 'Gracias', 'グラシアス', 'スペイン語'], food: [['🥘', 'パエリア', '大きななべで炊く米料理']], gift: [['🪭', 'せんす（アバニコ）', 'フラメンコでも使う']] },
+  DE: { name: 'ドイツ', words: ['Guten Tag', 'グーテンターク', 'Danke', 'ダンケ', 'ドイツ語'], food: [['🥨', 'プレッツェル', '結び目の形のパン'], ['🌭', 'ソーセージ', '白いソーセージも名物']], gift: [['🧸', 'テディベア', 'ドイツ生まれのくま']] },
+  CH: { name: 'スイス', words: ['Grüezi', 'グリュエツィ', 'Merci', 'メルスィ', 'スイスドイツ語'], food: [['🧀', 'チーズフォンデュ', 'とけたチーズにパンをからめる']], gift: [['🔔', 'カウベル', '牛の首につける鐘']] },
+  FR: { name: 'フランス', words: ['Bonjour', 'ボンジュール', 'Merci', 'メルシー', 'フランス語'], food: [['🥐', 'クロワッサン', '焼きたてのパン屋さんで']], gift: [['🧴', 'ラベンダーのにおい袋', '南フランスのかおり']] },
+  PT: { name: 'ポルトガル', words: ['Olá', 'オラ', 'Obrigado', 'オブリガード', 'ポルトガル語'], food: [['🥧', 'エッグタルト', 'パステル・デ・ナタ']], gift: [['🐓', 'バルセロスのにわとり', '幸運のにわとりの置物']] },
+  US: { name: 'アメリカ', words: ['Hello', 'ハロー', 'Thank you', 'サンキュー', '英語'], food: [['🍔', 'ハンバーガー', '大きなハンバーガー']], gift: [['🧢', 'ベースボールキャップ', '野球の帽子']] },
+  HI: { name: 'アメリカ（ハワイ）', words: ['Aloha', 'アロハ', 'Mahalo', 'マハロ', 'ハワイ語'], food: [['🍧', 'シェイブアイス', 'ハワイのかき氷'], ['🍳', 'ロコモコ', 'ハンバーグと目玉焼きのごはん']], gift: [['🌺', 'レイ', '花のくびかざり']] },
+  PR: { name: 'プエルトリコ', words: ['Hola', 'オラ', 'Gracias', 'グラシアス', 'スペイン語'], food: [['🍌', 'モフォンゴ', 'つぶした青いバナナの料理']], gift: [['🐸', 'コキーのおもちゃ', 'コキーと鳴く小さなカエル']] },
+  CA: { name: 'カナダ', words: ['Hello / Bonjour', 'ハロー / ボンジュール', 'Thank you / Merci', 'サンキュー / メルシー', '英語とフランス語'], food: [['🐟', 'サーモン', '太平洋のサーモン']], gift: [['🍁', 'メープルシロップ', 'カエデのあまいシロップ']] },
+};
+const CITY_C = {
+  JP: '東京 富士山のふもと 名古屋 京都 大阪 広島 福岡 札幌 函館 青森 仙台 釧路', KR: '釜山 ソウル 仁川', CN: '天津 北京 西安 蘭州 敦煌 トルファン ウルムチ エレンホト',
+  KZ: 'アルマトイ', UZ: 'タシケント サマルカンド ブハラ', TM: 'アシガバート', IR: 'マシュハド テヘラン タブリーズ', TR: 'カッパドキア イスタンブール', BG: 'ソフィア', RS: 'ベオグラード',
+  HU: 'ブダペスト', AT: 'ウィーン ザルツブルク', MN: 'ウランバートル', RU: 'ウランウデ バイカル湖 イルクーツク クラスノヤルスク ノヴォシビルスク オムスク エカテリンブルク カザン モスクワ',
+  BY: 'ミンスク', PL: 'ワルシャワ クラクフ', CZ: 'プラハ', IT: 'ベネチア フィレンツェ ローマ チビタベッキア', ES: 'バルセロナ サラゴサ マドリード ビルバオ カナリア諸島', DE: 'ミュンヘン', CH: 'チューリッヒ',
+  FR: 'パリ ボルドー', PT: 'リスボン アゾレス諸島', US: 'ニューヨーク ピッツバーグ シカゴ オマハ デンバー ロッキー山脈 モアブ モニュメントバレー グランドキャニオン マイアミ ニューオーリンズ ヒューストン エルパソ ホワイトサンズ アルバカーキ セドナ ラスベガス ロサンゼルス サンフランシスコ シアトル ダッチハーバー',
+  HI: 'ホノルル', PR: 'サンフアン', CA: 'バンクーバー',
+};
+// 町ごとの名物（グルメ・おみやげ・方言）。名所は spots: [絵, 名前, 時間, ひとこと]
+const CITY = {
+  '東京': { spots: [['🏮', '浅草寺と雷門', 2, '大きなちょうちんの門と、おみやげ屋さんが並ぶ仲見世通り'], ['🗼', '東京スカイツリー', 1, '高さ634m。日本でいちばん高いタワー'], ['🌸', '上野公園', 2, '動物園や博物館がある大きな公園']], food: [['🍣', '江戸前ずし', '東京湾の魚のおすし']], gift: [['🗼', 'タワーの置物', '東京タワーのミニチュア']] },
+  '京都': { spots: [['⛩', '伏見稲荷大社', 2, '赤い鳥居が山の上までずっと続く'], ['🏯', '清水寺', 2, '崖の上にせり出した「清水の舞台」'], ['🎋', '嵐山の竹林', 3, '空までのびる竹の小道']], food: [['🍵', '抹茶パフェ', '宇治抹茶のあまいパフェ']], gift: [['🪭', '京せんす', 'みやびなもようのせんす']], words: ['おいでやす', 'おいでやす', 'おおきに', 'おおきに', '京都ことば'] },
+  '大阪': { spots: [['🏯', '大阪城', 2, '金色のかざりがかがやくお城'], ['🌃', '道頓堀', 1, '川ぞいに大きな看板とネオンが並ぶ'], ['🐠', '海遊館', 2, 'ジンベエザメが泳ぐ大きな水そう']], food: [['🐙', 'たこ焼き', '外はカリッ、中はとろり']], gift: [['🐙', 'たこ焼きのキーホルダー', '大阪名物をいつも持ち歩ける']], words: ['まいど', 'まいど', 'おおきに', 'おおきに', '大阪ことば'] },
+  '名古屋': { food: [['🍤', '天むす', 'えびの天ぷらのおにぎり']], gift: [['🐟', '金のしゃちほこの置物', '名古屋城の屋根のかざり']], words: ['どえりゃあ', 'どえりゃあ（とても）', 'ありがとさん', 'ありがとさん', '名古屋ことば'] },
+  '富士山のふもと': { food: [['🍝', '富士宮やきそば', 'もちもちの太めの麺']], gift: [['🗻', '富士山の置物', '雪をかぶった富士山']] },
+  '広島': { food: [['🥞', 'お好み焼き', 'そば入りの広島風']], gift: [['🍁', 'もみじまんじゅう', 'もみじの形のおまんじゅう']], words: ['たいぎい', 'たいぎい（めんどう）', 'ありがとう', 'ありがとう', '広島ことば'] },
+  '福岡': { spots: [['⛩', '太宰府天満宮', 3, '学問の神さまをまつる神社。梅の木がいっぱい'], ['🗼', '福岡タワー', 1, '海辺に立つ高さ234mのタワー'], ['🏮', '中洲の屋台', 1, '夜になると川ぞいに屋台が並ぶ']], food: [['🍜', 'とんこつラーメン', '白いスープの細い麺']], gift: [['🎎', '博多人形', '素焼きの人形']], words: ['なんしよーと？', 'なんしよーと（何してるの？）', 'ありがとう', 'ありがとう', '博多ことば'] },
+  '札幌': { spots: [['🕰', '札幌市時計台', 1, '140年以上時を知らせる木の時計台'], ['📺', '大通公園とテレビ塔', 1, '冬は雪まつりの会場になる公園'], ['🌃', '藻岩山の夜景', 2, 'ロープウェイで登る山から町の灯り']], food: [['🍜', 'みそラーメン', 'こってりみそ味']], gift: [['🐻', '木彫りのクマ', '北海道のおなじみの置物']], words: ['なまら', 'なまら（とても）', 'ありがとう', 'ありがとう', '北海道ことば'] },
+  '函館': { food: [['🍚', '海鮮丼', '朝市のイクラやウニ']], gift: [['🦑', 'イカのおつまみ', '函館はイカの町']] },
+  '青森': { food: [['🍎', 'りんご', 'とれたてのりんご']], gift: [['🏮', 'ねぶたの小さなかざり', '夏祭りの大きな灯籠']], words: ['めやぐだ', 'めやぐだ（ありがとう・すまないね）', 'ありがとう', 'ありがとう', '津軽ことば'] },
+  '仙台': { food: [['🥩', '牛たん', '厚切りの焼き牛たん']], gift: [['🪆', 'こけし', '東北の木の人形']], words: ['いぎなり', 'いぎなり（とても）', 'ありがとう', 'ありがとう', '仙台ことば'] },
+  '釧路': { food: [['🦀', '炉ばた焼き', '炭火で焼く海の幸']], gift: [['🐦', 'タンチョウの置物', '赤い頭のツル']] },
+  'ソウル': { spots: [['🏯', '景福宮', 2, '昔の王さまの宮殿。門の前で衛兵の交代式'], ['🗼', 'Nソウルタワー', 1, '山の上のタワーから町が一望できる'], ['🛍', '明洞', 2, '屋台と買い物でにぎわう町']], food: [['🍢', 'トッポッキ', '甘辛いおもち']] },
+  '釜山': { food: [['🐟', 'チャガルチ市場の海鮮', '韓国最大級の魚市場']] },
+  '北京': { spots: [['🧱', '万里の長城（八達嶺）', 3, '山の尾根をどこまでも続く城壁'], ['🏯', '故宮', 3, '昔の皇帝が住んだ、とても広い宮殿'], ['🌸', '頤和園', 2, '大きな湖のある皇帝の庭園']], food: [['🦆', '北京ダック', 'パリパリの皮を薄い皮で包む']] },
+  '西安': { food: [['🍜', 'ビャンビャン麺', 'はばの広いもちもち麺']] },
+  '蘭州': { food: [['🍜', '蘭州牛肉麺', '目の前で麺をのばしてくれる']] },
+  '天津': { food: [['🥟', '天津の肉まん', 'ひだがきれいな肉まん']] },
+  'トルファン': { food: [['🍇', '干しぶどう', '暑い盆地で干したぶどう']] },
+  'ウルムチ': { food: [['🍢', '羊の串焼き', 'スパイスをふった串焼き']] },
+  'ウランバートル': { spots: [['🗿', 'チンギス・ハーン騎馬像', 2, '草原に立つ高さ40mの銀色の像'], ['🏯', 'ガンダン寺', 1, 'モンゴルでいちばん大きなお寺'], ['🐎', '草原で乗馬', 3, '遊牧民といっしょに草原をかける']], food: [['🥛', 'スーテーツァイ', '塩味のミルクティー']] },
+  'サマルカンド': { spots: [['🕌', 'レギスタン広場', 2, '青いタイルの3つの建物にかこまれた広場'], ['💙', 'シャーヒ・ズィンダ廟群', 2, '青いタイルの建物が通りに並ぶ'], ['🔭', 'ウルグ・ベクの天文台', 1, '600年前に星を観測した天文台']] },
+  'イスタンブール': { spots: [['🕌', 'ブルーモスク', 1, '中は青いタイルでいっぱい'], ['🛍', 'グランドバザール', 2, '4000をこえるお店がある屋根つき市場'], ['⛴', 'ボスポラス海峡クルーズ', 2, 'アジアとヨーロッパのあいだを船で']], food: [['🐟', 'サバサンド', '港で焼いたサバのサンドイッチ']] },
+  'カッパドキア': { food: [['🏺', 'つぼ焼きケバブ', 'つぼを割って食べる煮こみ']] },
+  'モスクワ': { spots: [['🟥', '赤の広場と聖ワシリイ大聖堂', 2, '玉ねぎ屋根のカラフルな大聖堂'], ['🚇', '地下鉄の駅めぐり', 1, 'シャンデリアのある宮殿のような駅'], ['🩰', 'ボリショイ劇場', 3, '世界的に有名なバレエの劇場']], food: [['🥞', 'ブリヌイ', 'ロシアのクレープ']] },
+  'ウィーン': { spots: [['🏰', 'シェーンブルン宮殿', 3, '1441の部屋がある黄色い宮殿'], ['🎡', 'プラーターの大観覧車', 1, '100年以上回りつづける観覧車'], ['🎻', '楽友協会でコンサート', 2, '金色にかがやく音楽ホール']] },
+  'ザルツブルク': { gift: [['🍫', 'モーツァルトチョコ', 'モーツァルトのふるさとの名物']] },
+  'ベネチア': { food: [['🦑', 'イカスミパスタ', 'まっ黒なパスタ']], gift: [['🎭', 'ベネチアの仮面', 'カーニバルの仮面']] },
+  'フィレンツェ': { food: [['🥩', 'ビステッカ', '分厚いTボーンステーキ']] },
+  'ローマ': { spots: [['🏛', 'コロッセオ', 2, '2000年前の円形闘技場'], ['⛲', 'トレビの泉', 1, 'コインを投げると、またローマに来られるといわれる'], ['⛪', 'バチカン', 3, '世界でいちばん小さな国']], food: [['🍨', 'ジェラート', '広場で食べる本場のアイス']], gift: [['🏛', 'コロッセオの置物', 'ローマのミニチュア']] },
+  'バルセロナ': { food: [['🥘', 'パエリア', '魚介たっぷりの米料理']] },
+  'マドリード': { food: [['🍫', 'チュロスとチョコラテ', '熱いチョコにつけて食べる']] },
+  'ビルバオ': { food: [['🍢', 'ピンチョス', '小さなパンにのせたおつまみ']] },
+  'カナリア諸島': { food: [['🥔', 'パパス・アルガダス', 'しわしわの塩ゆでポテト']] },
+  'ミュンヘン': { food: [['🥨', 'プレッツェルと白ソーセージ', 'ミュンヘンの朝ごはん']] },
+  'パリ': { spots: [['🗼', 'エッフェル塔', 2, 'てっぺんからパリの町が一望できる'], ['🖼', 'ルーヴル美術館', 3, 'モナ・リザがある世界最大級の美術館'], ['⛪', 'モンマルトルの丘', 2, '白いサクレ・クール寺院と画家の広場']], food: [['🧁', 'マカロン', 'カラフルなお菓子']], gift: [['🗼', 'エッフェル塔の置物', 'パリのミニチュア']] },
+  'ボルドー': { food: [['🍮', 'カヌレ', '外がカリッとした焼き菓子']] },
+  'リスボン': { spots: [['🚋', '路面電車28番', 2, '黄色い電車で坂道の町をめぐる'], ['🗼', 'ベレンの塔', 1, '大航海時代の船を見送った塔'], ['🏰', 'サン・ジョルジェ城', 2, '丘の上から町と川を見わたす']], food: [['🐟', 'イワシの炭火焼き', '夏祭りの味']] },
+  'アゾレス諸島': { food: [['🍍', 'アゾレスのパイナップル', '温室で育てる島の名物']] },
+  'ニューヨーク': { spots: [['🗽', '自由の女神', 3, 'フェリーで島にわたって間近で見る'], ['🌳', 'セントラルパーク', 2, '大都会のまん中の大きな公園'], ['🏙', 'エンパイア・ステート・ビル', 1, '展望台から摩天楼を見下ろす']], food: [['🌭', 'ホットドッグ', '屋台のホットドッグ']], gift: [['🗽', '自由の女神の置物', '緑色のミニチュア']] },
+  'シカゴ': { food: [['🍕', 'シカゴピザ', '深いお皿で焼く厚いピザ']] },
+  'オマハ': { food: [['🥩', 'ステーキ', '大平原の牛肉']] },
+  'デンバー': { spots: [['🎸', 'レッドロックス野外劇場', 2, '赤い大岩のあいだにある劇場'], ['🏛', '州議事堂の「1マイルの段」', 1, '階段のここがちょうど標高1マイル'], ['🦬', 'バイソンの牧場', 1, 'バイソンの群れが見られる公園']], gift: [['🤠', 'カウボーイハット', '西部の帽子']] },
+  'ニューオーリンズ': { food: [['🍩', 'ベニエ', '粉ざとうたっぷりの揚げパン']] },
+  'ヒューストン': { food: [['🌮', 'テクス・メクス', 'テキサス風のタコス']] },
+  'アルバカーキ': { food: [['🌶', 'グリーンチリ料理', 'ニューメキシコの青とうがらし']] },
+  'ラスベガス': { gift: [['🎲', 'サイコロのキーホルダー', 'ネオンの町の記念']] },
+  'マイアミ': { spots: [['🏖', 'サウスビーチ', 2, 'カラフルな建物と白い砂浜'], ['🐊', 'エバーグレーズ', 3, 'エアボートでワニのすむ湿地へ'], ['🎨', 'ウィンウッドの壁画', 1, '町じゅうが大きな絵でいっぱい']], food: [['🥪', 'キューバサンド', 'キューバ風のホットサンド']] },
+  'ロサンゼルス': { spots: [['⭐', 'ハリウッドの星の歩道', 1, '有名人の名前の星が並ぶ歩道'], ['🎢', 'テーマパーク', 3, '映画の世界のアトラクション'], ['🎡', 'サンタモニカの桟橋', 2, '海の上の遊園地と観覧車']], food: [['🌮', 'タコス', '屋台の本場のタコス']], gift: [['⭐', 'ハリウッドの星', '名前入りの星のかざり']] },
+  'サンフランシスコ': { spots: [['🌉', 'ゴールデン・ゲート・ブリッジ', 2, '赤い大きな橋を歩いてわたる'], ['🚃', 'ケーブルカー', 1, '急な坂道をのぼる昔ながらの電車'], ['🏝', 'アルカトラズ島', 3, '元刑務所があった湾の島']], food: [['🥣', 'クラムチャウダー', 'パンの器に入ったスープ']], gift: [['🚃', 'ケーブルカーの置物', '坂の町の名物']] },
+  'シアトル': { food: [['☕', 'シアトルのコーヒー', 'コーヒーの町の一杯']], gift: [['☕', 'マグカップ', 'コーヒーの町の記念']] },
+  'バンクーバー': { food: [['🐟', 'スモークサーモン', '太平洋のサーモン']] },
+  'ダッチハーバー': { food: [['🦀', 'タラバガニ', 'カニ漁の港の大きなカニ']] },
+  'ホノルル': { spots: [['🏖', 'ワイキキビーチ', 2, 'ダイヤモンドヘッドを見ながら海で遊ぶ'], ['🌋', 'ダイヤモンドヘッド登山', 3, '火山のふちまで登って海を見わたす'], ['🐠', 'ハナウマ湾', 2, 'シュノーケルで熱帯の魚と泳ぐ']] },
+  'サンフアン': { spots: [['🏰', 'エル・モロ要塞', 2, '海を守った古い石のとりで'], ['🎨', '旧市街のカラフルな通り', 1, 'パステルカラーの家が並ぶ'], ['✨', '光る湾', 2, '夜の海が青く光る湾']] },
+};
+// 名所が用意されていない町の観光（土地の景色で変わる）
+const GENERIC = {
+  city: [['🛍', '市場を歩く', 1, '地元の人でにぎわう市場をぶらぶら'], ['⛲', '町の広場でひと休み', 1, 'ベンチにすわって町をながめる'], ['🏛', '町の博物館', 2, 'この町の歴史を知る']],
+  farm: [['🧺', '農家の朝市', 1, 'とれたての野菜や果物'], ['🚲', '田舎道をサイクリング', 2, '畑のあいだを風を切って'], ['⛪', '古いお寺や教会', 1, '村の人が大切にしてきた建物']],
+  forest: [['🌲', '森の散歩', 2, '木もれ日の中をゆっくり歩く'], ['🍄', 'きのこ探し', 2, '森の中で見つけられるかな'], ['🛶', '湖でボート', 1, '静かな湖にこぎ出す']],
+  mount: [['🥾', 'ハイキング', 3, '山の上の見晴らし台まで'], ['🏞', '山の湖', 2, '山にかこまれた青い湖'], ['🚡', 'ロープウェイ', 1, '空中散歩で山の上へ']],
+  desert: [['🐪', 'ラクダに乗る', 2, 'ゆらゆら揺れながら砂の上を'], ['🌴', 'オアシスでひと休み', 1, '砂漠の中の水辺'], ['🌌', '星空観察', 2, '砂漠の夜は星がいっぱい']],
+  steppe: [['🐎', '乗馬', 2, '広い草原を馬で'], ['⛺', '草原のテントを訪ねる', 1, '遊牧のくらしを見せてもらう'], ['🧺', '草原でピクニック', 1, '地平線を見ながらお昼ごはん']],
+  coast: [['🏖', '浜辺を散歩', 1, '波の音を聞きながら'], ['🐟', '港の市場', 1, '朝とれた魚が並ぶ'], ['🗼', '灯台へ', 2, '岬の先の灯台まで歩く']],
+};
+const DESERT_US = [['🚙', 'ジープツアー', 2, '赤い岩のあいだをジープで'], ['🏜', '岩山の展望台', 1, 'どこまでも続く赤い大地'], ['🌌', '星空観察', 2, '砂漠の夜は星がいっぱい']];
+const ONSEN = ['♨️', '温泉', 1, '山を見ながら露天風呂'];
+// 泊まり方。夜の窓辺の小物も変わる
+const LODGING = { camp: ['🏕', 'キャンプ場', 'たき火をかこんで、星を見ながら'], hotel: ['🏨', 'ホテル', 'ふかふかのベッドとお風呂'], car: ['🚐', '車中泊', 'いつものキャンピングカーで'] };
+const LODGE_SILL = { camp: ['🔥', '🏕', '🌌'], hotel: ['🛏', '🛁', '🪴'], car: ['🕯', '💤', '🧸'] };
 
 'use strict';
 /* ===== 小道具 ===== */
@@ -1458,8 +1592,13 @@ function updateHud() {
   $('#bar i').style.width = (P.segKm / s.len * 100).toFixed(2) + '%';
   $('#bar b').textContent = sea ? '🚢' : '🚐';
   $('#bar b').style.left = (P.segKm / s.len * 100).toFixed(2) + '%';
-  const dep = $('#depart'); dep.hidden = !st.parked; if (st.parked) dep.innerHTML = `🅿️ ${st.parked}で停車中<b>▶ 出発する</b>`;
-  const stopNote = st.parked ? '' : st.stopMode === 'next' ? '<br><small>🅿️ 次の町で止まります</small>' : st.stopMode === 'every' ? '<br><small>🅿️ 町に着くたびに止まります</small>' : '';
+  const pk = $('#park'); pk.hidden = !st.parked;
+  if (st.parked) {
+    const html = st.act ? `<div class="pk-msg">👣 ${st.act.e} ${st.act.name}<small>あと${durText(Math.max(0, st.act.end - Date.now()) / 36e5)}でもどります</small></div><button class="pk-b ghost" data-act="back">早めにもどる</button>`
+      : `<div class="pk-msg">🅿️ ${st.parked}で停車中</div><button class="pk-b sight" data-act="sight">🗺 観光する</button><button class="pk-b" data-act="go">▶ 出発</button>`;
+    if (pk.dataset.h !== html.replace(/あと.*?で/, '')) { pk.innerHTML = html; pk.dataset.h = html.replace(/あと.*?で/, ''); } else if (st.act) pk.querySelector('small').textContent = `あと${durText(Math.max(0, st.act.end - Date.now()) / 36e5)}でもどります`;
+  }
+  const stopNote = st.parked ? '' : st.stopMode === 'next' ? '<br><small>🅿️ 次の町で止まります</small>' : st.stopMode === 'every' ? '<br><small>🅿️ 町に着くたびに止まります</small>' : `<br><button class="mini" data-act="stopnext">🅿️ 次の町で止まって観光する</button>`;
   $('#next').innerHTML = (st.parked ? `次は${(() => { let n = ''; walkStops((stop, km) => { if (km > st.km + 1e-6) { n = stop.name; return false; } }, 400); return n; })()}へ` : remain < 1 ? `<b>まもなく${s.b.name}に到着</b>` : `${s.b.name}まで あと <b>${fmt(remain)}km</b>（約${durText(eta)}）`) + stopNote;
   $('#total').textContent = fmt(traveled()) + 'km';
   $('#lap').textContent = (st.laps || 0) + 1 + '周目';
@@ -1491,6 +1630,9 @@ function updateSill() {
   else items = ['🕯', '💤', '🧸'];
   if ((RAIN[w.code] || 0) > 0) items[2] = '☂️';
   if (t <= 0) items[1] = '🧤';
+  const lodge = st.parked && st.stay && st.stay.lodge;
+  if (lodge && (hr >= 19 || hr < 5)) items = LODGE_SILL[lodge].slice();
+  (st.shelf || []).forEach((k, i) => { const g = st.gifts && st.gifts[k]; if (g) items[i + 1] = g.e; });
   const key = items.join('');
   $('#winwrap').classList.toggle('night', hr >= 19 || hr < 5);
   if ($('#sill').dataset.k === key) return;
@@ -1669,14 +1811,21 @@ function showMap(zoom) {
 }
 /* ----- 記録 ----- */
 function showRecord(tab = 'dex') {
-  const tabs = [['dex', '📖 図鑑'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['data', '📊 記録']];
+  const tabs = [['dex', '📖 図鑑'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['spot', '🗺 観光'], ['food', '🍽 グルメ'], ['gift', '🎁 おみやげ'], ['words', '💬 ことば'], ['data', '📊 記録']];
   let body = '';
   if (tab === 'dex') { const ids = Object.keys(DEX); body = `<p class="note">${Object.keys(st.dex).length} / ${ids.length} 種類を見つけました</p><div class="grid">${ids.map(id => { const e = st.dex[id], D = DEX[id]; return e ? `<div class="card"><div class="em">${D[0]}</div><b>${D[1]}</b><small>${D[2]}</small><small class="m">${e.n}回・はじめて：${e.place || ''}</small></div>` : `<div class="card no"><div class="em">？</div><b>？？？</b></div>`; }).join('')}</div>`; }
   if (tab === 'lm') { body = `<p class="note">窓から見えた名所 ${ALL_LM.filter(l => st.lm[l.key]).length} / ${ALL_LM.length}<br><small>アプリを開いているときに、近くを通ると記録されます</small></p><div class="list">${ALL_LM.map(l => `<div class="${st.lm[l.key] ? '' : 'no'}">${st.lm[l.key] ? '✅' : '⬜'} ${st.lm[l.key] ? l.name : '？？？'}<small>${l.key}</small></div>`).join('')}</div>`; }
   if (tab === 'stamp') { const names = new Set(); for (const id in LEGS) for (const s of LEGS[id].stops) names.add(s[0]); const arr = [...names]; body = `<p class="note">通った町 ${arr.filter(n => st.stamps[n]).length} / ${arr.length}</p><div class="stamps">${arr.map(n => `<div class="stamp ${st.stamps[n] ? '' : 'no'}" ${st.stamps[n] ? `data-fact="${n}"` : ''}>${st.stamps[n] ? n : '？'}${st.stamps[n] > 1 ? `<small>×${st.stamps[n]}</small>` : ''}</div>`).join('')}</div><p class="note"><small>町をタッチすると豆知識が読めます</small></p>`; }
-  if (tab === 'data') { const days = (Date.now() - st.started) / 864e5; body = `<div class="kv"><div><span>走ったきょり</span><b>${fmt(traveled())}km</b></div><div><span>地球何周ぶん？</span><b>${(traveled() / 40075).toFixed(2)}周</b></div><div><span>旅をはじめて</span><b>${Math.floor(days) + 1}日目</b></div><div><span>世界一周</span><b>${st.laps || 0}回 達成</b></div><div><span>出発地</span><b>${st.startName || '東京'}</b></div><div><span>拾ったボトル</span><b>${st.bottles || 0}本</b></div><div><span>いまの速さ</span><b>時速${st.speed}km</b></div></div>`; }
+  const empty = t => `<p class="note">${t}</p>`;
+  if (tab === 'spot') { const v = Object.values(st.spots || {}); body = v.length ? `<p class="note">観光した場所 ${v.length}か所</p><div class="grid">${v.map(e => `<div class="card"><div class="em">${e.e}</div><b>${e.name}</b><small>${e.desc}</small><small class="m">${e.city}${e.n > 1 ? '・' + e.n + '回' : ''}</small></div>`).join('')}</div>` : empty('まだありません。町で停車したら「🗺 観光する」から出かけてみましょう。'); }
+  if (tab === 'food') { const v = Object.values(st.food || {}); body = v.length ? `<p class="note">食べたもの ${v.length}品</p><div class="grid">${v.map(e => `<div class="card"><div class="em">${e.e}</div><b>${e.name}</b><small>${e.desc}</small><small class="m">${e.city}</small></div>`).join('')}</div>` : empty('まだありません。観光の「ご当地グルメ」で食べると記録されます。'); }
+  if (tab === 'gift') { const v = Object.entries(st.gifts || {}); body = v.length ? `<p class="note">おみやげ ${v.length}個<br><small>「飾る」を押すと窓辺に置けます（2つまで）</small></p><div class="grid">${v.map(([k, e]) => `<div class="card"><div class="em">${e.e}</div><b>${e.name}</b><small class="m">${e.city}</small><button class="mini" data-shelf="${k}" ${(st.shelf || []).includes(k) ? 'disabled' : ''}>${(st.shelf || []).includes(k) ? '✓ 飾っています' : '窓辺に飾る'}</button></div>`).join('')}</div>${(st.shelf || []).length ? '<button class="big ghost" id="unshelf">窓辺のおみやげを片づける</button>' : ''}` : empty('まだありません。観光の「おみやげ」で買うと、ここにたまります。'); }
+  if (tab === 'words') { const v = Object.values(st.words || {}); body = v.length ? `<p class="note">覚えたあいさつ ${v.length}</p>${v.map(e => `<div class="phrase sm"><small>${e.w[4]}（${e.city}）</small>${sayBtn(e.w[0], e.w[1], e.c || 'JP')}<b>${e.w[0]}</b><span>${e.w[1]}</span>${sayBtn(e.w[2], e.w[3], e.c || 'JP')}<b>${e.w[2]}</b><span>${e.w[3]}</span></div>`).join('')}` : empty('まだありません。観光の「地元のことば」で教えてもらえます。'); }
+  if (tab === 'data') { const days = (Date.now() - st.started) / 864e5; body = `<div class="kv"><div><span>走ったきょり</span><b>${fmt(traveled())}km</b></div><div><span>地球何周ぶん？</span><b>${(traveled() / 40075).toFixed(2)}周</b></div><div><span>旅をはじめて</span><b>${Math.floor(days) + 1}日目</b></div><div><span>世界一周</span><b>${st.laps || 0}回 達成</b></div><div><span>出発地</span><b>${st.startName || '東京'}</b></div><div><span>拾ったボトル</span><b>${st.bottles || 0}本</b></div><div><span>いまの速さ</span><b>時速${st.speed}km</b></div><div><span>泊まった回数</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>`; }
   modal(`<h2>旅の記録</h2><div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>とじる</button>`, 'rec');
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showRecord(b.dataset.tab));
+  bindShelf(); document.querySelectorAll('[data-shelf]').forEach(b => { const f = b.onclick; b.onclick = () => { f(); showRecord('gift'); }; });
+  const un = $('#unshelf'); if (un) un.onclick = () => { st.shelf = []; save(); $('#sill').dataset.k = ''; updateSill(); showRecord('gift'); };
   document.querySelectorAll('[data-fact]').forEach(b => b.onclick = () => toast(`📍 <b>${b.dataset.fact}</b><small>${FACTS[b.dataset.fact] || ''}</small>`, 6000));
 }
 function showSettings() {
@@ -1712,6 +1861,120 @@ async function postcard() {
   }, 'image/png');
 }
 
+/* ===== 観光モード ===== */
+const CITY_COUNTRY = {}; for (const c in CITY_C) for (const n of CITY_C[c].split(' ')) CITY_COUNTRY[n] = c;
+const FAST = QS.has('fast') ? 600 : 1; // テスト用：観光の時間を早送り
+function parkedStop() { return P && P.seg ? P.seg.b : null; }
+function sightOf(name) {
+  const stop = parkedStop(); const c = CITY_COUNTRY[name] || 'JP', C = COUNTRY[c], X = CITY[name] || {};
+  let biome = stop && stop.name === name ? stop.town : 'city';
+  let spots = X.spots;
+  if (!spots) {
+    spots = (biome === 'desert' && stop && stop.ll[1] < -50) ? DESERT_US : GENERIC[biome] || GENERIC.city;
+    if (c === 'JP' && (biome === 'mount' || biome === 'farm' || biome === 'forest')) spots = [spots[0], spots[1], ONSEN];
+  }
+  return { c, C, spots, food: X.food || C.food, gift: X.gift || C.gift, words: X.words || C.words, wkey: X.words ? c + ':' + name : c };
+}
+function ensureStay() { if (st.parked && (!st.stay || st.stay.city !== st.parked)) st.stay = { city: st.parked, done: {}, lodge: null }; return st.stay; }
+function startAct(kind, i) {
+  if (!st.parked || st.act) return;
+  const S0 = sightOf(st.parked); const it = kind === 'spot' ? S0.spots[i] : kind === 'food' ? S0.food[i] : S0.gift[i];
+  const hours = kind === 'spot' ? it[2] : kind === 'food' ? 1 : 0.5;
+  const verb = kind === 'spot' ? 'を観光中' : kind === 'food' ? 'を食べに行っています' : 'を買いに行っています';
+  st.act = { kind, i, city: st.parked, e: it[0], name: it[1] + verb, item: it, start: Date.now(), end: Date.now() + hours * 36e5 / FAST };
+  save(); closeModal(); updateHud();
+  toast(`👣 ${it[0]} ${it[1]}へ出かけました<small>${durText(hours)}ほどでもどります。アプリを閉じても大丈夫</small>`, 5000);
+}
+function finishAct(quiet) {
+  const a = st.act; if (!a) return; st.act = null;
+  const stay = ensureStay(); const it = a.item, key = a.city + ':' + it[1];
+  stay.done[a.kind + a.i] = 1;
+  let html = '';
+  if (a.kind === 'spot') {
+    st.spots = st.spots || {}; const e = st.spots[key] || (st.spots[key] = { e: it[0], name: it[1], city: a.city, desc: it[3], n: 0 }); e.n++;
+    html = `<div class="sight-card"><div class="big-em">${it[0]}</div><h2>${it[1]}</h2><p>${it[3]}</p><div class="tag pick">🗺 観光スタンプ GET</div></div>`;
+  } else if (a.kind === 'food') {
+    st.food = st.food || {}; const e = st.food[key] || (st.food[key] = { e: it[0], name: it[1], city: a.city, desc: it[2], n: 0 }); e.n++;
+    html = `<div class="sight-card"><div class="big-em">${it[0]}</div><h2>${it[1]}を食べました！</h2><p>${it[2]}</p><div class="tag pick">🍽 グルメ図鑑にのりました</div></div>`;
+  } else {
+    st.gifts = st.gifts || {}; st.gifts[key] = { e: it[0], name: it[1], city: a.city, desc: it[2] };
+    html = `<div class="sight-card"><div class="big-em">${it[0]}</div><h2>おみやげに「${it[1]}」を買いました</h2><p>${it[2]}</p><button class="big" data-shelf="${key}">窓辺に飾る</button></div>`;
+  }
+  save(); updateHud();
+  if (quiet) { toast(`${it[0]} ${it[1]}からもどりました`); return; }
+  modal(`<p class="note">${a.city}で</p>${html}<button class="big ghost" data-close>とじる</button>`);
+  bindShelf();
+}
+function bindShelf() {
+  document.querySelectorAll('[data-shelf]').forEach(b => b.onclick = () => {
+    const k = b.dataset.shelf; st.shelf = (st.shelf || []).filter(x => x !== k); st.shelf.unshift(k); st.shelf = st.shelf.slice(0, 2);
+    save(); $('#sill').dataset.k = ''; updateSill(); b.textContent = '✓ 窓辺に飾りました'; b.disabled = true;
+  });
+}
+// あいさつの読み上げ（スマホの読み上げ機能。その国の声がなければカタカナを日本語の声で）
+const LANG = { JP: 'ja-JP', KR: 'ko-KR', CN: 'zh-CN', MN: 'mn-MN', RU: 'ru-RU', KZ: 'kk-KZ', UZ: 'uz-UZ', TM: 'tk-TM', IR: 'fa-IR', TR: 'tr-TR', BG: 'bg-BG', RS: 'sr-RS', HU: 'hu-HU', AT: 'de-AT', BY: 'be-BY', PL: 'pl-PL', CZ: 'cs-CZ', IT: 'it-IT', ES: 'es-ES', DE: 'de-DE', CH: 'de-CH', FR: 'fr-FR', PT: 'pt-PT', US: 'en-US', HI: 'haw-US', PR: 'es-PR', CA: 'en-CA' };
+function voiceFor(lang) {
+  const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [], n = l => (l || '').replace('_', '-').toLowerCase(), L2 = lang.toLowerCase();
+  return vs.find(v => n(v.lang) === L2) || vs.find(v => n(v.lang).split('-')[0] === L2.split('-')[0]);
+}
+function say(text, reading, c) {
+  if (!window.speechSynthesis) { toast('この端末では読み上げが使えません'); return; }
+  speechSynthesis.cancel();
+  const parts = text.split(' / '), rparts = reading.split(' / '), langs = c === 'CA' ? ['en-US', 'fr-FR'] : [LANG[c] || 'ja-JP'];
+  parts.forEach((t, i) => {
+    const lang = langs[i] || langs[0], v = voiceFor(lang), u = new SpeechSynthesisUtterance();
+    if (v) { u.voice = v; u.lang = v.lang; u.text = t; } else { const j = voiceFor('ja-JP'); if (j) u.voice = j; u.lang = 'ja-JP'; u.text = rparts[i] || reading; }
+    u.rate = .85; speechSynthesis.speak(u);
+  });
+}
+if (window.speechSynthesis) speechSynthesis.getVoices();
+document.addEventListener('click', e => { const b = e.target.closest('[data-say]'); if (!b) return; const [t, r, c] = JSON.parse(b.dataset.say); say(t, r, c); });
+const sayBtn = (t, r, c) => `<button class="say" data-say='${JSON.stringify([t, r, c]).replace(/'/g, '&#39;')}'>🔊</button>`;
+function showWords() {
+  const S0 = sightOf(st.parked), w = S0.words;
+  st.words = st.words || {}; const first = !st.words[S0.wkey];
+  st.words[S0.wkey] = { w, city: st.parked, country: S0.C.name, c: S0.c }; save();
+  modal(`<h2>💬 ${w[4]}のあいさつ</h2><p class="note">${st.parked}の人に教えてもらいました</p>
+   <div class="phrase">${sayBtn(w[0], w[1], S0.c)}<small>こんにちは</small><b>${w[0]}</b><span>${w[1]}</span></div>
+   <div class="phrase">${sayBtn(w[2], w[3], S0.c)}<small>ありがとう</small><b>${w[2]}</b><span>${w[3]}</span></div>
+   <p class="note">🔊 を押すと発音が聞けます（マナーモードだと鳴らないことがあります）</p>
+   ${first ? '<div class="tag pick">💬 ことば帳にのりました</div>' : ''}
+   <button class="big" data-act="sight">観光にもどる</button>`);
+}
+function showSight() {
+  if (!st.parked) return;
+  const stay = ensureStay(), S0 = sightOf(st.parked), busy = !!st.act;
+  const card = (kind, i, it, hours) => `<button class="sp ${stay.done[kind + i] ? 'done' : ''}" data-start="${kind}:${i}" ${busy ? 'disabled' : ''}><span class="em">${it[0]}</span><b>${it[1]}</b><small>${kind === 'spot' ? it[3] : it[2]}</small><i>⏱ ${durText(hours)}${stay.done[kind + i] ? '・✓ 行った' : ''}</i></button>`;
+  modal(`<h2>🗺 ${st.parked}を観光</h2><p class="note">${S0.C.name}・${FACTS[st.parked] || ''}</p>
+   ${busy ? `<div class="busy">👣 いまは「${st.act.name}」です。もどってから次に出かけられます。</div>` : '<p class="note">出かけているあいだは車は止まったままです。アプリを閉じても、時間がたつともどってきます。</p>'}
+   <h3>📍 名所めぐり</h3><div class="sps">${S0.spots.map((it, i) => card('spot', i, it, it[2])).join('')}</div>
+   <h3>🍽 ご当地グルメ</h3><div class="sps">${S0.food.map((it, i) => card('food', i, it, 1)).join('')}</div>
+   <h3>🎁 おみやげ</h3><div class="sps">${S0.gift.map((it, i) => card('gift', i, it, .5)).join('')}</div>
+   <h3>💬 地元のことば</h3><button class="sp wide" data-act="words"><span class="em">💬</span><b>${S0.words[4]}であいさつを教えてもらう</b><small>「こんにちは」と「ありがとう」</small></button>
+   <h3>🌙 今夜の泊まり方</h3><div class="lodges">${Object.entries(LODGING).map(([k, v]) => `<button data-lodge="${k}" class="${stay.lodge === k ? 'on' : ''}"><span>${v[0]}</span><b>${v[1]}</b><small>${v[2]}</small></button>`).join('')}</div>
+   <button class="big ghost" data-close>とじる</button>`, 'sightm');
+  document.querySelectorAll('[data-start]').forEach(b => b.onclick = () => { const [k, i] = b.dataset.start.split(':'); startAct(k, +i); });
+  document.querySelectorAll('[data-lodge]').forEach(b => b.onclick = () => {
+    const k = b.dataset.lodge; if (stay.lodge !== k) { st.lodges = st.lodges || {}; st.lodges[k] = (st.lodges[k] || 0) + 1; }
+    stay.lodge = k; save(); document.querySelectorAll('[data-lodge]').forEach(x => x.classList.toggle('on', x === b)); $('#sill').dataset.k = ''; updateSill();
+    toast(`${LODGING[k][0]} 今夜は${LODGING[k][1]}に泊まります`);
+  });
+}
+function checkAct() { if (st && st.act && Date.now() >= st.act.end) finishAct(false); }
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || !st) return;
+  const a = b.dataset.act;
+  if (a === 'sight') showSight(); else if (a === 'go') depart(); else if (a === 'back') finishAct(false); else if (a === 'words') showWords();
+  else if (a === 'stopnext') { tick(); st.stopMode = 'next'; save(); updateHud(); toast('🅿️ 次の町で止まります'); }
+});
+// たき火（キャンプ場に泊まる夜）
+function drawCamp() {
+  if (!st.parked || !st.stay || st.stay.lodge !== 'camp' || L.night < .5) return;
+  const f = .8 + Math.sin(S.t * 9) * .1 + Math.sin(S.t * 23) * .06, x = W * .5, y = H;
+  const g = c.createRadialGradient(x, y, 10, x, y, Math.max(W, H) * .6 * f); g.addColorStop(0, 'rgba(255,150,60,.45)'); g.addColorStop(1, 'rgba(255,120,40,0)');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+}
+
 /* ===== 時間の進み ===== */
 let lastFrame = 0, lastSave = 0, lastHud = 0, prevBiome = '';
 function tick() {
@@ -1723,7 +1986,7 @@ function tick() {
 }
 // 停車中は、着いた町の手前（来た道の終わり）を現在地にする
 const curPos = () => posAt(st.parked ? Math.max(0, st.km - 0.05) : st.km);
-function depart() { if (!st.parked) return; const n = st.parked; st.parked = null; st.t = Date.now(); save(); toast(`🚐 ${n}を出発！`); updateHud(); }
+function depart() { if (!st.parked) return; if (st.act) finishAct(true); const n = st.parked; st.parked = null; st.stay = null; st.t = Date.now(); save(); toast(`🚐 ${n}を出発！`); updateHud(); }
 function arriveToasts(res) {
   for (const p of res.passed) toast(`${p.sea ? '⚓' : '📍'} <b>${p.name}</b>に到着<small>${FACTS[p.name] || ''}</small>`, 7000);
   for (const f of res.forks) toast(`🔀 ${f.at}から「${LEG[f.id].name}」へ`);
@@ -1735,6 +1998,7 @@ function back() {
   if (hrs > 2 / 60 && km > 0.5) { const sights = awaySights(before, st.km); showWelcome(hrs, km, res, sights); }
   else arriveToasts(res);
   save(); S.tiles.clear(); S.events = []; refreshWx(); refreshGeo(); updateHud();
+  if (st.act && Date.now() >= st.act.end) setTimeout(() => finishAct(false), $('#modal').hidden ? 0 : 50);
 }
 function frame(ts) {
   requestAnimationFrame(frame);
@@ -1760,9 +2024,9 @@ function frame(ts) {
   c.save(); c.translate(0, bump);
   if (ctx.sea) drawSea(dt, W8, alt, ctx); else drawLand(dt, W8, alt, ctx);
   c.restore();
-  drawWeather(dt, W8, ctx.sea);
+  drawWeather(dt, W8, ctx.sea); drawCamp();
   if (!st.preview) for (const n in S.lmSeen) if (S.lmSeen[n] > 90 && !st.lm[n]) { st.lm[n] = Date.now(); save(); toast(`🏛 <b>${LMNAME[n] || n}</b>が見えた！<small>名所の記録にのりました</small>`, 5000); }
-  if (ts - lastHud > 1000) { lastHud = ts; updateHud(); refreshWx(); refreshGeo(); }
+  if (ts - lastHud > 1000) { lastHud = ts; checkAct(); updateHud(); refreshWx(); refreshGeo(); }
   if (ts - lastSave > 10000) { lastSave = ts; save(); }
 }
 cv.addEventListener('click', e => {
@@ -1772,7 +2036,7 @@ cv.addEventListener('click', e => {
 document.addEventListener('visibilitychange', () => { if (!st) return; if (document.hidden) { tick(); save(); } else back(); });
 window.addEventListener('pagehide', () => { if (st) { tick(); save(); } });
 window.addEventListener('resize', resize);
-$('#b-map').onclick = () => showMap(0); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-photo').onclick = postcard; $('#fork').onclick = showFork; $('#depart').onclick = depart;
+$('#b-map').onclick = () => showMap(0); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-photo').onclick = postcard; $('#fork').onclick = showFork;
 
 function startTrip() {
   try { const c0 = JSON.parse(localStorage.getItem('camper-wx') || 'null'); if (c0 && Date.now() - c0.at < 30 * 60e3) wx = c0; } catch (e) { }
