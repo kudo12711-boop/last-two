@@ -1,6 +1,6 @@
 # ゲーム開発の記録（目次）
 
-最終更新: 2026-10-26
+最終更新: 2026-10-30
 
 くどうさんと Claude が「ゲーム開発」プロジェクトで作ってきたゲームの記録です。ゲームごとに、生まれたきっかけ、くどうさんの声と直したこと、遊ぶ場所、これからやることをまとめています。各ファイルの下のほうにある「技術メモ」は、次に作業する Claude（や開発者）向けの作り方の説明です。
 
@@ -11,7 +11,7 @@
 | チェイン・ノード | ババ抜きの連鎖をリアルタイム対戦に | v0.4（止まっている） | [Claude のページ](https://claude.ai/artifact/HeH8SpDMBTuyXFDSZkmhTH) | [chain-node.md](chain-node.md) |
 | 雪だるまパニック | 色ヒントつきの家族向けババ抜き | v0.1（止まっている） | [Claude のページ](https://claude.ai/artifact/K84cVFtwEVPtvigpT9Yjsx) | [yukidaruma.md](yukidaruma.md) |
 | ゆきどけ | 「あと一枚」の運だめし | v0.1（止まっている） | [Claude のページ](https://claude.ai/artifact/34nWk73xRYmMimZZe7sWKW) | [yukidoke.md](yukidoke.md) |
-| ぬけぬけリング | 1人用の連鎖パズル | v0.6 | [Claude のページ](https://claude.ai/artifact/PSX4VZySiZPo1ydbdRmSbM) | [nukenuke-ring.md](nukenuke-ring.md) |
+| ぬけぬけリング | 1人用の連鎖パズル | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
 | ラスト・ツー | 最後の2人の表情の読み合い | v1.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
 | まちがいさがし | 幼児向け、写真でも遊べる | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
 | 都道府県パズル | 47都道府県の形をはめる | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
@@ -30,6 +30,7 @@
 5. **2026-10-23** 課金方式を決定（くどうさん「採用します」）、2つのゲームをそれぞれ4段階の計画で進める（「それぞれ進めましょう」）。どちらも4段階が終わりました。
 6. **2026-10-24** 幼児向け まちがいさがし、都道府県パズル、キャンピングカー世界一周を新しく作成。
 7. **2026-10-25** キャンピングカーに観光モードと有料化の準備。幼児向け ゆびで めいろ を作成・公開。幼児向け すうじで てんつなぎ を作成（2とび・あいうえお・ABC、写真から作る機能、声の録音つき）、10/26 に公開。
+8. **2026-10-30** ぬけぬけリングを公開ページに出した（くどうさん「抜け抜けリングを公開してください」）。
 
 ## お金の方針（2026-10-23 決定）
 
@@ -47,7 +48,7 @@
 
 ## 次にやるとよいこと
 
-- 知り合いに遊んでもらって感想を集める（ぬけぬけリングの難しさ、ラスト・ツーの友だち対戦）。
+- 知り合いに遊んでもらって感想を集める（ぬけぬけリングの難しさは公開ページのURLを送るだけでOK、ラスト・ツーの友だち対戦）。
 - 売りたいゲームが決まったら、アプリ化の準備。
 
 ---
@@ -56,7 +57,7 @@
 
 - **リポジトリ** `kudo12711-boop/last-two`（Public）。`main` ブランチがそのまま GitHub Pages（https://kudo12711-boop.github.io/last-two/）になります。
   - `/index.html` … ラスト・ツー
-  - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`… それぞれ別のゲーム。ほかのゲームには影響しません。
+  - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/nukenuke-ring/`… それぞれ別のゲーム。ほかのゲームには影響しません。
   - `/docs/` … この記録
 - 変更は作業ブランチ → PR → マージ の順。マージすると1〜2分で公開ページに反映されます。
 - **プロジェクトの共有フォルダ** `/mnt/project-files/` に、各ゲームの HTML と作るための道具（`tools/`）があります。ゲームによっては、リポジトリの HTML がこの道具で作られたものなので、直すときはもと（src や tools）を直してから作り直します。各ゲームの技術メモを参照してください。
