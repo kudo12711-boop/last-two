@@ -109,12 +109,29 @@ body.full{overflow:hidden}
 body.full #winwrap{position:fixed;inset:0;z-index:15;padding:0;background:#000}
 body.full #win{margin:0;border-radius:0;box-shadow:none}
 body.full #win::after,body.full .curtain,body.full #sill{display:none}
-body.full #fsinfo{display:block;position:absolute;left:14px;top:calc(12px + env(safe-area-inset-top));z-index:4;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6);pointer-events:none;transition:opacity .6s}
-#fsinfo b{display:block;font-size:clamp(18px,4.5vw,28px);font-weight:900}#fsinfo span{font-size:13px;opacity:.9}
+#b-info{display:none}
+#fsmap{display:none}
+body.full #fsmap:not([hidden]){display:block;position:absolute;right:12px;top:calc(12px + env(safe-area-inset-top));z-index:4;width:clamp(110px,30vmin,190px);aspect-ratio:1;border-radius:18px;overflow:hidden;
+  border:2px solid rgba(255,255,255,.75);box-shadow:0 4px 14px rgba(0,0,0,.3);opacity:.92;cursor:pointer;transition:opacity .8s}
+body.full.calm #fsmap{opacity:.8}
+#fsmap svg{width:100%;height:100%;display:block;background:#bfe0ef}
+#fsmap .r-done{stroke-width:2.5}#fsmap .r-ahead{stroke-width:1.8}
+body.full.hasmap #fsinfo{max-width:calc(100% - clamp(110px,30vmin,190px) - 44px)}
+#fsmap text{font-size:1.3px;paint-order:stroke;stroke:#fff;stroke-width:.35px}
+#fsmap #mm-me{animation:none}
+body.full #b-info{display:block;position:absolute;left:62px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:5;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:17px;backdrop-filter:blur(4px);transition:opacity .6s}
+body.full #fsinfo{display:block;position:absolute;left:12px;top:calc(12px + env(safe-area-inset-top));z-index:4;max-width:min(78%,360px);color:#fff;pointer-events:none;
+  background:rgba(20,24,32,.28);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);border-radius:14px;padding:8px 12px;text-shadow:0 1px 4px rgba(0,0,0,.5);transition:opacity .8s}
+body.full #fsinfo.m-off{display:none}
+#fsinfo b{display:block;font-size:clamp(16px,4.2vw,24px);font-weight:900;line-height:1.25}
+#fsinfo span{display:block;font-size:12.5px;line-height:1.5;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#fsinfo .ad{opacity:.8}#fsinfo .sm{font-size:11.5px;opacity:.8}
+#fsinfo .pb{display:block;height:4px;border-radius:4px;background:rgba(255,255,255,.3);margin:4px 0 3px;overflow:hidden}#fsinfo .pb i{display:block;height:100%;background:#ffd36b}
 body.full #b-snd,body.full #b-full{bottom:calc(14px + env(safe-area-inset-bottom));transition:opacity .6s}
 body.full #b-full{right:14px}body.full #b-snd{left:14px}
-body.full.calm #fsinfo,body.full.calm #b-snd,body.full.calm #b-full{opacity:0}
-body.full #toasts{top:calc(70px + env(safe-area-inset-top))}
+body.full.calm #b-snd,body.full.calm #b-full,body.full.calm #b-info{opacity:0}
+body.full.calm #fsinfo{opacity:.8}
+body.full #toasts{top:auto;bottom:calc(70px + env(safe-area-inset-bottom))}
 #b-snd{position:absolute;left:10px;bottom:10px;z-index:5;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:18px;backdrop-filter:blur(4px)}
 #s-vol{width:100%;margin:6px 0;accent-color:var(--accent)}
 .sps{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
@@ -235,7 +252,7 @@ svg.map{width:100%;aspect-ratio:2.4/1;border-radius:14px;display:block;backgroun
     <div class="r"><div id="clock"></div><div id="wx"></div></div>
   </header>
   <div id="winwrap">
-    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button><button id="b-full" aria-label="全画面">⛶</button><div id="fsinfo"></div></div>
+    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button><button id="b-full" aria-label="全画面">⛶</button><button id="b-info" aria-label="情報の表示">ℹ️</button><div id="fsinfo"></div><div id="fsmap" hidden role="button" aria-label="地図をひらく"></div></div>
     <div id="sill"></div>
   </div>
   <section id="panel">
@@ -2030,7 +2047,7 @@ function legSegs(id, from = 0, to = Infinity) {
   }
   return out;
 }
-function showMap(zoom) {
+function routeSets() {
   const done = [], ahead = [], alt = [];
   const d0 = Math.max(st.startKm || 0, st.km - roughLap());
   walk(L => {
@@ -2047,6 +2064,10 @@ function showMap(zoom) {
   });
   // 一度も通っていない道も薄く
   const all = []; for (const id in LEG) all.push(...legSegs(id));
+  return { done, ahead, alt, all };
+}
+function showMap(zoom) {
+  const { done, ahead, alt, all } = routeSets();
   const me = prj(P.ll);
   const vb = zoom ? `${me[0] - 45} ${me[1] - 25} 90 50` : '0 0 720 300';
   const cities = new Map(); for (const id in LEG) for (const s of LEG[id].segs) cities.set(s.b.name, s.b.ll);
@@ -2453,7 +2474,41 @@ window.addEventListener('resize', resize);
 $('#b-map').onclick = () => showMap(0); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-photo').onclick = postcard; $('#fork').onclick = showFork;
 // 全画面：景色だけを画面いっぱいに。さわらないでいるとボタンや文字が消える
 let wakeLock = null, calmT = 0;
-function fsInfo() { const f = $('#fsinfo'); if (f) f.innerHTML = `<b>${$('#place').textContent}</b><span>${$('#clock').textContent}　${$('#wx').childNodes[0] ? $('#wx').childNodes[0].textContent : ''}</span>`; }
+let FSI = (() => { try { return localStorage.getItem('camper-fsinfo') || 'full'; } catch (e) { return 'full'; } })();
+// 全画面のすみの小さな地図（現在地のまわり）。道の線は進んだときだけ作りなおす
+let mmKey = '';
+function miniMap() {
+  const box = $('#fsmap'); if (!box) return;
+  const show = document.body.classList.contains('full') && (FSI === 'full' || FSI === 'map') && P;
+  box.hidden = !show; document.body.classList.toggle('hasmap', !!show); if (!show) return;
+  const key = Math.round(st.km / 50) + JSON.stringify(st.choices);
+  if (key !== mmKey) {
+    mmKey = key; const R = routeSets();
+    const cities = new Map(); for (const id in LEG) for (const sg of LEG[id].segs) cities.set(sg.b.name, sg.b.ll);
+    box.innerHTML = `<svg class="map mm" preserveAspectRatio="xMidYMid slice"><rect x="-400" y="-400" width="1600" height="1200" class="sea"/><path d="${LAND}" class="land"/>
+      <path d="${pathFor(R.all)}" class="r-all"/><path d="${pathFor(R.alt)}" class="r-alt"/><path d="${pathFor(R.ahead)}" class="r-ahead"/><path d="${pathFor(R.done)}" class="r-done"/>
+      ${[...cities].map(([n, ll]) => { const p = prj(ll); return `<circle cx="${p[0]}" cy="${p[1]}" r=".55" class="${st.stamps[n] ? 'v' : 'u'}"/><text x="${p[0] + .9}" y="${p[1] + .5}">${n}</text>`; }).join('')}
+      <circle id="mm-me" r="1.3" class="me"/></svg>`;
+  }
+  const me = prj(P.ll), svg = box.querySelector('svg'), z = 10;
+  svg.setAttribute('viewBox', `${(me[0] - z).toFixed(2)} ${(me[1] - z).toFixed(2)} ${z * 2} ${z * 2}`);
+  const m = box.querySelector('#mm-me'); m.setAttribute('cx', me[0]); m.setAttribute('cy', me[1]);
+}
+function fsInfo() {
+  const f = $('#fsinfo'); if (!f || !P) return;
+  f.className = 'm-' + FSI; miniMap(); if (FSI === 'off') { f.innerHTML = ''; return; }
+  const s = P.seg, remain = s.len - P.segKm, wxt = $('#wx').textContent.trim().replace(/\s+/g, ' ');
+  const head = `<b>${$('#place').textContent}</b>`, tw = `<span>🕐 ${$('#clock').textContent}　${wxt}</span>`;
+  if (FSI === 'mini' || FSI === 'map') { f.innerHTML = head + tw; return; }
+  const go = st.parked ? (st.act ? `👣 ${st.act.e} ${st.act.name}` : `🅿️ ${st.parked}で停車中`) : `${s.mode === 's' ? '🚢' : '🚐'} ${s.b.name}まで ${fmt(remain)}km（約${durText(remain / st.speed)}）`;
+  f.innerHTML = `${head}<span class="ad">${$('#addr').textContent}</span>${tw}<span>${go}</span>
+    ${st.parked ? '' : `<i class="pb"><i style="width:${(P.segKm / s.len * 100).toFixed(1)}%"></i></i>`}
+    <span class="sm">走ったきょり ${fmt(traveled())}km・時速${st.speed}km${(st.laps || 0) ? `・${st.laps + 1}周目` : ''}</span>`;
+}
+function cycleInfo() {
+  FSI = { full: 'map', map: 'mini', mini: 'off', off: 'full' }[FSI]; try { localStorage.setItem('camper-fsinfo', FSI); } catch (e) { }
+  fsInfo(); toast({ full: 'ℹ️ 情報と地図：くわしく', map: 'ℹ️ 地図と現在地だけ', mini: 'ℹ️ 現在地だけ', off: 'ℹ️ 表示しない（景色だけ）' }[FSI], 1600);
+}
 function poke() { document.body.classList.remove('calm'); clearTimeout(calmT); if (document.body.classList.contains('full')) calmT = setTimeout(() => document.body.classList.add('calm'), 3500); }
 async function setFull(on) {
   document.body.classList.toggle('full', on); $('#b-full').textContent = on ? '✕' : '⛶';
@@ -2462,6 +2517,8 @@ async function setFull(on) {
   try { if (on && navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); else if (!on && wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) { }
   fsInfo(); poke(); setTimeout(resize, 50); setTimeout(resize, 400);
 }
+$('#fsmap').onclick = e => { e.stopPropagation(); showMap(1); };
+$('#b-info').onclick = e => { e.stopPropagation(); cycleInfo(); poke(); };
 $('#b-full').onclick = e => { e.stopPropagation(); setFull(!document.body.classList.contains('full')); };
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('full')) setFull(false); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('full')) setFull(false); });
