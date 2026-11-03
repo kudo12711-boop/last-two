@@ -105,6 +105,10 @@ header .r{text-align:right;white-space:nowrap}
 .filebtn{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--line);background:#fff;border-radius:14px;padding:10px 12px;font-weight:700;font-size:14px;cursor:pointer}
 #b-full{position:absolute;right:10px;bottom:10px;z-index:5;height:38px;padding:0 14px;border-radius:19px;font-weight:700;font-size:14px!important;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:20px;line-height:1;backdrop-filter:blur(4px)}
 #fsinfo{display:none}
+/* 角が丸い窓ではボタンが隠れないよう内側へ */
+.f-retro #b-snd{left:20px;bottom:24px}.f-retro #b-full{right:20px;bottom:24px}
+.f-round #b-snd{left:21%;bottom:11%}.f-round #b-full{right:21%;bottom:11%}
+body.full #b-snd{left:14px}body.full #b-full{right:14px}
 body.full{overflow:hidden}
 body.full #winwrap{position:fixed;inset:0;z-index:15;padding:0;background:#000}
 body.full #win{margin:0;border-radius:0;box-shadow:none}
