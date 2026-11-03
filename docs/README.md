@@ -16,7 +16,7 @@
 | ぬけぬけリング | 1人用の連鎖パズル | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
 | ラスト・ツー | 最後の2人の表情の読み合い | v1.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
 | まちがいさがし | 幼児向け、写真でも遊べる | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
-| 都道府県パズル | 47都道府県の形をはめる | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
+| 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | PR #14 まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
 | ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
 | すうじで てんつなぎ | 幼児向け、番号順に点をつないで絵を完成 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
@@ -34,6 +34,7 @@
 7. **2026-10-25** キャンピングカーに観光モードと有料化の準備。幼児向け ゆびで めいろ を作成・公開。幼児向け すうじで てんつなぎ を作成（2とび・あいうえお・ABC、写真から作る機能、声の録音つき）、10/26 に公開。
 8. **2026-10-30** ぬけぬけリングを公開ページに出した（くどうさん「抜け抜けリングを公開してください」）。
 9. **2026-11-03** 公開中のゲームを選んで遊べる入口ページ「あそびのいりぐち」（`/games/`）を作った（くどうさん「作って下さい」）。
+10. **2026-11-03** 都道府県パズルを子ども向けに改良（v0.2: こどもステージ12個、シールずかん）。くどうさん「都道府県パズルを子供向けに改良して下さい」。
 
 ## お金の方針（2026-10-23 決定）
 
