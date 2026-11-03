@@ -21,6 +21,7 @@
 | ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
 | すうじで てんつなぎ | 幼児向け、番号順に点をつないで絵を完成 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
 | ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
+| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 
 「Claude のページ」は、くどうさんが claude.ai にログインしたときだけ開けます。「公開ページ」は誰でもログインなしで開けます。
 
@@ -37,6 +38,7 @@
 9. **2026-11-03** 公開中のゲームを選んで遊べる入口ページ「あそびのいりぐち」（`/games/`）を作った（くどうさん「作って下さい」）。
 10. **2026-11-03** 都道府県パズルを子ども向けに改良（v0.2: こどもステージ12個、シールずかん）。くどうさん「都道府県パズルを子供向けに改良して下さい」。
 11. **2026-11-03** 幼児向け ふくわらい を作成（くどうさん「子供向けに福笑いのゲームを考えたい。撮った写真を使えたり」→「写真＋目かくし」を選択）。
+12. **2026-11-03** 幼児向け けずって なにかな？（スクラッチであてっこ＋ずかん、写真モード）を作成。くどうさん「子供向けにスクラッチすると何かが表示されるゲームを考えたいです」→ 5案から「あてっこ＋ずかん」を選択。
 
 ## お金の方針（2026-10-23 決定）
 
@@ -63,7 +65,7 @@
 
 - **リポジトリ** `kudo12711-boop/last-two`（Public）。`main` ブランチがそのまま GitHub Pages（https://kudo12711-boop.github.io/last-two/）になります。
   - `/index.html` … ラスト・ツー
-  - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/fukuwarai/`、`/nukenuke-ring/`… それぞれ別のゲーム。ほかのゲームには影響しません。
+  - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/fukuwarai/`、`/kezuri/`、`/nukenuke-ring/`… それぞれ別のゲーム。ほかのゲームには影響しません。
   - `/games/` … 入口ページ（ゲームを公開したらここにもカードを足す）
   - `/docs/` … この記録
 - 変更は作業ブランチ → PR → マージ の順。マージすると1〜2分で公開ページに反映されます。
