@@ -257,6 +257,7 @@ input[type=range]{width:220px;accent-color:var(--accent)}
 <div class="toast" id="toast"></div>
 <input type="file" id="fileIn" accept="image/*" hidden>
 
+<script src="../common/kakin.js"></script>
 <script>
 "use strict";
 /* =========================================================
@@ -381,6 +382,15 @@ var RES = [ // むらの ひとと いる ばしょ
   {id:"letters", emo:"🐧", x:140, y:560},
   {id:"lanterns", emo:"🦝", x:265, y:575}
 ];
+/* 課金（../common/kakin.js、いまは おためし）: むりょうは くまさん・うさぎさん・ドラゴン の おねがい */
+var FREE_RES = ["cake","flowers","dragon"];
+function resOpen(id){ return FREE_RES.indexOf(id)>=0 || Kakin.full(); }
+Kakin.setup({
+  game: "oukoku", lang: function(){ return LANG; }, onChange: function(){ if($("#kingdom").classList.contains("on")) renderKingdom(); },
+  name: { ja: "ちいさな おうこく", en: "Little Kingdom" },
+  free: { ja: ["4人の やく（プリンセス・おうじさま・きしさま・さむらいさま）と きがえ", "くまさん・うさぎさん・ドラゴン の おねがい", "おしろが そだつ・おてがみ・しょうぞうが"], en: ["All 4 roles and dress-up", "Requests from Bear, Bunny and Dragon", "Growing castle, daily letter, portraits"] },
+  full: { ja: ["ふくろうの おばあさん・ゆうびんやの ペンギン・ひがしの くにの たぬきさん の おねがい", "その 3人からの おれいの きせかえ"], en: ["Requests from Grandma Owl, Penguin Mail Carrier and Tanuki from the East", "Thank-you dress-up gifts from those 3"] },
+});
 
 /* ---------- ほぞん ---------- */
 var KEY="oukoku-save", FACE_KEY="oukoku-face", PORT_KEY="oukoku-portraits";
@@ -764,8 +774,8 @@ function sceneSVG(){
   h.push('<g><rect x="360" y="410" width="10" height="30" fill="#8a5a3a"/><circle cx="365" cy="400" r="22" fill="#5aa85a"/></g>');
   // むらの ひと
   RES.forEach(function(r){
-    var act=S.active.indexOf(r.id)>=0;
-    h.push('<g class="tap" data-res="'+r.id+'"><circle cx="'+r.x+'" cy="'+(r.y-12)+'" r="34" fill="transparent"/><ellipse cx="'+r.x+'" cy="'+(r.y+6)+'" rx="20" ry="5" fill="rgba(0,0,0,.12)"/><text x="'+r.x+'" y="'+r.y+'" font-size="40" text-anchor="middle">'+r.emo+'</text>'+
+    var act=S.active.indexOf(r.id)>=0 && resOpen(r.id), lk=!resOpen(r.id);
+    h.push('<g class="tap" data-res="'+r.id+'"><circle cx="'+r.x+'" cy="'+(r.y-12)+'" r="34" fill="transparent"/><ellipse cx="'+r.x+'" cy="'+(r.y+6)+'" rx="20" ry="5" fill="rgba(0,0,0,.12)"/><text x="'+r.x+'" y="'+r.y+'" font-size="40" text-anchor="middle"'+(lk?' opacity=".55"':'')+'>'+r.emo+'</text>'+(lk?'<text x="'+(r.x+18)+'" y="'+(r.y-30)+'" font-size="18" text-anchor="middle">🔒</text>':'')+
       (act?'<g class="bob"><circle cx="'+(r.x+20)+'" cy="'+(r.y-48)+'" r="14" fill="#fff" stroke="#ff6fa8" stroke-width="3"/><text x="'+(r.x+20)+'" y="'+(r.y-42)+'" font-size="16" text-anchor="middle" font-weight="700" fill="#ff6fa8">!</text></g>':'')+'</g>');
   });
   // じぶん
@@ -774,6 +784,12 @@ function sceneSVG(){
   return h.join("");
 }
 function renderKingdom(){
+  // ぜんぶ版が ないとき、🔒の 人が おねがい中に なっていたら ほかの 人に かえる
+  if(S.active.some(function(x){ return !resOpen(x); })){
+    var keep=S.active.filter(resOpen), n=S.active.length;
+    FREE_RES.forEach(function(y){ if(keep.length<n && keep.indexOf(y)<0) keep.push(y); });
+    S.active=keep; save();
+  }
   var sc=$("#scene"); sc.innerHTML=sceneSVG(); sc.parentNode.classList.toggle("night", has("fireworks"));
   sc.querySelectorAll("[data-res]").forEach(function(g){ g.addEventListener("click",function(){ openRequest(g.getAttribute("data-res")); }); });
   var me=sc.querySelector("#me"); me.addEventListener("click",function(){ sfx("ok"); me.classList.remove("shake"); void me.getBBox(); me.classList.add("shake"); voice("role_"+S.role, titleOf()); });
@@ -800,7 +816,8 @@ $("#btnMenu").onclick=function(){
   var c=dialog('<button class="x">×</button><p class="say">'+esc(T().menuTitle)+'</p><div class="btns" style="flex-direction:column;align-items:center">'+
     '<button class="big sub" id="mV">'+(S.voice?T().voiceOn:T().voiceOff)+'</button>'+
     '<div class="langs"><button data-l="ja" aria-pressed="'+(LANG==="ja")+'">にほんご</button><button data-l="en" aria-pressed="'+(LANG==="en")+'">English</button></div>'+
-    '<button class="big sub" id="mT">'+esc(T().toTitle)+'</button></div>');
+    '<button class="big sub" id="mT">'+esc(T().toTitle)+'</button><div id="mK"></div></div>');
+  c.querySelector("#mK").appendChild(Kakin.parentButton());
   c.querySelector("#mV").onclick=function(){ S.voice=!S.voice; save(); this.textContent=S.voice?T().voiceOn:T().voiceOff; };
   c.querySelectorAll("[data-l]").forEach(function(b){ b.onclick=function(){ LANG=b.dataset.l; lsSet("oukoku-lang",LANG); closeDialog(); applyText(); renderKingdom(); }; });
   c.querySelector("#mT").onclick=function(){ closeDialog(); renderTitle(); show("title"); };
@@ -843,6 +860,7 @@ function resOf(id){ for(var i=0;i<RES.length;i++) if(RES[i].id===id) return RES[
 function openRequest(id){
   var r=resOf(id), G=T().games[id], act=S.active.indexOf(id)>=0;
   sfx("tap");
+  if(!resOpen(id)){ Kakin.ask(); return; }
   if(!act){ var msg=fmt(T().thanks,{t:titleOf()}); toast(r.emo+" "+msg); voice("thanks_"+id+"_"+S.role, msg); return; }
   var ctx={}; if(id==="lost"){ ctx.thing=pick(["glasses","key","hat","yarn"]); }
   var ask=fmt(G.ask,{x:ctx.thing?G.things[ctx.thing]:""});
@@ -870,8 +888,8 @@ function finishGame(){
   S.done[id]=(S.done[id]||0)+1; S.hearts+=gain;
   // つぎの おねがい：かなえた ひとを はずし、ほかの ひとから 1人
   S.active=S.active.filter(function(x){ return x!==id; });
-  var others=RES.map(function(x){ return x.id; }).filter(function(x){ return S.active.indexOf(x)<0 && x!==id; });
-  S.active.push(pick(others));
+  var others=RES.map(function(x){ return x.id; }).filter(function(x){ return S.active.indexOf(x)<0 && x!==id && resOpen(x); });
+  S.active.push(others.length?pick(others):id);
   var giftG=null; if(first && FIRST_GIFT[id] && S.unlocked.indexOf(FIRST_GIFT[id][1])<0){ giftG=FIRST_GIFT[id]; S.unlocked.push(giftG[1]); }
   save();
   sfx("win"); confetti(16);

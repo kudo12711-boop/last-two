@@ -15,15 +15,17 @@
 | ゆきどけ | 「あと一枚」の運だめし | v0.1（止まっている） | [Claude のページ](https://claude.ai/artifact/34nWk73xRYmMimZZe7sWKW) | [yukidoke.md](yukidoke.md) |
 | ぬけぬけリング | 1人用の連鎖パズル | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
 | ラスト・ツー | 最後の2人の表情の読み合い | v1.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
-| まちがいさがし | 幼児向け、写真でも遊べる | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
-| 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
+| まちがいさがし | 幼児向け、写真でも遊べる | v0.5（課金入り・公開前） | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
+| 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.3（課金入り・公開前） | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | PR #14 まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
-| ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
-| すうじで てんつなぎ | 幼児向け、番号順に点をつないで絵を完成 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
-| ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
-| もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
-| ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、着せかえと肖像画つき | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
-| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
+| ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.2（課金入り・公開前） | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
+| すうじで てんつなぎ | 幼児向け、番号順に点をつないで絵を完成 | v0.2（課金入り・公開前） | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
+| ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.2（課金入り・公開前） | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
+| もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.2（課金入り・公開前） | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
+| ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、着せかえと肖像画つき | v0.2（課金入り・公開前） | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
+| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.3（課金入り・公開前） | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
+
+全ゲーム共通の課金のしくみ: [kakin.md](kakin.md)
 
 「Claude のページ」は、くどうさんが claude.ai にログインしたときだけ開けます。「公開ページ」は誰でもログインなしで開けます。
 
@@ -43,13 +45,14 @@
 12. **2026-11-03** 幼児向け「もういいかい？ かくれんぼ」を作成（くどうさん「子ども向けのかくれんぼゲームを考えたいです」→ 3案から「ぜんぶ入り」を選択）。
 13. **2026-11-03** 「女の子向けの、プリンセスになれるゲームを考えたい」から、プリンセス・王子・騎士・侍を選べる「ちいさな おうこく」を作成（くどうさんが3案から選び、侍も追加）。
 14. **2026-11-03** 幼児向け けずって なにかな？（スクラッチであてっこ＋ずかん、写真モード）を作成。くどうさん「子供向けにスクラッチすると何かが表示されるゲームを考えたいです」→ 5案から「あてっこ＋ずかん」を選択。
+15. **2026-11-03** くどうさん「ここで開発しているゲームは全て課金する予定です。まだ課金するシステムが組み込まれていないゲームについて組み込むようにしてください」。共通の課金のしくみ（`common/kakin.js`、おためし版）を作り、子ども向け7本と都道府県パズル、入口ページに組み込んだ（[kakin.md](kakin.md)）。
 
 ## お金の方針（2026-10-23 決定）
 
 - **ぬけぬけリング**: 広告 ＋ ヒント・1手もどしを広告か少額購入で ＋ 月額パス（広告なし・ヒント使い放題・毎日の特別ステージ）。ライフ制は入れても控えめに。
 - **ラスト・ツー**: きせかえ（キャラ・カード柄・マンガ効果）＋ シーズンパス。広告は試合の終わりだけ。勝ち負けに関わる課金はしない。
-- **まちがいさがし**（提案のみ）: 無料で少し遊べて、買い切り500円くらい。幼児向けなので広告なし。
-- **キャンピングカー**（試作済み）: 追加ルートの販売（1つ480円・セット980円、仮）。
+- **子ども向けゲーム全部と都道府県パズル**（2026-11-03 に組み込み）: すこし むりょうで遊べて、「ぜんぶ版」（ゲームごとの買い切り 480円、仮）か「👪 ファミリーパス」（月380円、仮、ぜんぶのゲーム）で ぜんぶ遊べる。広告なし、買う前に おとなの確認。くわしくは [kakin.md](kakin.md)。
+- **キャンピングカー**（試作済み）: 追加ルートの販売（1つ480円・セット980円、仮）。ファミリーパスでも選べる。
 - いまはどれも「買うふり」で、本物のお金は動きません。
 
 ## くどうさんにしかできないこと
@@ -71,6 +74,7 @@
   - `/index.html` … ラスト・ツー
   - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/fukuwarai/`、`/kezuri/`、`/nukenuke-ring/`、`/kakurenbo/`、`/oukoku/`… それぞれ別のゲーム。ほかのゲームには影響しません。
   - `/games/` … 入口ページ（ゲームを公開したらここにもカードを足す）
+  - `/common/kakin.js` … 全ゲーム共通の課金のしくみ（新しいゲームにも入れる。[kakin.md](kakin.md)）
   - `/docs/` … この記録
 - 変更は作業ブランチ → PR → マージ の順。マージすると1〜2分で公開ページに反映されます。
 - **プロジェクトの共有フォルダ** `/mnt/project-files/` に、各ゲームの HTML と作るための道具（`tools/`）があります。ゲームによっては、リポジトリの HTML がこの道具で作られたものなので、直すときはもと（src や tools）を直してから作り直します。各ゲームの技術メモを参照してください。
