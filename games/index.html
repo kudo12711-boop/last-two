@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff4dc">
+<title>あそびのいりぐち</title>
+<meta name="description" content="くどうさんのゲームを選んで遊べる入口ページ">
+<style>
+:root{
+  --bg:#fff7e6; --card:#ffffff; --ink:#3b2f2a; --sub:#7a6a60; --line:#f0e0c8;
+  --accent:#ff8a3d; --chip:#fff0dc; --chipInk:#8a4b16; --shadow:0 2px 0 #f0dcc0, 0 6px 18px rgba(120,80,40,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1f1a17; --card:#2b2420; --ink:#f6ece2; --sub:#c2b2a4; --line:#3d332c;
+    --accent:#ffa260; --chip:#3a2d22; --chipInk:#ffcf9e; --shadow:0 2px 0 #15110f, 0 6px 18px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1f1a17; --card:#2b2420; --ink:#f6ece2; --sub:#c2b2a4; --line:#3d332c;
+  --accent:#ffa260; --chip:#3a2d22; --chipInk:#ffcf9e; --shadow:0 2px 0 #15110f, 0 6px 18px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;
+  line-height:1.6;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+h1{font-size:clamp(22px,5.6vw,36px);white-space:nowrap;margin:4px 0 2px;letter-spacing:.02em}
+.lead{color:var(--sub);margin:0 0 20px;font-size:15px}
+.lang{display:flex;border:2px solid var(--line);border-radius:999px;overflow:hidden;flex:none;background:var(--card)}
+.lang button{border:0;background:transparent;color:var(--sub);font:inherit;font-size:14px;padding:6px 12px;cursor:pointer;min-height:36px}
+.lang button[aria-pressed="true"]{background:var(--accent);color:#fff;font-weight:700}
+h2{font-size:18px;margin:28px 0 12px;display:flex;align-items:center;gap:8px}
+h2 small{font-weight:400;color:var(--sub);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+a.card{display:flex;gap:14px;align-items:flex-start;text-decoration:none;color:inherit;background:var(--card);
+  border:2px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow);
+  transition:transform .12s ease, border-color .12s ease;-webkit-tap-highlight-color:transparent}
+a.card:hover{border-color:var(--accent)}
+a.card:active{transform:scale(.98)}
+a.card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.icon{flex:none;width:64px;height:64px;border-radius:18px;display:grid;place-items:center;font-size:36px}
+.body{min-width:0}
+.name{font-weight:700;font-size:18px;margin:0 0 2px}
+.desc{margin:0 0 8px;font-size:14px;color:var(--sub)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;background:var(--chip);color:var(--chipInk);border-radius:999px;padding:2px 9px;white-space:nowrap}
+footer{margin-top:36px;color:var(--sub);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 data-t="title"></h1>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="ja">日本語</button>
+      <button type="button" data-lang="en">English</button>
+    </div>
+  </header>
+  <p class="lead" data-t="lead"></p>
+  <main id="sections"></main>
+  <footer data-t="footer"></footer>
+</div>
+
+<script>
+// ゲームの一覧。新しいゲームを公開したら、ここに1つ足すだけで入口ページに並びます。
+// 文字はすべて下の TEXT（言語ごとの辞書）にあり、言語を足すときは TEXT に1つ足します。
+var GAMES = [
+  {id:"machigai",   url:"../machigai/",      icon:"🔍", color:"#ffe3a3", group:"kids"},
+  {id:"meiro",      url:"../meiro/",         icon:"🐾", color:"#cdeccb", group:"kids"},
+  {id:"tentsunagi", url:"../tentsunagi/",    icon:"✏️", color:"#d6e4ff", group:"kids"},
+  {id:"lasttwo",    url:"../",               icon:"🃏", color:"#ffd2cc", group:"all"},
+  {id:"nukenuke",   url:"../nukenuke-ring/", icon:"⭕", color:"#e2d6ff", group:"all"},
+  {id:"todofuken",  url:"../todofuken/",     icon:"🗾", color:"#c9eef0", group:"all"},
+  {id:"camper",     url:"../camper/",        icon:"🚐", color:"#f3dcc2", group:"all"}
+];
+
+var TEXT = {
+  ja:{
+    title:"あそびのいりぐち",
+    lead:"遊びたいゲームを えらんでね。どれも ブラウザで そのまま遊べます。",
+    footer:"© kudo12711-boop",
+    groups:{kids:["ちいさな子ども向け","2〜6さいくらい"], all:["みんなで・ひとりで","子どもから おとなまで"]},
+    games:{
+      machigai:  {name:"まちがいさがし", desc:"2まいの絵の ちがうところを さがそう。おうちの写真でも遊べます。", chips:["2〜5さい","ひとり"]},
+      meiro:     {name:"ゆびで めいろ", desc:"キャラクターを 指でなぞって ゴールまで つれていこう。", chips:["2〜5さい","ひとり"]},
+      tentsunagi:{name:"すうじで てんつなぎ", desc:"1、2、3… と 点をつなぐと 絵が できあがるよ。", chips:["2〜6さい","ひとり"]},
+      lasttwo:   {name:"ラスト・ツー", desc:"ババ抜きの「最後の2人」。相手の表情を 読みあおう。", chips:["8さい〜","CPU・ともだち","カメラ"]},
+      nukenuke:  {name:"ぬけぬけリング", desc:"ペアがそろうと 次々に抜けていく 連鎖パズル。", chips:["8さい〜","ひとり","パズル"]},
+      todofuken: {name:"都道府県パズル", desc:"47都道府県の形を 日本地図の 正しい場所に はめよう。", chips:["6さい〜","ひとり","おぼえる"]},
+      camper:    {name:"キャンピングカー世界一周", desc:"閉じているあいだも 車が走る。次に開くと 世界のどこかの 今の景色。", chips:["みんな","ほうっておく"]}
+    }
+  },
+  en:{
+    title:"Game Corner",
+    lead:"Pick a game to play. Everything runs right in your browser.",
+    footer:"© kudo12711-boop · Some games are still in Japanese only.",
+    groups:{kids:["For little kids","about ages 2–6"], all:["For everyone","kids to grown-ups"]},
+    games:{
+      machigai:  {name:"Spot the Difference", desc:"Find what's different between two pictures. Works with your own photos too.", chips:["Ages 2–5","1 player"]},
+      meiro:     {name:"Finger Maze", desc:"Trace the character with your finger and lead it to the goal.", chips:["Ages 2–5","1 player"]},
+      tentsunagi:{name:"Dot to Dot", desc:"Connect the dots 1, 2, 3… and watch a picture appear.", chips:["Ages 2–6","1 player"]},
+      lasttwo:   {name:"Last Two", desc:"The final two players of Old Maid. Read each other's faces.", chips:["Ages 8+","vs CPU or friend","Camera"]},
+      nukenuke:  {name:"Nuke-Nuke Ring", desc:"A chain puzzle where matching pairs pop out one after another.", chips:["Ages 8+","1 player","Puzzle"]},
+      todofuken: {name:"Japan Map Puzzle", desc:"Fit all 47 prefectures into the right place on the map of Japan.", chips:["Ages 6+","1 player","Learning"]},
+      camper:    {name:"Camper Van World Trip", desc:"Your camper keeps driving while you're away. Come back to a live view from somewhere in the world.", chips:["All ages","Idle"]}
+    }
+  }
+};
+
+var KEY = "games-lang";
+function pickLang(){
+  var q = new URLSearchParams(location.search).get("lang");
+  if (q && TEXT[q]) return q;
+  try { var s = localStorage.getItem(KEY); if (s && TEXT[s]) return s; } catch(e){}
+  var nav = (navigator.languages && navigator.languages[0]) || navigator.language || "ja";
+  nav = nav.slice(0,2).toLowerCase();
+  return TEXT[nav] ? nav : (nav === "ja" ? "ja" : "en");
+}
+
+function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+
+function render(lang){
+  var T = TEXT[lang];
+  document.documentElement.lang = lang;
+  document.title = T.title;
+  document.querySelectorAll("[data-t]").forEach(function(n){ n.textContent = T[n.getAttribute("data-t")]; });
+  document.querySelectorAll(".lang button").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.lang===lang)); });
+  var root = document.getElementById("sections"); root.textContent = "";
+  ["kids","all"].forEach(function(g){
+    var h = el("h2", null, T.groups[g][0]); h.appendChild(el("small", null, T.groups[g][1])); root.appendChild(h);
+    var grid = el("div","grid");
+    GAMES.filter(function(x){return x.group===g;}).forEach(function(x){
+      var t = T.games[x.id];
+      var a = el("a","card"); a.href = x.url;
+      var ic = el("div","icon", x.icon); ic.style.background = x.color; ic.setAttribute("aria-hidden","true");
+      var b = el("div","body");
+      b.appendChild(el("p","name",t.name));
+      b.appendChild(el("p","desc",t.desc));
+      var c = el("div","chips"); t.chips.forEach(function(s){ c.appendChild(el("span","chip",s)); }); b.appendChild(c);
+      a.appendChild(ic); a.appendChild(b); grid.appendChild(a);
+    });
+    root.appendChild(grid);
+  });
+}
+
+document.querySelectorAll(".lang button").forEach(function(b){
+  b.addEventListener("click", function(){
+    try { localStorage.setItem(KEY, b.dataset.lang); } catch(e){}
+    render(b.dataset.lang);
+  });
+});
+render(pickLang());
+</script>
+</body>
+</html>
