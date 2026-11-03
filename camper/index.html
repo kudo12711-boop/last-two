@@ -28,7 +28,8 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 #app{height:100%;display:grid;grid-template-rows:auto 1fr auto;
   padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
 header{display:flex;align-items:flex-end;gap:10px;padding:10px 16px 4px}
-header .l{flex:1;min-width:0}
+header .l{flex:1;min-width:0;cursor:pointer}
+#place::after{content:" ⓘ";font-size:.6em;color:var(--accent);vertical-align:middle}
 #place{font-size:clamp(18px,5vw,26px);font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #addr{font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 header .r{text-align:right;white-space:nowrap}
@@ -124,7 +125,7 @@ body.full.hasmap #fsinfo{max-width:calc(100% - clamp(110px,30vmin,190px) - 44px)
 #fsmap text{font-size:1.3px;paint-order:stroke;stroke:#fff;stroke-width:.35px}
 #fsmap #mm-me{animation:none}
 body.full #b-info{display:block;position:absolute;left:62px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:5;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:17px;backdrop-filter:blur(4px);transition:opacity .6s}
-body.full #fsinfo{display:block;position:absolute;left:12px;top:calc(12px + env(safe-area-inset-top));z-index:4;max-width:min(78%,360px);color:#fff;pointer-events:none;
+body.full #fsinfo{cursor:pointer;display:block;position:absolute;left:12px;top:calc(12px + env(safe-area-inset-top));z-index:4;max-width:min(78%,360px);color:#fff;pointer-events:auto;
   background:rgba(20,24,32,.28);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);border-radius:14px;padding:8px 12px;text-shadow:0 1px 4px rgba(0,0,0,.5);transition:opacity .8s}
 body.full #fsinfo.m-off{display:none}
 #fsinfo b{display:block;font-size:clamp(16px,4.2vw,24px);font-weight:900;line-height:1.25}
@@ -212,6 +213,10 @@ button.chip{border:2px solid transparent;font-size:14px;padding:6px 12px}button.
 .meta{font-size:12px;color:var(--ink2)}.meta.wx{color:var(--ink);font-weight:700;font-size:13px}
 .tag{align-self:flex-start;background:#ffe2a8;border-radius:99px;padding:3px 9px;font-size:12px;font-weight:700}
 .tag.soft{background:var(--wall)}.tag.pick{background:var(--accent);color:#fff}
+.place-h{text-align:center;padding:4px 0 8px}.place-h small{font-weight:700;color:var(--ink2)}.place-h h2{font-size:30px;margin:2px 0}.place-h p{margin:0;font-size:14px}
+.fact{background:#fff7e0;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.7;margin:8px 0}
+.kv2{display:flex;flex-direction:column;gap:8px;margin:10px 0}.kv2>div{display:flex;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.kv2 span{flex:0 0 7.5em;font-size:13px;color:var(--ink2);font-weight:700}.kv2 b{flex:1;font-size:14px;line-height:1.6}.kv2 b small{display:block;font-weight:500;font-size:12px;color:var(--ink2)}
 .mapzoom{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px}
 .mapzoom button{width:48px;height:48px;border-radius:50%;border:0;background:var(--wood2);color:#fff;font-size:26px;font-weight:900;line-height:1}
 .mapzoom button:disabled{opacity:.3}.mapzoom span{min-width:90px;text-align:center;font-weight:900;font-size:16px}
@@ -2306,12 +2311,43 @@ async function showBackup() {
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
 
+/* ===== 町の情報カード（地名をタップ） ===== */
+function showPlace(which) {
+  if (!P) return;
+  const s = P.seg, sea = s.mode === 's';
+  const opts = st.parked ? [['now', s.b]] : [['prev', s.a], ['next', s.b]];
+  which = which || (st.parked ? 'now' : P.segKm < 8 ? 'prev' : 'next');
+  const [, stop] = opts.find(o => o[0] === which) || opts[opts.length - 1];
+  const n = stop.name, X = CITY[n] || {}, S0 = sightOf(n, stop), w = S0.words;
+  const dist = which === 'next' ? `${sea ? '🚢' : '🚐'} あと <b>${fmt(s.len - P.segKm)}km</b>（約${durText((s.len - P.segKm) / st.speed)}）で着きます`
+    : which === 'prev' ? `${sea ? '🚢' : '🚐'} <b>${fmt(P.segKm)}km</b>前に出発しました` : `🅿️ いまここに停車中です`;
+  const visits = st.stamps[n] || 0;
+  const lmn = stop.lm && LMNAME[n];
+  modal(`${opts.length > 1 ? `<div class="tabs">${opts.map(([k, o]) => `<button data-pl="${k}" class="${k === which ? 'on' : ''}">${k === 'prev' ? '◀ 出てきた町' : '次の町 ▶'}：${o.name}</button>`).join('')}</div>` : ''}
+   <div class="place-h"><small>${S0.C.name}${sea && which !== 'prev' ? '・⛴ 港町' : ''}</small><h2>${n}</h2><p>${dist}</p></div>
+   ${FACTS[n] ? `<div class="fact">💡 ${FACTS[n]}</div>` : ''}
+   <div class="kv2">
+     ${lmn ? `<div><span>🏛 窓から見える名所</span><b>${lmn}${st.lm[n] ? ' ✅' : ''}</b></div>` : ''}
+     ${X.spots ? `<div><span>📍 観光スポット</span><b>${X.spots.map(p => `${p[0]} ${p[1]}`).join('<br>')}</b></div>` : ''}
+     <div><span>🍽 名物</span><b>${S0.food.map(f => `${f[0]} ${f[1]}<small>${f[2]}</small>`).join('<br>')}</b></div>
+     <div><span>🎁 おみやげ</span><b>${S0.gift.map(f => `${f[0]} ${f[1]}`).join('<br>')}</b></div>
+     <div><span>📮 スタンプ</span><b>${visits ? `${visits}回 通りました` : 'まだ通っていません'}</b></div>
+   </div>
+   <h3>💬 ${w[4]}のあいさつ</h3>
+   <div class="phrase">${sayBtn(w[0], w[1], S0.c)}<small>こんにちは</small><b>${w[0]}</b><span>${w[1]}</span></div>
+   <div class="phrase">${sayBtn(w[2], w[3], S0.c)}<small>ありがとう</small><b>${w[2]}</b><span>${w[3]}</span></div>
+   ${geo && geo.text && !st.parked ? `<p class="note">📍 いま走っているあたり：${geo.text}</p>` : ''}
+   ${st.parked ? '<button class="big" data-act="sight">🗺 観光する</button>' : ''}
+   <button class="big ghost" data-close>とじる</button>`, 'placem');
+  document.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => showPlace(b.dataset.pl));
+}
+
 /* ===== 観光モード ===== */
 const CITY_COUNTRY = {}; for (const c in CITY_C) for (const n of CITY_C[c].split(' ')) CITY_COUNTRY[n] = c;
 const FAST = QS.has('fast') ? 600 : 1; // テスト用：観光の時間を早送り
 function parkedStop() { return P && P.seg ? P.seg.b : null; }
-function sightOf(name) {
-  const stop = parkedStop(); const c = CITY_COUNTRY[name] || 'JP', C = COUNTRY[c], X = CITY[name] || {};
+function sightOf(name, stop0) {
+  const stop = stop0 || parkedStop(); const c = CITY_COUNTRY[name] || 'JP', C = COUNTRY[c], X = CITY[name] || {};
   let biome = stop && stop.name === name ? stop.town : 'city';
   let spots = X.spots;
   if (!spots) {
@@ -2528,6 +2564,7 @@ async function setFull(on) {
   try { if (on && navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); else if (!on && wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) { }
   fsInfo(); poke(); setTimeout(resize, 50); setTimeout(resize, 400);
 }
+document.querySelector('header .l').onclick = () => showPlace(); $('#fsinfo').onclick = e => { e.stopPropagation(); showPlace(); };
 $('#fsmap').onclick = e => { e.stopPropagation(); showMap(3); };
 $('#b-info').onclick = e => { e.stopPropagation(); cycleInfo(); poke(); };
 $('#b-full').onclick = e => { e.stopPropagation(); setFull(!document.body.classList.contains('full')); };
