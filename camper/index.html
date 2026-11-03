@@ -117,8 +117,9 @@ body.full #win::after,body.full .curtain,body.full #sill{display:none}
 #b-info{display:none}
 #fsmap{display:none}
 body.full #fsmap:not([hidden]){display:block;position:absolute;right:12px;top:calc(12px + env(safe-area-inset-top));z-index:4;width:clamp(110px,30vmin,190px);aspect-ratio:1;border-radius:18px;overflow:hidden;
-  border:2px solid rgba(255,255,255,.75);box-shadow:0 4px 14px rgba(0,0,0,.3);opacity:.92;cursor:pointer;transition:opacity .8s}
-body.full.calm #fsmap{opacity:.8}
+  border:2px solid rgba(255,255,255,.5);box-shadow:0 4px 14px rgba(0,0,0,.15);opacity:.4;cursor:pointer;transition:opacity .5s,box-shadow .5s}
+body.full.calm #fsmap{opacity:.3}
+body.full #fsmap.solid{opacity:.95;border-color:rgba(255,255,255,.8);box-shadow:0 4px 14px rgba(0,0,0,.3)}
 #fsmap svg{width:100%;height:100%;display:block;background:#bfe0ef}
 #fsmap .r-done{stroke-width:2.5}#fsmap .r-ahead{stroke-width:1.8}
 body.full.hasmap #fsinfo{max-width:calc(100% - clamp(110px,30vmin,190px) - 44px)}
@@ -2565,7 +2566,13 @@ async function setFull(on) {
   fsInfo(); poke(); setTimeout(resize, 50); setTimeout(resize, 400);
 }
 document.querySelector('header .l').onclick = () => showPlace(); $('#fsinfo').onclick = e => { e.stopPropagation(); showPlace(); };
-$('#fsmap').onclick = e => { e.stopPropagation(); showMap(3); };
+// 地図はふだん半透明。1回タップでくっきり、くっきりしているときのタップで大きな地図
+let mmSolidT = 0;
+$('#fsmap').onclick = e => {
+  e.stopPropagation(); const box = $('#fsmap');
+  if (box.classList.contains('solid')) { showMap(3); return; }
+  box.classList.add('solid'); clearTimeout(mmSolidT); mmSolidT = setTimeout(() => box.classList.remove('solid'), 8000);
+};
 $('#b-info').onclick = e => { e.stopPropagation(); cycleInfo(); poke(); };
 $('#b-full').onclick = e => { e.stopPropagation(); setFull(!document.body.classList.contains('full')); };
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('full')) setFull(false); });
