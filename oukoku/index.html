@@ -1,0 +1,1083 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#ffe9f2">
+<title>ちいさな おうこく</title>
+<meta name="description" content="プリンセス・おうじさま・きしさま・さむらいさまになって、むらの みんなの おねがいを かなえよう">
+<style>
+:root{
+  --bg:#fff4f8; --panel:#ffffff; --ink:#4a3446; --sub:#8b7287; --line:#f5d7e6;
+  --accent:#ff6fa8; --accent2:#7f6bff; --gold:#e9b949; --ok:#3fbf7f;
+  --shadow:0 3px 0 #efc9dc, 0 8px 22px rgba(160,60,110,.12);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#211a26; --panel:#2f2536; --ink:#f8eaf3; --sub:#cdb6c8; --line:#46374f;
+    --shadow:0 3px 0 #17111b, 0 8px 22px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#211a26; --panel:#2f2536; --ink:#f8eaf3; --sub:#cdb6c8; --line:#46374f;
+  --shadow:0 3px 0 #17111b, 0 8px 22px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;
+  font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;
+  -webkit-user-select:none;user-select:none;touch-action:manipulation}
+button{font:inherit;color:inherit;cursor:pointer}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 12px)}
+.screen.on{display:flex}
+.big{border:0;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;font-size:20px;
+  padding:14px 30px;box-shadow:0 4px 0 #d94f87;min-height:56px}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 #d94f87}
+.big.sub{background:var(--panel);color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
+.icon-btn{border:2px solid var(--line);background:var(--panel);border-radius:16px;min-width:52px;height:52px;
+  font-size:24px;display:grid;place-items:center;position:relative;padding:0 8px;box-shadow:0 3px 0 var(--line)}
+.icon-btn:active{transform:translateY(2px);box-shadow:none}
+.icon-btn .lbl{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:10px;white-space:nowrap;color:var(--sub)}
+.badge{position:absolute;top:-6px;right:-6px;background:#ff4d6d;color:#fff;border-radius:999px;font-size:12px;
+  min-width:20px;height:20px;display:grid;place-items:center;font-weight:700;animation:pop 1s ease-in-out infinite}
+h1.logo{font-size:clamp(34px,10vw,56px);margin:0;text-align:center;letter-spacing:.04em;
+  color:var(--accent);text-shadow:0 3px 0 #fff, 0 6px 0 #f5c6dc}
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+.langs{display:flex;gap:6px;justify-content:center}
+.langs button{border:2px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 14px;font-size:14px;min-height:40px}
+.langs button[aria-pressed="true"]{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.title-av{display:flex;gap:4px;justify-content:center}
+.title-av svg{width:72px;height:100px}
+
+/* role pick */
+.ttl{font-size:22px;font-weight:700;text-align:center;margin:6px 0 12px}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;align-content:center;max-width:520px;margin:0 auto;width:100%}
+.role{background:var(--panel);border:3px solid var(--line);border-radius:22px;padding:8px 6px 10px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;align-items:center}
+.role:active{transform:scale(.97)}
+.role svg{width:100%;max-width:150px;height:auto;aspect-ratio:200/280}
+.role b{font-size:18px}
+
+/* closet */
+#closet .stage{flex:none;display:flex;justify-content:center;align-items:flex-end;height:38vh;min-height:220px;position:relative}
+#closet .stage svg{height:100%;width:auto}
+#closet .pet{position:absolute;bottom:4px;font-size:44px;left:calc(50% + 16vh)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 2px 6px;flex:none;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;border:2px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 14px;font-size:15px;min-height:42px}
+.tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.opts{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:10px;align-content:start;padding:6px 2px}
+.opt{aspect-ratio:1;border:3px solid var(--line);background:var(--panel);border-radius:18px;font-size:32px;
+  display:grid;place-items:center;position:relative;overflow:hidden;padding:0}
+.opt[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px #ffd0e4}
+.opt.locked{opacity:.45}
+.opt.locked::after{content:"🔒";position:absolute;right:3px;bottom:0;font-size:16px}
+.opt .sw{width:60%;height:60%;border-radius:50%;border:2px solid rgba(0,0,0,.1)}
+.opt svg{width:90%;height:90%}
+.opt small{position:absolute;bottom:2px;font-size:10px;color:var(--sub)}
+.row{display:flex;gap:10px;justify-content:center;align-items:center;flex:none;padding-top:8px;flex-wrap:wrap}
+.name-in{border:2px solid var(--line);border-radius:14px;padding:10px 12px;font:inherit;font-size:18px;width:100%;
+  background:var(--panel);color:var(--ink);-webkit-user-select:text;user-select:text}
+
+/* kingdom */
+#kingdom{padding-left:0;padding-right:0;padding-bottom:0}
+.topbar{display:flex;align-items:center;gap:8px;padding:0 10px 18px;flex:none}
+.hearts{display:flex;align-items:center;gap:6px;background:var(--panel);border:2px solid var(--line);border-radius:999px;
+  padding:4px 12px 4px 8px;font-weight:700;font-size:18px;min-height:44px}
+.prog{flex:none;padding:0 14px 8px;display:flex;align-items:center;gap:10px}
+.prog .bar{flex:1}
+.prog .bar{height:12px;border-radius:999px;background:var(--line);overflow:hidden}
+.prog .fill{height:100%;background:linear-gradient(90deg,#ff9ec6,#ff6fa8);border-radius:999px;transition:width .6s}
+.prog .nx{font-size:13px;color:var(--sub);white-space:nowrap;flex:none;max-width:65%;overflow:hidden;text-overflow:ellipsis}
+.scene-wrap{flex:1;position:relative;min-height:0;background:linear-gradient(#8fd3ff 0 45%,#9fe08a 45%)}
+.scene-wrap.night{background:linear-gradient(#5b5fb8 0 45%,#9fe08a 45%)}
+#scene{position:absolute;inset:0;width:100%;height:100%}
+.tap{cursor:pointer}
+.bob{animation:bob 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.cloud{animation:drift 40s linear infinite}
+.twinkle{animation:tw 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+@keyframes drift{from{transform:translateX(-80px)}to{transform:translateX(480px)}}
+@keyframes tw{50%{opacity:.25}}
+@keyframes pop{50%{transform:scale(1.15)}}
+@keyframes shake{20%,60%{transform:translateX(-7px) rotate(-4deg)}40%,80%{transform:translateX(7px) rotate(4deg)}}
+@keyframes grow{from{transform:scale(.3)}to{transform:scale(1)}}
+@keyframes fly{to{transform:translateY(-70vh) rotate(var(--r,30deg));opacity:0}}
+.shake{animation:shake .45s}
+.grow{animation:grow .35s cubic-bezier(.3,1.6,.6,1)}
+
+/* overlay / dialogs */
+.ov{position:fixed;inset:0;background:rgba(60,30,60,.45);display:none;align-items:flex-end;justify-content:center;z-index:20;
+  padding:12px 12px calc(env(safe-area-inset-bottom) + 12px)}
+.ov.on{display:flex}
+.card{background:var(--panel);border-radius:26px;padding:18px 16px 16px;width:100%;max-width:520px;box-shadow:0 10px 40px rgba(0,0,0,.25);
+  text-align:center;position:relative;max-height:calc(100vh - 40px);overflow:auto}
+.card .who{font-size:64px;line-height:1;margin-top:-4px}
+.card .say{font-size:20px;font-weight:700;margin:8px 0 4px;line-height:1.5}
+.card .note{color:var(--sub);font-size:14px;margin:0 0 14px}
+.card .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.x{position:absolute;top:8px;right:10px;border:0;background:transparent;font-size:26px;color:var(--sub);width:44px;height:44px}
+
+/* minigame */
+#game{background:linear-gradient(#e9f6ff,#fff4f8)}
+:root[data-theme="dark"] #game{background:linear-gradient(#1d2433,#211a26)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #game{background:linear-gradient(#1d2433,#211a26)}}
+.ghead{display:flex;align-items:center;gap:10px;flex:none}
+.ghead .who{font-size:44px}
+.ghead .say{flex:1;font-size:18px;font-weight:700;line-height:1.4}
+.garea{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:0}
+.tray{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:460px}
+.item{width:72px;height:72px;border-radius:20px;border:3px solid var(--line);background:var(--panel);font-size:40px;
+  display:grid;place-items:center;box-shadow:0 3px 0 var(--line);padding:0}
+.item:active{transform:translateY(2px);box-shadow:none}
+.item.done{opacity:.25;pointer-events:none}
+.bush.hint{animation:pop .8s ease-in-out infinite}
+.item.hint{animation:pop .8s ease-in-out infinite;border-color:var(--gold)}
+.order{display:flex;gap:8px;background:var(--panel);border:3px dashed var(--line);border-radius:18px;padding:8px 14px;font-size:34px}
+.order span{position:relative}
+.order span.ok::after{content:"✔";position:absolute;right:-6px;bottom:-6px;font-size:18px;color:var(--ok)}
+.cake{position:relative;width:220px;height:150px}
+.cake .layer{position:absolute;left:10px;right:10px;bottom:0;height:90px;border-radius:16px 16px 22px 22px;
+  background:linear-gradient(#fff 0 26%,#ffd3e3 26% 34%,#f7b98a 34%);box-shadow:inset 0 -8px 0 rgba(0,0,0,.08)}
+.cake .tops{position:absolute;left:20px;right:20px;top:20px;height:50px;display:flex;justify-content:space-around;align-items:flex-end;font-size:36px}
+.pots{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pot{width:92px;height:110px;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0;position:relative}
+.pot .pl{font-size:46px;line-height:1;min-height:50px}
+.pot .base{width:70px;height:44px;background:#d98b5f;border-radius:6px 6px 18px 18px;box-shadow:inset 0 6px 0 #b86e47}
+.drop{position:absolute;top:-10px;font-size:26px;animation:fall .5s ease-in forwards}
+@keyframes fall{from{transform:translateY(-20px);opacity:1}to{transform:translateY(40px);opacity:0}}
+.dragon{font-size:110px;line-height:1;position:relative}
+.think{position:absolute;top:-30px;right:-70px;background:var(--panel);border:3px solid var(--line);border-radius:50%;width:78px;height:78px;
+  display:grid;place-items:center;font-size:44px}
+.bushes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.bush{width:96px;height:96px;border:0;background:transparent;font-size:70px;position:relative;padding:0}
+.bush .found{position:absolute;left:0;right:0;bottom:-6px;font-size:36px}
+.houses{display:flex;gap:12px;justify-content:center}
+.house{width:96px;height:110px;border:0;background:transparent;padding:0;display:flex;flex-direction:column;align-items:center}
+.house .roof{width:0;height:0;border-left:48px solid transparent;border-right:48px solid transparent;border-bottom:40px solid}
+.house .wall{width:76px;height:64px;background:#fff6e8;border:3px solid #e6d2b5;border-top:0;display:grid;place-items:center;font-size:26px}
+.letter{font-size:70px;position:relative;line-height:1}
+.letter i{position:absolute;right:-8px;bottom:6px;width:30px;height:30px;border-radius:50%;border:3px solid #fff}
+.lanterns{display:flex;gap:6px;justify-content:center;align-items:flex-start}
+.lan{width:46px;height:62px;border-radius:44% 44% 44% 44%/50%;position:relative;border:2px solid rgba(0,0,0,.15);
+  background-image:repeating-linear-gradient(transparent 0 9px,rgba(0,0,0,.12) 9px 11px)}
+.lan::before,.lan::after{content:"";position:absolute;left:12px;right:12px;height:7px;background:#3b2a2a;border-radius:2px}
+.lan::before{top:-5px}.lan::after{bottom:-5px}
+.lan.q{background:var(--panel);border:3px dashed var(--sub);display:grid;place-items:center;font-size:26px;font-weight:700;color:var(--sub)}
+.lan.q::before,.lan.q::after{display:none}
+.item .lan{transform:scale(.8)}
+.string{height:3px;background:#8a6a5a;width:100%;max-width:360px;margin-bottom:-6px;border-radius:2px}
+
+/* portraits */
+.wall{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;align-content:start;padding:6px 2px 10px}
+.wall img{width:100%;border-radius:8px;box-shadow:var(--shadow);display:block}
+.wall .empty{grid-column:1/-1;text-align:center;color:var(--sub);padding:30px 10px}
+.crop{position:relative;width:260px;height:260px;margin:0 auto 10px;touch-action:none}
+.crop canvas{width:260px;height:260px;border-radius:20px;background:#eee}
+input[type=range]{width:220px;accent-color:var(--accent)}
+.bgs{display:flex;gap:8px;justify-content:center;margin:6px 0 12px;flex-wrap:wrap}
+.bgs button{width:44px;height:44px;border-radius:50%;border:3px solid var(--line)}
+.bgs button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px #ffd0e4}
+#bigimg{max-width:100%;max-height:60vh;border-radius:8px}
+
+.fx{position:fixed;font-size:34px;pointer-events:none;z-index:50;animation:fly 1.6s ease-out forwards}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 70px);transform:translateX(-50%);background:var(--panel);
+  border:2px solid var(--line);border-radius:999px;padding:8px 18px;font-weight:700;z-index:60;box-shadow:var(--shadow);display:none;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- タイトル -->
+<section class="screen on" id="title">
+  <div class="langs" role="group" aria-label="Language">
+    <button type="button" data-lang="ja">にほんご</button>
+    <button type="button" data-lang="en">English</button>
+  </div>
+  <div class="center">
+    <div class="title-av" id="titleAv"></div>
+    <h1 class="logo" data-t="title"></h1>
+    <p data-t="lead" style="margin:0;color:var(--sub);font-size:16px;max-width:340px"></p>
+    <button class="big" id="startBtn" data-t="start"></button>
+    <button class="big sub" id="resetBtn" data-t="newGame" style="display:none;font-size:15px;min-height:44px;padding:8px 18px"></button>
+  </div>
+</section>
+
+<!-- だれになる？ -->
+<section class="screen" id="rolepick">
+  <div class="ttl" data-t="whoAreYou"></div>
+  <div class="roles" id="roles"></div>
+</section>
+
+<!-- きせかえ -->
+<section class="screen" id="closet">
+  <div class="stage" id="closetStage"></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="opts" id="opts"></div>
+  <div class="row">
+    <button class="big" id="closetDone" data-t="decide"></button>
+  </div>
+</section>
+
+<!-- おうこく -->
+<section class="screen" id="kingdom">
+  <div class="topbar">
+    <div class="hearts">❤️ <span id="hc">0</span></div>
+    <div style="flex:1"></div>
+    <button class="icon-btn" id="btnMail" aria-label="mail">📮<span class="lbl" data-t="mail"></span></button>
+    <button class="icon-btn" id="btnCloset" aria-label="closet">👗<span class="lbl" data-t="closet"></span></button>
+    <button class="icon-btn" id="btnGallery" aria-label="portraits">🖼️<span class="lbl" data-t="gallery"></span></button>
+    <button class="icon-btn" id="btnMenu" aria-label="menu">⚙️<span class="lbl" data-t="menu"></span></button>
+  </div>
+  <div class="prog"><div class="bar"><div class="fill" id="pf"></div></div><div class="nx" id="pn"></div></div>
+  <div class="scene-wrap"><svg id="scene" viewBox="0 0 400 600" preserveAspectRatio="xMidYMax meet"></svg></div>
+</section>
+
+<!-- ミニゲーム -->
+<section class="screen" id="game">
+  <div class="ghead">
+    <div class="who" id="gWho"></div>
+    <div class="say" id="gSay"></div>
+    <button class="icon-btn" id="gQuit" aria-label="back">↩️</button>
+  </div>
+  <div class="garea" id="gArea"></div>
+</section>
+
+<!-- しょうぞうがの へや -->
+<section class="screen" id="gallery">
+  <div class="ttl" data-t="galleryTitle"></div>
+  <div class="wall" id="wall"></div>
+  <div class="row">
+    <button class="big sub" id="galBack" data-t="back"></button>
+    <button class="big" id="galNew" data-t="paint"></button>
+  </div>
+</section>
+
+<div class="ov" id="ov"><div class="card" id="ovCard"></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileIn" accept="image/*" hidden>
+
+<script>
+"use strict";
+/* =========================================================
+   ちいさな おうこく v0.1
+   文字はすべて TEXT（言語ごとの辞書）。言語を足すときは TEXT に1つ足す。
+   ========================================================= */
+
+var TEXT = {
+  ja:{
+    title:"ちいさな おうこく", lead:"プリンセス・おうじさま・きしさま・さむらいさまに なって、むらの みんなの おねがいを かなえよう",
+    start:"はじめる", cont:"つづきから", newGame:"さいしょから やりなおす", whoAreYou:"だれに なる？",
+    decide:"これで けってい！", back:"もどる", paint:"かいてもらう", mail:"おてがみ", closet:"きがえ", gallery:"しょうぞうが", menu:"せってい",
+    roles:{princess:"プリンセス", prince:"おうじさま", knight:"きしさま", samurai:"さむらいさま"},
+    tabs:{role:"だれ", skin:"はだ", hair:"かみがた", hairColor:"かみのいろ", color:"ふくのいろ", acc:"かざり", pet:"なかま", photo:"かお", name:"なまえ"},
+    namePh:"なまえ（なくてもOK）", nameNote:"おうちのひとが いれてね",
+    photoNote:"じぶんの かおの しゃしんで あそべます。しゃしんは この スマホの なかだけに しまわれて、ほかには おくられません。",
+    photoPick:"しゃしんを えらぶ", photoOff:"しゃしんを やめる", photoUse:"これにする", photoZoom:"おおきさ", photoDrag:"ゆびで うごかして かおを まるに あわせてね",
+    welcome:"ようこそ、{t}！\nここは あなたの ちいさな おうこく。むらの みんなの おねがいを きいてあげてね。",
+    welcomeSam:"ようこそ、ひがしの くにから きた {t}！\nここは ちいさな おうこく。むらの みんなの おねがいを きいてあげてね。",
+    help:"てつだう！", later:"あとで", thanks:"ありがとう、{t}！", backKingdom:"おうこくに もどる",
+    newDeco:"おうこくに {d} が できたよ！", allDeco:"おうこくが ぜんぶ かんせい！ これからも おねがいを きいてね",
+    nextDeco:"{d}まで あと❤️{n}", complete:"ぜんぶ そろったよ！",
+    gift:"おれいに {i} を もらったよ！", giftNew:"あたらしい きせかえ", tryOn:"きてみる",
+    mailTitle:"きょうの おてがみ", mailNone:"きょうの おてがみは もう よんだよ。\nまた あした みてね！", mailGift:"おうさまから プレゼントが とどいたよ！", mailHearts:"おうさまから ❤️3 が とどいたよ！",
+    galleryTitle:"しょうぞうがの へや", galleryEmpty:"まだ しょうぞうがが ないよ。\n「かいてもらう」で つくろう！",
+    paintTitle:"どんな はいけいに する？", paintGo:"かいてもらう！", saveImg:"ほぞんする", del:"けす", delAsk:"この しょうぞうがを けしますか？", yes:"はい", no:"いいえ",
+    saveNote:"ほぞんできない ときは、えを ながおしして ほぞんしてね",
+    menuTitle:"せってい", voiceOn:"🔊 こえ あり", voiceOff:"🔇 こえ なし", toTitle:"タイトルへ", theme:"🌙 あかるさ",
+    storeFull:"スマホの おきばが いっぱいで ほぞん できませんでした",
+    resetAsk:"いまの おうこくを けして、さいしょから はじめますか？（しょうぞうがは のこります）",
+    decos:{flags:"はた", flowers:"おはなばたけ", fountain:"ふんすい", lanterns:"ちょうちん", tower:"たかい とう", rainbow:"にじ", balloon:"ききゅう", gate:"ひがしの もん", pond:"はくちょうの いけ", fireworks:"はなび"},
+    kinds:{color:"ふくの いろ", hair:"かみがた", hairColor:"かみの いろ", acc:"かざり", pet:"なかま"},
+    items:{
+      long:"ロング", bob:"ボブ", short:"ショート", bun:"おだんご", twin:"ツイン", wavy:"ふわふわ",
+      tiara:"ティアラ", crown:"おうかん", helmet:"かぶと（きし）", hachimaki:"はちまき", none:"なし", flowercrown:"はなかんむり", ribbon:"リボン", feather:"はねぼうし", circlet:"きんの わ", kabuto:"かぶと（さむらい）",
+      cat:"ねこ", dog:"いぬ", dragon:"ドラゴン", unicorn:"ユニコーン", bunny:"うさぎ", chick:"ひよこ", penguin:"ペンギン", fox:"きつね",
+      pink:"ピンク", sky:"みずいろ", mint:"みどり", lavender:"むらさき", red:"あか", navy:"こん", yellow:"きいろ", gold:"きん", silver:"ぎん", black:"くろ", white:"しろ",
+      hcBlack:"くろ", hcBrown:"ちゃいろ", hcBlond:"きんいろ", hcRed:"あかちゃ", hcPink:"ピンク", hcBlue:"そらいろ", hcSilver:"ぎんいろ"
+    },
+    games:{
+      cake:{who:"パンやの くまさん", ask:"おまつりの ケーキを つくるのを てつだって！", how:"おなじ くだものを のせてね", wrong:"それは ちがうみたい", done:"おいしそうな ケーキが できた！"},
+      flowers:{who:"はなやの うさぎさん", ask:"おはなに おみずを あげて くれる？", how:"はちを タップして おみずを あげてね", done:"きれいに さいたね！"},
+      dragon:{who:"こどもの ドラゴン", ask:"くしゅん！ かぜを ひいちゃった…", how:"ドラゴンが ほしい ものを あげてね", wrong:"うーん、それじゃ ないみたい", done:"げんきに なったよ！",
+        needs:{cold:"さむいよ〜", throat:"のどが いたいよ", sleepy:"ねむいよ…", hungry:"おなか すいた〜", sneezy:"はなみずが でる〜"}},
+      lost:{who:"ふくろうの おばあさん", ask:"{x}を なくしちゃったの。さがして くれる？", how:"きを タップして さがしてね", wrong:"ここには ないみたい", done:"みつけてくれて ありがとう！",
+        things:{glasses:"めがね", key:"かぎ", hat:"ぼうし", yarn:"けいと"}},
+      letters:{who:"ゆうびんやの ペンギン", ask:"おてがみを とどけるのを てつだって！", how:"おなじ いろの おうちを タップしてね", wrong:"その おうちじゃ ないよ", done:"ぜんぶ とどいたね！"},
+      lanterns:{who:"ひがしの くにの たぬきさん", ask:"おまつりの ちょうちんを ならべて！", how:"つぎは どの いろ？", wrong:"おしい！ もういちど", done:"すてきな おまつりに なるね！"}
+    }
+  },
+  en:{
+    title:"My Little Kingdom", lead:"Be a princess, prince, knight or samurai, and help everyone in the village!",
+    start:"Start", cont:"Continue", newGame:"Start over", whoAreYou:"Who will you be?",
+    decide:"All set!", back:"Back", paint:"Paint me", mail:"Mail", closet:"Dress up", gallery:"Portraits", menu:"Settings",
+    roles:{princess:"Princess", prince:"Prince", knight:"Knight", samurai:"Samurai"},
+    tabs:{role:"Who", skin:"Skin", hair:"Hair", hairColor:"Hair color", color:"Outfit", acc:"Head", pet:"Buddy", photo:"Face", name:"Name"},
+    namePh:"Name (optional)", nameNote:"A grown-up can type it",
+    photoNote:"Play with a photo of your own face. The photo stays only on this device and is never sent anywhere.",
+    photoPick:"Choose a photo", photoOff:"Stop using photo", photoUse:"Use this", photoZoom:"Size", photoDrag:"Drag with your finger to fit the face in the circle",
+    welcome:"Welcome, {t}!\nThis is your little kingdom. Please help everyone in the village.",
+    welcomeSam:"Welcome, {t} from the Eastern Land!\nThis is the little kingdom. Please help everyone in the village.",
+    help:"I'll help!", later:"Later", thanks:"Thank you, {t}!", backKingdom:"Back to the kingdom",
+    newDeco:"A new {d} in your kingdom!", allDeco:"Your kingdom is complete! Keep helping the village.",
+    nextDeco:"{n}❤️ to {d}", complete:"Everything is built!",
+    gift:"You got {i} as a thank-you!", giftNew:"New dress-up item", tryOn:"Try it on",
+    mailTitle:"Today's letter", mailNone:"You already read today's letter.\nCome back tomorrow!", mailGift:"A present from the King and Queen!", mailHearts:"The King and Queen sent you 3 ❤️!",
+    galleryTitle:"Portrait Room", galleryEmpty:"No portraits yet.\nTap \"Paint me\" to make one!",
+    paintTitle:"Pick a background", paintGo:"Paint me!", saveImg:"Save", del:"Delete", delAsk:"Delete this portrait?", yes:"Yes", no:"No",
+    saveNote:"If saving doesn't work, press and hold the picture to save it",
+    menuTitle:"Settings", voiceOn:"🔊 Voice on", voiceOff:"🔇 Voice off", toTitle:"Title screen", theme:"🌙 Light/Dark",
+    storeFull:"Couldn't save: the device storage is full",
+    resetAsk:"Erase this kingdom and start over? (Portraits are kept.)",
+    decos:{flags:"flags", flowers:"flower garden", fountain:"fountain", lanterns:"lanterns", tower:"tall tower", rainbow:"rainbow", balloon:"hot-air balloon", gate:"Eastern gate", pond:"swan pond", fireworks:"fireworks"},
+    kinds:{color:"outfit color", hair:"hairstyle", hairColor:"hair color", acc:"headwear", pet:"buddy"},
+    items:{
+      long:"Long", bob:"Bob", short:"Short", bun:"Bun", twin:"Pigtails", wavy:"Wavy",
+      tiara:"Tiara", crown:"Crown", helmet:"Knight helmet", hachimaki:"Headband", none:"None", flowercrown:"Flower crown", ribbon:"Bow", feather:"Feather hat", circlet:"Gold circlet", kabuto:"Samurai helmet",
+      cat:"Cat", dog:"Dog", dragon:"Dragon", unicorn:"Unicorn", bunny:"Bunny", chick:"Chick", penguin:"Penguin", fox:"Fox",
+      pink:"Pink", sky:"Sky blue", mint:"Green", lavender:"Purple", red:"Red", navy:"Navy", yellow:"Yellow", gold:"Gold", silver:"Silver", black:"Black", white:"White",
+      hcBlack:"Black", hcBrown:"Brown", hcBlond:"Blond", hcRed:"Auburn", hcPink:"Pink", hcBlue:"Blue", hcSilver:"Silver"
+    },
+    games:{
+      cake:{who:"Baker Bear", ask:"Help me make a cake for the festival!", how:"Put on the same fruit", wrong:"Not that one", done:"What a yummy cake!"},
+      flowers:{who:"Florist Bunny", ask:"Could you water my flowers?", how:"Tap the pots to water them", done:"They bloomed so pretty!"},
+      dragon:{who:"Baby Dragon", ask:"Achoo! I caught a cold…", how:"Give the dragon what it needs", wrong:"Hmm, not that", done:"I feel better now!",
+        needs:{cold:"I'm cold!", throat:"My throat hurts", sleepy:"I'm sleepy…", hungry:"I'm hungry!", sneezy:"My nose is runny!"}},
+      lost:{who:"Grandma Owl", ask:"I lost my {x}. Can you find it?", how:"Tap the trees to look", wrong:"Not here", done:"You found it! Thank you!",
+        things:{glasses:"glasses", key:"key", hat:"hat", yarn:"yarn"}},
+      letters:{who:"Postman Penguin", ask:"Help me deliver the letters!", how:"Tap the house with the same color", wrong:"Not that house", done:"All delivered!"},
+      lanterns:{who:"Tanuki from the East", ask:"Line up the festival lanterns!", how:"Which color comes next?", wrong:"So close! Try again", done:"What a lovely festival!"}
+    }
+  }
+};
+
+/* ---------- データ ---------- */
+var ROLES = ["princess","prince","knight","samurai"];
+var SKINS = ["#ffe3cc","#f6cba5","#dca577","#ab744d","#74472b"];
+var HAIRS = ["long","bob","short","bun","twin","wavy"];
+var HAIRC = {hcBlack:"#33261f", hcBrown:"#7a4a2a", hcBlond:"#e6bf62", hcRed:"#b9512f", hcPink:"#f49ac1", hcBlue:"#7fa8f0", hcSilver:"#cfd4de"};
+var COLORS = {pink:"#ff8fbd", sky:"#7cc4f2", mint:"#6fd1a5", lavender:"#b48cf0", red:"#e8545c", navy:"#3f5aa8", yellow:"#f5cf4d", gold:"#e2b13c", silver:"#bfc8d4", black:"#34323f", white:"#f4f1ec"};
+var ACCS = ["tiara","crown","helmet","hachimaki","none","flowercrown","ribbon","feather","circlet","kabuto"];
+var PETS = {none:"", cat:"🐱", dog:"🐶", dragon:"🐲", unicorn:"🦄", bunny:"🐰", chick:"🐤", penguin:"🐧", fox:"🦊"};
+// 最初から使えるもの
+var FREE = ["long","bob","short","bun","hcBlack","hcBrown","hcBlond","hcRed","pink","sky","mint","lavender","red","navy","yellow","tiara","crown","helmet","hachimaki","none"];
+// おねがいを はじめて かなえたときの おれい
+var FIRST_GIFT = {cake:["acc","ribbon"], flowers:["acc","flowercrown"], dragon:["pet","dragon"], lost:["acc","feather"], letters:["pet","penguin"], lanterns:["acc","kabuto"]};
+// おてがみで とどく もの（ランダム）
+var MAIL_POOL = [["pet","cat"],["pet","dog"],["pet","unicorn"],["pet","bunny"],["pet","chick"],["pet","fox"],["hair","twin"],["hair","wavy"],
+  ["hairColor","hcPink"],["hairColor","hcBlue"],["hairColor","hcSilver"],["color","gold"],["color","silver"],["color","black"],["color","white"],["acc","circlet"]];
+var DECOS = [["flags",2],["flowers",4],["fountain",6],["lanterns",9],["tower",12],["rainbow",15],["balloon",19],["gate",23],["pond",27],["fireworks",32]];
+var DEF_LOOK = {
+  princess:{skin:0,hair:"long",hairColor:"hcBrown",color:"pink",acc:"tiara",pet:"none"},
+  prince:{skin:0,hair:"short",hairColor:"hcBlond",color:"navy",acc:"crown",pet:"none"},
+  knight:{skin:1,hair:"short",hairColor:"hcBrown",color:"red",acc:"helmet",pet:"none"},
+  samurai:{skin:1,hair:"bun",hairColor:"hcBlack",color:"navy",acc:"hachimaki",pet:"none"}
+};
+var RES = [ // むらの ひとと いる ばしょ
+  {id:"cake", emo:"🐻", x:72, y:360},
+  {id:"flowers", emo:"🐰", x:332, y:350},
+  {id:"dragon", emo:"🐲", x:330, y:520},
+  {id:"lost", emo:"🦉", x:58, y:500},
+  {id:"letters", emo:"🐧", x:140, y:560},
+  {id:"lanterns", emo:"🦝", x:265, y:575}
+];
+
+/* ---------- ほぞん ---------- */
+var KEY="oukoku-save", FACE_KEY="oukoku-face", PORT_KEY="oukoku-portraits";
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
+function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+function today(){ var d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+var S = null;
+function fresh(){ return {v:1, role:null, look:null, name:"", hearts:0, done:{}, unlocked:FREE.slice(), lastMail:"", active:["cake","flowers","dragon"], welcomed:false, voice:true}; }
+function load(){ try{ var j=JSON.parse(lsGet(KEY)); if(j && j.v===1) return j; }catch(e){} return null; }
+function save(){ lsSet(KEY, JSON.stringify(S)); }
+var FACE = lsGet(FACE_KEY) || "";
+
+/* ---------- ことば ---------- */
+var LANG = (function(){
+  var q=new URLSearchParams(location.search).get("lang"); if(q && TEXT[q]) return q;
+  var s=lsGet("oukoku-lang"); if(s && TEXT[s]) return s;
+  var n=((navigator.languages&&navigator.languages[0])||navigator.language||"ja").slice(0,2).toLowerCase();
+  return TEXT[n]?n:"en";
+})();
+function T(){ return TEXT[LANG]; }
+function fmt(s,o){ return s.replace(/\{(\w)\}/g,function(_,k){ return o[k]!=null?o[k]:""; }); }
+function titleOf(){ var t=T().roles[S.role]; return S.name ? (LANG==="ja"? t+" "+S.name : t+" "+S.name) : t; }
+function applyText(){
+  document.documentElement.lang=LANG; document.title=T().title;
+  document.querySelectorAll("[data-t]").forEach(function(n){ n.textContent=T()[n.getAttribute("data-t")]; });
+  document.querySelectorAll(".langs button").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.lang===LANG)); });
+  var has = S && S.role;
+  document.getElementById("startBtn").textContent = has? T().cont : T().start;
+  document.getElementById("resetBtn").style.display = has? "" : "none";
+}
+
+/* ---------- こえ・おと ---------- */
+function speak(txt){
+  if(!S || !S.voice || !window.speechSynthesis) return;
+  try{
+    speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(txt.replace(/[\u{1F000}-\u{1FFFF}☀-➿️]/gu,"").replace(/\n/g," "));
+    u.lang = LANG==="ja"?"ja-JP":"en-US"; u.rate = LANG==="ja"?1.0:0.95; u.pitch=1.15;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+var AC=null;
+function tone(f,d,type,when,vol){
+  try{
+    if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==="suspended") AC.resume();
+    var t=AC.currentTime+(when||0), o=AC.createOscillator(), g=AC.createGain();
+    o.type=type||"sine"; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.18,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+d+0.05);
+  }catch(e){}
+}
+function sfx(k){
+  if(k==="tap") tone(880,.12,"triangle");
+  else if(k==="ok"){ tone(784,.15,"triangle"); tone(1175,.2,"triangle",.09); }
+  else if(k==="no"){ tone(330,.18,"sine"); tone(262,.22,"sine",.12); }
+  else if(k==="win"){ [523,659,784,1047].forEach(function(f,i){ tone(f,.25,"triangle",i*.11); }); }
+  else if(k==="deco"){ [784,988,1175,1568,1319,1568].forEach(function(f,i){ tone(f,.3,"triangle",i*.1,.15); }); }
+}
+
+/* ---------- いろ ---------- */
+function mix(hex,amt){ // amt<0 で くらく、>0 で あかるく
+  var n=parseInt(hex.slice(1),16), r=n>>16, g=(n>>8)&255, b=n&255, t=amt<0?0:255, a=Math.abs(amt);
+  r=Math.round(r+(t-r)*a); g=Math.round(g+(t-g)*a); b=Math.round(b+(t-b)*a);
+  return "#"+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
+}
+
+/* =========================================================
+   キャラクターの え（SVG）  viewBox 0 0 200 280、あたまの まんなか (100,80) r=38
+   layer: "all" | "base"（かお より した）| "top"（かざり だけ）
+   ========================================================= */
+var UID=0;
+function avatarSVG(look, role, opt){
+  opt=opt||{}; var layer=opt.layer||"all", face=opt.face!==undefined?opt.face:FACE;
+  var id="a"+(++UID);
+  var skin=SKINS[look.skin]||SKINS[0], hc=HAIRC[look.hairColor]||"#5a3a2a", c=COLORS[look.color]||"#ff8fbd";
+  var c2=mix(c,-.25), c3=mix(c,.45), gold="#f2c64b", gold2="#c9952a";
+  var p=[], top=[];
+  // うしろの かみ
+  var hb={
+    long:'<path d="M58 78 Q58 36 100 36 Q142 36 142 78 L146 158 Q100 172 54 158 Z" fill="'+hc+'"/>',
+    bob:'<path d="M58 80 Q58 36 100 36 Q142 36 142 80 L144 118 Q100 128 56 118 Z" fill="'+hc+'"/>',
+    short:'', bun:'<circle cx="100" cy="34" r="15" fill="'+hc+'"/>',
+    twin:'<circle cx="52" cy="92" r="17" fill="'+hc+'"/><circle cx="148" cy="92" r="17" fill="'+hc+'"/><path d="M46 100 Q38 130 50 146 Q60 128 56 104Z M154 100 Q162 130 150 146 Q140 128 144 104Z" fill="'+hc+'"/>',
+    wavy:'<path d="M56 80 Q50 36 100 34 Q150 36 144 80 Q156 100 146 118 Q158 136 142 150 Q120 162 100 156 Q80 162 58 150 Q42 136 54 118 Q44 100 56 80Z" fill="'+hc+'"/>'
+  }[look.hair]||"";
+  // からだ（やくわり ごと）
+  var arm=function(col){ return '<path d="M72 128 Q56 150 62 182" stroke="'+col+'" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M128 128 Q144 150 138 182" stroke="'+col+'" stroke-width="14" fill="none" stroke-linecap="round"/>'+
+    '<circle cx="62" cy="186" r="8" fill="'+skin+'"/><circle cx="138" cy="186" r="8" fill="'+skin+'"/>'; };
+  var body="";
+  if(role==="princess"){
+    body = '<path d="M86 158 Q56 206 36 268 Q100 284 164 268 Q144 206 114 158 Z" fill="'+c+'"/>'+
+      '<path d="M44 250 Q100 266 156 250" stroke="'+c3+'" stroke-width="6" fill="none"/><path d="M52 226 Q100 240 148 226" stroke="'+c3+'" stroke-width="4" fill="none" stroke-dasharray="2 10" stroke-linecap="round"/>'+
+      arm(skin)+'<path d="M80 116 L120 116 L114 164 L86 164 Z" fill="'+c+'"/>'+
+      '<circle cx="76" cy="124" r="13" fill="'+c3+'"/><circle cx="124" cy="124" r="13" fill="'+c3+'"/>'+
+      '<path d="M86 160 L114 160" stroke="'+c2+'" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="160" r="6" fill="'+gold+'"/>'+
+      '<path d="M88 116 Q100 128 112 116" fill="'+skin+'"/><circle cx="100" cy="126" r="4" fill="'+gold+'"/>';
+  } else if(role==="prince"){
+    body = '<path d="M74 120 Q60 200 52 262 L148 262 Q140 200 126 120 Z" fill="'+c2+'" opacity=".9"/>'+ // マント
+      '<rect x="84" y="196" width="14" height="62" rx="5" fill="#f3efe6"/><rect x="102" y="196" width="14" height="62" rx="5" fill="#f3efe6"/>'+
+      '<rect x="80" y="246" width="20" height="16" rx="6" fill="#4a3226"/><rect x="100" y="246" width="20" height="16" rx="6" fill="#4a3226"/>'+
+      arm(c)+'<path d="M76 118 L124 118 L128 204 L72 204 Z" fill="'+c+'"/>'+
+      '<path d="M78 120 L122 196" stroke="'+gold+'" stroke-width="8"/><circle cx="100" cy="150" r="5" fill="'+gold+'"/>'+
+      '<rect x="66" y="114" width="20" height="9" rx="4" fill="'+gold+'"/><rect x="114" y="114" width="20" height="9" rx="4" fill="'+gold+'"/>'+
+      '<path d="M90 116 L100 130 L110 116" fill="#fff"/><rect x="72" y="196" width="56" height="8" fill="'+gold2+'"/>';
+  } else if(role==="knight"){
+    var st="#cfd6df", st2="#9aa5b3";
+    body = '<path d="M76 122 Q62 200 56 262 L144 262 Q138 200 124 122 Z" fill="'+c2+'"/>'+
+      '<rect x="84" y="196" width="14" height="62" rx="5" fill="'+st+'"/><rect x="102" y="196" width="14" height="62" rx="5" fill="'+st+'"/>'+
+      '<rect x="80" y="246" width="20" height="16" rx="6" fill="'+st2+'"/><rect x="100" y="246" width="20" height="16" rx="6" fill="'+st2+'"/>'+
+      arm(st)+'<path d="M76 118 L124 118 L126 204 L74 204 Z" fill="'+st+'"/>'+
+      '<path d="M84 124 L116 124 L114 206 L86 206 Z" fill="'+c+'"/>'+
+      '<path d="M100 146 l6 12 13 2 -10 9 3 13 -12 -7 -12 7 3 -13 -10 -9 13 -2z" fill="'+gold+'"/>'+
+      '<circle cx="70" cy="122" r="11" fill="'+st2+'"/><circle cx="130" cy="122" r="11" fill="'+st2+'"/>'+
+      // たて
+      '<path d="M134 164 L170 164 L170 196 Q170 224 152 236 Q134 224 134 196 Z" fill="'+c+'" stroke="'+gold+'" stroke-width="4"/>'+
+      '<path d="M152 176 L152 222 M140 192 L164 192" stroke="'+gold+'" stroke-width="5"/>';
+  } else { // samurai
+    body = '<path d="M80 180 L66 262 L98 262 L100 206 L102 262 L134 262 L120 180 Z" fill="'+c2+'"/>'+ // はかま
+      '<path d="M100 206 L100 262" stroke="'+mix(c2,-.2)+'" stroke-width="2"/>'+
+      '<rect x="72" y="256" width="26" height="8" rx="4" fill="#7a5a3a"/><rect x="102" y="256" width="26" height="8" rx="4" fill="#7a5a3a"/>'+
+      arm(c)+'<path d="M74 118 L126 118 L124 186 L76 186 Z" fill="'+c+'"/>'+
+      '<path d="M88 116 L100 150 L112 116" fill="#f6f3ea"/><path d="M88 116 L100 150 M112 116 L100 150" stroke="'+c2+'" stroke-width="3"/>'+
+      '<rect x="74" y="172" width="52" height="14" fill="#3b2b2b"/>'+
+      '<circle cx="84" cy="136" r="6" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="116" cy="136" r="6" fill="none" stroke="#fff" stroke-width="2.5"/>'+
+      // こしの かたな（さや）
+      '<path d="M60 196 L150 166" stroke="#2c2230" stroke-width="7" stroke-linecap="round"/><path d="M128 173 L150 166" stroke="#c9952a" stroke-width="7" stroke-linecap="round"/><path d="M124 168 L128 180" stroke="'+gold+'" stroke-width="5" stroke-linecap="round"/>';
+  }
+  p.push(hb, body);
+  // くび・あたま
+  p.push('<rect x="92" y="106" width="16" height="14" fill="'+skin+'"/>');
+  var useFace = face && layer!=="top";
+  if(face){
+    p.push('<clipPath id="'+id+'c"><circle cx="100" cy="80" r="38"/></clipPath><circle cx="100" cy="80" r="39.5" fill="'+skin+'"/>');
+    if(layer==="all") p.push('<image href="'+face+'" x="62" y="42" width="76" height="76" clip-path="url(#'+id+'c)" preserveAspectRatio="xMidYMid slice"/>');
+  } else {
+    p.push('<circle cx="100" cy="80" r="38" fill="'+skin+'"/>'+
+      '<ellipse cx="86" cy="84" rx="4.5" ry="6" fill="#3a2a2a"/><ellipse cx="114" cy="84" rx="4.5" ry="6" fill="#3a2a2a"/>'+
+      '<circle cx="87.5" cy="82" r="1.8" fill="#fff"/><circle cx="115.5" cy="82" r="1.8" fill="#fff"/>'+
+      '<ellipse cx="76" cy="96" rx="7" ry="4.5" fill="#ff9aa8" opacity=".6"/><ellipse cx="124" cy="96" rx="7" ry="4.5" fill="#ff9aa8" opacity=".6"/>'+
+      '<path d="M92 99 Q100 106 108 99" stroke="#a5484f" stroke-width="3" fill="none" stroke-linecap="round"/>');
+    // まえがみ
+    var hf={
+      long:'<path d="M62 76 Q60 40 100 40 Q140 40 138 76 Q120 58 100 62 Q80 56 62 76Z" fill="'+hc+'"/>',
+      bob:'<path d="M62 82 Q58 40 100 40 Q142 40 138 82 Q134 62 118 62 L100 58 L82 62 Q66 62 62 82Z" fill="'+hc+'"/>',
+      short:'<path d="M62 78 Q60 40 100 40 Q140 40 138 78 Q130 56 112 60 Q96 50 84 60 Q68 58 62 78Z" fill="'+hc+'"/>',
+      bun:'<path d="M62 76 Q62 42 100 42 Q138 42 138 76 Q124 56 100 58 Q76 56 62 76Z" fill="'+hc+'"/>',
+      twin:'<path d="M62 78 Q60 40 100 40 Q140 40 138 78 Q124 60 104 62 L100 54 L96 62 Q76 60 62 78Z" fill="'+hc+'"/>',
+      wavy:'<path d="M60 80 Q56 38 100 38 Q144 38 140 80 Q130 64 118 66 Q110 56 100 62 Q90 56 82 66 Q70 64 60 80Z" fill="'+hc+'"/>'
+    }[look.hair]||"";
+    p.push(hf);
+  }
+  // かざり
+  var a=look.acc;
+  if(a==="tiara") top.push('<path d="M76 50 L82 34 L91 46 L100 26 L109 46 L118 34 L124 50 Z" fill="'+gold+'" stroke="'+gold2+'" stroke-width="2" stroke-linejoin="round"/><circle cx="100" cy="40" r="5" fill="#ff5f9e"/><circle cx="82" cy="44" r="3" fill="#7fd3ff"/><circle cx="118" cy="44" r="3" fill="#7fd3ff"/>');
+  else if(a==="crown") top.push('<path d="M72 50 L72 22 L86 36 L100 16 L114 36 L128 22 L128 50 Z" fill="'+gold+'" stroke="'+gold2+'" stroke-width="2" stroke-linejoin="round"/><rect x="72" y="44" width="56" height="8" fill="'+gold2+'"/><circle cx="100" cy="36" r="5" fill="#e8545c"/><circle cx="84" cy="42" r="3.5" fill="#4f9cf0"/><circle cx="116" cy="42" r="3.5" fill="#4f9cf0"/>');
+  else if(a==="helmet") top.push('<path d="M60 74 Q58 34 100 32 Q142 34 140 74 L132 74 Q130 52 100 50 Q70 52 68 74 Z" fill="#cfd6df" stroke="#9aa5b3" stroke-width="2"/><path d="M100 32 Q108 6 132 10 Q118 18 112 34Z" fill="'+c+'"/><rect x="96" y="32" width="8" height="20" fill="#9aa5b3"/>');
+  else if(a==="hachimaki") top.push('<path d="M62 62 Q100 50 138 62 L138 70 Q100 58 62 70Z" fill="'+(look.color==="white"?"#e8545c":"#fff")+'" stroke="'+c2+'" stroke-width="1.5"/><path d="M138 64 Q156 60 162 74 M138 68 Q150 76 154 88" stroke="'+(look.color==="white"?"#e8545c":"#fff")+'" stroke-width="5" fill="none" stroke-linecap="round"/>');
+  else if(a==="flowercrown"){ var fc=["#ff7fb0","#ffd34d","#9fd8ff","#c9a2ff","#ff9e6b"], s=""; for(var i=0;i<7;i++){ var ang=Math.PI*(1.08+i*0.14), x=100+44*Math.cos(ang), y=80+44*Math.sin(ang)+4; s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="7" fill="'+fc[i%5]+'"/><circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.5" fill="#fff6a8"/>'; } top.push('<path d="M58 70 Q100 30 142 70" stroke="#6fbf73" stroke-width="4" fill="none"/>'+s); }
+  else if(a==="ribbon") top.push('<path d="M118 46 L146 30 L148 62 Z M118 46 L96 28 L96 60 Z" fill="'+c+'" stroke="'+c2+'" stroke-width="2" stroke-linejoin="round"/><circle cx="120" cy="46" r="7" fill="'+c2+'"/>');
+  else if(a==="feather") top.push('<ellipse cx="100" cy="46" rx="44" ry="12" fill="'+c2+'"/><path d="M62 46 Q64 24 100 22 Q136 24 138 46 Z" fill="'+c2+'"/><path d="M126 34 Q150 4 170 8 Q150 22 132 42Z" fill="#fff" stroke="#ddd"/><circle cx="124" cy="38" r="5" fill="'+gold+'"/>');
+  else if(a==="circlet") top.push('<path d="M62 64 Q100 46 138 64" stroke="'+gold+'" stroke-width="5" fill="none"/><path d="M100 50 l6 8 -6 8 -6 -8z" fill="#7fd3ff" stroke="'+gold2+'" stroke-width="1.5"/>');
+  else if(a==="kabuto") top.push('<path d="M56 74 Q56 32 100 30 Q144 32 144 74 L134 70 Q130 50 100 48 Q70 50 66 70 Z" fill="#2f2b3a"/><path d="M50 72 Q38 84 46 96 L60 78Z M150 72 Q162 84 154 96 L140 78Z" fill="#2f2b3a"/><path d="M100 40 Q80 26 72 4 Q90 18 100 30 Q110 18 128 4 Q120 26 100 40Z" fill="'+gold+'" stroke="'+gold2+'" stroke-width="2"/><circle cx="100" cy="42" r="6" fill="'+c+'"/>');
+  var inner;
+  if(layer==="top") inner = top.join("");
+  else if(layer==="base") inner = p.join("");
+  else inner = p.join("")+top.join("");
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280"'+(opt.attrs||'')+'>'+inner+'</svg>';
+}
+
+/* ---------- がめん きりかえ ---------- */
+function show(id){
+  document.querySelectorAll(".screen").forEach(function(s){ s.classList.toggle("on", s.id===id); });
+  if(window.speechSynthesis) try{ speechSynthesis.cancel(); }catch(e){}
+}
+function $(s){ return document.querySelector(s); }
+function el(tag,cls,html){ var e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function toast(t){ var e=$("#toast"); e.textContent=t; e.style.display="block"; clearTimeout(toast.t); toast.t=setTimeout(function(){ e.style.display="none"; },2200); }
+function confetti(n, chars){
+  chars=chars||["❤️","✨","💖","⭐","🌸"];
+  for(var i=0;i<(n||14);i++){ (function(i){ setTimeout(function(){
+    var f=el("div","fx",pick(chars)); f.style.left=(10+Math.random()*80)+"vw"; f.style.top=(60+Math.random()*30)+"vh";
+    f.style.setProperty("--r",(Math.random()*120-60)+"deg"); document.body.appendChild(f); setTimeout(function(){ f.remove(); },1700);
+  }, i*60); })(i); }
+}
+
+/* ---------- ダイアログ ---------- */
+function dialog(html, onclose){
+  var ov=$("#ov"), c=$("#ovCard"); c.innerHTML=html; ov.classList.add("on");
+  ov.onclick=function(e){ if(e.target===ov){ closeDialog(); onclose&&onclose(); } };
+  var x=c.querySelector(".x"); if(x) x.onclick=function(){ closeDialog(); onclose&&onclose(); };
+  return c;
+}
+function closeDialog(){ $("#ov").classList.remove("on"); }
+
+/* =========================================================
+   タイトル
+   ========================================================= */
+function renderTitle(){
+  var h=""; ROLES.forEach(function(r){ h+=avatarSVG(DEF_LOOK[r], r, {face:""}); });
+  $("#titleAv").innerHTML=h; applyText();
+}
+document.querySelectorAll(".langs button").forEach(function(b){ b.onclick=function(){ LANG=b.dataset.lang; lsSet("oukoku-lang",LANG); applyText(); }; });
+$("#startBtn").onclick=function(){
+  sfx("tap");
+  if(S && S.role){ enterKingdom(); }
+  else { S=fresh(); renderRoles(); show("rolepick"); }
+};
+$("#resetBtn").onclick=function(){
+  var c=dialog('<p class="say" style="font-size:17px">'+esc(T().resetAsk)+'</p><div class="btns"><button class="big sub" id="rN">'+T().no+'</button><button class="big" id="rY">'+T().yes+'</button></div>');
+  c.querySelector("#rN").onclick=closeDialog;
+  c.querySelector("#rY").onclick=function(){ closeDialog(); var v=S?S.voice:true; S=fresh(); S.voice=v; save(); renderRoles(); show("rolepick"); };
+};
+
+/* =========================================================
+   だれに なる？
+   ========================================================= */
+function renderRoles(){
+  var w=$("#roles"); w.innerHTML="";
+  ROLES.forEach(function(r){
+    var b=el("button","role", avatarSVG(DEF_LOOK[r], r, {face:""})+"<b>"+esc(T().roles[r])+"</b>");
+    b.onclick=function(){
+      sfx("ok"); var prev=S.look;
+      S.role=r; S.look=JSON.parse(JSON.stringify(DEF_LOOK[r]));
+      if(prev){ S.look.skin=prev.skin; S.look.pet=prev.pet; }
+      speak(T().roles[r]); openCloset(true);
+    };
+    w.appendChild(b);
+  });
+}
+
+/* =========================================================
+   きせかえ
+   ========================================================= */
+var closetTab="color", closetFirst=false;
+function openCloset(first){ closetFirst=!!first; closetTab=first?"color":"color"; show("closet"); renderCloset(); }
+function isUnlocked(v){ return v==="none" || S.unlocked.indexOf(v)>=0; }
+function renderCloset(){
+  $("#closetStage").innerHTML = avatarSVG(S.look, S.role) + '<div class="pet">'+(PETS[S.look.pet]||"")+'</div>';
+  var tabs=["role","color","acc","hair","hairColor","skin","pet","photo","name"], tw=$("#tabs"); tw.innerHTML="";
+  tabs.forEach(function(t){ var b=el("button",null,esc(T().tabs[t])); b.setAttribute("aria-pressed",String(t===closetTab));
+    b.onclick=function(){ closetTab=t; sfx("tap"); renderCloset(); }; tw.appendChild(b); });
+  var o=$("#opts"); o.innerHTML=""; o.style.display="grid";
+  function opt(inner, key, val, unlockKey){
+    var b=el("button","opt",inner), lk=unlockKey!=null && !isUnlocked(unlockKey);
+    b.setAttribute("aria-pressed", String(S.look[key]===val)); if(lk) b.classList.add("locked");
+    b.onclick=function(){ if(lk){ sfx("no"); toast("🔒"); return; } S.look[key]=val; sfx("tap"); save(); renderCloset(); };
+    o.appendChild(b);
+  }
+  if(closetTab==="role"){
+    ROLES.forEach(function(r){ var b=el("button","opt",avatarSVG(DEF_LOOK[r],r,{face:""})); b.setAttribute("aria-pressed",String(S.role===r));
+      b.onclick=function(){ if(S.role===r) return; sfx("tap"); var k=S.look; S.role=r; S.look=JSON.parse(JSON.stringify(DEF_LOOK[r])); S.look.skin=k.skin; S.look.pet=k.pet; S.look.hairColor=k.hairColor; save(); renderCloset(); };
+      o.appendChild(b); });
+  } else if(closetTab==="color"){
+    Object.keys(COLORS).forEach(function(k){ opt('<span class="sw" style="background:'+COLORS[k]+'"></span>',"color",k,k); });
+  } else if(closetTab==="hairColor"){
+    Object.keys(HAIRC).forEach(function(k){ opt('<span class="sw" style="background:'+HAIRC[k]+'"></span>',"hairColor",k,k); });
+  } else if(closetTab==="skin"){
+    SKINS.forEach(function(c,i){ opt('<span class="sw" style="background:'+c+'"></span>',"skin",i,null); });
+  } else if(closetTab==="hair"){
+    HAIRS.forEach(function(h){ var lk=Object.assign({},S.look,{hair:h,acc:"none"}); opt(avatarSVG(lk,S.role,{face:"",attrs:' viewBox="40 10 120 120"'}).replace('viewBox="0 0 200 280"',''),"hair",h,h); });
+  } else if(closetTab==="acc"){
+    ACCS.forEach(function(a){ var lk=Object.assign({},S.look,{acc:a}); opt(a==="none"?"🚫":avatarSVG(lk,S.role,{attrs:' viewBox="40 0 120 120"'}).replace('viewBox="0 0 200 280"',''),"acc",a,a); });
+  } else if(closetTab==="pet"){
+    Object.keys(PETS).forEach(function(k){ opt(k==="none"?"🚫":PETS[k],"pet",k,k); });
+  } else if(closetTab==="photo"){
+    o.style.display="block";
+    o.innerHTML='<p style="color:var(--sub);font-size:14px;margin:4px 6px 14px;text-align:center">'+esc(T().photoNote)+'</p><div class="row"><button class="big" id="phPick">📷 '+esc(T().photoPick)+'</button>'+(FACE?'<button class="big sub" id="phOff">'+esc(T().photoOff)+'</button>':'')+'</div>';
+    $("#phPick").onclick=function(){ $("#fileIn").value=""; $("#fileIn").click(); };
+    if(FACE) $("#phOff").onclick=function(){ FACE=""; lsDel(FACE_KEY); renderCloset(); };
+  } else if(closetTab==="name"){
+    o.style.display="block";
+    o.innerHTML='<input class="name-in" id="nameIn" maxlength="10" placeholder="'+esc(T().namePh)+'"><p style="color:var(--sub);font-size:13px;text-align:center">'+esc(T().nameNote)+'</p>';
+    var ni=$("#nameIn"); ni.value=S.name||""; ni.oninput=function(){ S.name=ni.value.trim(); save(); };
+  }
+}
+$("#closetDone").onclick=function(){ sfx("ok"); save(); enterKingdom(); };
+
+/* ---------- かおの しゃしん ---------- */
+$("#fileIn").onchange=function(){
+  var f=this.files&&this.files[0]; if(!f) return;
+  var url=URL.createObjectURL(f), img=new Image();
+  img.onload=function(){ cropFace(img, function(){ URL.revokeObjectURL(url); }); };
+  img.src=url;
+};
+function cropFace(img, done){
+  var c=dialog('<button class="x">×</button><p class="note" style="margin-top:20px">'+esc(T().photoDrag)+'</p><div class="crop"><canvas id="cc" width="520" height="520"></canvas></div>'+
+    '<div style="margin-bottom:12px">🔍 <input type="range" id="cz" min="1" max="4" step="0.01" value="1"></div><div class="btns"><button class="big" id="cOk">'+esc(T().photoUse)+'</button></div>', done);
+  var cv=c.querySelector("#cc"), ctx=cv.getContext("2d"), z=c.querySelector("#cz");
+  var base=Math.max(520/img.width, 520/img.height), sc=1, ox=0, oy=0;
+  function draw(target, size){
+    var k=size/520, s=base*sc*k, w=img.width*s, h=img.height*s;
+    target.drawImage(img, size/2-w/2+ox*k, size/2-h/2+oy*k, w, h);
+  }
+  function paint(){
+    ctx.clearRect(0,0,520,520); draw(ctx,520);
+    ctx.save(); ctx.fillStyle="rgba(0,0,0,.5)"; ctx.beginPath(); ctx.rect(0,0,520,520); ctx.arc(260,260,200,0,Math.PI*2,true); ctx.fill("evenodd");
+    ctx.strokeStyle="#fff"; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(260,260,200,0,Math.PI*2); ctx.stroke(); ctx.restore();
+  }
+  var drag=null;
+  cv.onpointerdown=function(e){ drag={x:e.clientX,y:e.clientY,ox:ox,oy:oy}; cv.setPointerCapture(e.pointerId); };
+  cv.onpointermove=function(e){ if(!drag) return; ox=drag.ox+(e.clientX-drag.x)*2; oy=drag.oy+(e.clientY-drag.y)*2; paint(); };
+  cv.onpointerup=cv.onpointercancel=function(){ drag=null; };
+  z.oninput=function(){ sc=+z.value; paint(); };
+  c.querySelector("#cOk").onclick=function(){
+    var o=document.createElement("canvas"); o.width=o.height=200; var x=o.getContext("2d");
+    // まるの なか（はば 400/520）を 200px に
+    x.translate(100,100); x.scale(520/400,520/400); x.translate(-100,-100); draw(x,200);
+    FACE=o.toDataURL("image/jpeg",0.85);
+    if(!lsSet(FACE_KEY,FACE)) toast(T().storeFull);
+    closeDialog(); done&&done(); sfx("ok"); renderCloset();
+  };
+  paint();
+}
+
+/* =========================================================
+   おうこく（まちの え）
+   ========================================================= */
+function decoCount(){ var n=0; DECOS.forEach(function(d){ if(S.hearts>=d[1]) n++; }); return n; }
+function has(id){ for(var i=0;i<DECOS.length;i++) if(DECOS[i][0]===id) return S.hearts>=DECOS[i][1]; return false; }
+function sceneSVG(){
+  var h=[], night=has("fireworks");
+  h.push('<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+(night?"#5b5fb8":"#8fd3ff")+'"/><stop offset="1" stop-color="'+(night?"#f7b6d2":"#e9f7ff")+'"/></linearGradient>'+
+    '<linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fe08a"/><stop offset="1" stop-color="#6cc46a"/></linearGradient></defs>');
+  h.push('<rect width="400" height="600" fill="url(#sky)"/>');
+  if(!night) h.push('<circle cx="340" cy="60" r="28" fill="#ffe27a"/><circle cx="340" cy="60" r="40" fill="#ffe27a" opacity=".25"/>');
+  else { for(var i=0;i<14;i++) h.push('<circle class="twinkle" style="animation-delay:'+(i*0.23).toFixed(2)+'s" cx="'+(20+i*27)+'" cy="'+(20+(i*37)%110)+'" r="1.8" fill="#fff"/>'); }
+  if(has("rainbow")) ["#ff7b7b","#ffb36b","#ffe36b","#7fdc8a","#7cc4f2","#b48cf0"].forEach(function(c,i){ h.push('<path d="M-20 270 A220 200 0 0 1 420 270" stroke="'+c+'" stroke-width="9" fill="none" opacity=".75" transform="translate(0,'+(i*9)+')"/>'); });
+  h.push('<g class="cloud"><ellipse cx="0" cy="70" rx="34" ry="14" fill="#fff" opacity=".9"/><ellipse cx="22" cy="62" rx="22" ry="14" fill="#fff" opacity=".9"/></g>');
+  h.push('<g class="cloud" style="animation-delay:-22s"><ellipse cx="0" cy="130" rx="28" ry="11" fill="#fff" opacity=".8"/><ellipse cx="16" cy="124" rx="18" ry="11" fill="#fff" opacity=".8"/></g>');
+  if(has("balloon")) h.push('<g class="bob"><path d="M62 92 Q40 92 40 66 Q40 40 62 40 Q84 40 84 66 Q84 92 62 92Z" fill="#ff8fbd"/><path d="M62 40 Q52 66 62 92 Q72 66 62 40" fill="#ffe36b"/><path d="M54 92 L58 104 M70 92 L66 104" stroke="#8a6a5a" stroke-width="1.5"/><rect x="55" y="104" width="14" height="10" rx="2" fill="#b0784e"/></g>');
+  if(night){ [[90,90,"#ffd34d"],[300,120,"#ff7fb0"],[200,60,"#9fd8ff"]].forEach(function(f,i){ var s='<g class="twinkle" style="animation-delay:'+(i*0.5)+'s">'; for(var k=0;k<12;k++){ var a=k*Math.PI/6; s+='<line x1="'+f[0]+'" y1="'+f[1]+'" x2="'+(f[0]+26*Math.cos(a)).toFixed(1)+'" y2="'+(f[1]+26*Math.sin(a)).toFixed(1)+'" stroke="'+f[2]+'" stroke-width="3" stroke-linecap="round"/>'; } h.push(s+'</g>'); }); }
+  // とおくの おか
+  h.push('<path d="M0 250 Q80 200 170 240 Q260 190 400 240 L400 600 L0 600Z" fill="#b8e8a4"/>');
+  // おしろ
+  var w="#fbf3ea", w2="#e8d9c8", rf="#7b8cf0";
+  h.push('<g>');
+  if(has("tower")) h.push('<rect x="262" y="70" width="34" height="170" fill="'+w+'" stroke="'+w2+'" stroke-width="2"/><path d="M256 72 L279 22 L302 72Z" fill="#b48cf0"/><rect x="273" y="104" width="12" height="18" rx="6" fill="#6b7bd6"/>');
+  h.push('<rect x="130" y="150" width="140" height="100" fill="'+w+'" stroke="'+w2+'" stroke-width="2"/>');
+  h.push('<rect x="112" y="110" width="40" height="140" fill="'+w+'" stroke="'+w2+'" stroke-width="2"/><rect x="248" y="110" width="40" height="140" fill="'+w+'" stroke="'+w2+'" stroke-width="2"/>');
+  h.push('<rect x="176" y="96" width="48" height="80" fill="'+w+'" stroke="'+w2+'" stroke-width="2"/>');
+  h.push('<path d="M106 112 L132 62 L158 112Z M242 112 L268 62 L294 112Z" fill="'+rf+'"/><path d="M170 98 L200 40 L230 98Z" fill="#ff8fbd"/>');
+  for(var x=130;x<270;x+=14) h.push('<rect x="'+x+'" y="142" width="8" height="10" fill="'+w+'" stroke="'+w2+'" stroke-width="1.5"/>');
+  h.push('<path d="M180 250 L180 212 Q200 188 220 212 L220 250Z" fill="#a8744a"/><circle cx="214" cy="232" r="2" fill="#f2c64b"/>');
+  h.push('<rect x="124" y="140" width="14" height="22" rx="7" fill="#6b7bd6"/><rect x="262" y="140" width="14" height="22" rx="7" fill="#6b7bd6"/><circle cx="200" cy="124" r="11" fill="#6b7bd6"/><circle cx="200" cy="124" r="11" fill="none" stroke="#f2c64b" stroke-width="2"/>');
+  h.push('<rect x="146" y="186" width="14" height="20" rx="7" fill="#6b7bd6"/><rect x="240" y="186" width="14" height="20" rx="7" fill="#6b7bd6"/>');
+  if(has("flags")){ [[132,62],[268,62],[200,40]].forEach(function(f,i){ h.push('<line x1="'+f[0]+'" y1="'+f[1]+'" x2="'+f[0]+'" y2="'+(f[1]-24)+'" stroke="#8a6a5a" stroke-width="2"/><path class="twinkle" style="animation-duration:2.4s" d="M'+f[0]+' '+(f[1]-24)+' l20 6 -20 6z" fill="'+["#ff6fa8","#ffd34d","#7cc4f2"][i]+'"/>'); }); }
+  h.push('</g>');
+  // じめん と みち
+  h.push('<path d="M0 262 Q200 240 400 262 L400 600 L0 600Z" fill="url(#gr)"/>');
+  h.push('<path d="M182 250 L218 250 L262 600 L138 600Z" fill="#f2dfb4"/>');
+  if(has("lanterns")){ h.push('<path d="M20 284 Q110 304 182 284 M218 284 Q290 304 380 284" stroke="#8a6a5a" stroke-width="2" fill="none"/>');
+    [40,80,120,160,240,280,320,360].forEach(function(x,i){ var y=284+ (x<200? 20*Math.sin((x-20)/162*Math.PI):20*Math.sin((x-218)/162*Math.PI)); h.push('<ellipse cx="'+x+'" cy="'+(y+8).toFixed(1)+'" rx="7" ry="9" fill="'+(i%2?"#ff6b5a":"#fff3d6")+'" stroke="#c0503f" stroke-width="1"/>'); }); }
+  if(has("gate")) h.push('<g><rect x="16" y="222" width="10" height="56" fill="#c0503f"/><rect x="58" y="222" width="10" height="56" fill="#c0503f"/><rect x="26" y="226" width="32" height="40" fill="#f6e7c8"/><path d="M30 266 L30 236 Q42 226 54 236 L54 266Z" fill="#7a4a2a"/>'+
+    '<path d="M0 214 Q12 220 20 210 L64 210 Q72 220 84 214 L74 202 L10 202Z" fill="#3e6b5a"/><path d="M14 202 L42 186 L70 202Z" fill="#4d8070"/><circle cx="42" cy="214" r="4" fill="#f2c64b"/></g>');
+  if(has("flowers")){ [[96,300],[304,300],[120,330],[280,330]].forEach(function(f){ h.push('<ellipse cx="'+f[0]+'" cy="'+f[1]+'" rx="30" ry="10" fill="#5aa85a"/>'); for(var k=0;k<5;k++) h.push('<circle cx="'+(f[0]-22+k*11)+'" cy="'+(f[1]-4+(k%2)*4)+'" r="5" fill="'+["#ff7fb0","#ffd34d","#fff","#c9a2ff","#ff9e6b"][k]+'"/>'); }); }
+  if(has("fountain")) h.push('<g><ellipse cx="200" cy="330" rx="40" ry="12" fill="#cfd6df"/><ellipse cx="200" cy="327" rx="34" ry="8" fill="#8fd3ff"/><rect x="195" y="300" width="10" height="26" fill="#cfd6df"/><path class="twinkle" d="M200 300 Q186 284 178 318 M200 300 Q214 284 222 318 M200 300 L200 282" stroke="#8fd3ff" stroke-width="3" fill="none" stroke-linecap="round"/></g>');
+  if(has("pond")) h.push('<g><ellipse cx="88" cy="440" rx="50" ry="18" fill="#7cc4f2"/><text x="80" y="446" font-size="22" text-anchor="middle">🦢</text></g>');
+  // き
+  h.push('<g><rect x="30" y="460" width="10" height="30" fill="#8a5a3a"/><circle cx="35" cy="450" r="24" fill="#5aa85a"/></g>');
+  h.push('<g><rect x="360" y="410" width="10" height="30" fill="#8a5a3a"/><circle cx="365" cy="400" r="22" fill="#5aa85a"/></g>');
+  // むらの ひと
+  RES.forEach(function(r){
+    var act=S.active.indexOf(r.id)>=0;
+    h.push('<g class="tap" data-res="'+r.id+'"><circle cx="'+r.x+'" cy="'+(r.y-12)+'" r="34" fill="transparent"/><ellipse cx="'+r.x+'" cy="'+(r.y+6)+'" rx="20" ry="5" fill="rgba(0,0,0,.12)"/><text x="'+r.x+'" y="'+r.y+'" font-size="40" text-anchor="middle">'+r.emo+'</text>'+
+      (act?'<g class="bob"><circle cx="'+(r.x+20)+'" cy="'+(r.y-48)+'" r="14" fill="#fff" stroke="#ff6fa8" stroke-width="3"/><text x="'+(r.x+20)+'" y="'+(r.y-42)+'" font-size="16" text-anchor="middle" font-weight="700" fill="#ff6fa8">!</text></g>':'')+'</g>');
+  });
+  // じぶん
+  h.push('<g id="me" class="tap">'+avatarSVG(S.look,S.role,{attrs:' x="150" y="360" width="100" height="140"'})+
+    (S.look.pet&&S.look.pet!=="none"?'<text x="250" y="496" font-size="30" text-anchor="middle">'+PETS[S.look.pet]+'</text>':'')+'</g>');
+  return h.join("");
+}
+function renderKingdom(){
+  var sc=$("#scene"); sc.innerHTML=sceneSVG(); sc.parentNode.classList.toggle("night", has("fireworks"));
+  sc.querySelectorAll("[data-res]").forEach(function(g){ g.addEventListener("click",function(){ openRequest(g.getAttribute("data-res")); }); });
+  var me=sc.querySelector("#me"); me.addEventListener("click",function(){ sfx("ok"); me.classList.remove("shake"); void me.getBBox(); me.classList.add("shake"); speak(titleOf()); });
+  $("#hc").textContent=S.hearts;
+  var next=null, prev=0; for(var i=0;i<DECOS.length;i++){ if(S.hearts<DECOS[i][1]){ next=DECOS[i]; break; } prev=DECOS[i][1]; }
+  if(next){ $("#pf").style.width=Math.round((S.hearts-prev)/(next[1]-prev)*100)+"%"; $("#pn").textContent=fmt(T().nextDeco,{d:T().decos[next[0]], n:next[1]-S.hearts}); }
+  else { $("#pf").style.width="100%"; $("#pn").textContent=T().complete; }
+  var mb=$("#btnMail"), bd=mb.querySelector(".badge"); if(bd) bd.remove();
+  if(S.lastMail!==today()) mb.appendChild(el("span","badge","1"));
+}
+function enterKingdom(){
+  applyText(); show("kingdom"); renderKingdom();
+  if(!S.welcomed){
+    S.welcomed=true; save();
+    var msg=fmt(S.role==="samurai"?T().welcomeSam:T().welcome,{t:titleOf()});
+    var c=dialog('<div class="who">🏰</div><p class="say">'+esc(msg).replace(/\n/g,"<br>")+'</p><div class="btns"><button class="big" id="wOk">OK</button></div>');
+    c.querySelector("#wOk").onclick=closeDialog; speak(msg);
+  }
+}
+$("#btnCloset").onclick=function(){ sfx("tap"); openCloset(false); };
+$("#btnGallery").onclick=function(){ sfx("tap"); renderGallery(); show("gallery"); };
+$("#btnMenu").onclick=function(){
+  sfx("tap");
+  var c=dialog('<button class="x">×</button><p class="say">'+esc(T().menuTitle)+'</p><div class="btns" style="flex-direction:column;align-items:center">'+
+    '<button class="big sub" id="mV">'+(S.voice?T().voiceOn:T().voiceOff)+'</button>'+
+    '<div class="langs"><button data-l="ja" aria-pressed="'+(LANG==="ja")+'">にほんご</button><button data-l="en" aria-pressed="'+(LANG==="en")+'">English</button></div>'+
+    '<button class="big sub" id="mT">'+esc(T().toTitle)+'</button></div>');
+  c.querySelector("#mV").onclick=function(){ S.voice=!S.voice; save(); this.textContent=S.voice?T().voiceOn:T().voiceOff; };
+  c.querySelectorAll("[data-l]").forEach(function(b){ b.onclick=function(){ LANG=b.dataset.l; lsSet("oukoku-lang",LANG); closeDialog(); applyText(); renderKingdom(); }; });
+  c.querySelector("#mT").onclick=function(){ closeDialog(); renderTitle(); show("title"); };
+};
+
+/* ---------- おてがみ（1日1かい） ---------- */
+$("#btnMail").onclick=function(){
+  sfx("tap");
+  if(S.lastMail===today()){
+    var c0=dialog('<button class="x">×</button><div class="who">📮</div><p class="say">'+esc(T().mailNone).replace(/\n/g,"<br>")+'</p>'); return;
+  }
+  S.lastMail=today();
+  var pool=MAIL_POOL.filter(function(g){ return S.unlocked.indexOf(g[1])<0; });
+  if(!pool.length){ S.hearts+=3; save(); renderKingdom(); var c1=dialog('<button class="x">×</button><div class="who">💌</div><p class="say">'+esc(T().mailHearts)+'</p>'); speak(T().mailHearts); confetti(); checkDeco(S.hearts-3); return; }
+  var g=pick(pool); S.unlocked.push(g[1]); save(); renderKingdom();
+  showGift(g, T().mailGift, "💌");
+};
+function itemPreview(g){
+  var k=g[0], v=g[1];
+  if(k==="pet") return '<div style="font-size:70px">'+PETS[v]+'</div>';
+  if(k==="color") return '<div style="width:70px;height:70px;border-radius:50%;margin:0 auto;background:'+COLORS[v]+';border:3px solid var(--line)"></div>';
+  if(k==="hairColor") return '<div style="width:70px;height:70px;border-radius:50%;margin:0 auto;background:'+HAIRC[v]+';border:3px solid var(--line)"></div>';
+  var lk=Object.assign({},S.look); lk[k]=v; if(k==="hair") lk.acc="none";
+  return '<div style="width:120px;margin:0 auto">'+avatarSVG(lk,S.role,{attrs:' viewBox="30 0 140 140"'}).replace('viewBox="0 0 200 280"','')+'</div>';
+}
+function showGift(g, head, icon, after){
+  var name=T().items[g[1]], kind=T().kinds[g[0]];
+  var c=dialog('<div class="who">'+icon+'</div><p class="say">'+esc(head)+'</p>'+itemPreview(g)+'<p class="note">'+esc(kind)+'：'+esc(name)+'</p>'+
+    '<div class="btns"><button class="big sub" id="gL">OK</button><button class="big" id="gT">'+esc(T().tryOn)+'</button></div>', after);
+  sfx("win"); confetti(10,["🎁","✨","💖"]); speak(head+" "+name);
+  c.querySelector("#gL").onclick=function(){ closeDialog(); after&&after(); };
+  c.querySelector("#gT").onclick=function(){ closeDialog(); S.look[g[0]]=g[1]; save(); closetTab=g[0]; show("closet"); renderCloset(); };
+}
+
+/* =========================================================
+   おねがい と ミニゲーム
+   ========================================================= */
+var CUR=null;
+function resOf(id){ for(var i=0;i<RES.length;i++) if(RES[i].id===id) return RES[i]; }
+function openRequest(id){
+  var r=resOf(id), G=T().games[id], act=S.active.indexOf(id)>=0;
+  sfx("tap");
+  if(!act){ var msg=fmt(T().thanks,{t:titleOf()}); toast(r.emo+" "+msg); speak(msg); return; }
+  var ctx={}; if(id==="lost"){ ctx.thing=pick(["glasses","key","hat","yarn"]); }
+  var ask=fmt(G.ask,{x:ctx.thing?G.things[ctx.thing]:""});
+  var c=dialog('<button class="x">×</button><div class="who">'+r.emo+'</div><p class="note" style="margin:6px 0 0">'+esc(G.who)+'</p><p class="say">'+esc(ask)+'</p>'+
+    '<div class="btns" style="margin-top:12px"><button class="big sub" id="rL">'+esc(T().later)+'</button><button class="big" id="rH">'+esc(T().help)+'</button></div>');
+  speak(ask);
+  c.querySelector("#rL").onclick=closeDialog;
+  c.querySelector("#rH").onclick=function(){ closeDialog(); startGame(id, ctx, ask); };
+}
+function startGame(id, ctx, ask){
+  var r=resOf(id), G=T().games[id];
+  CUR={id:id, ctx:ctx, over:false, timers:[]};
+  $("#gWho").textContent=r.emo; $("#gSay").textContent=G.how;
+  show("game"); var a=$("#gArea"); a.innerHTML="";
+  setTimeout(function(){ speak(G.how); }, 50);
+  GAMES[id](a, G, ctx);
+}
+function later(fn,ms){ var t=setTimeout(function(){ if(CUR && !CUR.over) fn(); }, ms); if(CUR) CUR.timers.push(t); return t; }
+$("#gQuit").onclick=function(){ if(CUR){ CUR.over=true; CUR.timers.forEach(clearTimeout); } CUR=null; enterKingdom(); };
+function say(t){ $("#gSay").textContent=t; speak(t); }
+function finishGame(){
+  if(!CUR || CUR.over) return; CUR.over=true;
+  var id=CUR.id, r=resOf(id), G=T().games[id];
+  var before=S.hearts, first=!S.done[id], gain=first?3:2;
+  S.done[id]=(S.done[id]||0)+1; S.hearts+=gain;
+  // つぎの おねがい：かなえた ひとを はずし、ほかの ひとから 1人
+  S.active=S.active.filter(function(x){ return x!==id; });
+  var others=RES.map(function(x){ return x.id; }).filter(function(x){ return S.active.indexOf(x)<0 && x!==id; });
+  S.active.push(pick(others));
+  var giftG=null; if(first && FIRST_GIFT[id] && S.unlocked.indexOf(FIRST_GIFT[id][1])<0){ giftG=FIRST_GIFT[id]; S.unlocked.push(giftG[1]); }
+  save();
+  sfx("win"); confetti(16);
+  var msg=G.done+" "+fmt(T().thanks,{t:titleOf()});
+  say(G.done);
+  setTimeout(function(){
+    var c=dialog('<div class="who">'+r.emo+'</div><p class="say">'+esc(fmt(T().thanks,{t:titleOf()}))+'</p><p style="font-size:34px;margin:6px 0 14px">'+"❤️".repeat(gain)+'</p>'+
+      '<div class="btns"><button class="big" id="fB">'+esc(T().backKingdom)+'</button></div>');
+    speak(fmt(T().thanks,{t:titleOf()}));
+    c.querySelector("#fB").onclick=function(){
+      closeDialog(); CUR=null; enterKingdom();
+      var go=function(){ checkDeco(before); };
+      if(giftG) setTimeout(function(){ showGift(giftG, fmt(T().gift,{i:T().items[giftG[1]]}), r.emo, go); }, 300);
+      else go();
+    };
+  }, 1100);
+}
+function checkDeco(before){
+  for(var i=0;i<DECOS.length;i++){
+    var d=DECOS[i]; if(before<d[1] && S.hearts>=d[1]){
+      var last=i===DECOS.length-1, m=last?T().allDeco:fmt(T().newDeco,{d:T().decos[d[0]]});
+      setTimeout(function(){ sfx("deco"); confetti(22,["🎉","✨","⭐","💖"]); var c=dialog('<div class="who">🏰</div><p class="say">'+esc(m)+'</p><div class="btns"><button class="big" id="dOk">OK</button></div>'); c.querySelector("#dOk").onclick=closeDialog; speak(m); }, 500);
+      return;
+    }
+  }
+}
+
+var GAMES = {
+  /* ケーキ：おなじ くだものを のせる */
+  cake:function(a,G){
+    var all=["🍓","🍇","🍒","🍫","🍊","🥝","🍌","🍑"], need=shuffle(all.slice()).slice(0,3), extra=shuffle(all.filter(function(x){ return need.indexOf(x)<0; })).slice(0,2);
+    var order=el("div","order"); need.forEach(function(x){ order.appendChild(el("span",null,x)); });
+    var cake=el("div","cake",'<div class="layer"></div><div class="tops"></div>'), tops=cake.querySelector(".tops");
+    var tray=el("div","tray"), got=0, miss=0;
+    a.appendChild(order); a.appendChild(cake); a.appendChild(tray);
+    shuffle(need.concat(extra)).forEach(function(x){
+      var b=el("button","item",x); tray.appendChild(b);
+      b.onclick=function(){
+        var i=need.indexOf(x);
+        if(i>=0){ sfx("ok"); b.classList.add("done"); order.children[i].classList.add("ok"); var t=el("span","grow",x); tops.appendChild(t); got++;
+          if(got===need.length){ later(function(){ tops.appendChild(el("span","grow","🕯️")); }, 300); later(finishGame, 900); } }
+        else { sfx("no"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); miss++; say(G.wrong);
+          if(miss>=2) tray.querySelectorAll(".item").forEach(function(n){ if(need.indexOf(n.textContent)>=0 && !n.classList.contains("done")) n.classList.add("hint"); }); }
+      };
+    });
+  },
+  /* おはな：はちを タップして そだてる */
+  flowers:function(a){
+    var st=["","🌱","🌿"], fl=["🌷","🌻","🌹","🌼","🌸","🌺"], pots=el("div","pots"), left=6;
+    a.appendChild(pots);
+    for(var i=0;i<6;i++){ (function(){
+      var lv=0, f=pick(fl), b=el("button","pot",'<div class="pl"></div><div class="base"></div>'), pl=b.querySelector(".pl");
+      b.onclick=function(){
+        if(lv>=3) return; lv++; sfx("tap");
+        var d=el("div","drop","💧"); b.appendChild(d); setTimeout(function(){ d.remove(); },500);
+        pl.textContent= lv<3? st[lv] : f; pl.classList.remove("grow"); void pl.offsetWidth; pl.classList.add("grow");
+        if(lv===3){ sfx("ok"); left--; if(left===0) later(finishGame,700); }
+      };
+      pots.appendChild(b);
+    })(); }
+  },
+  /* ドラゴン：ほしい ものを あげる */
+  dragon:function(a,G){
+    var NEEDS={cold:["🥶","🧣"], throat:["😷","🍵"], sleepy:["🥱","🧸"], hungry:["🤤","🍎"], sneezy:["🤧","🧻"]};
+    var rounds=shuffle(Object.keys(NEEDS)).slice(0,3), ri=0;
+    var dz=el("div","dragon",'🐲<div class="think"></div>'), th=dz.querySelector(".think"), tray=el("div","tray");
+    a.appendChild(dz); a.appendChild(tray);
+    function round(){
+      var k=rounds[ri], n=NEEDS[k], miss=0; th.textContent=n[0]; th.classList.remove("grow"); void th.offsetWidth; th.classList.add("grow");
+      say(G.needs[k]);
+      var opts=[n[1]].concat(shuffle(Object.keys(NEEDS).filter(function(x){ return x!==k; })).slice(0,2).map(function(x){ return NEEDS[x][1]; }));
+      tray.innerHTML="";
+      shuffle(opts).forEach(function(x){
+        var b=el("button","item",x); tray.appendChild(b);
+        b.onclick=function(){
+          if(x===n[1]){ sfx("ok"); th.textContent="💖"; tray.querySelectorAll("button").forEach(function(q){ q.disabled=true; });
+            ri++; if(ri<rounds.length) later(round,1000); else later(finishGame,700); }
+          else { sfx("no"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); say(G.wrong); miss++;
+            if(miss>=2) tray.querySelectorAll(".item").forEach(function(q){ if(q.textContent===n[1]) q.classList.add("hint"); }); }
+        };
+      });
+    }
+    round();
+  },
+  /* なくしもの：きの なかを さがす */
+  lost:function(a,G,ctx){
+    var TH={glasses:"👓", key:"🔑", hat:"🎩", yarn:"🧶"}, target=TH[ctx.thing];
+    var decoys=shuffle(["🐸","🍂","🐞","🍄","🐌","🐿️","🌰"]).slice(0,5), cont=shuffle(decoys.concat([target]));
+    var grid=el("div","bushes"), miss=0, done=false;
+    a.appendChild(el("div",null,'<div style="font-size:40px">🦉 💭 '+target+'</div>'));
+    a.appendChild(grid);
+    cont.forEach(function(x){
+      var b=el("button","bush","🌳"); grid.appendChild(b);
+      b.onclick=function(){
+        if(done || b.dataset.open) return; b.dataset.open=1;
+        b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
+        var f=el("div","found grow",x); b.appendChild(f);
+        if(x===target){ done=true; sfx("ok"); later(finishGame,800); }
+        else { sfx("no"); miss++; say(G.wrong);
+          if(miss>=3) grid.querySelectorAll(".bush").forEach(function(q,i){ if(cont[i]===target) q.classList.add("hint"); }); }
+      };
+    });
+  },
+  /* おてがみ：おなじ いろの おうちへ */
+  letters:function(a,G){
+    var cols=shuffle([["#e8545c","❤"],["#4f9cf0","💧"],["#f5c142","⭐"],["#5cc27a","🍀"]]).slice(0,3);
+    var seq=shuffle(cols.concat(cols)).slice(0,4), i=0;
+    var lt=el("div","letter",'✉️<i></i>'), dot=lt.querySelector("i"), hs=el("div","houses");
+    a.appendChild(lt); a.appendChild(hs);
+    cols.forEach(function(c){
+      var b=el("button","house",'<div class="roof" style="border-bottom-color:'+c[0]+'"></div><div class="wall">'+c[1]+'</div>'); hs.appendChild(b);
+      b.onclick=function(){
+        if(i>=seq.length) return;
+        if(c===seq[i]){ sfx("ok"); i++; b.classList.remove("grow"); void b.offsetWidth; b.classList.add("grow");
+          if(i<seq.length) next(); else { lt.textContent="📬"; later(finishGame,700); } }
+        else { sfx("no"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); say(G.wrong); }
+      };
+    });
+    function next(){ dot.style.background=seq[i][0]; lt.classList.remove("grow"); void lt.offsetWidth; lt.classList.add("grow"); }
+    next();
+  },
+  /* ちょうちん：いろの じゅんばん */
+  lanterns:function(a,G){
+    var C=["#ff6b5a","#fff3d6","#f5c142","#7cc4f2","#b48cf0"], pats=["AB","AAB","ABC"], ri=0;
+    var row=el("div","lanterns"), str=el("div","string"), tray=el("div","tray");
+    a.appendChild(str); a.appendChild(row); a.appendChild(tray);
+    function round(){
+      var p=pats[ri], cs=shuffle(C.slice()).slice(0,3), seq=[], miss=0;
+      for(var k=0;k<6;k++) seq.push(cs[p.charCodeAt(k%p.length)-65]);
+      var ans=seq[5]; row.innerHTML="";
+      seq.slice(0,5).forEach(function(c){ var l=el("div","lan grow"); l.style.backgroundColor=c; row.appendChild(l); });
+      var q=el("div","lan q","?"); row.appendChild(q);
+      var opts=shuffle(cs.slice()); tray.innerHTML="";
+      opts.forEach(function(c){
+        var b=el("button","item",'<div class="lan" style="background-color:'+c+'"></div>'); tray.appendChild(b);
+        b.onclick=function(){
+          if(c===ans){ sfx("ok"); q.className="lan grow"; q.textContent=""; q.style.backgroundColor=c; tray.querySelectorAll("button").forEach(function(z){ z.disabled=true; });
+            ri++; if(ri<pats.length) later(round,1000); else later(finishGame,700); }
+          else { sfx("no"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); say(G.wrong); miss++;
+            if(miss>=2) tray.querySelectorAll(".item").forEach(function(z,j){ if(opts[j]===ans) z.classList.add("hint"); }); }
+        };
+      });
+    }
+    round();
+  }
+};
+
+/* =========================================================
+   しょうぞうがの へや
+   ========================================================= */
+function getPorts(){ try{ return JSON.parse(lsGet(PORT_KEY))||[]; }catch(e){ return []; } }
+function setPorts(a){ while(a.length){ if(lsSet(PORT_KEY,JSON.stringify(a))) return true; a.shift(); } lsDel(PORT_KEY); return false; }
+function renderGallery(){
+  var w=$("#wall"), ps=getPorts(); w.innerHTML="";
+  if(!ps.length){ w.appendChild(el("div","empty",esc(T().galleryEmpty).replace(/\n/g,"<br>"))); return; }
+  ps.slice().reverse().forEach(function(p,ri){
+    var idx=ps.length-1-ri, im=el("img"); im.src=p.img; im.alt="";
+    im.onclick=function(){ viewPortrait(idx); }; w.appendChild(im);
+  });
+}
+function viewPortrait(idx){
+  var ps=getPorts(), p=ps[idx]; if(!p) return;
+  var c=dialog('<button class="x">×</button><img id="bigimg" src="'+p.img+'" alt="" style="margin-top:28px;-webkit-user-select:auto;-webkit-touch-callout:default"><p class="note">'+esc(T().saveNote)+'</p>'+
+    '<div class="btns"><button class="big sub" id="pD">🗑 '+esc(T().del)+'</button><a class="big" id="pS" download="portrait.jpg" href="'+p.img+'" style="text-decoration:none">💾 '+esc(T().saveImg)+'</a></div>');
+  c.querySelector("#pD").onclick=function(){
+    var c2=dialog('<p class="say">'+esc(T().delAsk)+'</p><div class="btns"><button class="big sub" id="dN">'+T().no+'</button><button class="big" id="dY">'+T().yes+'</button></div>');
+    c2.querySelector("#dN").onclick=function(){ viewPortrait(idx); };
+    c2.querySelector("#dY").onclick=function(){ var a=getPorts(); a.splice(idx,1); setPorts(a); if(!a.length) lsDel(PORT_KEY); closeDialog(); renderGallery(); };
+  };
+}
+$("#galBack").onclick=function(){ sfx("tap"); enterKingdom(); };
+var BGS=[["#ffd6e7","#ff9ec6"],["#d6ecff","#7cc4f2"],["#e7ffd6","#8fd38a"],["#efe1ff","#b48cf0"],["#fff1c9","#f5c142"],["#2d2b4a","#7b6bd6"]];
+$("#galNew").onclick=function(){
+  sfx("tap"); var sel=0;
+  function bgBtns(){ return BGS.map(function(b,i){ return '<button data-bg="'+i+'" aria-pressed="'+(i===sel)+'" style="background:linear-gradient('+b[0]+','+b[1]+')"></button>'; }).join(""); }
+  var c=dialog('<button class="x">×</button><p class="say">'+esc(T().paintTitle)+'</p><div class="bgs">'+bgBtns()+'</div><div class="btns"><button class="big" id="pGo">🎨 '+esc(T().paintGo)+'</button></div>');
+  c.querySelector(".bgs").onclick=function(e){ var b=e.target.closest("[data-bg]"); if(!b) return; sel=+b.dataset.bg; c.querySelectorAll("[data-bg]").forEach(function(x){ x.setAttribute("aria-pressed",String(+x.dataset.bg===sel)); }); };
+  c.querySelector("#pGo").onclick=function(){ this.disabled=true; paintPortrait(BGS[sel], function(img){
+    closeDialog();
+    if(!img) return;
+    var a=getPorts(); a.push({img:img, d:Date.now()}); if(a.length>12) a.shift();
+    if(!setPorts(a)) toast(T().storeFull);
+    sfx("win"); confetti(16,["🎨","✨","💖","⭐"]); renderGallery(); viewPortrait(getPorts().length-1);
+  }); };
+};
+function svgImg(svg){ return new Promise(function(res,rej){ var i=new Image(); i.onload=function(){ res(i); }; i.onerror=rej; i.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg); }); }
+function paintPortrait(bg, cb){
+  var W=480, H=640, cv=document.createElement("canvas"); cv.width=W; cv.height=H; var x=cv.getContext("2d");
+  // がくぶち
+  var gd=x.createLinearGradient(0,0,W,H); gd.addColorStop(0,"#f7d774"); gd.addColorStop(.5,"#c9952a"); gd.addColorStop(1,"#f7d774");
+  x.fillStyle=gd; x.fillRect(0,0,W,H);
+  x.fillStyle="#a8781e"; x.fillRect(26,26,W-52,H-52);
+  var bgG=x.createLinearGradient(0,34,0,H-34); bgG.addColorStop(0,bg[0]); bgG.addColorStop(1,bg[1]);
+  x.fillStyle=bgG; x.fillRect(34,34,W-68,H-68);
+  // ひかり
+  x.save(); x.globalAlpha=.25; x.fillStyle="#fff"; for(var i=0;i<12;i++){ x.beginPath(); x.moveTo(W/2,250); var a1=i*Math.PI/6, a2=a1+.18; x.lineTo(W/2+500*Math.cos(a1),250+500*Math.sin(a1)); x.lineTo(W/2+500*Math.cos(a2),250+500*Math.sin(a2)); x.fill(); } x.restore();
+  x.save(); x.beginPath(); x.rect(34,34,W-68,H-68); x.clip();
+  var ax=60, ay=70, aw=360, ah=504, k=aw/200;
+  var face=FACE;
+  Promise.all([svgImg(avatarSVG(S.look,S.role,{layer:face?"base":"all", face:face})), face?svgImg(avatarSVG(S.look,S.role,{layer:"top", face:face})):null,
+    face?new Promise(function(r){ var i=new Image(); i.onload=function(){ r(i); }; i.onerror=function(){ r(null); }; i.src=face; }):null])
+  .then(function(L){
+    x.drawImage(L[0],ax,ay,aw,ah);
+    if(L[2]){ x.save(); x.beginPath(); x.arc(ax+100*k, ay+80*k, 38*k, 0, Math.PI*2); x.clip(); x.drawImage(L[2], ax+62*k, ay+42*k, 76*k, 76*k); x.restore(); }
+    if(L[1]) x.drawImage(L[1],ax,ay,aw,ah);
+    if(S.look.pet && S.look.pet!=="none"){ x.font="76px sans-serif"; x.textAlign="center"; x.fillText(PETS[S.look.pet], 390, 560); }
+    x.restore();
+    // なふだ
+    x.fillStyle="#fff8e6"; x.strokeStyle="#c9952a"; x.lineWidth=4;
+    var py=H-96; roundRect(x, 90, py, W-180, 52, 14); x.fill(); x.stroke();
+    x.fillStyle="#6a4a1e"; x.textAlign="center"; x.font='bold 24px "Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif';
+    x.fillText(titleOf(), W/2, py+26); x.font='14px "Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif';
+    var d=new Date(); x.fillText(d.getFullYear()+"."+(d.getMonth()+1)+"."+d.getDate()+"  "+T().title, W/2, py+44);
+    try{ cb(cv.toDataURL("image/jpeg",0.82)); }catch(e){ cb(null); toast("⚠️"); }
+  }).catch(function(){ x.restore(); cb(null); toast("⚠️"); });
+}
+function roundRect(x,a,b,w,h,r){ x.beginPath(); x.moveTo(a+r,b); x.arcTo(a+w,b,a+w,b+h,r); x.arcTo(a+w,b+h,a,b+h,r); x.arcTo(a,b+h,a,b,r); x.arcTo(a,b,a+w,b,r); x.closePath(); }
+
+/* ---------- はじまり ---------- */
+S=load();
+renderTitle();
+document.addEventListener("pointerdown",function(){ if(AC && AC.state==="suspended") AC.resume(); },{passive:true});
+</script>
+</body>
+</html>

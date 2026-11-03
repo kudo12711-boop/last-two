@@ -20,6 +20,7 @@
 | キャンピングカー世界一周 | 放置型の車窓の旅 | PR #14 まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
 | ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
 | すうじで てんつなぎ | 幼児向け、番号順に点をつないで絵を完成 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
+| ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、着せかえと肖像画つき | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
 
 「Claude のページ」は、くどうさんが claude.ai にログインしたときだけ開けます。「公開ページ」は誰でもログインなしで開けます。
 
@@ -35,6 +36,7 @@
 8. **2026-10-30** ぬけぬけリングを公開ページに出した（くどうさん「抜け抜けリングを公開してください」）。
 9. **2026-11-03** 公開中のゲームを選んで遊べる入口ページ「あそびのいりぐち」（`/games/`）を作った（くどうさん「作って下さい」）。
 10. **2026-11-03** 都道府県パズルを子ども向けに改良（v0.2: こどもステージ12個、シールずかん）。くどうさん「都道府県パズルを子供向けに改良して下さい」。
+11. **2026-11-03** 「女の子向けの、プリンセスになれるゲームを考えたい」から、プリンセス・王子・騎士・侍を選べる「ちいさな おうこく」を作成（くどうさんが3案から選び、侍も追加）。
 
 ## お金の方針（2026-10-23 決定）
 
@@ -61,7 +63,7 @@
 
 - **リポジトリ** `kudo12711-boop/last-two`（Public）。`main` ブランチがそのまま GitHub Pages（https://kudo12711-boop.github.io/last-two/）になります。
   - `/index.html` … ラスト・ツー
-  - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/nukenuke-ring/`… それぞれ別のゲーム。ほかのゲームには影響しません。
+  - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/nukenuke-ring/`、`/oukoku/`… それぞれ別のゲーム。ほかのゲームには影響しません。
   - `/games/` … 入口ページ（ゲームを公開したらここにもカードを足す）
   - `/docs/` … この記録
 - 変更は作業ブランチ → PR → マージ の順。マージすると1〜2分で公開ページに反映されます。
