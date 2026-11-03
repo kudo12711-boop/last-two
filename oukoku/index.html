@@ -423,11 +423,27 @@ function speak(txt){
     speechSynthesis.speak(u);
   }catch(e){}
 }
-var AC=null;
+/* AI の こえ（日本語）: voice/<キー>.mp3 を WebAudio で ならす。ないときや 英語は ブラウザの よみあげ */
+var AC=null, VBUF={}, VSRC=null, VSEQ=0;
+function actx(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state==="suspended") AC.resume(); return AC; }
+function stopVoice(){ VSEQ++; if(VSRC){ try{ VSRC.stop(); }catch(e){} VSRC=null; } if(window.speechSynthesis) try{ speechSynthesis.cancel(); }catch(e){} }
+function vbuf(key){
+  if(!VBUF[key]) VBUF[key]=fetch("voice/"+key+".mp3?v=1").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
+    .then(function(b){ return new Promise(function(res,rej){ actx().decodeAudioData(b,res,rej); }); })
+    .catch(function(e){ delete VBUF[key]; throw e; });
+  return VBUF[key];
+}
+function voice(key, text){
+  if(!S || !S.voice) return;
+  stopVoice();
+  if(LANG!=="ja" || !actx()){ speak(text); return; }
+  var my=VSEQ;
+  vbuf(key).then(function(b){ if(my!==VSEQ) return; var src=AC.createBufferSource(); src.buffer=b; src.connect(AC.destination); src.start(); VSRC=src; })
+    .catch(function(){ if(my===VSEQ) speak(text); });
+}
 function tone(f,d,type,when,vol){
   try{
-    if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();
-    if(AC.state==="suspended") AC.resume();
+    if(!actx()) return;
     var t=AC.currentTime+(when||0), o=AC.createOscillator(), g=AC.createGain();
     o.type=type||"sine"; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t);
     g.gain.exponentialRampToValueAtTime(vol||0.18,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
@@ -555,7 +571,7 @@ function avatarSVG(look, role, opt){
 /* ---------- がめん きりかえ ---------- */
 function show(id){
   document.querySelectorAll(".screen").forEach(function(s){ s.classList.toggle("on", s.id===id); });
-  if(window.speechSynthesis) try{ speechSynthesis.cancel(); }catch(e){}
+  stopVoice();
 }
 function $(s){ return document.querySelector(s); }
 function el(tag,cls,html){ var e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; }
@@ -610,7 +626,7 @@ function renderRoles(){
       sfx("ok"); var prev=S.look;
       S.role=r; S.look=JSON.parse(JSON.stringify(DEF_LOOK[r]));
       if(prev){ S.look.skin=prev.skin; S.look.pet=prev.pet; }
-      speak(T().roles[r]); openCloset(true);
+      voice("role_"+r, T().roles[r]); openCloset(true);
     };
     w.appendChild(b);
   });
@@ -760,7 +776,7 @@ function sceneSVG(){
 function renderKingdom(){
   var sc=$("#scene"); sc.innerHTML=sceneSVG(); sc.parentNode.classList.toggle("night", has("fireworks"));
   sc.querySelectorAll("[data-res]").forEach(function(g){ g.addEventListener("click",function(){ openRequest(g.getAttribute("data-res")); }); });
-  var me=sc.querySelector("#me"); me.addEventListener("click",function(){ sfx("ok"); me.classList.remove("shake"); void me.getBBox(); me.classList.add("shake"); speak(titleOf()); });
+  var me=sc.querySelector("#me"); me.addEventListener("click",function(){ sfx("ok"); me.classList.remove("shake"); void me.getBBox(); me.classList.add("shake"); voice("role_"+S.role, titleOf()); });
   $("#hc").textContent=S.hearts;
   var next=null, prev=0; for(var i=0;i<DECOS.length;i++){ if(S.hearts<DECOS[i][1]){ next=DECOS[i]; break; } prev=DECOS[i][1]; }
   if(next){ $("#pf").style.width=Math.round((S.hearts-prev)/(next[1]-prev)*100)+"%"; $("#pn").textContent=fmt(T().nextDeco,{d:T().decos[next[0]], n:next[1]-S.hearts}); }
@@ -774,7 +790,7 @@ function enterKingdom(){
     S.welcomed=true; save();
     var msg=fmt(S.role==="samurai"?T().welcomeSam:T().welcome,{t:titleOf()});
     var c=dialog('<div class="who">🏰</div><p class="say">'+esc(msg).replace(/\n/g,"<br>")+'</p><div class="btns"><button class="big" id="wOk">OK</button></div>');
-    c.querySelector("#wOk").onclick=closeDialog; speak(msg);
+    c.querySelector("#wOk").onclick=closeDialog; voice("welcome_"+S.role, msg);
   }
 }
 $("#btnCloset").onclick=function(){ sfx("tap"); openCloset(false); };
@@ -794,13 +810,13 @@ $("#btnMenu").onclick=function(){
 $("#btnMail").onclick=function(){
   sfx("tap");
   if(S.lastMail===today()){
-    var c0=dialog('<button class="x">×</button><div class="who">📮</div><p class="say">'+esc(T().mailNone).replace(/\n/g,"<br>")+'</p>'); return;
+    var c0=dialog('<button class="x">×</button><div class="who">📮</div><p class="say">'+esc(T().mailNone).replace(/\n/g,"<br>")+'</p>'); voice("mail_none", T().mailNone); return;
   }
   S.lastMail=today();
   var pool=MAIL_POOL.filter(function(g){ return S.unlocked.indexOf(g[1])<0; });
-  if(!pool.length){ S.hearts+=3; save(); renderKingdom(); var c1=dialog('<button class="x">×</button><div class="who">💌</div><p class="say">'+esc(T().mailHearts)+'</p>'); speak(T().mailHearts); confetti(); checkDeco(S.hearts-3); return; }
+  if(!pool.length){ S.hearts+=3; save(); renderKingdom(); var c1=dialog('<button class="x">×</button><div class="who">💌</div><p class="say">'+esc(T().mailHearts)+'</p>'); voice("mail_hearts", T().mailHearts); confetti(); checkDeco(S.hearts-3); return; }
   var g=pick(pool); S.unlocked.push(g[1]); save(); renderKingdom();
-  showGift(g, T().mailGift, "💌");
+  showGift(g, T().mailGift, "💌", null, "mail_gift");
 };
 function itemPreview(g){
   var k=g[0], v=g[1];
@@ -810,11 +826,11 @@ function itemPreview(g){
   var lk=Object.assign({},S.look); lk[k]=v; if(k==="hair") lk.acc="none";
   return '<div style="width:120px;margin:0 auto">'+avatarSVG(lk,S.role,{attrs:' viewBox="30 0 140 140"'}).replace('viewBox="0 0 200 280"','')+'</div>';
 }
-function showGift(g, head, icon, after){
+function showGift(g, head, icon, after, vkey){
   var name=T().items[g[1]], kind=T().kinds[g[0]];
   var c=dialog('<div class="who">'+icon+'</div><p class="say">'+esc(head)+'</p>'+itemPreview(g)+'<p class="note">'+esc(kind)+'：'+esc(name)+'</p>'+
     '<div class="btns"><button class="big sub" id="gL">OK</button><button class="big" id="gT">'+esc(T().tryOn)+'</button></div>', after);
-  sfx("win"); confetti(10,["🎁","✨","💖"]); speak(head+" "+name);
+  sfx("win"); confetti(10,["🎁","✨","💖"]); if(vkey) voice(vkey, head); else voice("gift", head+" "+name);
   c.querySelector("#gL").onclick=function(){ closeDialog(); after&&after(); };
   c.querySelector("#gT").onclick=function(){ closeDialog(); S.look[g[0]]=g[1]; save(); closetTab=g[0]; show("closet"); renderCloset(); };
 }
@@ -827,12 +843,12 @@ function resOf(id){ for(var i=0;i<RES.length;i++) if(RES[i].id===id) return RES[
 function openRequest(id){
   var r=resOf(id), G=T().games[id], act=S.active.indexOf(id)>=0;
   sfx("tap");
-  if(!act){ var msg=fmt(T().thanks,{t:titleOf()}); toast(r.emo+" "+msg); speak(msg); return; }
+  if(!act){ var msg=fmt(T().thanks,{t:titleOf()}); toast(r.emo+" "+msg); voice("thanks_"+id+"_"+S.role, msg); return; }
   var ctx={}; if(id==="lost"){ ctx.thing=pick(["glasses","key","hat","yarn"]); }
   var ask=fmt(G.ask,{x:ctx.thing?G.things[ctx.thing]:""});
   var c=dialog('<button class="x">×</button><div class="who">'+r.emo+'</div><p class="note" style="margin:6px 0 0">'+esc(G.who)+'</p><p class="say">'+esc(ask)+'</p>'+
     '<div class="btns" style="margin-top:12px"><button class="big sub" id="rL">'+esc(T().later)+'</button><button class="big" id="rH">'+esc(T().help)+'</button></div>');
-  speak(ask);
+  voice(id==="lost"?"lost_ask_"+ctx.thing:id+"_ask", ask);
   c.querySelector("#rL").onclick=closeDialog;
   c.querySelector("#rH").onclick=function(){ closeDialog(); startGame(id, ctx, ask); };
 }
@@ -841,12 +857,12 @@ function startGame(id, ctx, ask){
   CUR={id:id, ctx:ctx, over:false, timers:[]};
   $("#gWho").textContent=r.emo; $("#gSay").textContent=G.how;
   show("game"); var a=$("#gArea"); a.innerHTML="";
-  setTimeout(function(){ speak(G.how); }, 50);
+  CUR.key=id; voice(id+"_how", G.how);
   GAMES[id](a, G, ctx);
 }
 function later(fn,ms){ var t=setTimeout(function(){ if(CUR && !CUR.over) fn(); }, ms); if(CUR) CUR.timers.push(t); return t; }
 $("#gQuit").onclick=function(){ if(CUR){ CUR.over=true; CUR.timers.forEach(clearTimeout); } CUR=null; enterKingdom(); };
-function say(t){ $("#gSay").textContent=t; speak(t); }
+function say(t,k){ $("#gSay").textContent=t; voice(k||(CUR?CUR.id:"")+"_wrong", t); }
 function finishGame(){
   if(!CUR || CUR.over) return; CUR.over=true;
   var id=CUR.id, r=resOf(id), G=T().games[id];
@@ -860,24 +876,24 @@ function finishGame(){
   save();
   sfx("win"); confetti(16);
   var msg=G.done+" "+fmt(T().thanks,{t:titleOf()});
-  say(G.done);
+  say(G.done, id+"_done");
   setTimeout(function(){
     var c=dialog('<div class="who">'+r.emo+'</div><p class="say">'+esc(fmt(T().thanks,{t:titleOf()}))+'</p><p style="font-size:34px;margin:6px 0 14px">'+"❤️".repeat(gain)+'</p>'+
       '<div class="btns"><button class="big" id="fB">'+esc(T().backKingdom)+'</button></div>');
-    speak(fmt(T().thanks,{t:titleOf()}));
+    voice("thanks_"+id+"_"+S.role, fmt(T().thanks,{t:titleOf()}));
     c.querySelector("#fB").onclick=function(){
       closeDialog(); CUR=null; enterKingdom();
       var go=function(){ checkDeco(before); };
       if(giftG) setTimeout(function(){ showGift(giftG, fmt(T().gift,{i:T().items[giftG[1]]}), r.emo, go); }, 300);
       else go();
     };
-  }, 1100);
+  }, 1700);
 }
 function checkDeco(before){
   for(var i=0;i<DECOS.length;i++){
     var d=DECOS[i]; if(before<d[1] && S.hearts>=d[1]){
-      var last=i===DECOS.length-1, m=last?T().allDeco:fmt(T().newDeco,{d:T().decos[d[0]]});
-      setTimeout(function(){ sfx("deco"); confetti(22,["🎉","✨","⭐","💖"]); var c=dialog('<div class="who">🏰</div><p class="say">'+esc(m)+'</p><div class="btns"><button class="big" id="dOk">OK</button></div>'); c.querySelector("#dOk").onclick=closeDialog; speak(m); }, 500);
+      var last=i===DECOS.length-1, vk=last?"deco_all":"deco_"+d[0], m=last?T().allDeco:fmt(T().newDeco,{d:T().decos[d[0]]});
+      setTimeout(function(){ sfx("deco"); confetti(22,["🎉","✨","⭐","💖"]); var c=dialog('<div class="who">🏰</div><p class="say">'+esc(m)+'</p><div class="btns"><button class="big" id="dOk">OK</button></div>'); c.querySelector("#dOk").onclick=closeDialog; voice(vk, m); }, 500);
       return;
     }
   }
@@ -925,7 +941,7 @@ var GAMES = {
     a.appendChild(dz); a.appendChild(tray);
     function round(){
       var k=rounds[ri], n=NEEDS[k], miss=0; th.textContent=n[0]; th.classList.remove("grow"); void th.offsetWidth; th.classList.add("grow");
-      say(G.needs[k]);
+      say(G.needs[k], "dragon_"+k);
       var opts=[n[1]].concat(shuffle(Object.keys(NEEDS).filter(function(x){ return x!==k; })).slice(0,2).map(function(x){ return NEEDS[x][1]; }));
       tray.innerHTML="";
       shuffle(opts).forEach(function(x){
@@ -1077,7 +1093,7 @@ function roundRect(x,a,b,w,h,r){ x.beginPath(); x.moveTo(a+r,b); x.arcTo(a+w,b,a
 /* ---------- はじまり ---------- */
 S=load();
 renderTitle();
-document.addEventListener("pointerdown",function(){ if(AC && AC.state==="suspended") AC.resume(); },{passive:true});
+document.addEventListener("pointerdown",function(){ actx(); },{passive:true});
 </script>
 </body>
 </html>
