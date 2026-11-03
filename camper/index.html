@@ -2081,12 +2081,16 @@ function routeSets() {
 }
 // 地図の拡大段階：[横はば（地図の単位。1度=2）, 名前]
 const MAPZ = [[720, '世界全体'], [240, '大陸'], [90, '地方'], [36, 'ちかく'], [14, 'すぐそば']];
-function showMap(zoom, ctr) {
+function showMap(zoom, ctr, w) {
   const { done, ahead, alt, all } = routeSets();
-  const me = prj(P.ll), c0 = ctr || me;
-  zoom = clamp(zoom | 0, 0, MAPZ.length - 1); try { localStorage.setItem('camper-mapz', zoom); } catch (e) { } const zw = MAPZ[zoom][0], zh = zw / 1.5;
-  const vb = zoom ? `${c0[0] - zw / 2} ${c0[1] - zh / 2} ${zw} ${zh}` : ctr ? `${c0[0] - 360} 0 720 300` : '0 0 720 300';
-  const lab = zoom >= 2, dr = zoom ? zw / 130 : 1.6, mr = zoom ? zw / 56 : 5, fs = zw / 34;
+  const me = prj(P.ll);
+  // w（地図の横はば）を指定されたらその広さで。段階の番号はいちばん近いものにする
+  const zw = clamp(w || MAPZ[clamp(zoom | 0, 0, MAPZ.length - 1)][0], 8, 720), zh = zw / 1.5;
+  zoom = MAPZ.reduce((bi, z, i) => Math.abs(Math.log(z[0] / zw)) < Math.abs(Math.log(MAPZ[bi][0] / zw)) ? i : bi, 0);
+  try { localStorage.setItem('camper-mapz', zoom); } catch (e) { }
+  const c0 = ctr || (zw >= 700 ? [360, 150] : me);
+  const vb = `${(c0[0] - zw / 2).toFixed(2)} ${clamp(c0[1] - zh / 2, -zh / 2, 360 - zh / 2).toFixed(2)} ${zw} ${zh}`;
+  const lab = zw <= 100, dr = Math.min(zw / 130, 1.6), mr = Math.min(zw / 56, 5), fs = zw / 34;
   const cities = new Map(); for (const id in LEG) for (const s of LEG[id].segs) cities.set(s.b.name, s.b.ll);
   const dots = [...cities].map(([n, ll]) => { const p = prj(ll); return `<circle cx="${p[0]}" cy="${p[1]}" r="${dr}" class="${st.stamps[n] ? 'v' : 'u'}"/>` + (lab ? `<text x="${p[0] + dr * 1.6}" y="${p[1] - dr * 1.2}" style="font-size:${fs}px">${n}</text>` : ''); }).join('');
   modal(`<h2>🗺 旅の地図</h2><div class="mapzoom"><button data-z="${zoom - 1}" ${zoom ? '' : 'disabled'} aria-label="縮小">−</button><span>${MAPZ[zoom][1]}</span><button data-z="${zoom + 1}" ${zoom < MAPZ.length - 1 ? '' : 'disabled'} aria-label="拡大">＋</button><button data-home aria-label="現在地へ" class="home">📍</button></div>
@@ -2095,17 +2099,43 @@ function showMap(zoom, ctr) {
   ${dots}<circle cx="${me[0]}" cy="${me[1]}" r="${mr}" class="me"/><circle cx="${me[0]}" cy="${me[1]}" r="${mr}" class="me2"/></svg>
   <div class="legend"><span><i class="l-done"></i>通ってきた道</span><span><i class="l-ahead"></i>これから</span><span><i class="l-alt"></i>えらばなかった道</span></div>
   <button class="big ghost" data-close>とじる</button>`, 'mapm');
-  // 指でなぞって地図を動かす
-  const svg = $('#sheet svg.map'); let drag = null, moved = !!ctr;
+  // 指でなぞって動かす・2本指でピンチして拡大縮小（ホイールでも）
+  const svg = $('#sheet svg.map'), pts = new Map(); let drag = null, pinch = null, pinched = false, moved = !!ctr, wheelT = 0;
   const getVB = () => svg.getAttribute('viewBox').split(' ').map(Number);
+  const setVB = (x, y, vw) => { const vh = vw / 1.5; svg.setAttribute('viewBox', `${x.toFixed(2)} ${clamp(y, -vh / 2, 360 - vh / 2).toFixed(2)} ${vw} ${vh}`); moved = true; };
   const center = () => { const v = getVB(); return [v[0] + v[2] / 2, v[1] + v[3] / 2]; };
-  svg.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, vb: getVB() }; svg.setPointerCapture(e.pointerId); });
-  svg.addEventListener('pointermove', e => {
-    if (!drag) return; const r = svg.getBoundingClientRect(), v = drag.vb, k = Math.max(v[2] / r.width, v[3] / r.height);
-    let x = v[0] - (e.clientX - drag.x) * k, y = clamp(v[1] - (e.clientY - drag.y) * k, -v[3] / 2, 360 - v[3] / 2);
-    svg.setAttribute('viewBox', `${x.toFixed(2)} ${y.toFixed(2)} ${v[2]} ${v[3]}`); moved = true;
+  const redraw = () => { const v = getVB(); showMap(0, center(), v[2]); };
+  const startOne = () => { const [p] = [...pts.values()]; drag = p ? { x: p.x, y: p.y, vb: getVB() } : null; };
+  svg.addEventListener('pointerdown', e => {
+    try { svg.setPointerCapture(e.pointerId); } catch (er) { } pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 2) {
+      const [a, b] = [...pts.values()], r = svg.getBoundingClientRect(), v = getVB(), k = v[2] / r.width;
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, v, sx: v[0] + (mx - r.left) * k, sy: v[1] + (my - r.top) * k }; drag = null;
+    } else startOne();
   });
-  const end = () => { drag = null; }; svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+  svg.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const r = svg.getBoundingClientRect();
+    if (pinch && pts.size >= 2) {
+      const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      const vw = clamp(pinch.v[2] * pinch.d / d, 8, 720), k = vw / r.width, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      setVB(pinch.sx - (mx - r.left) * k, pinch.sy - (my - r.top) * k, vw); return;
+    }
+    if (!drag) return; const v = drag.vb, k = v[2] / r.width;
+    setVB(v[0] - (e.clientX - drag.x) * k, v[1] - (e.clientY - drag.y) * k, v[2]);
+  });
+  const end = e => {
+    pts.delete(e.pointerId);
+    if (pinch && pts.size < 2) { pinch = null; pinched = true; }
+    if (pts.size) startOne(); else { drag = null; if (pinched) { pinched = false; redraw(); } }
+  };
+  svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+  svg.addEventListener('wheel', e => {
+    e.preventDefault(); const r = svg.getBoundingClientRect(), v = getVB(), k = v[2] / r.width;
+    const px = v[0] + (e.clientX - r.left) * k, py = v[1] + (e.clientY - r.top) * k, vw = clamp(v[2] * (e.deltaY > 0 ? 1.15 : 1 / 1.15), 8, 720), k2 = vw / r.width;
+    setVB(px - (e.clientX - r.left) * k2, py - (e.clientY - r.top) * k2, vw); clearTimeout(wheelT); wheelT = setTimeout(redraw, 300);
+  }, { passive: false });
   document.querySelectorAll('[data-z]').forEach(b => b.onclick = () => showMap(+b.dataset.z, +b.dataset.z && (zoom || moved) ? center() : null));
   $('[data-home]').onclick = () => showMap(zoom);
 }
