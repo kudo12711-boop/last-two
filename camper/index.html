@@ -103,7 +103,7 @@ header .r{text-align:right;white-space:nowrap}
 .mini:disabled{opacity:.6}
 .modal textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.4 monospace;background:#fff;word-break:break-all;resize:vertical}
 .filebtn{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--line);background:#fff;border-radius:14px;padding:10px 12px;font-weight:700;font-size:14px;cursor:pointer}
-#b-full{position:absolute;right:10px;bottom:10px;z-index:5;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:20px;line-height:1;backdrop-filter:blur(4px)}
+#b-full{position:absolute;right:10px;bottom:10px;z-index:5;height:38px;padding:0 14px;border-radius:19px;font-weight:700;font-size:14px!important;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:20px;line-height:1;backdrop-filter:blur(4px)}
 #fsinfo{display:none}
 body.full{overflow:hidden}
 body.full #winwrap{position:fixed;inset:0;z-index:15;padding:0;background:#000}
@@ -128,7 +128,7 @@ body.full #fsinfo.m-off{display:none}
 #fsinfo .ad{opacity:.8}#fsinfo .sm{font-size:11.5px;opacity:.8}
 #fsinfo .pb{display:block;height:4px;border-radius:4px;background:rgba(255,255,255,.3);margin:4px 0 3px;overflow:hidden}#fsinfo .pb i{display:block;height:100%;background:#ffd36b}
 body.full #b-snd,body.full #b-full{bottom:calc(14px + env(safe-area-inset-bottom));transition:opacity .6s}
-body.full #b-full{right:14px}body.full #b-snd{left:14px}
+body.full #b-full{right:14px;width:38px;padding:0;font-size:18px!important}body.full #b-snd{left:14px}
 body.full.calm #b-snd,body.full.calm #b-full,body.full.calm #b-info{opacity:0}
 body.full.calm #fsinfo{opacity:.8}
 body.full #toasts{top:auto;bottom:calc(70px + env(safe-area-inset-bottom))}
@@ -252,7 +252,7 @@ svg.map{width:100%;aspect-ratio:2.4/1;border-radius:14px;display:block;backgroun
     <div class="r"><div id="clock"></div><div id="wx"></div></div>
   </header>
   <div id="winwrap">
-    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button><button id="b-full" aria-label="全画面">⛶</button><button id="b-info" aria-label="情報の表示">ℹ️</button><div id="fsinfo"></div><div id="fsmap" hidden role="button" aria-label="地図をひらく"></div></div>
+    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button><button id="b-full" aria-label="全画面">⛶ 全画面</button><button id="b-info" aria-label="情報の表示">ℹ️</button><div id="fsinfo"></div><div id="fsmap" hidden role="button" aria-label="地図をひらく"></div></div>
     <div id="sill"></div>
   </div>
   <section id="panel">
@@ -2511,7 +2511,7 @@ function cycleInfo() {
 }
 function poke() { document.body.classList.remove('calm'); clearTimeout(calmT); if (document.body.classList.contains('full')) calmT = setTimeout(() => document.body.classList.add('calm'), 3500); }
 async function setFull(on) {
-  document.body.classList.toggle('full', on); $('#b-full').textContent = on ? '✕' : '⛶';
+  document.body.classList.toggle('full', on); $('#b-full').textContent = on ? '✕' : '⛶ 全画面';
   const el = document.documentElement;
   try { if (on && el.requestFullscreen && !document.fullscreenElement) await el.requestFullscreen({ navigationUI: 'hide' }); else if (!on && document.fullscreenElement) await document.exitFullscreen(); } catch (e) { }
   try { if (on && navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); else if (!on && wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) { }
