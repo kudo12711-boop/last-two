@@ -48,6 +48,8 @@ a.card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .desc{margin:0 0 8px;font-size:14px;color:var(--sub)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-size:12px;background:var(--chip);color:var(--chipInk);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.pass{margin-top:28px;padding:14px 16px;border-radius:18px;background:var(--card);border:2px solid var(--line);font-size:14px;color:var(--sub);line-height:1.6}
+.pass p{margin:0 0 10px}
 footer{margin-top:36px;color:var(--sub);font-size:12px;text-align:center}
 </style>
 </head>
@@ -64,9 +66,11 @@ footer{margin-top:36px;color:var(--sub);font-size:12px;text-align:center}
   </header>
   <p class="lead" data-t="lead"></p>
   <main id="sections"></main>
+  <section class="pass"><p data-t="pass"></p><div id="kkSlot"></div></section>
   <footer data-t="footer"></footer>
 </div>
 
+<script src="../common/kakin.js"></script>
 <script>
 // ゲームの一覧。新しいゲームを公開したら、ここに1つ足すだけで入口ページに並びます。
 // 文字はすべて下の TEXT（言語ごとの辞書）にあり、言語を足すときは TEXT に1つ足します。
@@ -89,6 +93,8 @@ var TEXT = {
     title:"あそびのいりぐち",
     lead:"遊びたいゲームを えらんでね。どれも ブラウザで そのまま遊べます。",
     footer:"© kudo12711-boop",
+    pass:"おうちのかたへ: 子ども向けゲームは、すこし むりょうで遊べて、「ぜんぶ版」（ゲームごとの買い切り）か「👪 ファミリーパス」（月ごと、ぜんぶのゲーム）で ぜんぶ遊べます。広告は出しません。いまは おためし版で、お金は かかりません。",
+    passBtn:"👪 ファミリーパスを見る", passOn:"👪 ファミリーパス 利用中",
     groups:{kids:["ちいさな子ども向け","2〜6さいくらい"], all:["みんなで・ひとりで","子どもから おとなまで"]},
     games:{
       machigai:  {name:"まちがいさがし", desc:"2まいの絵の ちがうところを さがそう。おうちの写真でも遊べます。", chips:["2〜5さい","ひとり"]},
@@ -108,6 +114,8 @@ var TEXT = {
     title:"Game Corner",
     lead:"Pick a game to play. Everything runs right in your browser.",
     footer:"© kudo12711-boop · Some games are still in Japanese only.",
+    pass:"For grown-ups: each kids game has a free part. Unlock everything with the game's full version (one-time) or the 👪 Family Pass (monthly, every game). No ads. This is a trial: no money is charged.",
+    passBtn:"👪 See the Family Pass", passOn:"👪 Family Pass active",
     groups:{kids:["For little kids","about ages 2–6"], all:["For everyone","kids to grown-ups"]},
     games:{
       machigai:  {name:"Spot the Difference", desc:"Find what's different between two pictures. Works with your own photos too.", chips:["Ages 2–5","1 player"]},
@@ -143,6 +151,12 @@ function render(lang){
   document.title = T.title;
   document.querySelectorAll("[data-t]").forEach(function(n){ n.textContent = T[n.getAttribute("data-t")]; });
   document.querySelectorAll(".lang button").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.lang===lang)); });
+  var slot = document.getElementById("kkSlot"); slot.textContent = "";
+  if (window.Kakin) {
+    Kakin.setup({ game:"games", noFull:true, lang:function(){ return lang; }, name:{ja:T.title,en:T.title}, free:null, full:null });
+    var kb = el("button","kk-parent", Kakin.hasPass() ? T.passOn : T.passBtn); kb.type = "button"; kb.onclick = function(){ Kakin.open(); }; slot.appendChild(kb);
+    Kakin.setup({ onChange:function(){ render(lang); } });
+  }
   var root = document.getElementById("sections"); root.textContent = "";
   ["kids","all"].forEach(function(g){
     var h = el("h2", null, T.groups[g][0]); h.appendChild(el("small", null, T.groups[g][1])); root.appendChild(h);

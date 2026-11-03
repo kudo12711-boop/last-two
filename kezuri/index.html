@@ -172,6 +172,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
   <h3 id="tVoice"></h3><div class="opt" id="voiceOpt"></div>
   <h3 id="tSound"></h3><div class="opt" id="soundOpt"></div>
   <h3>Language / ことば</h3><div class="opt" id="langOpt"></div>
+  <h3 id="tKk"></h3><p class="note" id="tKkNote"></p><div id="kkSlot"></div>
   <h3 id="tReset"></h3><p class="note" id="tResetNote"></p>
   <div class="opt"><button id="resetB"></button></div>
   <button class="big go" id="setClose"></button>
@@ -180,6 +181,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 <div id="say"></div>
 <canvas id="fx"></canvas>
 
+<script src="../common/kakin.js"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -500,6 +502,16 @@ async function recordFor(p, btn) {
   } catch (e) { alert(L === 'ja' ? 'マイクが つかえませんでした' : 'Could not use the microphone'); }
 }
 
+/* ---------- 課金（../common/kakin.js、いまは おためし） ---------- */
+const FREE_CATS = ['ani', 'food']; // むりょうは どうぶつ と たべもの（＋おうちの しゃしん）
+const catOpen = c => c === 'all' || c === 'home' || FREE_CATS.includes(c) || Kakin.full();
+Kakin.setup({
+  game: 'kezuri', lang: () => L, onChange: () => { renderTitle(); renderSettings(); },
+  name: { ja: 'けずって なにかな？', en: 'Scratch & Guess' },
+  free: { ja: ['どうぶつ・たべもの（30こ）', 'おうちの しゃしん', 'むずかしさ・ずかん・きらきら ぜんぶ'], en: ['Animals and food (30)', 'Family photos', 'All levels, picture book and shiny cards'] },
+  full: { ja: ['のりもの・うみ・しぜん（40こ）が ふえて、ぜんぶで 70こ'], en: ['Vehicles, sea and nature (40 more, 70 in all)'] },
+});
+
 /* ---------- タイトル ---------- */
 const LV = [ // ちょいす: えらぶ数、th: どのくらい けずったら こたえが でるか、same: おなじ なかまから まぎらわしいのを だす
   { choices: 0, th: .5 }, { choices: 2, th: .3 }, { choices: 3, th: .2 }, { choices: 4, th: 0, same: true }
@@ -517,13 +529,14 @@ function renderTitle() {
   $('#tCats').textContent = t.cats; $('#tLv').textContent = t.lv;
   $('#tBook').textContent = t.book; $('#tPhotos').textContent = t.photos; $('#tPhotosSub').textContent = t.photosSub;
   $('#setB').textContent = t.settings; $('#langB').textContent = L === 'ja' ? 'English' : '日本語';
-  if (!catList().includes(cat)) cat = 'all';
+  if (!catList().includes(cat) || !catOpen(cat)) cat = 'all';
   $('#cats').innerHTML = '';
   for (const c of catList()) {
     const b = document.createElement('button');
     b.innerHTML = `${c === 'all' ? '⭐' : c === 'home' ? '📷' : CATS[c].icon} ${t.catName[c]}`;
     if (c === cat) b.className = 'sel';
-    b.onclick = () => { cat = c; store.set('kezuri-cat', c); sfx.tap(); renderTitle(); };
+    if (!catOpen(c)) b.classList.add('kk-lock');
+    b.onclick = () => { sfx.tap(); if (!catOpen(c)) { Kakin.ask(); return; } cat = c; store.set('kezuri-cat', c); renderTitle(); };
     $('#cats').appendChild(b);
   }
   $('#lvs').innerHTML = '';
@@ -557,6 +570,9 @@ $('#phClose').onclick = () => { $('#photoM').classList.remove('on'); renderTitle
 function renderSettings() {
   const t = T();
   $('#tSet').textContent = t.set; $('#tVoice').textContent = t.voice; $('#tSound').textContent = t.sound;
+  $('#tKk').textContent = L === 'ja' ? '🔓 ぜんぶ版' : '🔓 Full version';
+  $('#tKkNote').textContent = L === 'ja' ? 'むりょうでは どうぶつ・たべもの・おうちの しゃしんで あそべます。ぜんぶ版（買い切り）か ファミリーパスで、のりもの・うみ・しぜんも あそべます。広告は出しません。' : 'Free: animals, food and family photos. The full version (one-time) or the Family Pass adds vehicles, sea and nature. No ads.';
+  if (!$('#kkSlot').firstChild) $('#kkSlot').appendChild(Kakin.parentButton()); else $('#kkSlot').firstChild._kkUpdate();
   $('#tReset').textContent = t.reset; $('#tResetNote').textContent = t.resetNote; $('#resetB').textContent = t.resetB; $('#setClose').textContent = t.close;
   const opt = (el, list, cur, fn) => { el.innerHTML = ''; for (const [v, label] of list) { const b = document.createElement('button'); b.textContent = label; if (v === cur) b.className = 'sel'; b.onclick = () => { fn(v); renderSettings(); }; el.appendChild(b); } };
   const vl = L === 'ja' ? AI_VOICES.map((id, i) => ['ai:' + id, t.ai(i + 1)]) : [];
@@ -579,7 +595,7 @@ let lay = { ox: 0, oy: 0, S: 100, dpr: 1 };
 
 function pool() {
   if (cat === 'home') return photos.slice();
-  if (cat === 'all') return ITEMS.concat(photos);
+  if (cat === 'all') return ITEMS.filter(i => catOpen(i.cat)).concat(photos);
   return ITEMS.filter(i => i.cat === cat);
 }
 function nextItem() {

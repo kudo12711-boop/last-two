@@ -169,9 +169,13 @@ input[type=file]{display:none}
   <div id="recList"></div>
   <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest">▶ ためす</button></div>
   <div class="note">「AIのこえ」は、あらかじめ AI で作っておいた自然な声です（Kokoro-82M／Apache-2.0）。</div>
+  <h3>🔓 ぜんぶ版</h3>
+  <div class="note">むりょうでは「のはら」と、しゃしんで あそぶ（1日2まいまで）、こえの録音が使えます。ぜんぶ版（買い切り）か ファミリーパスで、「うみ」「よぞら」と、しゃしんを何まいでも使えるようになります。広告は出しません。</div>
+  <div id="kkSlot"></div>
   <button class="big" id="btnHelpClose" style="justify-content:center;margin-top:14px">とじる</button>
 </div></div>
 
+<script src="../common/kakin.js"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -673,14 +677,29 @@ let lastFind = 0;
 document.querySelectorAll('.lvl button').forEach(b => b.onclick = () => {
   document.querySelectorAll('.lvl button').forEach(x => x.classList.toggle('sel', x === b)); N = +b.dataset.n; sfx.tap();
 });
-document.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { sfx.tap(); src = { theme: b.dataset.theme }; newRound(); });
-$('#btnPhoto').onclick = () => { audio(); $('#filePhoto').click(); };
-$('#btnCam').onclick = () => { audio(); $('#fileCam').click(); };
+/* 課金（../common/kakin.js、いまは おためし）: むりょうは のはら ＋ しゃしん1日2まい */
+const FREE_THEMES = ['field'], FREE_PHOTOS = 2;
+const themeOpen = th => FREE_THEMES.includes(th) || Kakin.full();
+const today = () => new Date().toDateString();
+const photoUsed = () => { const u = store.get('machigai-photo-day', null); return u && u.d === today() ? u.n : 0; };
+const photoOk = () => Kakin.full() || photoUsed() < FREE_PHOTOS;
+function renderLocks() { document.querySelectorAll('[data-theme]').forEach(b => b.classList.toggle('kk-lock', !themeOpen(b.dataset.theme))); }
+Kakin.setup({
+  game: 'machigai', lang: () => 'ja', onChange: renderLocks,
+  name: { ja: 'まちがいさがし', en: 'Spot the Difference' },
+  free: { ja: ['🌷 のはら（3・5・7つ）', 'しゃしんで あそぶ（1日2まいまで）', 'おうちの人の こえの録音'], en: ['Meadow (3, 5, 7)', 'Photo mode (2 photos a day)', 'Record your own voice'] },
+  full: { ja: ['🐟 うみ・🚀 よぞら', 'しゃしんを 何まいでも'], en: ['Sea and Night sky', 'Unlimited photos'] },
+});
+$('#kkSlot').appendChild(Kakin.parentButton());
+renderLocks();
+document.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { sfx.tap(); if (!themeOpen(b.dataset.theme)) { Kakin.ask(); return; } src = { theme: b.dataset.theme }; newRound(); });
+$('#btnPhoto').onclick = () => { audio(); if (!photoOk()) { Kakin.ask(); return; } $('#filePhoto').click(); };
+$('#btnCam').onclick = () => { audio(); if (!photoOk()) { Kakin.ask(); return; } $('#fileCam').click(); };
 for (const id of ['#filePhoto', '#fileCam']) $(id).onchange = async e => {
   const f = e.target.files && e.target.files[0]; e.target.value = '';
   if (!f) return;
   $('#busy').classList.add('on');
-  try { const img = await loadImage(f); src = { base: photoBase(img) }; await newRound(); }
+  try { const img = await loadImage(f); src = { base: photoBase(img) }; if (!Kakin.full()) store.set('machigai-photo-day', { d: today(), n: photoUsed() + 1 }); await newRound(); }
   catch (err) { alert('しゃしんを ひらけませんでした。べつの しゃしんで ためしてね。'); }
   $('#busy').classList.remove('on');
 };

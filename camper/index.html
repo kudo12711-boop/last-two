@@ -286,6 +286,7 @@ svg.map{touch-action:none;cursor:grab;width:100%;aspect-ratio:1.5/1;border-radiu
   </section>
 </div>
 <div id="modal" class="modal" hidden><div id="sheet"></div></div>
+<script src="../common/kakin.js"></script>
 <script>
 // ルートのデータ。各区間(leg)は「止まる町」の並び。町: [名前, 緯度, 経度, 町のまわりの景色, そこまでの道の景色, 'r'=道/'s'=船, 海域, 名所]
 const LEGS = {
@@ -860,7 +861,8 @@ function autoPick(lap, i) {
 }
 // 追加ルート（いまはお試し版なので、買っても本物のお金はかかりません）
 const PRICE = 480, BUNDLE = 980;
-function owns(id) { return !LEG[id].paid || OWNED.includes(id) || QS.has('allroutes'); }
+// ファミリーパス（../common/kakin.js、あそびのいりぐち共通）を持っていれば、追加ルートもぜんぶ選べる
+function owns(id) { return !LEG[id].paid || OWNED.includes(id) || QS.has('allroutes') || !!(window.Kakin && Kakin.hasPass()); }
 const PAID = () => Object.keys(LEG).filter(id => LEG[id].paid);
 function buyRoutes(ids) { OWNED = [...new Set([...OWNED, ...ids])]; try { localStorage.setItem('camper-owned', JSON.stringify(OWNED)); } catch (e) { } }
 function showShop(focus, back) {
@@ -871,7 +873,10 @@ function showShop(focus, back) {
      ${has ? '<div class="tag pick">✓ 持っています</div>' : `<button class="big" data-buyr="${id}">¥${PRICE} で買う</button>`}</div>`; }).join('')}
    ${left.length > 1 ? `<button class="big" data-buyr="all">🎁 ぜんぶセット ¥${BUNDLE}（${left.length}ルート）</button>` : ''}
    <p class="note">※ いまはお試し版です。ボタンを押しても本物のお金はかかりません。</p>
+   <p class="note">👪 子ども向けゲームと共通の「ファミリーパス」（月額・お試し）でも、追加ルートがぜんぶ選べます。</p>
+   ${window.Kakin ? '<button class="big ghost" id="shop-pass">👪 ファミリーパスを見る</button>' : ''}
    <button class="big ghost" id="shop-close">とじる</button>`);
+  if (window.Kakin) { Kakin.setup({ game: 'camper', lang: () => 'ja', noFull: true, name: { ja: 'キャンピングカー世界一周', en: 'Camper Trip' }, free: null, full: null, onChange: () => showShop(focus, back) }); $('#shop-pass').onclick = () => Kakin.open(); }
   $('#shop-close').onclick = () => back ? back() : closeModal();
   document.querySelectorAll('[data-buyr]').forEach(b => b.onclick = () => {
     const want = b.dataset.buyr === 'all' ? left : [b.dataset.buyr];
