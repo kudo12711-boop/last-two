@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#ffe4ec">
+<title>ふくわらい</title>
+<style>
+:root{
+  --bg:#fff0f3; --ink:#4a3340; --card:#ffffff; --accent:#ff6f91; --accent2:#ffb84d; --soft:#ffe0e8; --ok:#2fbf71;
+  --shadow:0 4px 0 rgba(140,60,90,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Maru Gothic ProN","Rounded Mplus 1c","Kosugi Maru","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation;background:none}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+.screen.on{display:flex}
+.hidden{display:none!important}
+
+/* タイトル */
+#home{align-items:center;gap:14px;overflow:auto;padding-top:calc(env(safe-area-inset-top) + 18px);padding-bottom:24px}
+#home h1{margin:0;font-size:clamp(36px,10vw,58px);letter-spacing:.06em;text-align:center;line-height:1.15}
+#home h1 span{display:inline-block;animation:bob 2.4s ease-in-out infinite}
+#home h1 span:nth-child(2n){animation-delay:.3s;color:var(--accent)}
+@keyframes bob{50%{transform:translateY(-6px) rotate(-3deg)}}
+.sub{margin:-6px 0 0;font-size:15px;opacity:.75;text-align:center}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(440px,100%)}
+.seg button{padding:10px 8px;border-radius:18px;background:var(--card);box-shadow:var(--shadow);font-size:18px;font-weight:700;line-height:1.25}
+.seg button small{display:block;font-size:12px;font-weight:400;opacity:.8}
+.seg button.sel{background:var(--accent);color:#fff}
+.lbl{width:min(440px,100%);font-weight:700;font-size:16px;margin-top:4px}
+#faces{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(440px,100%)}
+.fc{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 8px;border-radius:22px;background:var(--card);
+  box-shadow:var(--shadow);font-size:14px;font-weight:700}
+.fc canvas{width:100%;max-width:110px;aspect-ratio:5/6;height:auto}
+.fc:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(140,60,90,.18)}
+.fc.add{border:3px dashed #ffb3c6;box-shadow:none;background:#fff8fa;justify-content:center;min-height:120px}
+.fc.add .ico{font-size:40px;line-height:1.1}
+.fc .x{position:absolute;right:2px;top:2px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);font-size:14px;line-height:28px}
+.row{display:flex;gap:10px;width:min(440px,100%)}
+.big{display:flex;align-items:center;justify-content:center;gap:10px;flex:1;padding:14px 16px;border-radius:22px;background:var(--card);
+  box-shadow:var(--shadow);font-size:19px;font-weight:700}
+.big .ico{font-size:30px;line-height:1}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(140,60,90,.18)}
+.big.pri{background:var(--accent);color:#fff}
+.foot{display:flex;gap:6px;font-size:14px;flex-wrap:wrap;justify-content:center}
+.foot button{text-decoration:underline;opacity:.75;padding:6px}
+
+/* ゲーム */
+#game{padding-left:8px;padding-right:8px}
+.bar{display:flex;align-items:center;gap:8px;height:60px;flex:none}
+.round{width:48px;height:48px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);font-size:22px;display:grid;place-items:center;flex:none}
+.round:active{transform:translateY(3px);box-shadow:none}
+#dots{flex:1;display:flex;justify-content:center;gap:6px}
+#dots i{width:14px;height:14px;border-radius:50%;background:#f3c6d3;transition:.25s}
+#dots i.on{background:var(--accent);transform:scale(1.2)}
+#stage{flex:1;display:flex;flex-direction:column;min-height:0;gap:8px;padding-bottom:8px}
+#board{flex:1;position:relative;min-height:0}
+#cv{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none;display:block}
+#tray{flex:none;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;background:rgba(255,255,255,.6);border-radius:22px;padding:8px;min-height:84px}
+.pc{aspect-ratio:1;border-radius:16px;background:var(--card);box-shadow:var(--shadow);display:grid;place-items:center;touch-action:none;padding:4px;max-height:86px}
+.pc canvas{width:100%;height:100%;object-fit:contain;pointer-events:none;min-width:0}
+.pc.gone{visibility:hidden}
+.pc.pop{animation:pcin .45s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes pcin{from{transform:scale(0) rotate(-30deg)}}
+#tray.glow .pc:not(.gone){animation:glow 1.2s ease-in-out 2}
+@keyframes glow{50%{transform:scale(1.12);box-shadow:0 0 0 4px var(--accent2)}}
+#panel{flex:none;display:none;flex-direction:column;gap:8px;align-items:center;background:rgba(255,255,255,.75);border-radius:22px;padding:10px}
+#panel.on{display:flex}
+#score{font-size:20px;font-weight:900;text-align:center;min-height:28px}
+#score .st{color:var(--accent2);font-size:26px;letter-spacing:2px}
+#panel .row{width:100%}
+#panel .big{font-size:16px;padding:10px 8px;border-radius:18px}
+#panel .big .ico{font-size:22px}
+#senoBtn{font-size:30px;padding:16px;width:min(420px,100%);flex:none;animation:jump 1s ease-in-out infinite}
+@keyframes jump{50%{transform:translateY(-6px) scale(1.04)}}
+#ghost{position:fixed;left:0;top:0;pointer-events:none;z-index:20;display:none;filter:drop-shadow(0 6px 6px rgba(0,0,0,.25))}
+#say{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:clamp(34px,10vw,66px);font-weight:900;color:#fff;
+  -webkit-text-stroke:3px var(--accent);text-shadow:0 5px 0 rgba(0,0,0,.12);pointer-events:none;opacity:0;white-space:nowrap;z-index:15}
+#say.on{animation:sayA 1.6s ease-out forwards}
+@keyframes sayA{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}40%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%)}}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:14}
+
+@media (orientation:landscape) and (min-width:700px){
+  #stage{flex-direction:row}
+  #tray{width:220px;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start}
+  #panel{width:260px;justify-content:center}
+  #panel .row{flex-direction:column}
+}
+
+/* 写真 */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(40,20,30,.4);z-index:30;padding:16px}
+.modal.on{display:flex}
+.sheet{background:var(--card);border-radius:28px;padding:20px 18px;width:min(400px,100%);box-shadow:0 8px 0 rgba(140,60,90,.18);
+  animation:panelIn .4s cubic-bezier(.3,1.5,.5,1);max-height:calc(100dvh - 32px);overflow:auto}
+@keyframes panelIn{from{transform:scale(.6);opacity:0}}
+.sheet h2{margin:0 0 6px;font-size:22px;text-align:center}
+.sheet .big{width:100%;margin-top:10px}
+.sheet p,.note{font-size:14px;line-height:1.65;margin:6px 0}
+.note{opacity:.75;font-size:13px}
+#edit{padding-left:8px;padding-right:8px}
+#editMsg{font-size:14px;line-height:1.5;padding:4px 6px;flex:none;min-height:42px}
+#ecvWrap{flex:1;position:relative;min-height:0}
+#ecv{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
+#edit .row{width:100%;padding:8px 0;flex:none}
+#busy{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:18px;font-weight:700;text-align:center}
+#busy.on{display:flex}
+#busy span{background:rgba(255,255,255,.9);padding:14px 18px;border-radius:18px;animation:jump 1s ease-in-out infinite}
+
+/* アルバム */
+#albumS{overflow:auto;padding-bottom:24px}
+#albumGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;width:100%;max-width:640px;margin:0 auto}
+#albumGrid img{width:100%;border-radius:14px;box-shadow:var(--shadow);background:#fff;display:block}
+#albumEmpty{text-align:center;opacity:.7;padding:30px 10px}
+#bigImg{max-width:100%;max-height:60dvh;border-radius:18px;display:block;margin:0 auto}
+
+#help .sheet{font-size:15px;line-height:1.6}
+#help h3{margin:14px 0 4px;font-size:17px}
+.opt{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.opt button{padding:7px 12px;border-radius:14px;background:var(--soft);font-size:14px;font-weight:700}
+.opt button.sel{background:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+
+<!-- タイトル -->
+<section id="home" class="screen on">
+  <h1 id="ttl"></h1>
+  <p class="sub" data-t="sub"></p>
+  <div class="seg" id="modeSeg">
+    <button data-mode="easy"><span data-t="easy"></span><small data-t="easyS"></small></button>
+    <button data-mode="blind"><span data-t="blind"></span><small data-t="blindS"></small></button>
+  </div>
+  <div class="lbl" data-t="choose"></div>
+  <div id="faces"></div>
+  <div class="row"><button class="big" id="albumBtn"><span class="ico">📒</span><span data-t="album"></span></button></div>
+  <div class="foot">
+    <button id="helpBtn" data-t="help"></button>
+    <button id="langBtn"></button>
+    <button id="gamesBtn" data-t="games"></button>
+  </div>
+</section>
+
+<!-- ゲーム -->
+<section id="game" class="screen">
+  <div class="bar">
+    <button class="round" id="homeBtn" aria-label="home">🏠</button>
+    <div id="dots"></div>
+    <button class="round" id="sndBtn" aria-label="sound">🔊</button>
+  </div>
+  <div id="stage">
+    <div id="board"><canvas id="cv"></canvas></div>
+    <div id="tray"></div>
+    <div id="panel">
+      <div id="score"></div>
+      <div class="row">
+        <button class="big" id="ansBtn"><span class="ico">👀</span><span data-t="answer"></span></button>
+        <button class="big" id="saveBtn"><span class="ico">📒</span><span data-t="save"></span></button>
+      </div>
+      <div class="row">
+        <button class="big pri" id="againBtn"><span class="ico">🔁</span><span data-t="again"></span></button>
+        <button class="big" id="otherBtn"><span class="ico">😀</span><span data-t="other"></span></button>
+      </div>
+    </div>
+    <button class="big pri hidden" id="senoBtn" data-t="seno"></button>
+  </div>
+</section>
+
+<!-- 写真のパーツあわせ -->
+<section id="edit" class="screen">
+  <div class="bar">
+    <button class="round" id="editBack" aria-label="back">↩️</button>
+    <div style="flex:1;font-weight:700;text-align:center" data-t="editTitle"></div>
+    <div style="width:48px"></div>
+  </div>
+  <div id="editMsg"></div>
+  <div id="ecvWrap"><canvas id="ecv"></canvas><div id="busy"><span data-t="detecting"></span></div></div>
+  <div class="row"><button class="big pri" id="makeBtn"><span class="ico">✨</span><span data-t="make"></span></button></div>
+</section>
+
+<!-- アルバム -->
+<section id="albumS" class="screen">
+  <div class="bar">
+    <button class="round" id="albumBack" aria-label="back">🏠</button>
+    <div style="flex:1;font-weight:700;text-align:center;font-size:20px" data-t="album"></div>
+    <div style="width:48px"></div>
+  </div>
+  <div id="albumGrid"></div>
+  <div id="albumEmpty" data-t="albumEmpty"></div>
+</section>
+
+<div class="modal" id="photoM"><div class="sheet">
+  <h2 data-t="addPhoto"></h2>
+  <p data-t="photoNote"></p>
+  <button class="big pri" id="camBtn"><span class="ico">📷</span><span data-t="take"></span></button>
+  <button class="big" id="pickBtn"><span class="ico">🖼️</span><span data-t="pickPhoto"></span></button>
+  <button class="big" id="photoCancel" data-t="cancel"></button>
+  <input type="file" accept="image/*" capture="user" id="camIn" class="hidden">
+  <input type="file" accept="image/*" id="pickIn" class="hidden">
+</div></div>
+
+<div class="modal" id="viewM"><div class="sheet">
+  <img id="bigImg" alt="">
+  <div class="row" style="margin-top:12px">
+    <button class="big" id="dlBtn"><span class="ico">⬇️</span><span data-t="download"></span></button>
+    <button class="big" id="delBtn"><span class="ico">🗑️</span><span data-t="del"></span></button>
+  </div>
+  <button class="big" id="viewClose" data-t="close"></button>
+</div></div>
+
+<div class="modal" id="help"><div class="sheet" id="helpBody"></div></div>
+
+<canvas id="ghost"></canvas>
+<canvas id="fx"></canvas>
+<div id="say"></div>
+
+<script>
+'use strict';
+/* ---------- ほぞん ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+const $ = s => document.querySelector(s);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const W = 600, H = 720; // かおの おおきさ（パーツの ざひょう）
+
+/* ---------- ことば ---------- */
+const T = {
+  ja: {
+    title: 'ふくわらい', sub: 'パーツを おいて、へんな かおを つくろう',
+    easy: 'かんたん', easyS: 'ぴたっと くっつく・2さい〜', blind: 'めかくし', blindS: 'おくまで みえない・4さい〜',
+    choose: 'どの かおで あそぶ？', addPhoto: 'しゃしんで つくる', album: 'アルバム', help: 'おうちの かたへ', games: 'ほかの あそび',
+    look: 'よーく みてね', blindOn: 'めかくし ちゅう', seno: 'せーの！', match: 'そっくりど',
+    save: 'アルバムへ', saved: 'いれたよ！', again: 'もういちど', other: 'ほかの かお', answer: 'こたえ',
+    take: 'カメラで とる', pickPhoto: 'しゃしんを えらぶ', cancel: 'やめる', close: 'とじる', download: 'ほぞん', del: 'けす',
+    photoNote: 'かおが まっすぐ うつった しゃしんが おすすめです。しゃしんは この スマホ（タブレット）の なかだけで つかい、どこにも おくりません。',
+    editTitle: 'パーツの いち', detecting: 'かおを さがしているよ…',
+    found: 'おうちの かたへ: まるが まゆ・め・はな・くちに あっているか たしかめてね。まるは ゆびで うごかせます（みぎしたの ● で おおきさ）。',
+    notFound: 'かおが みつからなかったよ。まるを ゆびで まゆ・め・はな・くちに あわせてね。',
+    make: 'これで つくる', photoName: 'しゃしん', albumEmpty: 'まだ ないよ。かおが できたら「アルバムへ」で いれてね。',
+    brow: 'まゆ', eye: 'め', nose: 'はな', mouth: 'くち',
+    delFace: 'この かおを けしますか？', delPic: 'この しゃしんを けしますか？', full: 'いっぱいに なったので ふるい ものを けしました',
+    hVoice: 'こえ', hDev: 'スマホの こえ', hOff: 'なし', hSound: 'おと', hOn: 'あり', hLang: 'ことば / Language',
+    hAbout: 'あそびかた',
+    hAboutT: '<b>かんたん</b>: パーツを かおの うえに おくと、ちかければ「ぴたっ」と くっつきます。<br><b>めかくし</b>: さいしょに かおを よく みてから、めかくし。おいた パーツは みえません。ぜんぶ おいたら「せーの！」で みんなで みよう。<br>「こたえ」を おしている あいだは、もとの かおが みえます。',
+    hPhoto: 'しゃしんの こと',
+    hPhotoT: 'かおの いちを みつける しくみも ふくめて、ぜんぶ この きかいの なかで うごきます。しゃしんは インターネットに おくりません。つくった かおと アルバムは この きかいの ブラウザに ほぞんされます。',
+    hClear: 'しゃしんの かおと アルバムを ぜんぶ けす', hClearQ: 'しゃしんで つくった かおと アルバムを ぜんぶ けしますか？', hClose: 'とじる',
+    faceNames: { okame: 'おかめ', neko: 'ねこ', kuma: 'くま', oni: 'おに' }
+  },
+  en: {
+    title: 'FUKUWARAI', sub: 'Put the face parts on — make a funny face!',
+    easy: 'Easy', easyS: 'Parts snap into place · 2+', blind: 'Blindfold', blindS: 'Parts stay hidden · 4+',
+    choose: 'Pick a face', addPhoto: 'Make from a photo', album: 'Album', help: 'For parents', games: 'More games',
+    look: 'Take a good look!', blindOn: 'Eyes closed!', seno: 'Ready... Look!', match: 'Match',
+    save: 'To album', saved: 'Saved!', again: 'Play again', other: 'Other faces', answer: 'Answer',
+    take: 'Take a photo', pickPhoto: 'Choose a photo', cancel: 'Cancel', close: 'Close', download: 'Save', del: 'Delete',
+    photoNote: 'A photo looking straight at the camera works best. The photo stays on this phone or tablet and is never uploaded.',
+    editTitle: 'Face parts', detecting: 'Looking for the face…',
+    found: 'For parents: check that the circles sit on the eyebrows, eyes, nose and mouth. Drag a circle to move it (the ● at its lower right changes its size).',
+    notFound: 'No face found. Drag the circles onto the eyebrows, eyes, nose and mouth.',
+    make: 'Make it!', photoName: 'Photo', albumEmpty: 'Nothing yet. Tap "To album" after you finish a face.',
+    brow: 'brow', eye: 'eye', nose: 'nose', mouth: 'mouth',
+    delFace: 'Delete this face?', delPic: 'Delete this picture?', full: 'Storage was full, so the oldest one was removed',
+    hVoice: 'Voice', hDev: 'Device voice', hOff: 'Off', hSound: 'Sound', hOn: 'On', hLang: 'Language / ことば',
+    hAbout: 'How to play',
+    hAboutT: '<b>Easy</b>: drop a part near its spot and it snaps into place.<br><b>Blindfold</b>: look at the face first, then the screen goes dark and the parts you place are hidden. When all are placed, tap the button to reveal the funny face together.<br>Hold “Answer” to see the original face.',
+    hPhoto: 'About photos',
+    hPhotoT: 'Everything, including finding the face, runs on this device. Photos are never sent over the internet. Faces you make and the album are stored in this browser only.',
+    hClear: 'Delete all photo faces and the album', hClearQ: 'Delete all photo faces and the album?', hClose: 'Close',
+    faceNames: { okame: 'Okame', neko: 'Kitty', kuma: 'Bear', oni: 'Little Oni' }
+  }
+};
+const LINES = {
+  look: { ja: ['よーく、みてね。', 'どんな、かお、かな？'], en: ['Take a good look!', 'What does this face look like?'] },
+  blind: { ja: ['めかくし、するよ！'], en: ['Now, eyes closed!'] },
+  pick: { ja: ['どこに、おくかな？', 'つぎは、どれに、する？'], en: ['Where does it go?', 'Which one next?'] },
+  put: { ja: ['ぽん！', 'ここかな？', 'いいね！'], en: ['Pop!', 'Here?', 'Nice!'] },
+  snap: { ja: ['ぴたっと、くっついたね！', 'ぴったり！'], en: ['Snap!', 'Perfect fit!'] },
+  ready: { ja: ['ぜんぶ、おけたね！せーので、みてみよう。'], en: ["All done! Let's take a look!"] },
+  seno: { ja: ['せーの！'], en: ['Ready, set...'] },
+  funny: { ja: ['へんな、かおー！', 'わはは！おもしろい、かお！', 'だれ、これー？'], en: ['What a funny face!', 'Ha ha! So silly!', 'Who is this?'] },
+  good: { ja: ['そっくり！じょうず！', 'すごーい！ぴったりだね！'], en: ['Just like it! Great job!', 'Wow! Spot on!'] },
+  photo: { ja: ['かおが、できたよ！'], en: ['Your face is ready!'] }
+};
+let lang = store.get('fuku-lang', null);
+const qs = new URLSearchParams(location.search).get('lang');
+if (qs === 'en' || qs === 'ja') lang = qs;
+if (!lang) lang = /^ja/i.test(navigator.language || '') ? 'ja' : 'en';
+const t = k => (T[lang] && T[lang][k]) ?? T.ja[k];
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.title = t('title');
+  $('#ttl').innerHTML = [...t('title')].map(c => `<span>${c === ' ' ? '&nbsp;' : c}</span>`).join('');
+  document.querySelectorAll('[data-t]').forEach(e => { e.textContent = t(e.dataset.t); });
+  $('#langBtn').textContent = lang === 'ja' ? 'English' : '日本語';
+}
+
+/* ---------- おと ---------- */
+let soundOn = store.get('fuku-sound', true);
+let actx = null;
+function audio() {
+  if (!soundOn) return null;
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function tone(freq, t0, dur, type = 'sine', vol = .25, slideTo) {
+  const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), tt = a.currentTime + t0;
+  o.type = type; o.frequency.setValueAtTime(freq, tt);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, tt + dur);
+  g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(vol, tt + .02); g.gain.exponentialRampToValueAtTime(.001, tt + dur);
+  o.connect(g).connect(a.destination); o.start(tt); o.stop(tt + dur + .05);
+}
+function boing(t0 = 0, f = 220) { // びよーん
+  const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain(), tt = a.currentTime + t0;
+  o.type = 'triangle'; o.frequency.setValueAtTime(f, tt); o.frequency.exponentialRampToValueAtTime(f * 2.6, tt + .5);
+  lfo.frequency.value = 14; lg.gain.value = f * .25; lfo.connect(lg).connect(o.frequency);
+  g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(.22, tt + .03); g.gain.exponentialRampToValueAtTime(.001, tt + .7);
+  o.connect(g).connect(a.destination); o.start(tt); lfo.start(tt); o.stop(tt + .75); lfo.stop(tt + .75);
+}
+const sfx = {
+  grab() { tone(660, 0, .08, 'sine', .1, 900); },
+  put() { tone(520, 0, .1, 'sine', .2, 300); },
+  soft() { tone(300, 0, .12, 'sine', .12, 200); },
+  snap() { [784, 1175].forEach((f, i) => tone(f, i * .07, .16, 'triangle', .18)); },
+  whoosh() { tone(300, 0, .3, 'sine', .08, 1200); },
+  drum() { for (let i = 0; i < 14; i++) tone(120 + i * 6, i * .07, .06, 'triangle', .14 + i * .008); },
+  reveal(i) { tone(600 + i * 90, 0, .12, 'square', .07); },
+  funny() { boing(0, 200); boing(.35, 260); [392, 370, 349, 330].forEach((f, i) => tone(f, .8 + i * .22, .24, 'sawtooth', .06, f * .94)); },
+  good() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i * .11, i === 6 ? .7 : .18, 'square', .08)); },
+  tap() { tone(880, 0, .06, 'sine', .08); }
+};
+
+/* ---------- こえ（AIで作った声 → なければ 端末の読み上げ） ---------- */
+const AI_VOICES = [{ id: 'jf_alpha', n: 1 }, { id: 'jf_gongitsune', n: 2 }, { id: 'jf_nezumi', n: 3 }, { id: 'jf_tebukuro', n: 4 }];
+const aiBuf = {};
+function aiLoad(id) {
+  const a = audio(); if (!a) return;
+  for (const [cat, v] of Object.entries(LINES)) for (let i = 0; i < v.ja.length; i++) {
+    const k = `${id}/${cat}${i}`;
+    if (aiBuf[k]) continue;
+    aiBuf[k] = 'loading';
+    fetch(`voice/${k}.mp3?v=1`).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(b => new Promise((res, rej) => a.decodeAudioData(b, res, rej)))
+      .then(buf => { aiBuf[k] = buf; }).catch(() => { aiBuf[k] = 'none'; });
+  }
+}
+let devVoice = { ja: null, en: null };
+function voiceScore(v) {
+  const n = v.name; let s = 0;
+  if (/拡張|Enhanced|Premium|プレミアム/i.test(n)) s += 50;
+  if (/Natural|Neural|Online/i.test(n)) s += 45;
+  if (/Google/i.test(n)) s += 30;
+  if (/Kyoko|O-ren|Nanami|Samantha|Ava|Jenny|Aria/i.test(n)) s += 10;
+  if (/Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Bad News|Bells|Bubbles|Albert|Zarvox|Whisper/i.test(n)) s -= 60;
+  return s;
+}
+function loadVoices() {
+  try {
+    const vs = speechSynthesis.getVoices();
+    for (const l of ['ja', 'en']) devVoice[l] = vs.filter(v => new RegExp('^' + l, 'i').test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a))[0] || null;
+  } catch (e) {}
+}
+if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+function tts(text) {
+  if (!('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/、/g, ' '));
+    u.lang = lang === 'ja' ? 'ja-JP' : 'en-US'; u.pitch = 1.2; u.rate = lang === 'ja' ? .95 : .9;
+    if (devVoice[lang]) u.voice = devVoice[lang];
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+let voiceMode = store.get('fuku-voice', 'ai:jf_alpha'); // 'ai:<id>' / 'dev' / 'off'
+let aiSrc = null; const lastTake = {};
+function speak(cat) {
+  if (!soundOn || voiceMode === 'off') return;
+  const list = LINES[cat][lang] || LINES[cat].ja;
+  let idx = Math.floor(Math.random() * list.length);
+  if (list.length > 1 && idx === lastTake[cat]) idx = (idx + 1) % list.length;
+  lastTake[cat] = idx;
+  if (lang === 'ja' && voiceMode.startsWith('ai:')) {
+    const b = aiBuf[`${voiceMode.slice(3)}/${cat}${idx}`];
+    const a = audio();
+    if (a && b && typeof b !== 'string') {
+      try { if (aiSrc) aiSrc.stop(); } catch (e) {}
+      const s = a.createBufferSource(), g = a.createGain(); g.gain.value = 1.4;
+      s.buffer = b; s.connect(g).connect(a.destination); s.start(); aiSrc = s; return;
+    }
+  }
+  tts(list[idx]);
+}
+function bigSay(txt) {
+  const e = $('#say'); e.textContent = txt; e.classList.remove('on'); void e.offsetWidth; e.classList.add('on');
+}
+
+/* ---------- 絵の かお ---------- */
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function E(g, cx, cy, rx, ry, fill, stroke, lw) {
+  g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  if (fill) { g.fillStyle = fill; g.fill(); }
+  if (stroke) { g.lineWidth = lw || 6; g.strokeStyle = stroke; g.stroke(); }
+}
+function line(g, pts, color, lw) {
+  g.beginPath(); g.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]);
+  g.strokeStyle = color; g.lineWidth = lw; g.stroke();
+}
+function P(type, id, x, y, w, h, draw) {
+  const c = mk(w, h), g = c.getContext('2d');
+  g.translate(w / 2, h / 2); g.lineCap = 'round'; g.lineJoin = 'round'; draw(g);
+  return { type, id, tx: x, ty: y, img: c };
+}
+function baseOf(draw) { const c = mk(W, H), g = c.getContext('2d'); g.lineCap = 'round'; g.lineJoin = 'round'; draw(g); return c; }
+const FACES = [];
+function makeDrawn() {
+  { // おかめ
+    const ink = '#3a2a22', skin = '#fff4ea', hair = '#231c22';
+    const base = baseOf(g => {
+      E(g, 300, 330, 255, 255, hair);
+      const sh = [[300, 405, 195, 245], [218, 488, 128, 140], [382, 488, 128, 140]];
+      sh.forEach(s => E(g, ...s, null, ink, 12)); sh.forEach(s => E(g, ...s, skin));
+      g.fillStyle = hair; g.beginPath(); g.moveTo(102, 345); g.bezierCurveTo(92, 140, 200, 78, 300, 78);
+      g.bezierCurveTo(400, 78, 508, 140, 498, 345); g.bezierCurveTo(480, 252, 405, 212, 300, 226);
+      g.bezierCurveTo(195, 212, 120, 252, 102, 345); g.fill();
+      line(g, [300, 90, 300, 222], '#4d4350', 4);
+      g.globalAlpha = .45; E(g, 178, 525, 50, 30, '#ff8a9a'); E(g, 422, 525, 50, 30, '#ff8a9a'); g.globalAlpha = 1;
+    });
+    const brow = g => E(g, 0, 0, 24, 12, '#2a2226');
+    const eye = g => { g.beginPath(); g.moveTo(-34, 10); g.quadraticCurveTo(0, -24, 34, 10); g.strokeStyle = ink; g.lineWidth = 8; g.stroke(); };
+    FACES.push({ id: 'okame', base, parts: [
+      P('brow', 'browL', 222, 272, 70, 44, brow), P('brow', 'browR', 378, 272, 70, 44, brow),
+      P('eye', 'eyeL', 212, 372, 96, 54, eye), P('eye', 'eyeR', 388, 372, 96, 54, eye),
+      P('nose', 'nose', 300, 452, 60, 64, g => { g.beginPath(); g.moveTo(-4, -22); g.quadraticCurveTo(-20, 12, 0, 16); g.quadraticCurveTo(14, 16, 14, 6); g.strokeStyle = ink; g.lineWidth = 6; g.stroke(); }),
+      P('mouth', 'mouth', 300, 565, 90, 60, g => { E(g, 0, 0, 28, 17, '#e2364a', '#9b1d2e', 4); g.beginPath(); g.moveTo(-24, 0); g.quadraticCurveTo(0, 7, 24, 0); g.strokeStyle = '#8a1424'; g.lineWidth = 4; g.stroke(); E(g, -8, -8, 7, 3, 'rgba(255,255,255,.6)'); })
+    ] });
+  }
+  { // ねこ
+    const ink = '#5b3a1f', fur = '#f7a64a';
+    const base = baseOf(g => {
+      for (const s of [1, -1]) {
+        g.save(); if (s < 0) { g.translate(600, 0); g.scale(-1, 1); }
+        g.beginPath(); g.moveTo(100, 320); g.lineTo(128, 105); g.lineTo(270, 205); g.closePath(); g.fillStyle = fur; g.fill(); g.lineWidth = 10; g.strokeStyle = ink; g.stroke();
+        g.beginPath(); g.moveTo(140, 270); g.lineTo(152, 160); g.lineTo(225, 215); g.closePath(); g.fillStyle = '#ffb3c1'; g.fill();
+        g.restore();
+      }
+      E(g, 300, 410, 245, 215, fur, ink, 10);
+      [[300, 205, 300, 262], [258, 212, 266, 256], [342, 212, 334, 256]].forEach(p => line(g, p, '#d27a22', 13));
+      E(g, 258, 508, 64, 48, '#fff8ee'); E(g, 342, 508, 64, 48, '#fff8ee');
+    });
+    const eye = g => { E(g, 0, 0, 36, 44, '#9fdc5a', ink, 6); E(g, 0, 4, 14, 32, '#222'); E(g, -10, -14, 8, 8, '#fff'); };
+    const wh = g => { line(g, [52, -18, -56, -32], ink, 5); line(g, [52, 0, -60, 0], ink, 5); line(g, [52, 18, -56, 32], ink, 5); };
+    FACES.push({ id: 'neko', base, parts: [
+      P('eye', 'eyeL', 205, 388, 90, 104, eye), P('eye', 'eyeR', 395, 388, 90, 104, eye),
+      P('nose', 'nose', 300, 468, 60, 44, g => { g.beginPath(); g.moveTo(-20, -11); g.lineTo(20, -11); g.lineTo(0, 12); g.closePath(); g.fillStyle = '#ff8fa3'; g.fill(); g.strokeStyle = ink; g.lineWidth = 5; g.stroke(); }),
+      P('mouth', 'mouth', 300, 514, 96, 50, g => { g.beginPath(); g.moveTo(0, -16); g.lineTo(0, 0); g.moveTo(-34, -6); g.quadraticCurveTo(-17, 18, 0, 0); g.quadraticCurveTo(17, 18, 34, -6); g.strokeStyle = ink; g.lineWidth = 6; g.stroke(); }),
+      P('whisker', 'whL', 128, 492, 128, 80, wh),
+      P('whisker', 'whR', 472, 492, 128, 80, g => { g.scale(-1, 1); wh(g); })
+    ] });
+  }
+  { // くま
+    const ink = '#4a2e1a', fur = '#a26b42', light = '#f0d2a8';
+    const base = baseOf(g => {
+      for (const x of [150, 450]) { E(g, x, 200, 72, 72, fur, ink, 10); E(g, x, 200, 40, 40, light); }
+      E(g, 300, 412, 245, 225, fur, ink, 10);
+      E(g, 300, 505, 108, 80, light);
+    });
+    const eye = g => { E(g, 0, 0, 20, 23, '#2a1a10'); E(g, -6, -8, 6, 6, '#fff'); };
+    const ck = g => E(g, 0, 0, 32, 20, 'rgba(255,120,150,.55)');
+    FACES.push({ id: 'kuma', base, parts: [
+      P('eye', 'eyeL', 212, 372, 56, 60, eye), P('eye', 'eyeR', 388, 372, 56, 60, eye),
+      P('nose', 'nose', 300, 474, 76, 54, g => { E(g, 0, 0, 31, 21, '#2a1a10'); E(g, -9, -8, 10, 5, 'rgba(255,255,255,.55)'); }),
+      P('mouth', 'mouth', 300, 535, 90, 60, g => { g.beginPath(); g.moveTo(0, -26); g.lineTo(0, -4); g.moveTo(-30, -12); g.quadraticCurveTo(-15, 16, 0, -4); g.quadraticCurveTo(15, 16, 30, -12); g.strokeStyle = ink; g.lineWidth = 6; g.stroke(); }),
+      P('cheek', 'ckL', 168, 470, 74, 50, ck), P('cheek', 'ckR', 432, 470, 74, 50, ck)
+    ] });
+  }
+  { // おに
+    const ink = '#5a1a14', red = '#ef5a46', hair = '#2e3a2a', horn = '#ffd34d';
+    const base = baseOf(g => {
+      for (let i = 0; i <= 10; i++) { const a = Math.PI * (1.05 + i * .09); E(g, 300 + Math.cos(a) * 245, 360 + Math.sin(a) * 215, 58, 58, hair); }
+      E(g, 300, 425, 230, 235, red, ink, 10);
+      for (const x of [165, 230, 300, 370, 435]) E(g, x, x === 300 ? 212 : 228 + Math.abs(x - 300) * .12, 40, 40, hair);
+      for (const s of [1, -1]) {
+        g.save(); if (s < 0) { g.translate(600, 0); g.scale(-1, 1); }
+        g.beginPath(); g.moveTo(178, 200); g.quadraticCurveTo(190, 110, 222, 58); g.quadraticCurveTo(250, 130, 262, 188); g.closePath();
+        g.fillStyle = horn; g.fill(); g.lineWidth = 8; g.strokeStyle = ink; g.stroke();
+        line(g, [196, 150, 250, 140], '#e0a020', 7); line(g, [208, 108, 240, 100], '#e0a020', 6);
+        g.restore();
+      }
+    });
+    const eye = g => { E(g, 0, 0, 40, 32, '#fff', ink, 6); E(g, 4, 4, 15, 17, '#222'); E(g, 0, -3, 5, 5, '#fff'); };
+    FACES.push({ id: 'oni', base, parts: [
+      P('brow', 'browL', 212, 305, 110, 50, g => line(g, [-38, -9, 38, 10], hair, 17)),
+      P('brow', 'browR', 388, 305, 110, 50, g => line(g, [-38, 10, 38, -9], hair, 17)),
+      P('eye', 'eyeL', 212, 378, 96, 78, eye), P('eye', 'eyeR', 388, 378, 96, 78, eye),
+      P('nose', 'nose', 300, 458, 76, 60, g => { E(g, 0, 0, 30, 24, '#d8402f', ink, 5); E(g, -10, 6, 5, 6, ink); E(g, 10, 6, 5, 6, ink); }),
+      P('mouth', 'mouth', 300, 560, 180, 90, g => {
+        g.beginPath(); g.moveTo(-75, -15); g.quadraticCurveTo(0, 70, 75, -15); g.quadraticCurveTo(0, 12, -75, -15); g.closePath();
+        g.fillStyle = '#7a1f1a'; g.fill(); g.strokeStyle = ink; g.lineWidth = 6; g.stroke();
+        for (const s of [1, -1]) { g.beginPath(); g.moveTo(s * -56, -5); g.lineTo(s * -36, 0); g.lineTo(s * -47, 22); g.closePath(); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 3; g.stroke(); }
+      })
+    ] });
+  }
+}
+
+/* ---------- 写真の かお ---------- */
+const PHOTO_KEYS = [['browL', 'brow'], ['browR', 'brow'], ['eyeL', 'eye'], ['eyeR', 'eye'], ['nose', 'nose'], ['mouth', 'mouth']];
+let photoFaces = store.get('fuku-faces', []); // [{id, img, boxes}]
+function inpaint(g, ells) { // パーツの あとを まわりの はだの いろで うめる
+  const img = g.getImageData(0, 0, W, H), d = img.data, mask = new Uint8Array(W * H);
+  for (const e of ells) {
+    const rx = e.rx * 1.06, ry = e.ry * 1.06;
+    for (let y = Math.max(0, Math.floor(e.cy - ry)); y <= Math.min(H - 1, Math.ceil(e.cy + ry)); y++)
+      for (let x = Math.max(0, Math.floor(e.cx - rx)); x <= Math.min(W - 1, Math.ceil(e.cx + rx)); x++)
+        if (((x - e.cx) / rx) ** 2 + ((y - e.cy) / ry) ** 2 <= 1) mask[y * W + x] = 1;
+  }
+  const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]];
+  const out = new Float32Array(W * H * 3);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (!mask[y * W + x]) continue;
+    let r = 0, gg = 0, b = 0, ws = 0;
+    for (const [dx, dy] of DIRS) {
+      let k = 1, xx = x + dx, yy = y + dy;
+      while (xx >= 0 && yy >= 0 && xx < W && yy < H && mask[yy * W + xx] && k < 400) { xx += dx; yy += dy; k++; }
+      if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+      const sx = Math.min(W - 1, Math.max(0, xx + dx * 2)), sy = Math.min(H - 1, Math.max(0, yy + dy * 2)), i = (sy * W + sx) * 4;
+      const w = 1 / (k * k); r += d[i] * w; gg += d[i + 1] * w; b += d[i + 2] * w; ws += w;
+    }
+    const o = (y * W + x) * 3; if (ws) { out[o] = r / ws; out[o + 1] = gg / ws; out[o + 2] = b / ws; }
+  }
+  for (let i = 0; i < W * H; i++) if (mask[i]) { d[i * 4] = out[i * 3]; d[i * 4 + 1] = out[i * 3 + 1]; d[i * 4 + 2] = out[i * 3 + 2]; }
+  for (let pass = 0; pass < 4; pass++) { // すこし ぼかす
+    for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) {
+      if (!mask[y * W + x]) continue;
+      let r = 0, gg = 0, b = 0;
+      for (let j = -2; j <= 2; j++) for (let i2 = -2; i2 <= 2; i2++) { const q = ((y + j) * W + x + i2) * 4; r += d[q]; gg += d[q + 1]; b += d[q + 2]; }
+      const o = (y * W + x) * 4; d[o] = r / 25; d[o + 1] = gg / 25; d[o + 2] = b / 25;
+    }
+  }
+  for (let i = 0; i < W * H; i++) if (mask[i]) { const n = (Math.random() - .5) * 5; d[i * 4] += n; d[i * 4 + 1] += n; d[i * 4 + 2] += n; }
+  g.putImageData(img, 0, 0);
+}
+function cutPart(src, e) {
+  const pw = Math.max(8, Math.ceil(e.rx * 2)), ph = Math.max(8, Math.ceil(e.ry * 2)), c = mk(pw, ph), g = c.getContext('2d');
+  g.drawImage(src, e.cx - e.rx, e.cy - e.ry, pw, ph, 0, 0, pw, ph);
+  g.globalCompositeOperation = 'destination-in';
+  g.save(); g.translate(pw / 2, ph / 2); g.scale(1, ph / pw);
+  const gr = g.createRadialGradient(0, 0, 0, 0, 0, pw / 2);
+  gr.addColorStop(0, '#000'); gr.addColorStop(.72, '#000'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr; g.fillRect(-pw / 2, -pw / 2, pw, pw); g.restore();
+  return c;
+}
+function roundClip(g) {
+  const r = 70; g.beginPath(); g.moveTo(r, 0); g.arcTo(W, 0, W, H, r); g.arcTo(W, H, 0, H, r); g.arcTo(0, H, 0, 0, r); g.arcTo(0, 0, W, 0, r); g.closePath();
+}
+function buildPhotoFace(rec, src) {
+  const base = mk(W, H), g = base.getContext('2d');
+  g.save(); roundClip(g); g.clip(); g.drawImage(src, 0, 0, W, H); g.restore();
+  const ells = PHOTO_KEYS.map(([k]) => rec.boxes[k]);
+  const parts = PHOTO_KEYS.map(([k, type]) => { const e = rec.boxes[k]; return { type, id: k, tx: e.cx, ty: e.cy, img: cutPart(src, e) }; });
+  inpaint(g, ells);
+  g.save(); roundClip(g); g.lineWidth = 10; g.strokeStyle = '#fff'; g.stroke(); g.restore();
+  return { id: rec.id, photo: true, base, parts };
+}
+function loadImg(url) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; }); }
+
+/* ---------- がめん ---------- */
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
+let mode = store.get('fuku-mode', 'easy');
+function renderMode() { document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('sel', b.dataset.mode === mode)); }
+$('#modeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; mode = b.dataset.mode; store.set('fuku-mode', mode); renderMode(); sfx.tap(); });
+
+function drawFull(g, face, w, h) { // サムネイル
+  const s = Math.min(w / W, h / H); g.save(); g.translate((w - W * s) / 2, (h - H * s) / 2); g.scale(s, s);
+  g.drawImage(face.base, 0, 0);
+  for (const p of face.parts) g.drawImage(p.img, p.tx - p.img.width / 2, p.ty - p.img.height / 2);
+  g.restore();
+}
+const builtPhoto = {}; // id -> face
+async function ensurePhotoFaces() {
+  for (const rec of photoFaces) {
+    if (builtPhoto[rec.id]) continue;
+    try { const im = await loadImg(rec.img); builtPhoto[rec.id] = buildPhotoFace(rec, im); } catch (e) {}
+  }
+}
+async function renderHome() {
+  applyLang(); renderMode();
+  await ensurePhotoFaces();
+  const box = $('#faces'); box.innerHTML = '';
+  const list = [...FACES.map(f => ({ f, name: t('faceNames')[f.id] })),
+    ...photoFaces.filter(r => builtPhoto[r.id]).map((r, i) => ({ f: builtPhoto[r.id], name: `${t('photoName')} ${i + 1}`, rec: r }))];
+  for (const it of list) {
+    const b = document.createElement('button'); b.className = 'fc';
+    const c = mk(200, 240); drawFull(c.getContext('2d'), it.f, 200, 240);
+    b.append(c); const s = document.createElement('span'); s.textContent = it.name; b.append(s);
+    b.onclick = e => { if (e.target.closest('.x')) return; startGame(it.f); };
+    if (it.rec) {
+      const x = document.createElement('span'); x.className = 'x'; x.textContent = '✕';
+      x.onclick = e => { e.stopPropagation(); if (!confirm(t('delFace'))) return; photoFaces = photoFaces.filter(r => r.id !== it.rec.id); delete builtPhoto[it.rec.id]; store.set('fuku-faces', photoFaces); renderHome(); };
+      b.append(x);
+    }
+    box.append(b);
+  }
+  const add = document.createElement('button'); add.className = 'fc add';
+  add.innerHTML = `<span class="ico">📷</span><span>${t('addPhoto')}</span>`;
+  add.onclick = () => { sfx.tap(); $('#photoM').classList.add('on'); };
+  box.append(add);
+}
+
+/* ---------- ゲーム ---------- */
+const cv = $('#cv'), cx = cv.getContext('2d');
+let lookTimer = 0;
+let G = null; // {face, placed:{id:{x,y,t,slot}}, phase, t0, overlay, revealT}
+let lay = { s: 1, ox: 0, oy: 0, w: 0, h: 0 };
+function layout() {
+  const r = $('#board').getBoundingClientRect(), dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  if (cv.width !== Math.round(r.width * dpr) || cv.height !== Math.round(r.height * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
+  const s = Math.min(r.width / W, r.height / H) * .97;
+  lay = { s, ox: (r.width - W * s) / 2, oy: (r.height - H * s) / 2, w: r.width, h: r.height, dpr };
+}
+function startGame(face) {
+  sfx.tap(); audio();
+  G = { face, placed: {}, order: [], phase: 'look', t0: performance.now(), overlay: 0, revealT: {}, showAns: false, wob: 0 };
+  show('game'); $('#panel').classList.remove('on'); $('#senoBtn').classList.add('hidden'); $('#tray').classList.remove('hidden');
+  $('#tray').innerHTML = ''; $('#dots').innerHTML = face.parts.map(() => '<i></i>').join('');
+  $('#saveBtn').disabled = false; $('#saveBtn').querySelector('[data-t]').textContent = t('save');
+  layout(); speak('look'); bigSay(t('look'));
+  const me = G; clearTimeout(lookTimer);
+  lookTimer = setTimeout(() => {
+    if (G !== me) return;
+    G.phase = 'play'; G.playT = performance.now(); sfx.whoosh();
+    if (mode === 'blind') { speak('blind'); bigSay('🙈 ' + t('blindOn')); }
+    buildTray();
+    setTimeout(() => { if (G && G.phase === 'play' && !G.order.length) { speak('pick'); $('#tray').classList.add('glow'); } }, mode === 'blind' ? 1700 : 600);
+  }, 2600);
+}
+function buildTray() {
+  const tray = $('#tray'); tray.innerHTML = ''; tray.classList.remove('glow');
+  const parts = [...G.face.parts].sort(() => Math.random() - .5);
+  parts.forEach((p, i) => {
+    const b = document.createElement('div'); b.className = 'pc pop'; b.style.animationDelay = (i * .07) + 's'; b.dataset.id = p.id;
+    const c = mk(p.img.width, p.img.height); c.getContext('2d').drawImage(p.img, 0, 0);
+    b.append(c); tray.append(b);
+    b.addEventListener('pointerdown', e => startDrag(e, p, b));
+  });
+}
+function updDots() { [...$('#dots').children].forEach((d, i) => d.classList.toggle('on', i < G.order.length)); }
+
+/* ドラッグ */
+const ghost = $('#ghost'), gctx = ghost.getContext('2d');
+let drag = null;
+function startDrag(e, p, el) {
+  if (!G || G.phase !== 'play') return;
+  e.preventDefault(); audio();
+  drag = { p, el, touch: e.pointerType !== 'mouse' };
+  const dpr = lay.dpr, w = p.img.width * lay.s, h = p.img.height * lay.s;
+  ghost.width = Math.ceil(w * dpr); ghost.height = Math.ceil(h * dpr); ghost.style.width = w + 'px'; ghost.style.height = h + 'px';
+  gctx.setTransform(dpr * lay.s, 0, 0, dpr * lay.s, 0, 0); gctx.clearRect(0, 0, p.img.width, p.img.height); gctx.drawImage(p.img, 0, 0);
+  ghost.style.display = 'block'; if (el) el.classList.add('gone');
+  sfx.grab(); moveDrag(e); $('#tray').classList.remove('glow');
+}
+function liftOf() { return drag && drag.touch ? Math.min(40, drag.p.img.height * lay.s * .5 + 10) : 0; }
+function moveDrag(e) {
+  if (!drag) return;
+  drag.x = e.clientX; drag.y = e.clientY - liftOf();
+  ghost.style.transform = `translate(${drag.x - ghost.offsetWidth / 2}px,${drag.y - ghost.offsetHeight / 2}px) scale(1.08)`;
+}
+function endDrag() {
+  if (!drag) return;
+  const d = drag; drag = null; ghost.style.display = 'none';
+  const r = cv.getBoundingClientRect();
+  let fx = (d.x - r.left - lay.ox) / lay.s, fy = (d.y - r.top - lay.oy) / lay.s;
+  const inside = d.x >= r.left && d.x <= r.right && d.y >= r.top - 20 && d.y <= r.bottom;
+  if (!inside || d.x === undefined) { if (d.el) d.el.classList.remove('gone'); if (d.prev) G.placed[d.p.id] = d.prev, G.order.includes(d.p.id) || G.order.push(d.p.id); sfx.soft(); updDots(); return; }
+  fx = Math.max(-60, Math.min(W + 60, fx)); fy = Math.max(-60, Math.min(H + 60, fy));
+  let slot = null;
+  if (mode === 'easy') { // ちかければ ぴたっ（おなじ しゅるいの あいている ばしょ）
+    let best = 78 * (G.face.photo ? 1.1 : 1);
+    for (const q of G.face.parts) {
+      if (q.type !== d.p.type) continue;
+      if (Object.entries(G.placed).some(([id, v]) => id !== d.p.id && v.slot === q.id)) continue;
+      const dd = Math.hypot(fx - q.tx, fy - q.ty);
+      if (dd < best) { best = dd; slot = q; }
+    }
+  }
+  if (slot) { fx = slot.tx; fy = slot.ty; }
+  G.placed[d.p.id] = { x: fx, y: fy, t: performance.now(), slot: slot ? slot.id : null };
+  if (!G.order.includes(d.p.id)) G.order.push(d.p.id);
+  updDots();
+  if (mode === 'blind') { sfx.soft(); if (Math.random() < .35) speak('put'); }
+  else if (slot) { sfx.snap(); if (Math.random() < .6) speak('snap'); }
+  else { sfx.put(); if (Math.random() < .4) speak('put'); }
+  if (G.order.length === G.face.parts.length) allPlaced();
+  else if (G.order.length === 1 && Math.random() < .5) setTimeout(() => G && G.phase === 'play' && speak('pick'), 900);
+}
+window.addEventListener('pointermove', moveDrag, { passive: true });
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
+cv.addEventListener('pointerdown', e => { // かんたんモードでは おいた パーツを うごかせる
+  if (!G || G.phase !== 'play' || mode !== 'easy') return;
+  const r = cv.getBoundingClientRect(), fx = (e.clientX - r.left - lay.ox) / lay.s, fy = (e.clientY - r.top - lay.oy) / lay.s;
+  for (let i = G.order.length - 1; i >= 0; i--) {
+    const id = G.order[i], v = G.placed[id], p = G.face.parts.find(q => q.id === id);
+    if (Math.abs(fx - v.x) < p.img.width / 2 + 10 && Math.abs(fy - v.y) < p.img.height / 2 + 10) {
+      delete G.placed[id]; G.order.splice(i, 1); updDots();
+      startDrag(e, p, null); drag.prev = v; drag.touch = false; moveDrag(e); return;
+    }
+  }
+});
+
+function allPlaced() {
+  if (mode === 'blind') {
+    G.phase = 'seno';
+    setTimeout(() => {
+      if (!G || G.phase !== 'seno') return;
+      $('#tray').classList.add('hidden'); $('#senoBtn').classList.remove('hidden'); speak('ready');
+    }, 500);
+  } else {
+    G.phase = 'reveal';
+    setTimeout(() => finish(), 700);
+  }
+}
+$('#senoBtn').addEventListener('click', () => {
+  if (!G || G.phase !== 'seno') return;
+  $('#senoBtn').classList.add('hidden'); G.phase = 'reveal';
+  speak('seno'); bigSay(t('seno')); sfx.drum();
+  setTimeout(() => {
+    if (!G) return;
+    G.revealStart = performance.now();
+    G.order.forEach((id, i) => { G.revealT[id] = performance.now() + 450 + i * 230; setTimeout(() => sfx.reveal(i), 450 + i * 230); });
+    setTimeout(finish, 600 + G.order.length * 230);
+  }, 1050);
+});
+function scoreOf() {
+  // 左右の パーツは 入れかわっても OK
+  const parts = G.face.parts, done = new Set(); let sum = 0, n = 0;
+  for (const p of parts) {
+    if (done.has(p.id)) continue;
+    const mate = parts.find(q => q !== p && q.type === p.type && !done.has(q.id));
+    const v = G.placed[p.id], c = d => Math.max(0, 1 - d / 190);
+    if (mate) {
+      const m = G.placed[mate.id];
+      const a = c(Math.hypot(v.x - p.tx, v.y - p.ty)) + c(Math.hypot(m.x - mate.tx, m.y - mate.ty));
+      const b = c(Math.hypot(v.x - mate.tx, v.y - mate.ty)) + c(Math.hypot(m.x - p.tx, m.y - p.ty));
+      sum += Math.max(a, b); n += 2; done.add(mate.id);
+    } else { sum += c(Math.hypot(v.x - p.tx, v.y - p.ty)); n++; }
+    done.add(p.id);
+  }
+  return Math.round(sum / n * 100);
+}
+function finish() {
+  if (!G) return;
+  G.phase = 'done'; G.doneT = performance.now();
+  const sc = scoreOf(), good = sc >= 82;
+  const stars = sc >= 90 ? 3 : sc >= 70 ? 2 : 1;
+  $('#score').innerHTML = `<span class="st">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span><br>${t('match')} ${sc}%`;
+  $('#tray').classList.add('hidden'); $('#panel').classList.add('on');
+  requestAnimationFrame(layout);
+  if (good) { sfx.good(); setTimeout(() => speak('good'), 300); confetti(); }
+  else { sfx.funny(); setTimeout(() => speak('funny'), 250); bigSay(lang === 'ja' ? 'わはは！' : 'Ha ha!'); }
+}
+
+/* えがく */
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (!G || !$('#game').classList.contains('on')) return;
+  layout();
+  const g = cx, { s, ox, oy, dpr } = lay;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, lay.w, lay.h);
+  g.save(); g.translate(ox, oy); g.scale(s, s);
+  g.save(); g.shadowColor = 'rgba(120,40,70,.18)'; g.shadowBlur = 24 * s; g.shadowOffsetY = 8;
+  g.drawImage(G.face.base, 0, 0); g.restore();
+  const face = G.face;
+  if (G.phase === 'look' || G.showAns) {
+    const a = G.phase === 'look' ? Math.min(1, (now - G.t0) / 300) : 1;
+    g.globalAlpha = G.showAns && G.phase !== 'look' ? .9 : a;
+    for (const p of face.parts) g.drawImage(p.img, p.tx - p.img.width / 2, p.ty - p.img.height / 2);
+    g.globalAlpha = 1;
+  }
+  // めかくし
+  let ov = 0;
+  if (mode === 'blind') {
+    if (G.phase === 'play' || G.phase === 'seno') ov = Math.min(1, (now - (G.playT || now)) / 500);
+    else if (G.phase === 'reveal' && G.revealStart) ov = Math.max(0, 1 - (now - G.revealStart) / 400);
+    else if (G.phase === 'reveal') ov = 1;
+  }
+  if (!G.showAns) {
+    for (const id of G.order) {
+      const v = G.placed[id], p = face.parts.find(q => q.id === id);
+      if (mode === 'blind' && (G.phase === 'play' || G.phase === 'seno' || (G.phase === 'reveal' && !(G.revealT[id] && now >= G.revealT[id])))) continue;
+      let k = 1, rot = 0, dy = 0;
+      const since = now - (mode === 'blind' && G.revealT[id] ? G.revealT[id] : v.t);
+      if (since < 400) { const q = since / 400; k = 1 + Math.sin(q * Math.PI) * .35; }
+      if (G.phase === 'done') { const tt = (now - G.doneT) / 1000, i = face.parts.indexOf(p); rot = Math.sin(tt * 3.2 + i) * .07; dy = Math.sin(tt * 4 + i * 1.7) * 4; k *= 1 + Math.sin(tt * 5 + i) * .03; }
+      g.save(); g.translate(v.x, v.y + dy); g.rotate(rot); g.scale(k, k);
+      g.drawImage(p.img, -p.img.width / 2, -p.img.height / 2); g.restore();
+    }
+  }
+  g.restore();
+  if (ov > 0) {
+    g.fillStyle = `rgba(40,20,50,${.78 * ov})`; g.fillRect(0, 0, lay.w, lay.h);
+    g.save(); g.translate(ox, oy); g.scale(s, s); g.globalAlpha = ov;
+    for (const id of G.order) { const v = G.placed[id]; E(g, v.x, v.y, 9, 9, 'rgba(255,255,255,.35)'); }
+    g.restore(); g.globalAlpha = ov;
+    g.font = `${Math.round(Math.min(64, lay.w * .14))}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('🙈', lay.w / 2, lay.h * .12 + Math.sin(now / 400) * 4);
+    g.globalAlpha = 1;
+  }
+}
+requestAnimationFrame(frame);
+
+/* かみふぶき */
+const fx = $('#fx'), fxc = fx.getContext('2d');
+let bits = [];
+function confetti() {
+  fx.width = innerWidth; fx.height = innerHeight;
+  const cols = ['#ff6f91', '#ffb84d', '#6fd3ff', '#7be07b', '#c38bff'];
+  for (let i = 0; i < 110; i++) bits.push({ x: Math.random() * fx.width, y: -20 - Math.random() * fx.height * .4, vx: (Math.random() - .5) * 3, vy: 2 + Math.random() * 3, r: Math.random() * 6, c: pick(cols), a: Math.random() * 6 });
+  if (bits.length === 110) requestAnimationFrame(fxLoop);
+}
+function fxLoop() {
+  fxc.clearRect(0, 0, fx.width, fx.height);
+  bits = bits.filter(b => b.y < fx.height + 20);
+  for (const b of bits) { b.x += b.vx; b.y += b.vy; b.a += .15; fxc.save(); fxc.translate(b.x, b.y); fxc.rotate(b.a); fxc.fillStyle = b.c; fxc.fillRect(-5, -3, 10 + b.r, 6); fxc.restore(); }
+  if (bits.length) requestAnimationFrame(fxLoop); else fxc.clearRect(0, 0, fx.width, fx.height);
+}
+
+/* ボタン */
+$('#homeBtn').onclick = () => { sfx.tap(); G = null; drag = null; ghost.style.display = 'none'; show('home'); renderHome(); };
+$('#otherBtn').onclick = $('#homeBtn').onclick;
+$('#againBtn').onclick = () => { if (G) startGame(G.face); };
+$('#sndBtn').onclick = () => { soundOn = !soundOn; store.set('fuku-sound', soundOn); $('#sndBtn').textContent = soundOn ? '🔊' : '🔇'; if (soundOn) { audio(); sfx.tap(); } };
+const ans = $('#ansBtn');
+const ansOn = e => { e.preventDefault(); if (G && G.phase === 'done') G.showAns = true; };
+const ansOff = () => { if (G) G.showAns = false; };
+ans.addEventListener('pointerdown', ansOn); ans.addEventListener('pointerup', ansOff); ans.addEventListener('pointerleave', ansOff); ans.addEventListener('pointercancel', ansOff);
+ans.addEventListener('contextmenu', e => e.preventDefault());
+
+/* アルバム */
+let album = store.get('fuku-album', []); // [{id, img}]
+function snapshot() {
+  const w = 360, h = 432, c = mk(w, h), g = c.getContext('2d');
+  g.fillStyle = '#fff0f3'; g.fillRect(0, 0, w, h);
+  const s = w / W; g.scale(s, s);
+  g.drawImage(G.face.base, 0, 0);
+  for (const id of G.order) { const v = G.placed[id], p = G.face.parts.find(q => q.id === id); g.drawImage(p.img, v.x - p.img.width / 2, v.y - p.img.height / 2); }
+  return c.toDataURL('image/jpeg', .82);
+}
+function saveAlbum() {
+  album.unshift({ id: Date.now(), img: snapshot() });
+  album = album.slice(0, 40);
+  let dropped = false;
+  while (!store.set('fuku-album', album) && album.length > 1) { album.pop(); dropped = true; }
+  return dropped;
+}
+$('#saveBtn').onclick = () => {
+  if (!G || G.phase !== 'done' || $('#saveBtn').disabled) return;
+  const dropped = saveAlbum(); sfx.snap();
+  $('#saveBtn').disabled = true; $('#saveBtn').querySelector('[data-t]').textContent = t('saved');
+  if (dropped) bigSay('📒');
+};
+function renderAlbum() {
+  const gr = $('#albumGrid'); gr.innerHTML = '';
+  $('#albumEmpty').classList.toggle('hidden', album.length > 0);
+  album.forEach(a => {
+    const im = new Image(); im.src = a.img; im.alt = '';
+    im.onclick = () => { viewing = a; $('#bigImg').src = a.img; $('#viewM').classList.add('on'); };
+    gr.append(im);
+  });
+}
+let viewing = null;
+$('#albumBtn').onclick = () => { sfx.tap(); renderAlbum(); show('albumS'); };
+$('#albumBack').onclick = () => { show('home'); renderHome(); };
+$('#viewClose').onclick = () => $('#viewM').classList.remove('on');
+$('#delBtn').onclick = () => {
+  if (!viewing || !confirm(t('delPic'))) return;
+  album = album.filter(a => a.id !== viewing.id); store.set('fuku-album', album); $('#viewM').classList.remove('on'); renderAlbum();
+};
+$('#dlBtn').onclick = async () => {
+  if (!viewing) return;
+  try {
+    const blob = await (await fetch(viewing.img)).blob(), file = new File([blob], `fukuwarai-${viewing.id}.jpg`, { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = viewing.img; a.download = `fukuwarai-${viewing.id}.jpg`; a.click();
+};
+
+/* ---------- 写真から つくる ---------- */
+$('#photoCancel').onclick = () => $('#photoM').classList.remove('on');
+$('#camBtn').onclick = () => $('#camIn').click();
+$('#pickBtn').onclick = () => $('#pickIn').click();
+['#camIn', '#pickIn'].forEach(s => $(s).addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = '';
+  $('#photoM').classList.remove('on'); if (f) openPhoto(f);
+}));
+let faceapiP = null;
+function loadFaceApi() {
+  if (faceapiP) return faceapiP;
+  faceapiP = new Promise((res, rej) => {
+    const sc = document.createElement('script'); sc.src = 'lib/face-api.js?v=1';
+    sc.onload = async () => {
+      try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('lib/model');
+        await faceapi.nets.faceLandmark68Net.loadFromUri('lib/model');
+        res(faceapi);
+      } catch (e) { rej(e); }
+    };
+    sc.onerror = rej; document.head.append(sc);
+  });
+  faceapiP.catch(() => { faceapiP = null; });
+  return faceapiP;
+}
+const ecv = $('#ecv'), ectx = ecv.getContext('2d');
+let ED = null; // {src(canvas), crop(canvas W×H), boxes}
+async function openPhoto(file) {
+  show('edit'); $('#busy').classList.add('on'); $('#editMsg').textContent = ''; ED = null; drawEdit();
+  let im;
+  try { im = await loadImg(URL.createObjectURL(file)); } catch (e) { show('home'); return; }
+  const k = Math.min(1, 1280 / Math.max(im.naturalWidth, im.naturalHeight));
+  const src = mk(Math.round(im.naturalWidth * k), Math.round(im.naturalHeight * k));
+  src.getContext('2d').drawImage(im, 0, 0, src.width, src.height);
+  let pts = null;
+  try {
+    const api = await loadFaceApi();
+    let r = await api.detectSingleFace(src, new api.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: .35 })).withFaceLandmarks();
+    if (!r) r = await api.detectSingleFace(src, new api.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: .25 })).withFaceLandmarks();
+    if (r) pts = r.landmarks.positions.map(p => ({ x: p.x, y: p.y }));
+  } catch (e) { console.warn(e); }
+  ED = pts ? fromLandmarks(src, pts) : fallbackCrop(src);
+  $('#busy').classList.remove('on');
+  $('#editMsg').textContent = pts ? t('found') : t('notFound');
+  drawEdit();
+}
+function avg(pts, a, b) { let x = 0, y = 0; for (let i = a; i <= b; i++) { x += pts[i].x; y += pts[i].y; } return { x: x / (b - a + 1), y: y / (b - a + 1) }; }
+function fromLandmarks(src, pts) {
+  const eL = avg(pts, 36, 41), eR = avg(pts, 42, 47), ang = Math.atan2(eR.y - eL.y, eR.x - eL.x);
+  const c = avg(pts, 0, 67);
+  const rot = p => { const dx = p.x - c.x, dy = p.y - c.y, co = Math.cos(-ang), si = Math.sin(-ang); return { x: c.x + dx * co - dy * si, y: c.y + dx * si + dy * co }; };
+  const R = pts.map(rot);
+  const xs = R.slice(0, 17).map(p => p.x), minx = Math.min(...xs), maxx = Math.max(...xs), fw = maxx - minx;
+  const browTop = Math.min(...R.slice(17, 27).map(p => p.y)), chin = Math.max(...R.slice(0, 17).map(p => p.y));
+  const fh = chin - browTop, cw = fw * 1.42, ch = cw * H / W;
+  const left = (minx + maxx) / 2 - cw / 2, top = browTop - (ch - fh) * .6, k = W / cw;
+  const crop = mk(W, H), g = crop.getContext('2d');
+  g.fillStyle = '#f4e6dc'; g.fillRect(0, 0, W, H);
+  g.save(); g.scale(k, k); g.translate(-left, -top); g.translate(c.x, c.y); g.rotate(-ang); g.translate(-c.x, -c.y); g.drawImage(src, 0, 0); g.restore();
+  const M = R.map(p => ({ x: (p.x - left) * k, y: (p.y - top) * k }));
+  const bb = (a, b) => { const s = M.slice(a, b + 1), x0 = Math.min(...s.map(p => p.x)), x1 = Math.max(...s.map(p => p.x)), y0 = Math.min(...s.map(p => p.y)), y1 = Math.max(...s.map(p => p.y)); return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, w: x1 - x0, h: y1 - y0 }; };
+  const mkE = (b, px, py, minRy) => ({ cx: b.cx, cy: b.cy, rx: b.w / 2 * px + 8, ry: Math.max(b.h / 2 * py + 8, minRy) });
+  const bl = bb(17, 21), br = bb(22, 26), el = bb(36, 41), er = bb(42, 47), no = bb(29, 35), mo = bb(48, 59);
+  const boxes = {
+    browL: mkE(bl, 1.22, 1.6, 22), browR: mkE(br, 1.22, 1.6, 22),
+    eyeL: mkE(el, 1.55, 2.4, 0), eyeR: mkE(er, 1.55, 2.4, 0),
+    nose: mkE(no, 1.3, 1.15, 0), mouth: mkE(mo, 1.28, 1.7, 0)
+  };
+  for (const k2 of ['eyeL', 'eyeR']) boxes[k2].ry = Math.max(boxes[k2].ry, boxes[k2].rx * .5);
+  boxes.mouth.ry = Math.max(boxes.mouth.ry, boxes.mouth.rx * .42);
+  boxes.nose.cy += 6; boxes.nose.ry = Math.max(boxes.nose.ry, boxes.nose.rx * .8);
+  for (const [b, e] of [['browL', 'eyeL'], ['browR', 'eyeR']]) { // まゆと めが かさならないように
+    const B = boxes[b], Ey = boxes[e], gap = Ey.cy - B.cy;
+    if (B.ry + Ey.ry > gap) { B.ry = Math.min(B.ry, gap * .42); Ey.ry = Math.min(Ey.ry, gap * .58); }
+  }
+  { const N = boxes.nose, Mo = boxes.mouth, gap = Mo.cy - N.cy; if (N.ry + Mo.ry > gap) { N.ry = Math.min(N.ry, gap * .55); Mo.ry = Math.min(Mo.ry, gap * .45); } }
+  return { crop, boxes };
+}
+function fallbackCrop(src) {
+  const crop = mk(W, H), g = crop.getContext('2d');
+  const k = Math.max(W / src.width, H / src.height);
+  g.drawImage(src, (W - src.width * k) / 2, (H - src.height * k) / 2, src.width * k, src.height * k);
+  const boxes = { browL: { cx: 215, cy: 280, rx: 60, ry: 22 }, browR: { cx: 385, cy: 280, rx: 60, ry: 22 }, eyeL: { cx: 215, cy: 340, rx: 58, ry: 30 }, eyeR: { cx: 385, cy: 340, rx: 58, ry: 30 }, nose: { cx: 300, cy: 435, rx: 48, ry: 55 }, mouth: { cx: 300, cy: 545, rx: 85, ry: 40 } };
+  return { crop, boxes };
+}
+let elay = { s: 1, ox: 0, oy: 0 };
+function drawEdit() {
+  const r = $('#ecvWrap').getBoundingClientRect(), dpr = Math.min(2.5, devicePixelRatio || 1);
+  ecv.width = Math.round(r.width * dpr); ecv.height = Math.round(r.height * dpr);
+  const g = ectx; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, r.width, r.height);
+  if (!ED) return;
+  const s = Math.min(r.width / W, r.height / H); elay = { s, ox: (r.width - W * s) / 2, oy: (r.height - H * s) / 2 };
+  g.save(); g.translate(elay.ox, elay.oy); g.scale(s, s); g.drawImage(ED.crop, 0, 0);
+  const cols = { brow: '#ffb84d', eye: '#6fd3ff', nose: '#7be07b', mouth: '#ff6f91' };
+  for (const [k, type] of PHOTO_KEYS) {
+    const e = ED.boxes[k];
+    g.setLineDash([]); E(g, e.cx, e.cy, e.rx, e.ry, null, 'rgba(0,0,0,.45)', 7 / s);
+    g.setLineDash([12 / s, 8 / s]); E(g, e.cx, e.cy, e.rx, e.ry, null, cols[type], 4 / s); g.setLineDash([]);
+    const hx = e.cx + e.rx * .7071, hy = e.cy + e.ry * .7071; E(g, hx, hy, 13 / s, 13 / s, cols[type], '#fff', 3 / s);
+    g.font = `bold ${Math.round(15 / s)}px sans-serif`; g.textAlign = 'center'; g.lineWidth = 4 / s; g.strokeStyle = '#fff'; g.fillStyle = '#4a3340';
+    const ly = type === 'eye' || type === 'mouth' ? e.cy + e.ry + 20 / s : e.cy - e.ry - 8 / s;
+    g.strokeText(t(type), e.cx, ly); g.fillText(t(type), e.cx, ly);
+  }
+  g.restore();
+}
+let edrag = null;
+ecv.addEventListener('pointerdown', e => {
+  if (!ED) return;
+  const r = ecv.getBoundingClientRect(), x = (e.clientX - r.left - elay.ox) / elay.s, y = (e.clientY - r.top - elay.oy) / elay.s;
+  const hr = 26 / elay.s;
+  for (const [k] of PHOTO_KEYS) { const b = ED.boxes[k]; if (Math.hypot(x - (b.cx + b.rx * .7071), y - (b.cy + b.ry * .7071)) < hr) { edrag = { k, rs: true, x, y, b0: { ...b } }; ecv.setPointerCapture(e.pointerId); return; } }
+  let best = null, bd = 1e9;
+  for (const [k] of PHOTO_KEYS) { const b = ED.boxes[k], q = ((x - b.cx) / b.rx) ** 2 + ((y - b.cy) / b.ry) ** 2; if (q < 1.3 && q < bd) { bd = q; best = k; } }
+  if (best) { edrag = { k: best, x, y, b0: { ...ED.boxes[best] } }; ecv.setPointerCapture(e.pointerId); }
+});
+ecv.addEventListener('pointermove', e => {
+  if (!edrag) return;
+  const r = ecv.getBoundingClientRect(), x = (e.clientX - r.left - elay.ox) / elay.s, y = (e.clientY - r.top - elay.oy) / elay.s;
+  const b = ED.boxes[edrag.k], b0 = edrag.b0;
+  if (edrag.rs) { b.rx = Math.max(14, Math.min(220, b0.rx + (x - edrag.x) / .7071)); b.ry = Math.max(10, Math.min(200, b0.ry + (y - edrag.y) / .7071)); }
+  else { b.cx = Math.max(0, Math.min(W, b0.cx + x - edrag.x)); b.cy = Math.max(0, Math.min(H, b0.cy + y - edrag.y)); }
+  drawEdit();
+});
+ecv.addEventListener('pointerup', () => { edrag = null; });
+ecv.addEventListener('pointercancel', () => { edrag = null; });
+$('#editBack').onclick = () => { ED = null; show('home'); renderHome(); };
+$('#makeBtn').onclick = async () => {
+  if (!ED) return;
+  audio();
+  const rec = { id: 'p' + Date.now(), img: ED.crop.toDataURL('image/jpeg', .85), boxes: JSON.parse(JSON.stringify(ED.boxes)) };
+  photoFaces.push(rec);
+  while (!store.set('fuku-faces', photoFaces) && photoFaces.length > 1) photoFaces.shift();
+  photoFaces = photoFaces.slice(-8); store.set('fuku-faces', photoFaces);
+  const face = buildPhotoFace(rec, ED.crop); builtPhoto[rec.id] = face; ED = null;
+  speak('photo'); setTimeout(() => startGame(face), 900);
+};
+
+/* ---------- おうちの かたへ ---------- */
+function renderHelp() {
+  const vb = (v, label) => `<button data-v="${v}" class="${voiceMode === v ? 'sel' : ''}">${label}</button>`;
+  $('#helpBody').innerHTML = `
+    <h2>${t('help')}</h2>
+    <h3>${t('hAbout')}</h3><p class="note" style="opacity:1;font-size:14px">${t('hAboutT')}</p>
+    <h3>${t('hVoice')}</h3>
+    <div class="opt" id="vOpt">${lang === 'ja' ? AI_VOICES.map(v => vb('ai:' + v.id, 'AI ' + v.n)).join('') : ''}${vb('dev', t('hDev'))}${vb('off', t('hOff'))}</div>
+    <h3>${t('hSound')}</h3>
+    <div class="opt" id="sOpt"><button data-s="1" class="${soundOn ? 'sel' : ''}">${t('hOn')}</button><button data-s="0" class="${soundOn ? '' : 'sel'}">${t('hOff')}</button></div>
+    <h3>${t('hLang')}</h3>
+    <div class="opt" id="lOpt"><button data-l="ja" class="${lang === 'ja' ? 'sel' : ''}">日本語</button><button data-l="en" class="${lang === 'en' ? 'sel' : ''}">English</button></div>
+    <h3>${t('hPhoto')}</h3><p class="note">${t('hPhotoT')}</p>
+    <div class="opt"><button id="clrBtn">${t('hClear')}</button></div>
+    <button class="big" id="helpClose">${t('hClose')}</button>`;
+  $('#vOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; voiceMode = b.dataset.v; store.set('fuku-voice', voiceMode); if (voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3)); renderHelp(); setTimeout(() => speak('good'), 200); };
+  $('#sOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; soundOn = b.dataset.s === '1'; store.set('fuku-sound', soundOn); $('#sndBtn').textContent = soundOn ? '🔊' : '🔇'; renderHelp(); };
+  $('#lOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; setLang(b.dataset.l); renderHelp(); };
+  $('#clrBtn').onclick = () => { if (!confirm(t('hClearQ'))) return; photoFaces = []; album = []; store.set('fuku-faces', []); store.set('fuku-album', []); for (const k in builtPhoto) delete builtPhoto[k]; renderHome(); };
+  $('#helpClose').onclick = () => $('#help').classList.remove('on');
+}
+function setLang(l) { lang = l; store.set('fuku-lang', l); renderHome(); }
+$('#helpBtn').onclick = () => { renderHelp(); $('#help').classList.add('on'); };
+$('#langBtn').onclick = () => setLang(lang === 'ja' ? 'en' : 'ja');
+$('#gamesBtn').onclick = () => { location.href = '../games/' + (lang === 'en' ? '?lang=en' : ''); };
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('on'); }));
+window.addEventListener('resize', () => { if ($('#edit').classList.contains('on')) drawEdit(); });
+
+/* はじめの タップで おとを ひらく（iPhone） */
+document.addEventListener('pointerdown', function unlock() {
+  const a = audio(); if (a && voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3));
+  document.removeEventListener('pointerdown', unlock);
+}, { once: false });
+
+makeDrawn();
+$('#sndBtn').textContent = soundOn ? '🔊' : '🔇';
+renderHome();
+</script>
+</body>
+</html>
