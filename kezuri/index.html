@@ -38,6 +38,8 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 .row button{padding:8px 10px;border-radius:14px;background:var(--soft);font-weight:700;line-height:1.2;min-width:62px;font-size:15px}
 .row button small{display:block;font-size:11px;font-weight:400;opacity:.8}
 .row button.sel{background:var(--accent);color:#fff}
+#fats button{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0}
+#fats button i{display:block;border-radius:50%;background:currentColor;opacity:.75}
 .foot{display:flex;gap:10px;font-size:14px;flex-wrap:wrap;justify-content:center}
 .foot button{background:none;text-decoration:underline;opacity:.7;padding:6px}
 
@@ -124,6 +126,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
   <button class="big go" id="goB"></button>
   <div class="box"><b id="tCats"></b><div class="row" id="cats"></div></div>
   <div class="box"><b id="tLv"></b><div class="row" id="lvs"></div></div>
+  <div class="box"><b id="tFat"></b><div class="row" id="fats"></div></div>
   <button class="big" id="bookB"><span class="ico">📖</span><span><span id="tBook"></span><small id="bookN"></small></span></button>
   <button class="big" id="photoB"><span class="ico">📷</span><span><span id="tPhotos"></span><small id="tPhotosSub"></small></span></button>
   <div class="foot"><button id="setB"></button><button id="langB">English</button></div>
@@ -195,7 +198,7 @@ const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans
 const TEXT = {
   ja: {
     title: 'けずって なにかな？', sub: 'ゆびで ごしごし。なにが でてくるかな？', start: 'はじめる',
-    cats: 'どれで あそぶ？', lv: 'むずかしさ', book: 'ずかん', photos: 'おうちの しゃしん',
+    cats: 'どれで あそぶ？', lv: 'むずかしさ', fat: 'けずる ふとさ（うえの「？」で ためせます）', fatName: ['ほそい', 'ふつう', 'ふとい', 'とても ふとい'], book: 'ずかん', photos: 'おうちの しゃしん',
     photosSub: 'かぞくや ペットの しゃしんを かくして あそべます', settings: '⚙️ おうちの人の せってい',
     scratch: 'ゆびで けずってね', next: 'つぎへ ▶', found: n => `ずかん ${n}`, newMark: 'NEW!',
     bookN: (a, b) => `${a} / ${b} こ みつけたよ`, bookSum: (a, b) => `${a} / ${b} こ　（✨は きらきら）`,
@@ -217,7 +220,7 @@ const TEXT = {
   },
   en: {
     title: 'Scratch & Guess', sub: 'Rub with your finger. What will appear?', start: 'Play',
-    cats: 'Pick a theme', lv: 'Level', book: 'Picture book', photos: 'Family photos',
+    cats: 'Pick a theme', lv: 'Level', fat: 'Scratch size (try it on the "?" card above)', fatName: ['Thin', 'Normal', 'Thick', 'Extra thick'], book: 'Picture book', photos: 'Family photos',
     photosSub: 'Hide photos of family or pets and play', settings: '⚙️ Settings for grown-ups',
     scratch: 'Scratch with your finger', next: 'Next ▶', found: n => `Book ${n}`, newMark: 'NEW!',
     bookN: (a, b) => `Found ${a} of ${b}`, bookSum: (a, b) => `${a} / ${b} found  (✨ = sparkly)`,
@@ -502,6 +505,8 @@ const LV = [ // ちょいす: えらぶ数、th: どのくらい けずったら
   { choices: 0, th: .5 }, { choices: 2, th: .3 }, { choices: 3, th: .2 }, { choices: 4, th: 0, same: true }
 ];
 let lv = store.get('kezuri-lv', 1), cat = store.get('kezuri-cat', 'all');
+const FAT = [.045, .075, .11, .16]; // けずる ふとさ（カードの はばに たいする 半径）
+let fat = clamp(store.get('kezuri-fat', 1), 0, FAT.length - 1);
 let book = store.get('kezuri-book', {}); // id -> { n, s(きらきらの数) }
 function catList() { const l = ['all', ...Object.keys(CATS)]; if (photos.length) l.push('home'); return l; }
 function renderTitle() {
@@ -528,6 +533,14 @@ function renderTitle() {
     if (i === lv) b.className = 'sel';
     b.onclick = () => { lv = i; store.set('kezuri-lv', i); sfx.tap(); renderTitle(); };
     $('#lvs').appendChild(b);
+  });
+  $('#tFat').textContent = t.fat; $('#fats').innerHTML = '';
+  FAT.forEach((f, i) => {
+    const b = document.createElement('button'), d = Math.round(8 + f * 160);
+    b.innerHTML = `<i style="width:${d}px;height:${d}px"></i><small>${t.fatName[i]}</small>`;
+    if (i === fat) b.className = 'sel';
+    b.onclick = () => { fat = i; store.set('kezuri-fat', i); sfx.tap(); demoInit(); renderTitle(); };
+    $('#fats').appendChild(b);
   });
   const all = ITEMS.length + photos.length, got = ITEMS.filter(i => book[i.id]).length + photos.filter(p => book[p.id]).length;
   $('#bookN').textContent = t.bookN(got, all);
@@ -672,7 +685,7 @@ function buildCover(keep) {
 }
 function star(c, x, y, r) { c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.closePath(); c.fill(); }
 
-const brush = () => Math.max(18, lay.S * .075);
+const brush = () => Math.max(8, lay.S * FAT[fat]);
 function scratchSeg(x0, y0, x1, y1) {
   const r = brush(), c = covG;
   c.globalCompositeOperation = 'destination-out';
@@ -914,7 +927,7 @@ const dEnd = () => { dLast = null; scratchSound(0); };
 demo.addEventListener('pointerup', dEnd); demo.addEventListener('pointercancel', dEnd);
 function dpos(e) { const r = demo.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 function dscr(a, b) {
-  const x = dm.x; x.globalCompositeOperation = 'destination-out'; x.lineCap = 'round'; x.lineWidth = dm.S * .14;
+  const x = dm.x; x.globalCompositeOperation = 'destination-out'; x.lineCap = 'round'; x.lineWidth = dm.S * FAT[fat] * 2;
   x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x + .01, b.y); x.stroke(); x.globalCompositeOperation = 'source-over';
 }
 
