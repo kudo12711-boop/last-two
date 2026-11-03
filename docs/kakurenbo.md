@@ -62,4 +62,4 @@
 - 写真モード: 写真を `object-fit: contain` と同じ計算で置き、かくれる子の下の部分に「同じ写真の同じ場所」を切りぬいた板（.pc、background-position で合わせる）をかぶせる。写真は長い辺 1400px の JPEG。かくれる場所は 0〜1 の割合で保存。写真モードは A より 0.1 多く見せる。
 - C モード: おにさんは `moveOni`（%＋--u）で動く。見つかる確率は 1ぴき設定で 40%、ほかは 50%。見つからないときは 3〜4 か所さがして「まいった」。
 - 保存: localStorage `kakurenbo-book`（ずかん：絵文字ごとの回数）、`kakurenbo-medal`、`kakurenbo-level`、`kakurenbo-voice`（`ai:jf_alpha` 標準 / `dev` / `off`）、`kakurenbo-sound`、`kakurenbo-me`、`kakurenbo-oni`。IndexedDB `kakurenbo`（ストア `voice`＝録音、`room`＝部屋の写真と場所、`face`＝顔 200px PNG）。
-- 声の作り方は [ゆびで めいろ](meiro.md) と同じ（Kokoro fp16 で候補を作り、whisper-tiny で聞き取って一番合うものを選ぶ）。道具は `/mnt/project-files/kakurenbo/tools/`（slots.py＝セリフ一覧, cand.py, asr.mjs, pick.py）。
+- 声の作り方は [ゆびで めいろ](meiro.md) と同じ（Kokoro fp16 で候補を作り、whisper-tiny で聞き取って一番合うものを選ぶ）。4種類×33セリフ＝132こ。116こは聞き取りが一致。合わなかった16こは、ほとんどが「いーち」「にーい」など短い数字（whisper-tiny が短い言葉を聞きまちがえやすい）と「くすくす／うふふ」。気になるときは耳で確かめて作り直すか、録音で差しかえる。道具は `/mnt/project-files/kakurenbo/tools/`（slots.py＝セリフ一覧, cand.py, asr.mjs, pick.py）。
