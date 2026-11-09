@@ -1,6 +1,6 @@
 # ゲーム開発の記録（目次）
 
-最終更新: 2026-11-03
+最終更新: 2026-11-09
 
 くどうさんと Claude が「ゲーム開発」プロジェクトで作ってきたゲームの記録です。ゲームごとに、生まれたきっかけ、くどうさんの声と直したこと、遊ぶ場所、これからやることをまとめています。各ファイルの下のほうにある「技術メモ」は、次に作業する Claude（や開発者）向けの作り方の説明です。
 
@@ -15,12 +15,15 @@
 | ゆきどけ | 「あと一枚」の運だめし | v0.1（止まっている） | [Claude のページ](https://claude.ai/artifact/34nWk73xRYmMimZZe7sWKW) | [yukidoke.md](yukidoke.md) |
 | ぬけぬけリング | 1人用の連鎖パズル | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
 | ラスト・ツー | 最後の2人の表情の読み合い | v1.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
-| まちがいさがし | 幼児向け、写真でも遊べる | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
+| まちがいさがし | 幼児向け、写真でも遊べる | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
 | 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | PR #14 まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
 | ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
 | すうじで てんつなぎ | 幼児向け、番号順に点をつないで絵を完成 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
 | ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
+| もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
+| ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、着せかえと肖像画つき | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
+| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 
 「Claude のページ」は、くどうさんが claude.ai にログインしたときだけ開けます。「公開ページ」は誰でもログインなしで開けます。
 
@@ -37,6 +40,9 @@
 9. **2026-11-03** 公開中のゲームを選んで遊べる入口ページ「あそびのいりぐち」（`/games/`）を作った（くどうさん「作って下さい」）。
 10. **2026-11-03** 都道府県パズルを子ども向けに改良（v0.2: こどもステージ12個、シールずかん）。くどうさん「都道府県パズルを子供向けに改良して下さい」。
 11. **2026-11-03** 幼児向け ふくわらい を作成（くどうさん「子供向けに福笑いのゲームを考えたい。撮った写真を使えたり」→「写真＋目かくし」を選択）。
+12. **2026-11-03** 幼児向け「もういいかい？ かくれんぼ」を作成（くどうさん「子ども向けのかくれんぼゲームを考えたいです」→ 3案から「ぜんぶ入り」を選択）。
+13. **2026-11-03** 「女の子向けの、プリンセスになれるゲームを考えたい」から、プリンセス・王子・騎士・侍を選べる「ちいさな おうこく」を作成（くどうさんが3案から選び、侍も追加）。
+14. **2026-11-03** 幼児向け けずって なにかな？（スクラッチであてっこ＋ずかん、写真モード）を作成。くどうさん「子供向けにスクラッチすると何かが表示されるゲームを考えたいです」→ 5案から「あてっこ＋ずかん」を選択。
 
 ## お金の方針（2026-10-23 決定）
 
@@ -63,7 +69,7 @@
 
 - **リポジトリ** `kudo12711-boop/last-two`（Public）。`main` ブランチがそのまま GitHub Pages（https://kudo12711-boop.github.io/last-two/）になります。
   - `/index.html` … ラスト・ツー
-  - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/fukuwarai/`、`/nukenuke-ring/`… それぞれ別のゲーム。ほかのゲームには影響しません。
+  - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/fukuwarai/`、`/kezuri/`、`/nukenuke-ring/`、`/kakurenbo/`、`/oukoku/`… それぞれ別のゲーム。ほかのゲームには影響しません。
   - `/games/` … 入口ページ（ゲームを公開したらここにもカードを足す）
   - `/docs/` … この記録
 - 変更は作業ブランチ → PR → マージ の順。マージすると1〜2分で公開ページに反映されます。

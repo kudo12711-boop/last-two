@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#e8f3ff">
+<title>けずって なにかな？</title>
+<style>
+:root{
+  --bg:#eaf4ff; --ink:#33405a; --card:#ffffff; --accent:#ff7a59; --ok:#2fbf71; --soft:#dceaff;
+  --line:#c9dcf5; --shadow:0 4px 0 rgba(40,70,120,.16);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Maru Gothic ProN","Rounded Mplus 1c","Kosugi Maru","Hiragino Sans","Noto Sans JP",sans-serif;
+  overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+.screen.on{display:flex}
+
+/* タイトル */
+#title{align-items:center;gap:14px;overflow:auto;padding-top:calc(env(safe-area-inset-top) + 20px);padding-bottom:24px}
+#title h1{margin:0;font-size:clamp(32px,9vw,54px);letter-spacing:.03em;text-align:center;line-height:1.2}
+#title h1 span{display:inline-block;animation:bob 2.4s ease-in-out infinite}
+#title h1 span:nth-child(2n){animation-delay:.3s;color:var(--accent)}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.sub{margin:-6px 0 0;font-size:16px;opacity:.75;text-align:center}
+#demo{width:min(240px,60vw);aspect-ratio:1;border-radius:26px;box-shadow:var(--shadow);touch-action:none;flex:none;background:#fff}
+.big{display:flex;align-items:center;gap:14px;width:min(420px,100%);padding:16px 20px;border-radius:24px;background:var(--card);
+  box-shadow:var(--shadow);font-size:22px;font-weight:700;text-align:left;flex:none}
+.big .ico{font-size:36px;line-height:1}
+.big small{display:block;font-size:13px;font-weight:400;opacity:.7}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(40,70,120,.16)}
+.big.go{background:var(--accent);color:#fff;justify-content:center;font-size:26px}
+.box{width:min(420px,100%);background:var(--card);border-radius:20px;padding:10px 12px;box-shadow:var(--shadow);flex:none}
+.box b{font-size:15px}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.row button{padding:8px 10px;border-radius:14px;background:var(--soft);font-weight:700;line-height:1.2;min-width:62px;font-size:15px}
+.row button small{display:block;font-size:11px;font-weight:400;opacity:.8}
+.row button.sel{background:var(--accent);color:#fff}
+#fats button{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0}
+#fats button i{display:block;border-radius:50%;background:currentColor;opacity:.75}
+.foot{display:flex;gap:10px;font-size:14px;flex-wrap:wrap;justify-content:center}
+.foot button{background:none;text-decoration:underline;opacity:.7;padding:6px}
+
+/* ゲーム */
+#game{padding-left:8px;padding-right:8px}
+.bar{display:flex;align-items:center;gap:8px;height:62px;flex:none}
+.round{width:50px;height:50px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);font-size:24px;display:grid;place-items:center;flex:none;position:relative}
+.round:active{transform:translateY(3px);box-shadow:none}
+.round i{position:absolute;right:-4px;top:-4px;min-width:20px;height:20px;border-radius:10px;background:var(--accent);color:#fff;font-size:12px;font-style:normal;font-weight:900;display:grid;place-items:center;padding:0 4px}
+#prog{flex:1;text-align:center;font-size:18px;font-weight:900;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#board{flex:1;position:relative;min-height:0}
+#cv{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none;display:block}
+#under{flex:none;min-height:118px;display:flex;align-items:center;justify-content:center;padding:6px 0 10px}
+#msg{font-size:20px;font-weight:700;opacity:.7;text-align:center;animation:bob 2.4s ease-in-out infinite}
+#choices{display:none;gap:8px;width:min(560px,100%);justify-content:center}
+#choices.on{display:flex}
+#choices button{flex:1;max-width:140px;min-height:98px;border-radius:22px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;animation:popIn .4s cubic-bezier(.3,1.6,.5,1) backwards}
+#choices button:nth-child(2){animation-delay:.08s}#choices button:nth-child(3){animation-delay:.16s}#choices button:nth-child(4){animation-delay:.24s}
+#choices button .e{font-size:46px;line-height:1.1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+#choices button img{width:56px;height:56px;border-radius:12px;object-fit:cover}
+#choices button span{font-size:14px;font-weight:700;line-height:1.2;word-break:keep-all}
+#choices button.no{opacity:.25;animation:shake .4s;pointer-events:none}
+#choices button.yes{background:#d8f5e3;transform:scale(1.08)}
+#choices button:active{transform:translateY(3px);box-shadow:none}
+@keyframes popIn{from{transform:scale(.3);opacity:0}}
+@keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-5px)}}
+#nextB{display:none;font-size:24px;padding:16px 36px;border-radius:24px;background:var(--accent);color:#fff;font-weight:900;box-shadow:var(--shadow);animation:popIn .4s cubic-bezier(.3,1.6,.5,1)}
+#nextB.on{display:block}
+#say{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:clamp(34px,10vw,66px);font-weight:900;color:#fff;
+  -webkit-text-stroke:3px var(--accent);text-shadow:0 5px 0 rgba(0,0,0,.12);pointer-events:none;opacity:0;white-space:nowrap;z-index:5}
+#say.on{animation:sayA 1.6s ease-out forwards}
+@keyframes sayA{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}40%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%)}}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
+
+/* ずかん */
+#book{gap:8px;padding-bottom:12px}
+#book .bar b{flex:1;text-align:center;font-size:20px}
+#bookTabs{display:flex;gap:6px;overflow-x:auto;flex:none;padding-bottom:4px}
+#bookTabs button{flex:none;padding:8px 12px;border-radius:14px;background:var(--card);font-weight:700;font-size:15px;box-shadow:var(--shadow);white-space:nowrap}
+#bookTabs button.sel{background:var(--accent);color:#fff}
+#bookTabs button.full::after{content:' 👑'}
+#bookGrid{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;align-content:start;padding:4px 2px 20px}
+#bookGrid button{position:relative;aspect-ratio:1;border-radius:20px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px}
+#bookGrid button .e{font-size:44px;line-height:1.1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+#bookGrid button img{width:60px;height:60px;border-radius:12px;object-fit:cover}
+#bookGrid button.yet{background:#f2f6fb;box-shadow:none}
+#bookGrid button.yet .e{filter:brightness(0);opacity:.13}
+#bookGrid button span{font-size:12px;font-weight:700;line-height:1.2}
+#bookGrid button i{position:absolute;right:6px;top:4px;font-size:11px;font-style:normal;font-weight:700;opacity:.6}
+#bookGrid button.shiny{background:linear-gradient(135deg,#fff6c9,#ffe07a)}
+#bookGrid button.shiny::before{content:'✨';position:absolute;left:5px;top:3px;font-size:14px}
+#bookGrid button.hop{animation:jump .6s}
+@keyframes jump{40%{transform:translateY(-12px) scale(1.08)}}
+#bookSum{flex:none;text-align:center;font-size:14px;opacity:.75}
+
+/* モーダル */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:30;padding:16px}
+.modal.on{display:flex}
+.panel{background:var(--card);border-radius:28px;padding:16px;width:min(440px,100%);box-shadow:0 8px 0 rgba(40,70,120,.16);animation:panelIn .45s cubic-bezier(.3,1.5,.5,1);font-size:15px;line-height:1.7;max-height:calc(100dvh - 32px);overflow:auto}
+@keyframes panelIn{from{transform:translateY(60%) scale(.8);opacity:0}}
+.panel h2{margin:0;font-size:22px;color:var(--accent)}
+.panel h3{margin:14px 0 4px;font-size:17px}
+.note{font-size:13px;opacity:.75;line-height:1.6;margin:4px 0 8px}
+.opt{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.opt button{padding:8px 12px;border-radius:12px;background:var(--soft);font-weight:700;font-size:14px}
+.opt button.sel{background:var(--accent);color:#fff}
+.panel .big{width:100%;justify-content:center;margin-top:12px;font-size:18px;padding:12px}
+#phList{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.ph{display:flex;align-items:center;gap:8px;background:#f4f8fd;border-radius:16px;padding:6px}
+.ph img{width:58px;height:58px;border-radius:12px;object-fit:cover;flex:none}
+.ph input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--line);background:#fff;color:var(--ink)}
+.ph button{width:40px;height:40px;border-radius:50%;background:#fff;font-size:18px;flex:none;box-shadow:var(--shadow)}
+.ph button.rec{background:#ff5a5a;color:#fff;animation:blink .8s infinite}
+.ph button.has{background:#d8f5e3}
+@keyframes blink{50%{opacity:.55}}
+</style>
+</head>
+<body>
+
+<div id="title" class="screen on">
+  <h1 id="tTitle"></h1>
+  <p class="sub" id="tSub"></p>
+  <canvas id="demo"></canvas>
+  <button class="big go" id="goB"></button>
+  <div class="box"><b id="tCats"></b><div class="row" id="cats"></div></div>
+  <div class="box"><b id="tLv"></b><div class="row" id="lvs"></div></div>
+  <div class="box"><b id="tFat"></b><div class="row" id="fats"></div></div>
+  <div class="box"><b id="tBack"></b><div class="row" id="backs"></div></div>
+  <button class="big" id="bookB"><span class="ico">📖</span><span><span id="tBook"></span><small id="bookN"></small></span></button>
+  <button class="big" id="photoB"><span class="ico">📷</span><span><span id="tPhotos"></span><small id="tPhotosSub"></small></span></button>
+  <div class="foot"><button id="setB"></button><button id="langB">English</button></div>
+</div>
+
+<div id="game" class="screen">
+  <div class="bar">
+    <button class="round" id="backB" aria-label="back">🏠</button>
+    <div id="prog"></div>
+    <button class="round" id="hintB" aria-label="hint">💡</button>
+    <button class="round" id="gBookB" aria-label="book">📖</button>
+  </div>
+  <div id="board"><canvas id="cv"></canvas></div>
+  <div id="under">
+    <div id="msg"></div>
+    <div id="choices"></div>
+    <button id="nextB"></button>
+  </div>
+</div>
+
+<div id="book" class="screen">
+  <div class="bar">
+    <button class="round" id="bookBack" aria-label="back">◀</button>
+    <b id="tBook2"></b>
+    <span style="width:50px"></span>
+  </div>
+  <div id="bookTabs"></div>
+  <div id="bookGrid"></div>
+  <div id="bookSum"></div>
+</div>
+
+<div class="modal" id="photoM"><div class="panel">
+  <h2 id="tPh"></h2>
+  <p class="note" id="tPhNote"></p>
+  <button class="big" id="phAdd"><span class="ico">➕</span><span id="tPhAdd"></span></button>
+  <input type="file" id="phFile" accept="image/*" multiple hidden>
+  <div id="phList"></div>
+  <button class="big go" id="phClose"></button>
+</div></div>
+
+<div class="modal" id="setM"><div class="panel">
+  <h2 id="tSet"></h2>
+  <h3 id="tVoice"></h3><div class="opt" id="voiceOpt"></div>
+  <h3 id="tSound"></h3><div class="opt" id="soundOpt"></div>
+  <h3>Language / ことば</h3><div class="opt" id="langOpt"></div>
+  <h3 id="tReset"></h3><p class="note" id="tResetNote"></p>
+  <div class="opt"><button id="resetB"></button></div>
+  <button class="big go" id="setClose"></button>
+</div></div>
+
+<div id="say"></div>
+<canvas id="fx"></canvas>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ease = t => t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t);
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+
+/* ---------- ことば（言語を足すときは TEXT と ITEMS の名前に1つ足す） ---------- */
+const TEXT = {
+  ja: {
+    title: 'けずって なにかな？', sub: 'ゆびで ごしごし。なにが でてくるかな？', start: 'はじめる',
+    cats: 'どれで あそぶ？', lv: 'むずかしさ', fat: 'けずる ふとさ（うえの「？」で ためせます）', fatName: ['ほそい', 'ふつう', 'ふとい', 'とても ふとい'],
+    back: 'けずった ところが また かくれる', backName: ['かくれない', 'ゆっくり', 'はやい'], backSub: ['', 'じっくり', 'いそいで！'], book: 'ずかん', photos: 'おうちの しゃしん',
+    photosSub: 'かぞくや ペットの しゃしんを かくして あそべます', settings: '⚙️ おうちの人の せってい',
+    scratch: 'ゆびで けずってね', next: 'つぎへ ▶', found: n => `ずかん ${n}`, newMark: 'NEW!',
+    bookN: (a, b) => `${a} / ${b} こ みつけたよ`, bookSum: (a, b) => `${a} / ${b} こ　（✨は きらきら）`,
+    ph: '📷 おうちの しゃしん', phNote: 'しゃしんを えらぶと「おうち」で あそべます。なまえを いれて、🎙️で おうちの人の こえを ろくおんすると、あたったときに その こえで よびます。しゃしんと こえは この たんまつの なかにだけ ほぞんされます。',
+    phAdd: 'しゃしんを えらぶ', phName: 'なまえ', close: 'とじる', phDel: 'この しゃしんを けしますか？',
+    set: '⚙️ せってい', voice: 'こえ', sound: 'おと', on: 'あり', off: 'なし', dev: 'たんまつの こえ',
+    reset: 'ずかんを リセット', resetNote: 'みつけた ものの きろくを ぜんぶ けします。', resetB: 'リセットする', resetQ: 'ずかんを ぜんぶ けしますか？',
+    ai: n => `AIのこえ ${n}`, noPhoto: 'まだ しゃしんが ありません',
+    catName: { all: 'ぜんぶ', ani: 'どうぶつ', car: 'のりもの', food: 'たべもの', sea: 'うみ', nat: 'しぜん', home: 'おうち' },
+    lvName: ['けずるだけ', '2つから', '3つから', '4つから'], lvAge: ['2さい〜', '3さい〜', '4さい〜', '5さい〜'],
+    say: {
+      start0: 'なにが、かくれているかな？', start1: 'ゆびで、ごしごし、けずってみよう！',
+      q0: 'なにかな？', q1: 'どれだと、おもう？',
+      ok0: 'あたり！', ok1: 'せいかい！', ok2: 'よく、わかったね！',
+      miss0: 'ちがうみたい。', miss1: 'もうすこし、けずってみよう！',
+      new0: 'ずかんに、はいったよ！', shiny0: 'わあ、きらきらだ！',
+      comp0: 'ぜんぶ、あつめたね！すごい！', hint0: 'ここを、けずってみて！'
+    }
+  },
+  en: {
+    title: 'Scratch & Guess', sub: 'Rub with your finger. What will appear?', start: 'Play',
+    cats: 'Pick a theme', lv: 'Level', fat: 'Scratch size (try it on the "?" card above)', fatName: ['Thin', 'Normal', 'Thick', 'Extra thick'],
+    back: 'Scratched spots cover up again', backName: ['Off', 'Slow', 'Fast'], backSub: ['', 'take your time', 'hurry!'], book: 'Picture book', photos: 'Family photos',
+    photosSub: 'Hide photos of family or pets and play', settings: '⚙️ Settings for grown-ups',
+    scratch: 'Scratch with your finger', next: 'Next ▶', found: n => `Book ${n}`, newMark: 'NEW!',
+    bookN: (a, b) => `Found ${a} of ${b}`, bookSum: (a, b) => `${a} / ${b} found  (✨ = sparkly)`,
+    ph: '📷 Family photos', phNote: 'Pick photos to play the "Home" theme. Type a name and tap 🎙️ to record your own voice saying it. Photos and voices stay on this device only.',
+    phAdd: 'Choose photos', phName: 'Name', close: 'Close', phDel: 'Delete this photo?',
+    set: '⚙️ Settings', voice: 'Voice', sound: 'Sound', on: 'On', off: 'Off', dev: 'Device voice',
+    reset: 'Reset picture book', resetNote: 'Erases everything found so far.', resetB: 'Reset', resetQ: 'Erase the whole picture book?',
+    ai: n => `AI voice ${n}`, noPhoto: 'No photos yet',
+    catName: { all: 'All', ani: 'Animals', car: 'Vehicles', food: 'Food', sea: 'Sea', nat: 'Nature', home: 'Home' },
+    lvName: ['Just scratch', 'Pick of 2', 'Pick of 3', 'Pick of 4'], lvAge: ['Age 2+', 'Age 3+', 'Age 4+', 'Age 5+'],
+    say: {
+      start0: 'What is hiding here?', start1: 'Scratch with your finger!',
+      q0: 'What is it?', q1: 'Which one do you think?',
+      ok0: 'Yes!', ok1: "That's right!", ok2: 'Great guess!',
+      miss0: 'Not that one.', miss1: 'Scratch a little more!',
+      new0: 'Added to your book!', shiny0: 'Wow, a sparkly one!',
+      comp0: 'You found them all! Amazing!', hint0: 'Try scratching here!'
+    }
+  }
+};
+function pickLang() {
+  const q = new URLSearchParams(location.search).get('lang');
+  if (q && TEXT[q]) return q;
+  const s = store.get('kezuri-lang', null); if (s && TEXT[s]) return s;
+  try { const gl = localStorage.getItem('games-lang'); if (gl && TEXT[gl]) return gl; } catch (e) {} // 入口ページで えらんだ ことば
+  const nav = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').slice(0, 2);
+  return TEXT[nav] ? nav : 'en';
+}
+let L = pickLang();
+const T = () => TEXT[L];
+
+/* ---------- でてくるもの ---------- */
+// [id, えもじ, ja, en]（id は 声ファイルの名前にも つかう）
+const CATS = {
+  ani: { icon: '🐘', bg: ['#fff3c9', '#ffd98a'], items: [
+    ['dog', '🐕', 'いぬ', 'dog'], ['cat', '🐈', 'ねこ', 'cat'], ['elephant', '🐘', 'ぞう', 'elephant'], ['giraffe', '🦒', 'きりん', 'giraffe'],
+    ['lion', '🦁', 'ライオン', 'lion'], ['panda', '🐼', 'パンダ', 'panda'], ['rabbit', '🐇', 'うさぎ', 'rabbit'], ['monkey', '🐒', 'おさる', 'monkey'],
+    ['cow', '🐄', 'うし', 'cow'], ['pig', '🐖', 'ぶた', 'pig'], ['chicken', '🐓', 'にわとり', 'chicken'], ['penguin', '🐧', 'ペンギン', 'penguin'],
+    ['zebra', '🦓', 'しまうま', 'zebra'], ['bear', '🐻', 'くま', 'bear'], ['frog', '🐸', 'かえる', 'frog'], ['horse', '🐎', 'うま', 'horse'] ] },
+  car: { icon: '🚗', bg: ['#e3f0ff', '#b9d8ff'], items: [
+    ['car', '🚗', 'くるま', 'car'], ['bus', '🚌', 'バス', 'bus'], ['firetruck', '🚒', 'しょうぼうしゃ', 'fire truck'], ['ambulance', '🚑', 'きゅうきゅうしゃ', 'ambulance'],
+    ['police', '🚓', 'パトカー', 'police car'], ['train', '🚃', 'でんしゃ', 'train'], ['shinkansen', '🚄', 'しんかんせん', 'bullet train'], ['plane', '✈️', 'ひこうき', 'airplane'],
+    ['heli', '🚁', 'ヘリコプター', 'helicopter'], ['rocket', '🚀', 'ロケット', 'rocket'], ['bike', '🚲', 'じてんしゃ', 'bicycle'], ['tractor', '🚜', 'トラクター', 'tractor'],
+    ['ship', '🚢', 'ふね', 'ship'], ['truck', '🚚', 'トラック', 'truck'] ] },
+  food: { icon: '🍎', bg: ['#ffe6ee', '#ffc2d4'], items: [
+    ['apple', '🍎', 'りんご', 'apple'], ['banana', '🍌', 'バナナ', 'banana'], ['strawberry', '🍓', 'いちご', 'strawberry'], ['watermelon', '🍉', 'すいか', 'watermelon'],
+    ['grapes', '🍇', 'ぶどう', 'grapes'], ['onigiri', '🍙', 'おにぎり', 'rice ball'], ['bread', '🍞', 'パン', 'bread'], ['cake', '🍰', 'ケーキ', 'cake'],
+    ['icecream', '🍦', 'ソフトクリーム', 'ice cream'], ['donut', '🍩', 'ドーナツ', 'donut'], ['carrot', '🥕', 'にんじん', 'carrot'], ['pizza', '🍕', 'ピザ', 'pizza'],
+    ['peach', '🍑', 'もも', 'peach'], ['corn', '🌽', 'とうもろこし', 'corn'] ] },
+  sea: { icon: '🐙', bg: ['#dcf6ff', '#9fe0f5'], items: [
+    ['fish', '🐟', 'さかな', 'fish'], ['octopus', '🐙', 'たこ', 'octopus'], ['crab', '🦀', 'かに', 'crab'], ['dolphin', '🐬', 'いるか', 'dolphin'],
+    ['whale', '🐳', 'くじら', 'whale'], ['shark', '🦈', 'さめ', 'shark'], ['turtle', '🐢', 'かめ', 'turtle'], ['squid', '🦑', 'いか', 'squid'],
+    ['tropical', '🐠', 'ねったいぎょ', 'tropical fish'], ['puffer', '🐡', 'ふぐ', 'pufferfish'], ['shrimp', '🦐', 'えび', 'shrimp'], ['shell', '🐚', 'かいがら', 'seashell'] ] },
+  nat: { icon: '🦋', bg: ['#e6f8dc', '#bfeaa8'], items: [
+    ['butterfly', '🦋', 'ちょうちょ', 'butterfly'], ['ladybug', '🐞', 'てんとうむし', 'ladybug'], ['bee', '🐝', 'はち', 'bee'], ['snail', '🐌', 'かたつむり', 'snail'],
+    ['caterpillar', '🐛', 'いもむし', 'caterpillar'], ['ant', '🐜', 'あり', 'ant'], ['sunflower', '🌻', 'ひまわり', 'sunflower'], ['tulip', '🌷', 'チューリップ', 'tulip'],
+    ['rainbow', '🌈', 'にじ', 'rainbow'], ['sun', '☀️', 'おひさま', 'sun'], ['moon', '🌙', 'おつきさま', 'moon'], ['snowman', '⛄', 'ゆきだるま', 'snowman'],
+    ['tree', '🌳', 'き', 'tree'], ['mushroom', '🍄', 'きのこ', 'mushroom'] ] }
+};
+const ITEMS = []; // { id, e, cat, n:{ja,en} }
+for (const c in CATS) for (const [id, e, ja, en] of CATS[c].items) ITEMS.push({ id, e, cat: c, n: { ja, en } });
+const ITEM_BY = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+const nameOf = it => it.photo ? it.name : it.n[L] || it.n.en;
+
+/* ---------- おと ---------- */
+let soundOn = store.get('kezuri-sound', true);
+let actx = null;
+function audio() {
+  if (!soundOn) return null;
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function tone(freq, t0, dur, type = 'sine', vol = .25, slideTo) {
+  const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + t0;
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .02); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + .05);
+}
+const sfx = {
+  tap() { tone(880, 0, .06, 'sine', .08); },
+  wrong() { tone(300, 0, .16, 'sine', .14, 220); tone(240, .15, .2, 'sine', .12, 180); },
+  quiz() { [659, 784, 988].forEach((f, i) => tone(f, i * .08, .15, 'triangle', .12)); },
+  reveal() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i * .09, i === 6 ? .6 : .14, 'square', .07)); },
+  shiny() { [1568, 2093, 2637, 3136, 2637, 3136, 3520].forEach((f, i) => tone(f, .7 + i * .07, .35, 'sine', .08)); },
+  comp() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, i * .12, .5, 'triangle', .1)); }
+};
+// けずる おと（ノイズを ずっと ながしておき、ゆびの はやさで 大きさを かえる）
+let scr = null;
+function scratchSound(level) {
+  const a = audio(); if (!a) return;
+  if (!scr) {
+    const n = a.sampleRate * 2, b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (.6 + .4 * Math.sin(i / 90));
+    const s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+    s.buffer = b; s.loop = true; f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = .9; g.gain.value = 0;
+    s.connect(f).connect(g).connect(a.destination); s.start();
+    scr = { g, f };
+  }
+  const t = a.currentTime;
+  scr.g.gain.cancelScheduledValues(t);
+  scr.g.gain.setTargetAtTime(level * .22, t, .03);
+  scr.f.frequency.setTargetAtTime(2400 + level * 2400, t, .05);
+}
+
+/* ---------- こえ ---------- */
+const AI_VOICES = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro']; // 日本語だけ
+const aiBuf = {}; let aiSrc = null;
+function aiLoad(id, keys) {
+  const a = audio(); if (!a) return;
+  for (const key of keys) {
+    const k = `${id}/${key}`;
+    if (aiBuf[k]) continue;
+    aiBuf[k] = 'loading';
+    fetch(`voice/${k}.mp3?v=1`).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(b => new Promise((res, rej) => a.decodeAudioData(b, res, rej)))
+      .then(buf => { aiBuf[k] = buf; }).catch(() => { aiBuf[k] = 'none'; });
+  }
+}
+let devVoices = [];
+function voiceScore(v) {
+  const n = v.name; let s = 0;
+  if (/拡張|Enhanced|Premium|プレミアム/i.test(n)) s += 50;
+  if (/Natural|Neural|Online/i.test(n)) s += 45;
+  if (/Google/i.test(n)) s += 30;
+  if (/Kyoko|O-ren|Nanami|Samantha|Karen|Jenny|Aria/i.test(n)) s += 10;
+  if (/Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Bad|Bells|Bubbles|Jester|Whisper|Zarvox|Albert|Trinoids|Organ|Cellos|Boing|Wobble|Superstar/i.test(n)) s -= 60;
+  return s;
+}
+function loadVoices() { try { devVoices = speechSynthesis.getVoices(); } catch (e) {} }
+if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+function tts(text, onend) {
+  if (!('speechSynthesis' in window)) { if (onend) setTimeout(onend, 700); return; }
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text), code = L === 'ja' ? 'ja-JP' : 'en-US';
+    const vs = devVoices.filter(v => v.lang.replace('_', '-').toLowerCase().startsWith(L)).sort((a, b) => voiceScore(b) - voiceScore(a));
+    u.lang = code; u.pitch = 1.15; u.rate = L === 'ja' ? .95 : .9; if (vs[0]) u.voice = vs[0];
+    if (onend) { let done = false; const f = () => { if (!done) { done = true; onend(); } }; u.onend = f; setTimeout(f, 2600); }
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+// 'ai:jf_alpha' / 'dev'（端末の読み上げ）/ 'off'
+let voiceMode = store.get('kezuri-voice', 'ai:jf_alpha');
+const useAI = () => L === 'ja' && voiceMode.startsWith('ai:');
+function playBuf(b, off = 0, dur) {
+  const a = audio(); if (!a) return;
+  try { if (aiSrc) aiSrc.stop(); } catch (e) {}
+  try { speechSynthesis.cancel(); } catch (e) {}
+  const src = a.createBufferSource(); src.buffer = b; src.connect(a.destination); src.start(0, off, dur || b.duration); aiSrc = src;
+}
+let speakTok = 0;
+// key: 'ok0' など、または 'it_dog'（なまえ）。しゃべりおわったら onend
+function say(key, onend) {
+  const tok = ++speakTok, fin = () => { if (onend && tok === speakTok) onend(); };
+  if (!soundOn || voiceMode === 'off') { if (onend) setTimeout(fin, 350); return; }
+  let text, ph = null;
+  if (key.startsWith('it_')) {
+    const id = key.slice(3); ph = photos.find(p => p.id === id);
+    if (ph) {
+      if (ph.recBuf && audio()) { playBuf(ph.recBuf.buf, ph.recBuf.off, ph.recBuf.dur); if (onend) setTimeout(fin, ph.recBuf.dur * 1000 + 150); return; }
+      text = ph.name;
+    } else text = ITEM_BY[id] ? nameOf(ITEM_BY[id]) : '';
+  } else text = T().say[key] || '';
+  if (useAI() && !ph) {
+    const id = voiceMode.slice(3), a = audio();
+    if (a) {
+      aiLoad(id, [key]);
+      const b = aiBuf[`${id}/${key}`];
+      if (b && typeof b !== 'string') { playBuf(b); if (onend) setTimeout(fin, b.duration * 1000 + 150); return; }
+    }
+  }
+  tts(text, onend ? fin : null);
+}
+function sayCat(cat, onend) { say(cat + Math.floor(Math.random() * Object.keys(T().say).filter(k => k.replace(/\d+$/, '') === cat).length), onend); }
+function sayChain(keys) { if (keys.length) say(keys[0], () => setTimeout(() => sayChain(keys.slice(1)), 120)); }
+function prepVoice(keys) { if (useAI()) aiLoad(voiceMode.slice(3), keys); }
+const PHRASES = Object.keys(TEXT.ja.say);
+
+/* ---------- おうちの しゃしん（この端末の IndexedDB にだけ保存） ---------- */
+let photos = []; // { id:'p…', name, blob, rec, url, img, recBuf }
+const pdb = {
+  open() { return new Promise((res, rej) => { const r = indexedDB.open('kezuri', 1); r.onupgradeneeded = () => r.result.createObjectStore('photo'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  async run(mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction('photo', mode), st = t.objectStore('photo'); fn(st); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); },
+  put(k, v) { return this.run('readwrite', st => st.put(v, k)); },
+  del(k) { return this.run('readwrite', st => st.delete(k)); },
+  async all() { const out = []; await this.run('readonly', st => { const c = st.openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out.push(Object.assign({ id: cur.key }, cur.value)); cur.continue(); } }; }); return out; }
+};
+function photoSave(p) { return pdb.put(p.id, { name: p.name, blob: p.blob, rec: p.rec || null, t: p.t }).catch(() => {}); }
+function photoReady(p) {
+  p.url = URL.createObjectURL(p.blob);
+  p.img = new Image(); p.img.src = p.url;
+  p.photo = true; p.cat = 'home'; p.e = '';
+  if (p.rec) decodeRec(p);
+  return p;
+}
+function decodeRec(p) {
+  const a = audio() || (window.OfflineAudioContext ? new OfflineAudioContext(1, 1, 44100) : null);
+  if (!a || !p.rec) return;
+  const blob = p.rec;
+  blob.arrayBuffer().then(ab => new Promise((res, rej) => a.decodeAudioData(ab, res, rej))).then(buf => {
+    const d = buf.getChannelData(0); let pk = 0; for (let i = 0; i < d.length; i++) pk = Math.max(pk, Math.abs(d[i]));
+    const th = Math.max(.02, pk * .12); let i0 = 0, i1 = d.length - 1;
+    while (i0 < d.length && Math.abs(d[i0]) < th) i0++;
+    while (i1 > i0 && Math.abs(d[i1]) < th) i1--;
+    const off = Math.max(0, i0 / buf.sampleRate - .04), end = Math.min(buf.duration, i1 / buf.sampleRate + .12);
+    if (p.rec === blob) p.recBuf = { buf, off, dur: Math.max(.1, end - off) };
+  }).catch(() => {});
+}
+pdb.all().then(list => { photos = list.sort((a, b) => a.t - b.t).map(photoReady); renderTitle(); }).catch(() => {});
+document.addEventListener('pointerdown', () => { if (audio()) photos.forEach(p => { if (p.rec && !p.recBuf) decodeRec(p); }); }, { passive: true, once: true });
+
+function shrinkPhoto(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      const M = 900, r = Math.min(1, M / Math.max(im.naturalWidth, im.naturalHeight));
+      const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * r); c.height = Math.round(im.naturalHeight * r);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      c.toBlob(b => b ? res(b) : rej(), 'image/jpeg', .85);
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(); };
+    im.src = url;
+  });
+}
+$('#phAdd').onclick = () => $('#phFile').click();
+$('#phFile').onchange = async e => {
+  const files = [...e.target.files]; e.target.value = '';
+  for (const f of files) {
+    try {
+      const blob = await shrinkPhoto(f);
+      const p = photoReady({ id: 'p' + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name: (L === 'ja' ? 'しゃしん ' : 'Photo ') + (photos.length + 1), blob, t: Date.now() });
+      photos.push(p); await photoSave(p);
+    } catch (err) {}
+  }
+  renderPhotos(); renderTitle();
+};
+let recState = null;
+function renderPhotos() {
+  const el = $('#phList'); el.innerHTML = '';
+  if (!photos.length) { el.innerHTML = `<span class="note">${T().noPhoto}</span>`; return; }
+  for (const p of photos) {
+    const row = document.createElement('div'); row.className = 'ph';
+    row.innerHTML = `<img alt=""><input maxlength="16"><button class="r" aria-label="record">🎙️</button><button class="pl" aria-label="play">▶</button><button class="d" aria-label="delete">🗑️</button>`;
+    row.querySelector('img').src = p.url;
+    const inp = row.querySelector('input'); inp.value = p.name; inp.placeholder = T().phName;
+    inp.onchange = () => { p.name = inp.value.trim() || p.name; photoSave(p); };
+    const rb = row.querySelector('.r');
+    if (p.rec) rb.classList.add('has');
+    rb.onclick = () => recordFor(p, rb);
+    row.querySelector('.pl').onclick = () => { audio(); say('it_' + p.id); };
+    row.querySelector('.d').onclick = () => {
+      if (!confirm(T().phDel)) return;
+      photos = photos.filter(x => x !== p); pdb.del(p.id); URL.revokeObjectURL(p.url);
+      renderPhotos(); renderTitle();
+    };
+    el.appendChild(row);
+  }
+}
+async function recordFor(p, btn) {
+  if (recState) { recState.stop(); return; }
+  audio();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mr = new MediaRecorder(stream), chunks = [];
+    mr.ondataavailable = e => chunks.push(e.data);
+    mr.onstop = () => {
+      stream.getTracks().forEach(t => t.stop()); recState = null; btn.classList.remove('rec');
+      const b = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
+      if (b.size > 800) { p.rec = b; p.recBuf = null; photoSave(p); decodeRec(p); btn.classList.add('has'); setTimeout(() => say('it_' + p.id), 400); }
+    };
+    mr.start(); btn.classList.add('rec');
+    recState = { stop() { try { mr.stop(); } catch (e) {} } };
+    setTimeout(() => { if (recState) recState.stop(); }, 3000);
+  } catch (e) { alert(L === 'ja' ? 'マイクが つかえませんでした' : 'Could not use the microphone'); }
+}
+
+/* ---------- タイトル ---------- */
+const LV = [ // ちょいす: えらぶ数、th: どのくらい けずったら こたえが でるか、same: おなじ なかまから まぎらわしいのを だす
+  { choices: 0, th: .5 }, { choices: 2, th: .3 }, { choices: 3, th: .2 }, { choices: 4, th: 0, same: true }
+];
+let lv = store.get('kezuri-lv', 1), cat = store.get('kezuri-cat', 'all');
+const FAT = [.045, .075, .11, .16]; // けずる ふとさ（カードの はばに たいする 半径）
+let fat = clamp(store.get('kezuri-fat', 1), 0, FAT.length - 1);
+const BACK = [0, .5, 1.2]; // けずった ところが もどる はやさ（1びょうあたり。0=もどらない）
+let back = clamp(store.get('kezuri-back', 0), 0, BACK.length - 1);
+let book = store.get('kezuri-book', {}); // id -> { n, s(きらきらの数) }
+function catList() { const l = ['all', ...Object.keys(CATS)]; if (photos.length) l.push('home'); return l; }
+function renderTitle() {
+  const t = T();
+  document.documentElement.lang = L; document.title = t.title;
+  $('#tTitle').innerHTML = [...t.title].map(ch => ch === ' ' ? ' ' : `<span>${ch}</span>`).join('');
+  $('#tSub').textContent = t.sub; $('#goB').textContent = t.start;
+  $('#tCats').textContent = t.cats; $('#tLv').textContent = t.lv;
+  $('#tBook').textContent = t.book; $('#tPhotos').textContent = t.photos; $('#tPhotosSub').textContent = t.photosSub;
+  $('#setB').textContent = t.settings; $('#langB').textContent = L === 'ja' ? 'English' : '日本語';
+  if (!catList().includes(cat)) cat = 'all';
+  $('#cats').innerHTML = '';
+  for (const c of catList()) {
+    const b = document.createElement('button');
+    b.innerHTML = `${c === 'all' ? '⭐' : c === 'home' ? '📷' : CATS[c].icon} ${t.catName[c]}`;
+    if (c === cat) b.className = 'sel';
+    b.onclick = () => { cat = c; store.set('kezuri-cat', c); sfx.tap(); renderTitle(); };
+    $('#cats').appendChild(b);
+  }
+  $('#lvs').innerHTML = '';
+  LV.forEach((x, i) => {
+    const b = document.createElement('button');
+    b.innerHTML = `${'★'.repeat(i + 1)}<small>${t.lvName[i]}・${t.lvAge[i]}</small>`;
+    if (i === lv) b.className = 'sel';
+    b.onclick = () => { lv = i; store.set('kezuri-lv', i); sfx.tap(); renderTitle(); };
+    $('#lvs').appendChild(b);
+  });
+  $('#tFat').textContent = t.fat; $('#fats').innerHTML = '';
+  FAT.forEach((f, i) => {
+    const b = document.createElement('button'), d = Math.round(8 + f * 160);
+    b.innerHTML = `<i style="width:${d}px;height:${d}px"></i><small>${t.fatName[i]}</small>`;
+    if (i === fat) b.className = 'sel';
+    b.onclick = () => { fat = i; store.set('kezuri-fat', i); sfx.tap(); demoInit(); renderTitle(); };
+    $('#fats').appendChild(b);
+  });
+  $('#tBack').textContent = t.back; $('#backs').innerHTML = '';
+  BACK.forEach((v, i) => {
+    const b = document.createElement('button');
+    b.innerHTML = `${['🚫', '🐢', '🐇'][i]} ${t.backName[i]}${t.backSub[i] ? `<small>${t.backSub[i]}</small>` : ''}`;
+    if (i === back) b.className = 'sel';
+    b.onclick = () => { back = i; store.set('kezuri-back', i); sfx.tap(); demoInit(); renderTitle(); };
+    $('#backs').appendChild(b);
+  });
+  const all = ITEMS.length + photos.length, got = ITEMS.filter(i => book[i.id]).length + photos.filter(p => book[p.id]).length;
+  $('#bookN').textContent = t.bookN(got, all);
+}
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
+function setLang(l) { L = l; store.set('kezuri-lang', l); renderTitle(); renderSettings(); }
+$('#langB').onclick = () => setLang(L === 'ja' ? 'en' : 'ja');
+$('#goB').onclick = () => { audio(); startGame(); };
+$('#bookB').onclick = () => { audio(); openBook('title'); };
+$('#photoB').onclick = () => { audio(); const t = T(); $('#tPh').textContent = t.ph; $('#tPhNote').textContent = t.phNote; $('#tPhAdd').textContent = t.phAdd; $('#phClose').textContent = t.close; renderPhotos(); $('#photoM').classList.add('on'); };
+$('#phClose').onclick = () => { $('#photoM').classList.remove('on'); renderTitle(); };
+
+/* ---------- せってい ---------- */
+function renderSettings() {
+  const t = T();
+  $('#tSet').textContent = t.set; $('#tVoice').textContent = t.voice; $('#tSound').textContent = t.sound;
+  $('#tReset').textContent = t.reset; $('#tResetNote').textContent = t.resetNote; $('#resetB').textContent = t.resetB; $('#setClose').textContent = t.close;
+  const opt = (el, list, cur, fn) => { el.innerHTML = ''; for (const [v, label] of list) { const b = document.createElement('button'); b.textContent = label; if (v === cur) b.className = 'sel'; b.onclick = () => { fn(v); renderSettings(); }; el.appendChild(b); } };
+  const vl = L === 'ja' ? AI_VOICES.map((id, i) => ['ai:' + id, t.ai(i + 1)]) : [];
+  vl.push(['dev', t.dev], ['off', t.off]);
+  const curV = (L !== 'ja' && voiceMode.startsWith('ai:')) ? 'dev' : voiceMode;
+  opt($('#voiceOpt'), vl, curV, v => { voiceMode = v; store.set('kezuri-voice', v); audio(); prepVoice(['ok0']); setTimeout(() => say('ok0'), 300); });
+  opt($('#soundOpt'), [[true, t.on], [false, t.off]], soundOn, v => { soundOn = v; store.set('kezuri-sound', v); if (!v && scr) scr.g.gain.value = 0; });
+  opt($('#langOpt'), [['ja', '日本語'], ['en', 'English']], L, v => setLang(v));
+}
+$('#setB').onclick = () => { renderSettings(); $('#setM').classList.add('on'); };
+$('#setClose').onclick = () => $('#setM').classList.remove('on');
+$('#resetB').onclick = () => { if (confirm(T().resetQ)) { book = {}; store.set('kezuri-book', book); renderTitle(); } };
+
+/* ---------- ゲーム ---------- */
+const cv = $('#cv'), g = cv.getContext('2d');
+const GRID = 40;
+let st = null; // いまの カード
+let recent = [];
+let lay = { ox: 0, oy: 0, S: 100, dpr: 1 };
+
+function pool() {
+  if (cat === 'home') return photos.slice();
+  if (cat === 'all') return ITEMS.concat(photos);
+  return ITEMS.filter(i => i.cat === cat);
+}
+function nextItem() {
+  const p = pool();
+  const cand = p.filter(i => !recent.includes(i.id));
+  const list = cand.length ? cand : p;
+  // まだ みつけていない ものを でやすく
+  const w = list.map(i => book[i.id] ? 1 : 3), sum = w.reduce((a, b) => a + b, 0);
+  let r = Math.random() * sum;
+  for (let i = 0; i < list.length; i++) { r -= w[i]; if (r <= 0) return list[i]; }
+  return list[list.length - 1];
+}
+function makeChoices(it, n) {
+  if (!n) return [];
+  let others;
+  if (it.photo) {
+    others = photos.filter(p => p !== it);
+    if (others.length < n - 1) others = others.concat(shuffle(ITEMS.slice()).slice(0, n - 1 - others.length));
+  } else if (LV[lv].same) {
+    others = ITEMS.filter(i => i.cat === it.cat && i !== it);
+  } else {
+    // ちいさい子むけ: ちがう なかまから（まぎらわしくない）
+    others = ITEMS.filter(i => i.cat !== it.cat);
+    if (n === 3) others = shuffle(ITEMS.filter(i => i !== it)).slice(0, 12);
+  }
+  return shuffle([it, ...shuffle(others.slice()).slice(0, n - 1)]);
+}
+
+function layout() {
+  const W = cv.clientWidth, H = cv.clientHeight, dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const S = Math.max(120, Math.min(W - 8, H - 8));
+  lay = { ox: (W - S) / 2, oy: (H - S) / 2, S, dpr, W, H };
+  if (st) buildCover(true);
+}
+window.addEventListener('resize', () => { if ($('#game').classList.contains('on')) layout(); });
+
+const COVERS = [['#c9ced6', '#eef1f5', '#aab1bc'], ['#e9c35a', '#fff0b3', '#cf9f2a'], ['#f3a6c3', '#ffe1ec', '#df7ea4'], ['#8fc2f2', '#e2f1ff', '#6aa6e0'], ['#b8a6f0', '#ece6ff', '#9b84e6']];
+function startGame() {
+  recent = []; show('game');
+  requestAnimationFrame(() => { layout(); newCard(true); });
+}
+function newCard(first) {
+  const it = nextItem();
+  recent.push(it.id); if (recent.length > Math.min(6, pool().length - 1)) recent.shift();
+  const S = lay.S;
+  const shiny = !it.photo && Math.random() < 1 / 8;
+  st = {
+    it, shiny, state: 'scratch', t0: performance.now(), lastScratch: performance.now(), hinted: false,
+    grid: new Float32Array(GRID * GRID), cov: COVERS[Math.floor(Math.random() * COVERS.length)],
+    // えの いち（すこし ずらして、どこに いるか さがす たのしさ）
+    px: it.photo ? .5 : rnd(.38, .62), py: it.photo ? .5 : rnd(.38, .6), ps: it.photo ? 1 : rnd(.56, .68), rot: it.photo ? 0 : rnd(-.18, .18),
+    choices: makeChoices(it, LV[lv].choices), openT: 0, flakes: [], hintAt: null
+  };
+  st.picCells = [];
+  for (let gy = 0; gy < GRID; gy++) for (let gx = 0; gx < GRID; gx++) {
+    const x = (gx + .5) / GRID, y = (gy + .5) / GRID;
+    if (it.photo ? (Math.abs(x - .5) < .4 && Math.abs(y - .5) < .4) : Math.hypot(x - st.px, y - st.py) < st.ps * .4) st.picCells.push(gy * GRID + gx);
+  }
+  buildCover(false);
+  prepVoice([...PHRASES, 'it_' + it.id, ...st.choices.map(c => 'it_' + c.id)]);
+  $('#choices').classList.remove('on'); $('#choices').innerHTML = '';
+  $('#nextB').classList.remove('on');
+  $('#msg').style.display = ''; $('#msg').textContent = T().scratch;
+  renderProg();
+  if (LV[lv].th === 0) setTimeout(() => { if (st && st.it === it && st.state === 'scratch') showQuiz(); }, 900);
+  if (first) sayCat('start'); else setTimeout(() => sayCat('start'), 250);
+}
+function renderProg() {
+  const all = ITEMS.length + photos.length, got = ITEMS.filter(i => book[i.id]).length + photos.filter(p => book[p.id]).length;
+  $('#prog').textContent = `📖 ${got} / ${all}`;
+}
+
+// けずる まく（オフスクリーン）
+let covC = document.createElement('canvas'), covG = covC.getContext('2d');
+const covBase = document.createElement('canvas'); // けずる まえの まく（また かくれる モードで つかう）
+function buildCover(keep) {
+  const { S, dpr } = lay, px = Math.round(S * dpr);
+  covC.width = px; covC.height = px;
+  const c = covG, [c0, c1, c2] = st.cov;
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const gr = c.createLinearGradient(0, 0, S, S); gr.addColorStop(0, c0); gr.addColorStop(.45, c1); gr.addColorStop(.55, c1); gr.addColorStop(1, c0);
+  c.fillStyle = gr; c.fillRect(0, 0, S, S);
+  // もようの「？」と ほし
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  const n = 5, step = S / n;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const cx = (x + .5 + (y % 2 ? .25 : -.25)) * step, cy = (y + .5) * step;
+    c.fillStyle = c2; c.globalAlpha = .55;
+    if ((x + y) % 2) { c.font = `900 ${step * .5}px sans-serif`; c.fillText('?', cx, cy); }
+    else star(c, cx, cy, step * .16);
+  }
+  c.globalAlpha = 1;
+  // きらっとした ななめの ひかり
+  c.fillStyle = 'rgba(255,255,255,.35)';
+  c.beginPath(); c.moveTo(S * .1, 0); c.lineTo(S * .22, 0); c.lineTo(0, S * .22); c.lineTo(0, S * .1); c.fill();
+  covBase.width = px; covBase.height = px; covBase.getContext('2d').drawImage(covC, 0, 0);
+  // もう けずった ところを けしなおす（画面の むきが かわったとき）
+  if (keep) {
+    c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000';
+    const cs = S / GRID;
+    for (let i = 0; i < st.grid.length; i++) if (st.grid[i] > .5) { const gx = i % GRID, gy = Math.floor(i / GRID); c.beginPath(); c.arc((gx + .5) * cs, (gy + .5) * cs, cs * .95, 0, 7); c.fill(); }
+    c.globalCompositeOperation = 'source-over';
+  }
+}
+function star(c, x, y, r) { c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.closePath(); c.fill(); }
+
+const brush = () => Math.max(8, lay.S * FAT[fat]);
+function scratchSeg(x0, y0, x1, y1) {
+  const r = brush(), c = covG;
+  c.globalCompositeOperation = 'destination-out';
+  c.lineCap = 'round'; c.lineJoin = 'round'; c.lineWidth = r * 2; c.strokeStyle = '#000';
+  c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1 + .01, y1); c.stroke();
+  // ふちを すこし ぎざぎざに
+  c.fillStyle = '#000';
+  for (let i = 0; i < 3; i++) { const a = rnd(0, 7); c.beginPath(); c.arc(x1 + Math.cos(a) * r * .95, y1 + Math.sin(a) * r * .95, r * rnd(.15, .3), 0, 7); c.fill(); }
+  c.globalCompositeOperation = 'source-over';
+  // ます目に きろく
+  const cs = lay.S / GRID, len = Math.hypot(x1 - x0, y1 - y0), steps = Math.max(1, Math.ceil(len / (r * .5)));
+  for (let s = 0; s <= steps; s++) {
+    const x = x0 + (x1 - x0) * s / steps, y = y0 + (y1 - y0) * s / steps;
+    const ga = Math.max(0, Math.floor((x - r) / cs)), gb = Math.min(GRID - 1, Math.floor((x + r) / cs));
+    const ha = Math.max(0, Math.floor((y - r) / cs)), hb = Math.min(GRID - 1, Math.floor((y + r) / cs));
+    for (let gy = ha; gy <= hb; gy++) for (let gx = ga; gx <= gb; gx++)
+      if (Math.hypot((gx + .5) * cs - x, (gy + .5) * cs - y) < r * .9) st.grid[gy * GRID + gx] = 1;
+  }
+  // けずりカス
+  if (st.flakes.length < 80) for (let i = 0; i < 2; i++) st.flakes.push({ x: x1 + rnd(-r, r) * .6, y: y1 + rnd(-r, r) * .6, vx: rnd(-40, 40), vy: rnd(-60, 10), life: 1, s: rnd(2, 4.5), c: st.cov[i % 2 ? 0 : 2] });
+}
+function picFrac() { let n = 0; for (const i of st.picCells) n += st.grid[i]; return n / st.picCells.length; }
+function allFrac() { let n = 0; for (const v of st.grid) n += v; return n / st.grid.length; }
+
+const ptrs = new Map();
+let speed = 0;
+function toCard(e) { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left - lay.ox, y: e.clientY - r.top - lay.oy }; }
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); audio();
+  if (!st) return;
+  const p = toCard(e);
+  if (st.state === 'open') { // ひらいた えを さわると なまえを もういちど
+    if (p.x > 0 && p.y > 0 && p.x < lay.S && p.y < lay.S) { st.bounce = performance.now(); say('it_' + st.it.id); }
+    return;
+  }
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  ptrs.set(e.pointerId, { ...p, t: performance.now() });
+  scratchSeg(p.x, p.y, p.x, p.y); afterScratch();
+});
+cv.addEventListener('pointermove', e => {
+  const q = ptrs.get(e.pointerId); if (!q || !st || st.state === 'open') return;
+  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  let last = q;
+  for (const ev of (evs.length ? evs : [e])) { const p = toCard(ev); scratchSeg(last.x, last.y, p.x, p.y); last = p; }
+  const now = performance.now(), d = Math.hypot(last.x - q.x, last.y - q.y);
+  speed = Math.max(speed, clamp(d / Math.max(8, now - q.t) / 1.2, 0, 1));
+  ptrs.set(e.pointerId, { ...last, t: now });
+  afterScratch();
+});
+const up = e => { ptrs.delete(e.pointerId); };
+cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+
+function afterScratch() {
+  st.lastScratch = performance.now(); st.hintAt = null;
+  if (st.state !== 'scratch') return;
+  const f = picFrac(), L0 = LV[lv];
+  if (!L0.choices) { if (f >= L0.th) reveal(true); }
+  else if (f >= L0.th) showQuiz();
+}
+function showQuiz() {
+  st.state = 'quiz';
+  $('#msg').style.display = 'none';
+  const el = $('#choices'); el.innerHTML = '';
+  for (const c of st.choices) {
+    const b = document.createElement('button');
+    b.innerHTML = c.photo ? `<img alt=""><span></span>` : `<div class="e">${c.e}</div><span></span>`;
+    if (c.photo) b.querySelector('img').src = c.url;
+    b.querySelector('span').textContent = nameOf(c);
+    b.onclick = () => answer(c, b);
+    el.appendChild(b);
+  }
+  el.classList.add('on'); sfx.quiz();
+  setTimeout(() => sayCat('q'), 150);
+}
+function answer(c, b) {
+  if (!st || st.state !== 'quiz') return;
+  audio();
+  if (c === st.it) { b.classList.add('yes'); reveal(false); }
+  else { b.classList.add('no'); sfx.wrong(); sayChain(['miss0', 'miss1']); }
+}
+function reveal(auto) {
+  st.state = 'open'; st.openT = performance.now(); st.bounce = st.openT + 500;
+  ptrs.clear(); scratchSound(0);
+  const it = st.it, rec = book[it.id] || { n: 0, s: 0 }, isNew = !rec.n;
+  rec.n++; if (st.shiny) rec.s = (rec.s || 0) + 1;
+  book[it.id] = rec; store.set('kezuri-book', book);
+  // なかまを ぜんぶ あつめた？
+  const catDone = !it.photo && isNew && CATS[it.cat].items.every(([id]) => book[id]);
+  sfx.reveal(); if (st.shiny) sfx.shiny();
+  confetti(st.shiny);
+  showSay(nameOf(it) + (L === 'ja' ? '！' : '!'));
+  const keys = [];
+  if (!auto) keys.push('ok' + Math.floor(Math.random() * 3));
+  keys.push('it_' + it.id);
+  if (st.shiny) keys.push('shiny0');
+  if (isNew) keys.push('new0');
+  if (catDone) keys.push('comp0');
+  setTimeout(() => sayChain(keys), auto ? 200 : 0);
+  if (catDone) setTimeout(() => { sfx.comp(); confetti(true); }, 2200);
+  st.isNew = isNew;
+  renderProg();
+  setTimeout(() => {
+    if (!st || st.it !== it) return;
+    $('#choices').classList.remove('on'); $('#msg').style.display = 'none';
+    $('#nextB').textContent = T().next; $('#nextB').classList.add('on');
+  }, 1300);
+}
+$('#nextB').onclick = () => { sfx.tap(); newCard(false); };
+$('#backB').onclick = () => { st = null; scratchSound(0); try { speechSynthesis.cancel(); } catch (e) {} renderTitle(); show('title'); };
+$('#gBookB').onclick = () => { scratchSound(0); openBook('game'); };
+$('#hintB').onclick = () => { if (st && st.state !== 'open') { audio(); giveHint(true); } };
+function giveHint(force) {
+  // まだ けずっていない、えの ところを ひからせる
+  const left = st.picCells.filter(i => st.grid[i] < .5);
+  if (!left.length) return;
+  const i = pick(left);
+  st.hintAt = { x: (i % GRID + .5) / GRID, y: (Math.floor(i / GRID) + .5) / GRID, t: performance.now() };
+  if (force || !st.hinted) say('hint0');
+  st.hinted = true;
+}
+
+/* ---------- かく ---------- */
+function drawPic(c, it, S, now) {
+  // うしろの いろ
+  if (it.photo) {
+    c.fillStyle = '#fff'; c.fillRect(0, 0, S, S);
+    const im = it.img;
+    if (im && im.complete && im.naturalWidth) {
+      const r = Math.max(S / im.naturalWidth, S / im.naturalHeight), w = im.naturalWidth * r, h = im.naturalHeight * r;
+      c.drawImage(im, (S - w) / 2, (S - h) / 2, w, h);
+    }
+    return;
+  }
+  const [b0, b1] = st.shiny ? ['#fff8d6', '#ffd24d'] : CATS[it.cat].bg;
+  const gr = c.createRadialGradient(S / 2, S / 2, S * .05, S / 2, S / 2, S * .75);
+  gr.addColorStop(0, b0); gr.addColorStop(1, b1); c.fillStyle = gr; c.fillRect(0, 0, S, S);
+  // まわりの ちいさな もよう
+  c.fillStyle = 'rgba(255,255,255,.55)';
+  for (let i = 0; i < 9; i++) { const a = i * 2.4 + 1, rr = S * (.36 + (i % 3) * .05); c.beginPath(); c.arc(S / 2 + Math.cos(a) * rr, S / 2 + Math.sin(a) * rr, S * (.018 + (i % 2) * .012), 0, 7); c.fill(); }
+  if (st.shiny) { // きらきら
+    c.save(); c.translate(S * st.px, S * st.py); c.rotate(now / 3000);
+    c.fillStyle = 'rgba(255,255,255,.5)';
+    for (let i = 0; i < 12; i++) { c.rotate(Math.PI / 6); c.beginPath(); c.moveTo(0, 0); c.lineTo(S, -S * .08); c.lineTo(S, S * .08); c.fill(); }
+    c.restore();
+    c.fillStyle = '#fff';
+    for (let i = 0; i < 6; i++) { const tw = .5 + .5 * Math.sin(now / 250 + i * 1.7); star(c, S * ((i * .37 + .1) % 1), S * ((i * .61 + .15) % 1), S * .03 * tw + 1); }
+  }
+  // えもじ
+  let sc = 1;
+  if (st.bounce && now > st.bounce) { const t = (now - st.bounce) / 1000; if (t < 1.4) sc = 1 + .16 * Math.sin(t * 11) * Math.exp(-t * 3); }
+  const fs = S * st.ps;
+  c.save(); c.translate(S * st.px, S * st.py); c.rotate(st.rot); c.scale(sc, sc);
+  c.font = `${fs}px ${EMOJI_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(it.e, 0, fs * .04);
+  c.restore();
+}
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+let lastT = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+  drawDemo(now);
+  if (!st || !$('#game').classList.contains('on')) return;
+  // けずる おと
+  if (st.state !== 'open') { scratchSound(ptrs.size ? speed : 0); speed *= .8; }
+  // また かくれる モード: けずる まえの まくを うすく かさねて、すこしずつ もどす
+  // （まいフレームだと うすすぎて いろが のこるので、0.15びょうごとに まとめて かさねる）
+  if (BACK[back] && st.state !== 'open' && (st.backT = (st.backT || 0) + dt) >= .15) {
+    const k = 1 - Math.exp(-BACK[back] * st.backT); st.backT = 0;
+    covG.save(); covG.setTransform(1, 0, 0, 1, 0, 0); covG.globalCompositeOperation = 'source-over'; covG.globalAlpha = k;
+    covG.drawImage(covBase, 0, 0); covG.restore();
+    for (let i = 0; i < st.grid.length; i++) st.grid[i] *= 1 - k;
+  }
+  // ほうっておくと ヒント
+  if (st.state === 'scratch' && !st.hintAt && now - st.lastScratch > 8000 && LV[lv].choices !== 4) { giveHint(false); st.lastScratch = now; }
+  const { S, dpr, ox, oy } = lay;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, lay.W, lay.H);
+  g.save(); g.translate(ox, oy);
+  // カードの かげ
+  g.fillStyle = 'rgba(40,70,120,.16)'; rr(g, 0, 5, S, S, S * .07); g.fill();
+  g.save(); rr(g, 0, 0, S, S, S * .07); g.clip();
+  drawPic(g, st.it, S, now);
+  let ca = 1;
+  if (st.state === 'open') ca = 1 - ease((now - st.openT) / 700);
+  if (ca > 0) { g.globalAlpha = ca; g.setTransform(1, 0, 0, 1, ox * dpr, oy * dpr); g.drawImage(covC, 0, 0); g.setTransform(dpr, 0, 0, dpr, ox * dpr, oy * dpr); g.globalAlpha = 1; }
+  // ヒントの ひかり
+  if (st.hintAt && st.state !== 'open') {
+    const t = (now - st.hintAt.t) / 1000, x = st.hintAt.x * S, y = st.hintAt.y * S;
+    if (t < 4) {
+      const r = brush() * (1.3 + .3 * Math.sin(t * 8));
+      g.strokeStyle = `rgba(255,255,255,${.9 - t * .2})`; g.lineWidth = 5; g.beginPath(); g.arc(x, y, r, 0, 7); g.stroke();
+      g.fillStyle = '#ffe14d'; star(g, x, y, r * .45);
+      // ゆびの えもじ
+      g.font = `${S * .1}px ${EMOJI_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('👆', x + r * .4, y + r * 1.2 + Math.sin(t * 6) * 6);
+    } else st.hintAt = null;
+  }
+  g.restore();
+  // けずりカス
+  for (const f of st.flakes) {
+    f.vy += 420 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.life -= dt * 1.6;
+    if (f.life > 0) { g.globalAlpha = f.life; g.fillStyle = f.c; g.fillRect(f.x, f.y, f.s, f.s); }
+  }
+  g.globalAlpha = 1;
+  st.flakes = st.flakes.filter(f => f.life > 0);
+  // NEW!
+  if (st.state === 'open' && st.isNew) {
+    const t = (now - st.openT) / 1000;
+    if (t > .5) {
+      const s = Math.min(1, (t - .5) * 4);
+      g.save(); g.translate(S * .82, S * .1); g.rotate(.25); g.scale(s, s);
+      g.fillStyle = '#ff4d6d'; rr(g, -S * .12, -S * .05, S * .24, S * .1, S * .03); g.fill();
+      g.fillStyle = '#fff'; g.font = `900 ${S * .065}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(T().newMark, 0, 0);
+      g.restore();
+    }
+  }
+  g.restore();
+}
+
+/* タイトルの おためし（さわると けずれる） */
+const demo = $('#demo'), dg = demo.getContext('2d');
+let dm = null;
+function demoInit() {
+  const dpr = Math.min(2.5, window.devicePixelRatio || 1), S = demo.clientWidth || 200;
+  demo.width = S * dpr; demo.height = S * dpr;
+  const c = document.createElement('canvas'); c.width = S * dpr; c.height = S * dpr;
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const gr = x.createLinearGradient(0, 0, S, S); gr.addColorStop(0, '#c9ced6'); gr.addColorStop(.5, '#eef1f5'); gr.addColorStop(1, '#c9ced6');
+  x.fillStyle = gr; x.fillRect(0, 0, S, S);
+  x.fillStyle = '#aab1bc'; x.font = `900 ${S * .5}px sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('?', S / 2, S / 2);
+  const base = document.createElement('canvas'); base.width = c.width; base.height = c.height; base.getContext('2d').drawImage(c, 0, 0);
+  dm = { S, dpr, c, x, base, last: performance.now(), e: pick(['🐘', '🚒', '🍓', '🐙', '🦋', '🦁', '🚀']) };
+}
+function drawDemo(now) {
+  if (!$('#title').classList.contains('on')) return;
+  if (!dm || demo.width === 0) demoInit();
+  const { S, dpr } = dm, ddt = Math.min(.05, (now - dm.last) / 1000); dm.last = now;
+  if (BACK[back] && (dm.backT = (dm.backT || 0) + ddt) >= .15) { const x = dm.x; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1 - Math.exp(-BACK[back] * dm.backT); dm.backT = 0; x.drawImage(dm.base, 0, 0); x.restore(); }
+  dg.setTransform(dpr, 0, 0, dpr, 0, 0);
+  dg.fillStyle = '#fff3c9'; dg.fillRect(0, 0, S, S);
+  dg.font = `${S * .62}px ${EMOJI_FONT}`; dg.textAlign = 'center'; dg.textBaseline = 'middle';
+  dg.fillText(dm.e, S / 2, S / 2 + Math.sin(now / 400) * 3);
+  dg.setTransform(1, 0, 0, 1, 0, 0); dg.drawImage(dm.c, 0, 0);
+}
+let dLast = null;
+demo.addEventListener('pointerdown', e => { audio(); try { demo.setPointerCapture(e.pointerId); } catch (er) {} dLast = dpos(e); dscr(dLast, dLast); });
+demo.addEventListener('pointermove', e => { if (!dLast) return; const p = dpos(e); dscr(dLast, p); dLast = p; scratchSound(.6); });
+const dEnd = () => { dLast = null; scratchSound(0); };
+demo.addEventListener('pointerup', dEnd); demo.addEventListener('pointercancel', dEnd);
+function dpos(e) { const r = demo.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function dscr(a, b) {
+  const x = dm.x; x.globalCompositeOperation = 'destination-out'; x.lineCap = 'round'; x.lineWidth = dm.S * FAT[fat] * 2;
+  x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x + .01, b.y); x.stroke(); x.globalCompositeOperation = 'source-over';
+}
+
+/* ---------- ずかん ---------- */
+let bookFrom = 'title', bookTab = 'ani';
+function openBook(from) {
+  bookFrom = from;
+  if (from === 'game' && st) bookTab = st.it.photo ? 'home' : st.it.cat;
+  if (bookTab === 'home' && !photos.length) bookTab = 'ani';
+  show('book'); renderBook();
+}
+function renderBook() {
+  const t = T();
+  $('#tBook2').textContent = '📖 ' + t.book;
+  const tabs = $('#bookTabs'); tabs.innerHTML = '';
+  for (const c of catList().filter(c => c !== 'all')) {
+    const b = document.createElement('button');
+    const list = c === 'home' ? photos.map(p => p.id) : CATS[c].items.map(i => i[0]);
+    b.textContent = `${c === 'home' ? '📷' : CATS[c].icon} ${t.catName[c]}`;
+    if (c === bookTab) b.classList.add('sel');
+    if (list.length && list.every(id => book[id])) b.classList.add('full');
+    b.onclick = () => { bookTab = c; sfx.tap(); renderBook(); };
+    tabs.appendChild(b);
+  }
+  const grid = $('#bookGrid'); grid.innerHTML = '';
+  const list = bookTab === 'home' ? photos : ITEMS.filter(i => i.cat === bookTab);
+  for (const it of list) {
+    const r = book[it.id], b = document.createElement('button');
+    if (!r) b.className = 'yet';
+    else if (r.s) b.className = 'shiny';
+    b.innerHTML = it.photo ? (r ? '<img alt=""><span></span>' : '<div class="e">❓</div><span>？</span>') : `<div class="e">${it.e}</div><span></span>`;
+    if (it.photo && r) b.querySelector('img').src = it.url;
+    if (r) { b.querySelector('span').textContent = nameOf(it); if (r.n > 1) b.insertAdjacentHTML('beforeend', `<i>×${r.n}</i>`); }
+    else if (!it.photo) b.querySelector('span').textContent = '？';
+    b.onclick = () => {
+      if (!r) { sfx.tap(); return; }
+      b.classList.remove('hop'); void b.offsetWidth; b.classList.add('hop'); say('it_' + it.id);
+    };
+    grid.appendChild(b);
+  }
+  prepVoice(list.filter(i => !i.photo).map(i => 'it_' + i.id));
+  const all = ITEMS.length + photos.length, got = ITEMS.filter(i => book[i.id]).length + photos.filter(p => book[p.id]).length;
+  $('#bookSum').textContent = t.bookSum(got, all);
+}
+$('#bookBack').onclick = () => { if (bookFrom === 'game' && st) { show('game'); requestAnimationFrame(layout); } else { renderTitle(); show('title'); } };
+
+/* ---------- くす玉 ---------- */
+const fx = $('#fx'), fg = fx.getContext('2d');
+function confetti(gold) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  fx.width = innerWidth * dpr; fx.height = innerHeight * dpr;
+  const cols = gold ? ['#ffd700', '#fff1a8', '#ffb300', '#ffffff'] : ['#ff7a59', '#ffd23f', '#5aa9ff', '#7bc96f', '#c58cff', '#ff6f91'];
+  const ps = Array.from({ length: 90 }, () => ({ x: innerWidth / 2 + rnd(-40, 40), y: innerHeight * .4, vx: rnd(-320, 320), vy: rnd(-620, -200), r: rnd(0, 7), vr: rnd(-8, 8), c: pick(cols), s: rnd(6, 11) }));
+  let t0 = performance.now(), last = t0;
+  (function f(now) {
+    const dt = Math.min(.04, (now - last) / 1000); last = now;
+    fg.setTransform(dpr, 0, 0, dpr, 0, 0); fg.clearRect(0, 0, innerWidth, innerHeight);
+    for (const p of ps) { p.vy += 900 * dt; p.vx *= .99; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; fg.save(); fg.translate(p.x, p.y); fg.rotate(p.r); fg.fillStyle = p.c; fg.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); fg.restore(); }
+    if (now - t0 < 2200) requestAnimationFrame(f); else fg.clearRect(0, 0, innerWidth, innerHeight);
+  })(t0);
+}
+function showSay(t) { const s = $('#say'); s.textContent = t; s.classList.remove('on'); void s.offsetWidth; s.classList.add('on'); }
+
+renderTitle();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
