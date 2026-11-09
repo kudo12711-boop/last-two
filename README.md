@@ -26,7 +26,7 @@
 - むずかしさは ★〜★★★★（2さい〜5さい向け）。毎回ちがう迷路が自動でできます。
 - 声は Kokoro-82M（Apache-2.0）で作った音声を `meiro/voice/` に入れています。作り方は `/mnt/project-files/meiro/tools/`。
 
-## すうじで てんつなぎ（幼児向け）
+## てんつなぎ（幼児向け）
 
 遊ぶ: https://kudo12711-boop.github.io/last-two/tentsunagi/
 

@@ -307,7 +307,7 @@ function bfs(m, from) { // それぞれのマスまでの きょりと ひとつ
 }
 function route(m, from, to) {
   const { prev } = bfs(m, from), r = [to];
-  while (r[0] !== from) r.unshift(prev[r[0]]);
+  while (r[0] !== from) { if (prev[r[0]] < 0) return [from]; r.unshift(prev[r[0]]); } // とどかないときに 止まらないように
   return r;
 }
 function newMaze() {
@@ -336,9 +336,10 @@ function newMaze() {
 const board = $('#board'), cv = $('#cv'), ctx = cv.getContext('2d');
 let maze = null, path = [], got = new Set(), state = 'idle';
 let lay = { cell: 40, ox: 0, oy: 0, w: 0, h: 0, dpr: 1 };
-let hero = { x: 0, y: 0, tx: 0, ty: 0, hop: 0, shakeX: 0, shakeY: 0, shakeT: 0 };
+let hero = { x: 0, y: 0, way: [], hop: 0, shakeX: 0, shakeY: 0, shakeT: 0 };
 let hintUntil = 0, nudgeUntil = 0, cheered = false, bumps = 0, lastBump = 0, pops = [];
-let drag = null; // { id }
+let drag = null; // { id, last }
+let clearTimer = 0;
 
 function layout() {
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
@@ -349,7 +350,7 @@ function layout() {
   const cell = Math.floor(Math.min((W - pad * 2) / maze.cols, (H - pad * 2) / maze.rows));
   lay = { cell, w: cell * maze.cols, h: cell * maze.rows, dpr };
   lay.ox = Math.round((W - lay.w) / 2); lay.oy = Math.round((H - lay.h) / 2);
-  const p = center(path[path.length - 1]); hero.x = hero.tx = p.x; hero.y = hero.ty = p.y;
+  const p = center(path[path.length - 1]); hero.x = p.x; hero.y = p.y; hero.way = [];
 }
 function center(c) { return { x: lay.ox + (c % maze.cols + .5) * lay.cell, y: lay.oy + (((c / maze.cols) | 0) + .5) * lay.cell }; }
 function cellAt(x, y) {
@@ -359,7 +360,7 @@ function cellAt(x, y) {
 }
 
 function startGame(th) {
-  theme = th; state = 'play';
+  theme = th; state = 'play'; drag = null; clearTimeout(clearTimer);
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
   $('#game').classList.add('on');
   $('#clear').classList.remove('on');
@@ -380,7 +381,10 @@ function renderItems() {
 /* ---------- ゆびの うごき ---------- */
 function localXY(e) { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 cv.addEventListener('pointerdown', e => {
-  if (state !== 'play' || drag) return;
+  if (state !== 'play') return;
+  // 前の指の「はなした」が とどかなかったときも、あたらしい指で つづけられるように
+  if (drag && drag.id !== e.pointerId) { try { cv.releasePointerCapture(drag.id); } catch (err) {} }
+  drag = null;
   audio(); prepVoice();
   const p = localXY(e), cur = path[path.length - 1], hc = center(cur);
   const near = Math.hypot(p.x - hc.x, p.y - hc.y) < lay.cell * 1.0;
@@ -388,7 +392,7 @@ cv.addEventListener('pointerdown', e => {
   if (near) { /* キャラクターから */ }
   else if (idx >= 0) { path.length = idx + 1; sfx.back(); } // とおってきた線の とちゅうから やりなおし
   else { nudgeUntil = performance.now() + 1800; speak('here'); return; }
-  drag = { id: e.pointerId };
+  drag = { id: e.pointerId, last: center(path[path.length - 1]) };
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
   follow(p);
 });
@@ -400,21 +404,35 @@ cv.addEventListener('pointermove', e => {
 const endDrag = e => { if (drag && e.pointerId === drag.id) drag = null; };
 cv.addEventListener('pointerup', endDrag);
 cv.addEventListener('pointercancel', endDrag);
+cv.addEventListener('lostpointercapture', endDrag);
+document.addEventListener('visibilitychange', () => { drag = null; });
 
+// 指の うごきを こまかく区切って 1マスずつ たどる（はやく うごかしても かべを とびこえない）
 function follow(p) {
-  const target = cellAt(p.x, p.y), cur = path[path.length - 1];
-  if (target < 0 || target === cur) return;
-  // ちかくの マス（かべを とおらずに 3マス以内）なら そこまで すすむ
-  const { dist, prev } = bfs(maze, cur);
-  if (dist[target] > 0 && dist[target] <= 3) {
-    const r = [target];
-    while (prev[r[0]] !== cur) r.unshift(prev[r[0]]);
-    for (const n of r) stepTo(n);
-    return;
+  if (!drag) return;
+  const a = drag.last || p, d = Math.hypot(p.x - a.x, p.y - a.y);
+  const n = Math.max(1, Math.ceil(d / (lay.cell * .2)));
+  for (let i = 1; i <= n && state === 'play'; i++) {
+    const q = { x: a.x + (p.x - a.x) * i / n, y: a.y + (p.y - a.y) * i / n };
+    if (!followPoint(q)) return; // かべで 止まったら、その先は たどらない
+    if (drag) drag.last = q;
   }
-  // となりの マスなのに かべがある → ぽよん
+}
+function followPoint(p) {
+  const target = cellAt(p.x, p.y), cur = path[path.length - 1];
+  if (target < 0) return false;
+  if (target === cur) return true;
   const dx = target % maze.cols - cur % maze.cols, dy = ((target / maze.cols) | 0) - ((cur / maze.cols) | 0);
-  if (Math.abs(dx) + Math.abs(dy) === 1 || (Math.abs(dx) <= 1 && Math.abs(dy) <= 1)) bump(Math.sign(dx), Math.sign(dy));
+  if (Math.abs(dx) > 1 || Math.abs(dy) > 1) return false;
+  const nb = neighbors(maze, cur);
+  if (Math.abs(dx) + Math.abs(dy) === 1) {
+    if (nb.includes(target)) { stepTo(target); return true; }
+  } else { // ななめの角を かすめたときは、かべのない 曲がり方が あれば そっちを とおる
+    const mid = nb.find(c => neighbors(maze, c).includes(target));
+    if (mid != null) { stepTo(mid); if (state === 'play') stepTo(target); return true; }
+  }
+  bump(Math.sign(dx), Math.sign(dy)); // かべ → ぽよん
+  return false;
 }
 function stepTo(n) {
   if (path.length >= 2 && path[path.length - 2] === n) { path.pop(); sfx.back(); }
@@ -422,7 +440,7 @@ function stepTo(n) {
     path.push(n); sfx.step(path.length);
     if (maze.items.includes(n) && !got.has(n)) collect(n);
   }
-  const p = center(n); hero.tx = p.x; hero.ty = p.y; hero.hop = 1;
+  hero.way.push(center(n)); hero.hop = 1;
   if (n === maze.goal) return goal();
   const { dist } = bfs(maze, n);
   if (!cheered && dist[maze.goal] > 0 && dist[maze.goal] <= Math.max(2, Math.round(maze.sol.length * .3)) && maze.sol.length > 6) { cheered = true; speak('cheer'); }
@@ -450,7 +468,8 @@ function goal() {
   const book = store.get('meiro-book', []);
   const r = pick(REWARDS); book.push(r); store.set('meiro-book', book);
   $('#reward').textContent = r;
-  setTimeout(() => $('#clear').classList.add('on'), 1700);
+  clearTimeout(clearTimer);
+  clearTimer = setTimeout(() => { if (state === 'clear') $('#clear').classList.add('on'); }, 1700);
 }
 $('#btnHint').onclick = () => {
   if (state !== 'play') return;
@@ -505,7 +524,6 @@ function draw(now) {
   ctx.strokeStyle = theme.trail; ctx.globalAlpha = .85; ctx.lineWidth = cell * .36;
   ctx.beginPath();
   path.forEach((c, i) => { const p = center(c); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
-  ctx.lineTo(hero.x, hero.y);
   ctx.stroke(); ctx.globalAlpha = 1;
   // あつめるもの
   for (const c of maze.items) if (!got.has(c)) { const p = center(c); emoji(theme.item, p.x, p.y + Math.sin(now / 400 + c) * cell * .04, cell * .5); }
@@ -524,7 +542,13 @@ function draw(now) {
   const gs = state === 'clear' ? 1.25 + Math.sin(now / 120) * .1 : 1 + Math.sin(now / 300) * .06;
   emoji(theme.goal, gc.x, gc.y, cell * .66 * gs);
   // キャラクター
-  hero.x += (hero.tx - hero.x) * .35; hero.y += (hero.ty - hero.y) * .35;
+  // マスの まんなかを 順に たどるので、かべの上を ななめに 横ぎらない
+  let mv = cell * (.22 + hero.way.length * .08);
+  while (hero.way.length && mv > 0) {
+    const w = hero.way[0], ddx = w.x - hero.x, ddy = w.y - hero.y, dd = Math.hypot(ddx, ddy);
+    if (dd <= mv) { hero.x = w.x; hero.y = w.y; mv -= dd; hero.way.shift(); }
+    else { hero.x += ddx / dd * mv; hero.y += ddy / dd * mv; mv = 0; }
+  }
   hero.hop *= .85;
   let bx = 0, by = 0;
   const st = (now - hero.shakeT) / 260;
@@ -572,7 +596,7 @@ function renderTitle() {
   $('#btnSnd').textContent = soundOn ? '🔊 おと あり' : '🔇 おと なし';
 }
 function goTitle() {
-  state = 'idle'; drag = null; maze = null;
+  state = 'idle'; drag = null; maze = null; clearTimeout(clearTimer);
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
   $('#title').classList.add('on'); $('#clear').classList.remove('on');
   document.querySelector('meta[name=theme-color]').content = '#ffe9a8';
