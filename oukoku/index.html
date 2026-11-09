@@ -35,7 +35,11 @@ button{font:inherit;color:inherit;cursor:pointer}
   padding:14px 30px;box-shadow:0 4px 0 #d94f87;min-height:56px}
 .big:active{transform:translateY(3px);box-shadow:0 1px 0 #d94f87}
 .big.sub{background:var(--panel);color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
-.icon-btn{border:2px solid var(--line);background:var(--panel);border-radius:16px;min-width:52px;height:52px;
+.quit-btn{border:2px solid var(--line);background:var(--panel);border-radius:999px;height:48px;padding:0 16px;font-size:16px;
+  display:flex;align-items:center;gap:6px;box-shadow:0 3px 0 var(--line);white-space:nowrap;flex:none}
+.quit-btn:active{transform:translateY(2px);box-shadow:none}
+.backlink{color:var(--sub);font-size:14px;text-decoration:none;border-bottom:1px dashed var(--sub)}
+.icon-btn{border:2px solid var(--line);background:var(--panel);border-radius:16px;min-width:48px;height:52px;
   font-size:24px;display:grid;place-items:center;position:relative;padding:0 8px;box-shadow:0 3px 0 var(--line)}
 .icon-btn:active{transform:translateY(2px);box-shadow:none}
 .icon-btn .lbl{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:10px;white-space:nowrap;color:var(--sub)}
@@ -82,7 +86,7 @@ h1.logo{font-size:clamp(34px,10vw,56px);margin:0;text-align:center;letter-spacin
 
 /* kingdom */
 #kingdom{padding-left:0;padding-right:0;padding-bottom:0}
-.topbar{display:flex;align-items:center;gap:8px;padding:0 10px 18px;flex:none}
+.topbar{display:flex;align-items:center;gap:6px;padding:0 10px 18px;flex:none}
 .hearts{display:flex;align-items:center;gap:6px;background:var(--panel);border:2px solid var(--line);border-radius:999px;
   padding:4px 12px 4px 8px;font-weight:700;font-size:18px;min-height:44px}
 .prog{flex:none;padding:0 14px 8px;display:flex;align-items:center;gap:10px}
@@ -200,6 +204,7 @@ input[type=range]{width:220px;accent-color:var(--accent)}
     <h1 class="logo" data-t="title"></h1>
     <p data-t="lead" style="margin:0;color:var(--sub);font-size:16px;max-width:340px"></p>
     <button class="big" id="startBtn" data-t="start"></button>
+    <a class="backlink" href="../games/" data-t="otherGames"></a>
     <button class="big sub" id="resetBtn" data-t="newGame" style="display:none;font-size:15px;min-height:44px;padding:8px 18px"></button>
   </div>
 </section>
@@ -223,6 +228,7 @@ input[type=range]{width:220px;accent-color:var(--accent)}
 <!-- おうこく -->
 <section class="screen" id="kingdom">
   <div class="topbar">
+    <button class="icon-btn" id="btnEnd" aria-label="end">🚪<span class="lbl" data-t="end"></span></button>
     <div class="hearts">❤️ <span id="hc">0</span></div>
     <div style="flex:1"></div>
     <button class="icon-btn" id="btnMail" aria-label="mail">📮<span class="lbl" data-t="mail"></span></button>
@@ -240,7 +246,7 @@ input[type=range]{width:220px;accent-color:var(--accent)}
   <div class="ghead">
     <div class="who" id="gWho"></div>
     <div class="say" id="gSay"></div>
-    <button class="icon-btn" id="gQuit" aria-label="back">↩️</button>
+    <button class="quit-btn" id="gQuit"><span>✖</span> <b data-t="quit"></b></button>
   </div>
   <div class="garea" id="gArea"></div>
 </section>
@@ -270,7 +276,9 @@ var TEXT = {
   ja:{
     title:"ちいさな おうこく", lead:"プリンセス・おうじさま・きしさま・さむらいさまに なって、むらの みんなの おねがいを かなえよう",
     start:"はじめる", cont:"つづきから", newGame:"さいしょから やりなおす", whoAreYou:"だれに なる？",
-    decide:"これで けってい！", back:"もどる", paint:"かいてもらう", mail:"おてがみ", closet:"きがえ", gallery:"しょうぞうが", menu:"せってい",
+    decide:"これで けってい！", quit:"やめる", end:"おわる", otherGames:"← ほかの ゲームで あそぶ",
+    endAsk:"きょうは ここで おわりに する？\nおうこくは ちゃんと ほぞん されているよ。つぎは「つづきから」で あそべるよ。", endYes:"おわる", endNo:"まだ あそぶ", bye:"またね！",
+    quitAsk:"この おねがいを やめて おうこくに もどる？", quitYes:"やめる", quitNo:"つづける", back:"もどる", paint:"かいてもらう", mail:"おてがみ", closet:"きがえ", gallery:"しょうぞうが", menu:"せってい",
     roles:{princess:"プリンセス", prince:"おうじさま", knight:"きしさま", samurai:"さむらいさま"},
     tabs:{role:"だれ", skin:"はだ", hair:"かみがた", hairColor:"かみのいろ", color:"ふくのいろ", acc:"かざり", pet:"なかま", photo:"かお", name:"なまえ"},
     namePh:"なまえ（なくてもOK）", nameNote:"おうちのひとが いれてね",
@@ -315,7 +323,9 @@ var TEXT = {
   en:{
     title:"My Little Kingdom", lead:"Be a princess, prince, knight or samurai, and help everyone in the village!",
     start:"Start", cont:"Continue", newGame:"Start over", whoAreYou:"Who will you be?",
-    decide:"All set!", back:"Back", paint:"Paint me", mail:"Mail", closet:"Dress up", gallery:"Portraits", menu:"Settings",
+    decide:"All set!", quit:"Stop", end:"Quit", otherGames:"← Play other games",
+    endAsk:"Stop playing for today?\nYour kingdom is saved. Tap \"Continue\" next time.", endYes:"Quit", endNo:"Keep playing", bye:"See you!",
+    quitAsk:"Stop this request and go back to the kingdom?", quitYes:"Stop", quitNo:"Keep going", back:"Back", paint:"Paint me", mail:"Mail", closet:"Dress up", gallery:"Portraits", menu:"Settings",
     roles:{princess:"Princess", prince:"Prince", knight:"Knight", samurai:"Samurai"},
     tabs:{role:"Who", skin:"Skin", hair:"Hair", hairColor:"Hair color", color:"Outfit", acc:"Head", pet:"Buddy", photo:"Face", name:"Name"},
     namePh:"Name (optional)", nameNote:"A grown-up can type it",
@@ -804,6 +814,12 @@ function enterKingdom(){
     c.querySelector("#wOk").onclick=closeDialog; voice("welcome_"+S.role, msg);
   }
 }
+$("#btnEnd").onclick=function(){
+  sfx("tap");
+  var c=dialog('<div class="who">🌙</div><p class="say" style="font-size:18px">'+esc(T().endAsk).replace(/\n/g,"<br>")+'</p><div class="btns"><button class="big sub" id="eN">'+esc(T().endNo)+'</button><button class="big" id="eY">🚪 '+esc(T().endYes)+'</button></div>');
+  c.querySelector("#eN").onclick=closeDialog;
+  c.querySelector("#eY").onclick=function(){ closeDialog(); save(); renderTitle(); show("title"); toast("👋 "+T().bye); };
+};
 $("#btnCloset").onclick=function(){ sfx("tap"); openCloset(false); };
 $("#btnGallery").onclick=function(){ sfx("tap"); renderGallery(); show("gallery"); };
 $("#btnMenu").onclick=function(){
@@ -873,7 +889,14 @@ function startGame(id, ctx, ask){
   GAMES[id](a, G, ctx);
 }
 function later(fn,ms){ var t=setTimeout(function(){ if(CUR && !CUR.over) fn(); }, ms); if(CUR) CUR.timers.push(t); return t; }
-$("#gQuit").onclick=function(){ if(CUR){ CUR.over=true; CUR.timers.forEach(clearTimeout); } CUR=null; enterKingdom(); };
+function quitGame(){ if(CUR){ CUR.over=true; CUR.timers.forEach(clearTimeout); } CUR=null; enterKingdom(); }
+$("#gQuit").onclick=function(){
+  if(!CUR || CUR.over){ return; }
+  sfx("tap");
+  var c=dialog('<p class="say">'+esc(T().quitAsk)+'</p><div class="btns"><button class="big sub" id="qN">'+esc(T().quitNo)+'</button><button class="big" id="qY">'+esc(T().quitYes)+'</button></div>');
+  c.querySelector("#qN").onclick=closeDialog;
+  c.querySelector("#qY").onclick=function(){ closeDialog(); quitGame(); };
+};
 function say(t,k){ $("#gSay").textContent=t; voice(k||(CUR?CUR.id:"")+"_wrong", t); }
 function finishGame(){
   if(!CUR || CUR.over) return; CUR.over=true;
