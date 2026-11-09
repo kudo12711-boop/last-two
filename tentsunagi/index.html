@@ -204,7 +204,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
   <h2>おうちのかたへ</h2>
   ・光っている点から、つぎの点へ指でなぞると線がつながります。点をタップするだけでもつながるので、小さい子でも遊べます。<br>
   ・全部つなぐと、絵に色がついて動き出し、声や音が出ます。できた絵はシールちょうにたまります。<br>
-  ・「むずかしさ」の★で点の数（5・10・15・20）を選び、−／＋で3〜30まで細かく変えられます。点が少ないときは、絵の残りの部分が はじめから描いてあります。<br>
+  ・「むずかしさ」で点の数（5・10・15・20・30・45）を選び、−／＋で3〜60まで細かく変えられます（ABCは26まで、あいうえおは46まで）。点が多いときは、おしろ・きょうりゅう・タコなどの むずかしい絵が出てきます。点が少ないときは、絵の残りの部分が はじめから描いてあります。<br>
   ・「かぞえかた」で 1,2,3／2,4,6（2とびの数え方）／あいうえお順／ABC順 を選べます。つなぐたびに声で読みあげるので、数や文字を覚える練習にもなります。<br>
   ・「じぶんで つくる」で、おうちの人が指で描いた形や、紙に描いた絵・写真のりんかくから、オリジナルの点つなぎが作れます。
   <h3>💡 つぎの点</h3>
@@ -295,7 +295,25 @@ const sfx = {
   bfly() { for (let i = 0; i < 6; i++) tone(1200 + i * 150, i * .08, .1, 'sine', .06); },
   rabbit() { for (let i = 0; i < 2; i++) tone(260, i * .45, .25, 'sine', .3, 700); },
   car() { tone(440, 0, .18, 'square', .1); tone(440, .25, .25, 'square', .1); noise(.6, 1.2, .12, 200, 600, .8); },
-  custom() { [784, 988, 1175, 1568].forEach((f, i) => tone(f, i * .09, .2, 'triangle', .14)); }
+  custom() { [784, 988, 1175, 1568].forEach((f, i) => tone(f, i * .09, .2, 'triangle', .14)); },
+  tulip() { [659, 784, 988].forEach((f, i) => tone(f, i * .15, .4, 'sine', .1)); },
+  umbrella() { noise(0, .15, .3, 1800, 900, 1); tone(500, .05, .2, 'sine', .15, 900); },
+  snowman() { [1568, 1760, 2093, 2349].forEach((f, i) => tone(f, i * .12, .5, 'sine', .07)); },
+  balloon() { tone(300, 0, .9, 'sine', .14, 700); },
+  icecream() { [1319, 1568, 2093].forEach((f, i) => tone(f, i * .08, .25, 'triangle', .1)); },
+  bear() { tone(110, 0, .6, 'sawtooth', .08, 80); noise(0, .5, .12, 300, 200, 1); },
+  pig() { for (let i = 0; i < 2; i++) { tone(180, i * .3, .18, 'sawtooth', .1, 140); noise(i * .3, .18, .1, 400, 300, 2); } },
+  turtle() { tone(220, 0, .3, 'sine', .12, 200); tone(196, .4, .4, 'sine', .12, 180); },
+  chick() { for (let i = 0; i < 4; i++) tone(2400, i * .14, .08, 'sine', .1, 3200); },
+  plane() { noise(0, 1.6, .2, 600, 2000, .7); tone(220, 0, 1.4, 'sawtooth', .04, 300); },
+  dolphin() { for (let i = 0; i < 5; i++) tone(2000 + i * 200, i * .1, .08, 'sine', .1, 3500); },
+  castle() { [523, 523, 523, 659, 784, 659, 784].forEach((f, i) => tone(f, [0, .12, .24, .36, .6, .78, .9][i], i === 6 ? .6 : .14, 'square', .08)); },
+  dino() { tone(90, 0, .9, 'sawtooth', .12, 60); noise(0, .8, .2, 250, 150, 1); },
+  octopus() { for (let i = 0; i < 4; i++) tone(rnd(300, 500), i * .15, .15, 'sine', .14, rnd(150, 250)); },
+  crown() { sfx.star(); },
+  tree() { [1319, 1319, 1319, 1319, 1319, 1319, 1319, 1568, 1047, 1175, 1319].forEach((f, i) => tone(f, i * .14, .12, 'sine', .1)); },
+  train() { tone(880, 0, .7, 'square', .06); tone(1109, 0, .7, 'square', .05); for (let i = 0; i < 6; i++) noise(.8 + i * .2, .12, .14, 900, 500, 1); },
+  elephant() { tone(300, 0, .9, 'sawtooth', .1, 520); tone(150, 0, .9, 'square', .04, 260); }
 };
 
 /* ---------- こえ ---------- */
@@ -309,7 +327,7 @@ function numRead(n) {
   const t = Math.floor(n / 10), o = n % 10;
   return ['', 'じゅう', 'にじゅう', 'さんじゅう', 'よんじゅう', 'ごじゅう', 'ろくじゅう'][t] + (o ? NUMS[o - 1] : '');
 }
-const KANA = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほ';
+const KANA = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん';
 const ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const ABC_READ = ['エー', 'ビー', 'シー', 'ディー', 'イー', 'エフ', 'ジー', 'エイチ', 'アイ', 'ジェー', 'ケー', 'エル', 'エム', 'エヌ', 'オー', 'ピー', 'キュー', 'アール', 'エス', 'ティー', 'ユー', 'ブイ', 'ダブリュー', 'エックス', 'ワイ', 'ゼット'];
 // 声ファイル（voice/<声>/<key>.mp3）と、ないときの よみあげ文
@@ -438,7 +456,14 @@ function P() {
   const p = [];
   const api = {
     m(x, y) { p.push([x, y]); return api; },
-    l(x, y) { p.push([x, y]); return api; },
+    l(x, y) { const q = p[p.length - 1]; if (!q || Math.hypot(q[0] - x, q[1] - y) > .01) p.push([x, y]); return api; },
+    // まるの いちぶ（ど。0=みぎ、90=した、ふえる ほうが とけいまわり）
+    a(cx, cy, r, a0, a1, n) { return api.e(cx, cy, r, r, a0, a1, n); },
+    e(cx, cy, rx, ry, a0, a1, n) {
+      n = n || Math.max(6, Math.ceil(Math.abs(a1 - a0) / 6));
+      for (let k = 0; k <= n; k++) { const a = (a0 + (a1 - a0) * k / n) * Math.PI / 180; api.l(cx + Math.cos(a) * rx, cy + Math.sin(a) * ry); }
+      return api;
+    },
     c(x1, y1, x2, y2, x, y, n = 18) {
       const [x0, y0] = p[p.length - 1];
       for (let k = 1; k <= n; k++) {
@@ -617,10 +642,257 @@ const PICS = [
       const p = t % 4.5, spin = p < 1.2 ? 0 : (p < 2.4 ? Math.pow((p - 1.2) / 1.2, 2) * 18 : -(1 - ease((p - 2.4) / 1.8)) * 18);
       for (const x of [27, 73]) wheel(g, x, 72, 10, spin);
       if (p < 1.4) for (let i = 0; i < 3; i++) { const k = ((t * 1.5) + i / 3) % 1; g.globalAlpha *= 1 - k; ell(g, 4 - k * 10, 66 - k * 6, 2 + k * 4, 2 + k * 4, '#cfcfcf'); g.globalAlpha /= Math.max(.001, 1 - k); }
+    } },
+  /* ---- v0.2 で ふやした え（hard: 点が おおい むずかしい え） ---- */
+  { id: 'tulip', name: 'チューリップ', emoji: '🌷', fill: '#ff6f91', bg: '#e8f7e0',
+    path() { return P().m(50, 10).l(60, 26).l(72, 14).c(78, 34, 74, 52, 50, 56).c(26, 52, 22, 34, 28, 14).l(40, 26).l(50, 10).pts; },
+    anim(t) { return { rot: Math.sin(t * 1.8) * .08, oy: 96 }; },
+    back(g) {
+      rect(g, 48, 54, 4, 42, '#4caf50');
+      g.save(); g.translate(60, 78); g.rotate(-.6); ell(g, 0, 0, 12, 4.5, '#66bb6a'); g.restore();
+      g.save(); g.translate(40, 84); g.rotate(.6); ell(g, 0, 0, 11, 4, '#66bb6a'); g.restore();
+    },
+    art(g) {
+      g.strokeStyle = '#e0507a'; g.lineWidth = 1.8; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(40, 26); g.quadraticCurveTo(44, 42, 50, 54); g.moveTo(60, 26); g.quadraticCurveTo(56, 42, 50, 54); g.stroke();
+      g.globalAlpha *= .5; ell(g, 34, 30, 3, 8, '#fff'); g.globalAlpha /= .5;
+    } },
+  { id: 'umbrella', name: 'かさ', emoji: '☂️', fill: '#5aa9ff', bg: '#e0f0ff',
+    path() { return P().m(50, 12).c(76, 12, 94, 30, 94, 50).q(83, 42, 72, 50).q(61, 42, 50, 50).q(39, 42, 28, 50).q(17, 42, 6, 50).c(6, 30, 24, 12, 50, 12).pts; },
+    anim(t) { return { rot: Math.sin(t * 2.2) * .07, oy: 86 }; },
+    back(g, t) {
+      g.strokeStyle = '#7a4a26'; g.lineWidth = 3; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(50, 48); g.lineTo(50, 82); g.arc(44, 82, 6, 0, Math.PI); g.stroke();
+      g.beginPath(); g.moveTo(50, 12); g.lineTo(50, 6); g.stroke();
+      for (let i = 0; i < 7; i++) { const k = (t * .8 + i / 7) % 1, x = 6 + (i * 37) % 90; ell(g, x, -6 + k * 30, 1.2, 2.6, 'rgba(90,169,255,.7)'); }
+    },
+    art(g) {
+      g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 2;
+      g.beginPath(); for (const x of [28, 50, 72]) { g.moveTo(50, 12); g.quadraticCurveTo(x + (x - 50) * .1, 26, x, 48); } g.stroke();
+      ell(g, 24, 30, 3, 3, '#ffd23f'); ell(g, 76, 30, 3, 3, '#ffd23f'); ell(g, 50, 30, 3, 3, '#ff6f91');
+    } },
+  { id: 'snowman', name: 'ゆきだるま', emoji: '⛄', fill: '#ffffff', bg: '#dbeeff',
+    path() { return P().m(50, 16).a(50, 32, 16, -90, 57.9).a(50, 68, 24, -69.2, 249.2).a(50, 32, 16, 122.1, 270).pts; },
+    anim(t) { return { rot: Math.sin(t * 2.6) * .05, oy: 92 }; },
+    back(g, t) {
+      g.strokeStyle = '#7a4a26'; g.lineWidth = 2.5; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(30, 60); g.lineTo(12, 48 + Math.sin(t * 4) * 3); g.moveTo(70, 60); g.lineTo(88, 48 - Math.sin(t * 4) * 3); g.stroke();
+      for (let i = 0; i < 8; i++) { const k = (t * .3 + i / 8) % 1; sparkle(g, 4 + (i * 53) % 92, -4 + k * 104, 1.8, '#fff'); }
+    },
+    art(g, t) {
+      rect(g, 38, 12, 24, 5, '#333'); rect(g, 42, 0, 16, 13, '#333'); rect(g, 42, 9, 16, 3, '#ff5a5a');
+      face(g, 44, 30, 56, 30, 50, 38, 2.2, t);
+      poly(g, [[50, 33], [62, 35], [50, 36]], '#ff9f1a');
+      rect(g, 34, 45, 32, 5, '#ff5a5a'); rect(g, 56, 45, 5, 12, '#ff5a5a');
+      for (const y of [60, 70, 80]) ell(g, 50, y, 2.2, 2.2, '#4a3b2a');
+    } },
+  { id: 'balloon', name: 'ふうせん', emoji: '🎈', fill: '#ff5a5a', bg: '#fff0f0',
+    path() { return P().m(50, 8).c(74, 8, 84, 30, 80, 46).c(76, 62, 58, 72, 53, 74).l(56, 80).l(44, 80).l(47, 74).c(42, 72, 24, 62, 20, 46).c(16, 30, 26, 8, 50, 8).pts; },
+    anim(t) { return { dy: Math.sin(t * 1.6) * 5, rot: Math.sin(t * 1.3) * .06, oy: 80 }; },
+    back(g, t) { g.strokeStyle = '#888'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(50, 80); g.bezierCurveTo(46 + Math.sin(t * 3) * 4, 86, 54, 92, 50, 100); g.stroke(); },
+    art(g) { g.globalAlpha *= .6; ell(g, 36, 26, 5, 10, '#fff'); g.globalAlpha /= .6; } },
+  { id: 'icecream', name: 'アイスクリーム', emoji: '🍦', fill: '#ffd6e7', bg: '#fff4e0',
+    path() { return P().m(50, 10).c(66, 10, 72, 20, 70, 30).c(80, 32, 82, 44, 74, 48).l(50, 94).l(26, 48).c(18, 44, 20, 32, 30, 30).c(28, 20, 34, 10, 50, 10).pts; },
+    anim(t) { return { rot: Math.sin(t * 3) * .05, oy: 94 }; },
+    art(g, t) {
+      poly(g, [[26, 48], [74, 48], [50, 94]], '#e8b56a');
+      g.strokeStyle = '#c98f3e'; g.lineWidth = 1.4; g.beginPath();
+      for (let i = 1; i < 5; i++) { g.moveTo(26 + i * 10, 48); g.lineTo(50 + (i - 2.5) * 3, 90); }
+      for (let i = 1; i < 4; i++) { const y = 48 + i * 11, w = 24 * (1 - i * 11 / 46); g.moveTo(50 - w, y); g.lineTo(50 + w, y); }
+      g.stroke();
+      g.save(); g.beginPath(); g.moveTo(20, 46); g.bezierCurveTo(20, 36, 30, 30, 50, 32); g.bezierCurveTo(70, 30, 80, 36, 80, 46); g.closePath(); g.fillStyle = '#a5e3c9'; g.fill(); g.restore();
+      ell(g, 50, 6 + Math.sin(t * 4) * .8, 5, 5, '#ff3b5c'); g.strokeStyle = '#4caf50'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(51, 2); g.quadraticCurveTo(54, -4, 58, -4); g.stroke();
+      for (const [x, y, c] of [[40, 20, '#ffd23f'], [58, 18, '#5aa9ff'], [46, 26, '#7bc96f'], [62, 26, '#ff8a3d'], [36, 40, '#ff6f91'], [62, 40, '#c58cff']]) rect(g, x, y, 3, 1.4, c);
+    } },
+  { id: 'bear', name: 'くま', emoji: '🐻', fill: '#c68a53', bg: '#f4ead8',
+    path() { return P().m(31.6, 29.8).a(50, 56, 32, -125, -55).a(74, 24, 11, 134, 435).a(50, 56, 32, -25, 205).a(26, 24, 11, 105, 406).pts; },
+    anim(t) { return { rot: Math.sin(t * 2) * .06, oy: 88 }; },
+    art(g, t) {
+      ell(g, 26, 24, 6, 6, '#e8b98a'); ell(g, 74, 24, 6, 6, '#e8b98a');
+      ell(g, 50, 70, 14, 11, '#f0d2a8');
+      ell(g, 50, 63, 4.5, 3.2, '#3a2a1a');
+      const blink = (t % 3) > 2.85;
+      for (const x of [38, 62]) { if (blink) { g.strokeStyle = '#3a2a1a'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(x - 3, 54); g.lineTo(x + 3, 54); g.stroke(); } else { ell(g, x, 53, 3.2, 4, '#3a2a1a'); ell(g, x - 1, 51.6, 1, 1.2, '#fff'); } }
+      g.strokeStyle = '#3a2a1a'; g.lineWidth = 2; g.lineCap = 'round'; g.beginPath(); g.moveTo(50, 66); g.lineTo(50, 71); g.quadraticCurveTo(46, 76, 42, 73); g.moveTo(50, 71); g.quadraticCurveTo(54, 76, 58, 73); g.stroke();
+      ell(g, 30, 66, 5, 3, 'rgba(255,120,150,.4)'); ell(g, 70, 66, 5, 3, 'rgba(255,120,150,.4)');
+    } },
+  { id: 'pig', name: 'ぶた', emoji: '🐷', fill: '#ffb3c8', bg: '#fff0f4',
+    path() { return P().m(20, 14).e(50, 58, 36, 30, -118, -62).l(80, 14).e(50, 58, 36, 30, -30, 210).l(20, 14).pts; },
+    anim(t) { const b = Math.abs(Math.sin(t * 3)); return { dy: -b * 4, oy: 88 }; },
+    art(g, t) {
+      poly(g, [[24, 22], [32, 33], [24, 36]], '#ff8fab'); poly(g, [[76, 22], [68, 33], [76, 36]], '#ff8fab');
+      ell(g, 50, 68, 14, 10, '#ff8fab'); ell(g, 45, 68, 2.6, 3.6, '#c2557a'); ell(g, 55, 68, 2.6, 3.6, '#c2557a');
+      const blink = (t % 3.4) > 3.25;
+      for (const x of [36, 64]) { if (blink) { g.strokeStyle = '#3a2a1a'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(x - 3, 52); g.lineTo(x + 3, 52); g.stroke(); } else { ell(g, x, 52, 3, 3.8, '#3a2a1a'); ell(g, x - 1, 50.8, 1, 1.1, '#fff'); } }
+      ell(g, 26, 68, 5, 3, 'rgba(255,90,130,.35)'); ell(g, 74, 68, 5, 3, 'rgba(255,90,130,.35)');
+    } },
+  { id: 'turtle', name: 'かめ', emoji: '🐢', fill: '#7bc96f', bg: '#e0f4f0', hard: true,
+    path() { return P().m(45, 24).c(62, 24, 74, 38, 76, 58).l(80, 52).c(82, 42, 96, 42, 96, 52).c(96, 60, 88, 62, 82, 60).l(76, 63).l(74, 72).l(66, 72).l(64, 64).l(30, 64).l(28, 72).l(20, 72).l(18, 63).l(8, 64).l(14, 58).c(16, 38, 28, 24, 45, 24).pts; },
+    anim(t) { return { dx: Math.sin(t * .9) * 6, dy: -Math.abs(Math.sin(t * 3.6)) * 1.2 }; },
+    art(g, t) {
+      rect(g, 14, 58, 62, 6, '#f2e3a0');
+      g.strokeStyle = '#3f8f36'; g.lineWidth = 1.8; g.lineJoin = 'round';
+      const hex = (cx, cy, r) => { g.beginPath(); for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + Math.PI / 6; g.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); } g.closePath(); g.stroke(); };
+      hex(45, 42, 8); hex(30, 48, 6); hex(60, 48, 6); hex(45, 28, 3.5);
+      ell(g, 90, 49, 2, 2.4, '#3a2a1a'); ell(g, 89.4, 48.2, .7, .7, '#fff');
+      g.strokeStyle = '#3a2a1a'; g.lineWidth = 1.4; g.beginPath(); g.arc(90, 54, 3, .2, 1.4); g.stroke();
+    } },
+  { id: 'chick', name: 'ひよこ', emoji: '🐤', fill: '#ffd23f', bg: '#fff8d6',
+    path() { return P().m(44, 25).l(42, 12).l(50, 20).l(56, 10).l(57, 25).a(50, 58, 34, -78, -10).l(96, 58).a(50, 58, 34, 10, 258).l(44, 25).pts; },
+    anim(t) { const b = Math.abs(Math.sin(t * 4)); return { dy: -b * 6, sy: 1 - (1 - b) * .05, oy: 94 }; },
+    back(g) { g.strokeStyle = '#ff9f1a'; g.lineWidth = 2.6; g.lineCap = 'round'; g.beginPath(); for (const x of [40, 60]) { g.moveTo(x, 90); g.lineTo(x, 96); g.moveTo(x - 4, 98); g.lineTo(x, 96); g.lineTo(x + 4, 98); } g.stroke(); },
+    art(g, t) {
+      poly(g, [[83, 52], [96, 58], [83, 64]], '#ff9f1a');
+      const blink = (t % 2.8) > 2.65;
+      if (blink) { g.strokeStyle = '#3a2a1a'; g.lineWidth = 2.4; g.beginPath(); g.moveTo(66, 46); g.lineTo(72, 46); g.stroke(); } else { ell(g, 69, 46, 3.4, 4.2, '#3a2a1a'); ell(g, 68, 44.6, 1.1, 1.2, '#fff'); }
+      ell(g, 72, 58, 5, 3, 'rgba(255,120,150,.45)');
+      g.save(); g.translate(40, 62); g.rotate(Math.sin(t * 10) * .25); ell(g, 0, 0, 14, 9, '#ffc400'); g.restore();
+    } },
+  { id: 'plane', name: 'ひこうき', emoji: '✈️', fill: '#e8edf7', bg: '#d6ecff',
+    path() { return P().m(94, 52).c(94, 46, 88, 44, 80, 44).l(60, 44).l(48, 22).l(40, 22).l(44, 44).l(22, 44).l(14, 30).l(8, 30).l(10, 48).c(10, 54, 14, 58, 22, 58).l(44, 58).l(36, 78).l(46, 78).l(62, 58).l(80, 58).c(88, 58, 94, 56, 94, 52).pts; },
+    anim(t) {
+      const p = t % 4.5;
+      if (p < 1.5) return { dy: Math.sin(t * 3) * 2, rot: Math.sin(t * 3) * .03 };
+      if (p < 2.6) return { dx: Math.pow((p - 1.5) / 1.1, 2) * 180, dy: -Math.pow((p - 1.5) / 1.1, 2) * 30, rot: -.12 };
+      return { dx: -180 * (1 - ease((p - 2.6) / 1.9)), dy: 20 * (1 - ease((p - 2.6) / 1.9)) };
+    },
+    art(g) {
+      poly(g, [[60, 44], [48, 22], [40, 22], [44, 44]], '#5aa9ff'); poly(g, [[44, 58], [36, 78], [46, 78], [62, 58]], '#5aa9ff');
+      poly(g, [[22, 44], [14, 30], [8, 30], [10, 44]], '#ff5a5a');
+      for (let i = 0; i < 6; i++) ell(g, 30 + i * 8, 50, 2, 2.2, '#9fd0ff');
+      poly(g, [[84, 45], [91, 48], [92, 51], [84, 51]], '#9fd0ff');
+      rect(g, 12, 53, 72, 1.6, '#5aa9ff');
+    } },
+  { id: 'dolphin', name: 'イルカ', emoji: '🐬', fill: '#6fb8ff', bg: '#d6f0ff',
+    path() { return P().m(94, 54).l(84, 48).c(78, 32, 60, 28, 52, 30).l(44, 16).l(40, 34).c(30, 40, 22, 48, 16, 52).l(6, 40).l(10, 56).l(4, 70).l(18, 60).c(30, 68, 54, 72, 66, 66).l(62, 80).l(74, 64).c(82, 60, 90, 58, 94, 54).pts; },
+    anim(t) { const s = Math.sin(t * 2.4); return { dy: -Math.max(0, s) * 16, rot: Math.cos(t * 2.4) * -.22 }; },
+    art(g, t) {
+      g.save(); g.beginPath(); g.moveTo(84, 54); g.bezierCurveTo(70, 66, 40, 64, 20, 58); g.bezierCurveTo(34, 68, 56, 72, 70, 64); g.closePath(); g.fillStyle = '#d8ecff'; g.fill(); g.restore();
+      ell(g, 78, 46, 2.3, 2.6, '#1d2b4a'); ell(g, 77.3, 45.2, .8, .8, '#fff');
+      g.strokeStyle = '#1d2b4a'; g.lineWidth = 1.6; g.lineCap = 'round'; g.beginPath(); g.moveTo(85, 52); g.quadraticCurveTo(89, 54, 93, 53); g.stroke();
+    },
+    front(g, t) {
+      g.fillStyle = 'rgba(90,184,240,.55)'; g.beginPath(); g.moveTo(-10, 104);
+      for (let x = -10; x <= 110; x += 4) g.lineTo(x, 90 + Math.sin(x * .12 + t * 3) * 2.5);
+      g.lineTo(110, 104); g.closePath(); g.fill();
+    } },
+  { id: 'castle', name: 'おしろ', emoji: '🏰', fill: '#d8d0f0', bg: '#e8e0ff', hard: true,
+    path() {
+      const a = P().m(8, 14);
+      const crenel = (x0, x1, top, gap, n) => { const w = (x1 - x0) / (2 * n - 1); for (let i = 0; i < 2 * n - 1; i++) { const y = i % 2 ? gap : top; a.l(x0 + i * w, y).l(x0 + (i + 1) * w, y); } };
+      crenel(8, 28, 14, 20, 3);   // ひだりの とう
+      a.l(28, 40);
+      crenel(28, 72, 40, 46, 4);  // かべ
+      a.l(72, 14);
+      crenel(72, 92, 14, 20, 3);  // みぎの とう
+      return a.l(92, 92).l(8, 92).l(8, 14).pts;
+    },
+    anim(t) { return { dy: -Math.max(0, Math.sin(t * 3)) * 1.5 * Math.max(0, 1 - t / 2) }; },
+    back(g, t) {
+      g.strokeStyle = '#7a6a9a'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(18, 14); g.lineTo(18, 0); g.moveTo(82, 14); g.lineTo(82, 0); g.stroke();
+      for (const x of [18, 82]) poly(g, [[x, 0], [x + 10 + Math.sin(t * 6 + x) * 2, 3], [x, 6]], '#ff5a5a');
+    },
+    art(g, t) {
+      g.save(); g.beginPath(); g.moveTo(40, 92); g.lineTo(40, 74); g.arc(50, 74, 10, Math.PI, 0); g.lineTo(60, 92); g.closePath(); g.fillStyle = '#8a5a3a'; g.fill(); g.restore();
+      const lit = .6 + .4 * Math.sin(t * 2);
+      for (const [x, y] of [[15, 34], [15, 56], [79, 34], [79, 56], [36, 56], [58, 56]]) { g.save(); g.beginPath(); g.moveTo(x, y + 10); g.lineTo(x, y + 3); g.arc(x + 3, y + 3, 3, Math.PI, 0); g.lineTo(x + 6, y + 10); g.closePath(); g.fillStyle = `rgba(255,${200 + 40 * lit | 0},90,1)`; g.fill(); g.restore(); }
+      g.strokeStyle = 'rgba(122,106,154,.35)'; g.lineWidth = 1; g.beginPath();
+      for (let y = 26; y < 92; y += 8) for (let x = 10 + (y / 8 % 2) * 4; x < 90; x += 10) { g.moveTo(x, y); g.lineTo(x + 5, y); }
+      g.stroke();
+    } },
+  { id: 'dino', name: 'きょうりゅう', emoji: '🦕', fill: '#8fd16b', bg: '#eaf7d8', hard: true,
+    path() {
+      const a = P().m(78, 12).c(88, 12, 95, 16, 94, 22).c(93, 27, 86, 28, 80, 28).c(76, 36, 76, 48, 76, 60).l(72, 70).l(70, 86).l(62, 86).l(62, 72).l(40, 72).l(40, 86).l(32, 86).l(30, 70).l(20, 66).l(2, 72).l(12, 60).l(22, 52);
+      // せなかの とげ
+      const yb = x => 52 - 14 * Math.sin(Math.PI * (x - 22) / 46);
+      const sp = 6;
+      for (let i = 0; i < sp; i++) {
+        const x0 = 22 + i * 46 / sp, x1 = 22 + (i + 1) * 46 / sp, xm = (x0 + x1) / 2;
+        a.l(xm, yb(xm) - 8).l(x1, yb(x1));
+      }
+      return a.c(70, 40, 70, 24, 72, 16).l(78, 12).pts;
+    },
+    anim(t) { return { dx: Math.sin(t * 1.2) * 4, rot: Math.sin(t * 2.4) * .03, oy: 86 }; },
+    art(g, t) {
+      g.save(); g.beginPath(); g.moveTo(32, 70); g.quadraticCurveTo(52, 62, 72, 68); g.lineTo(72, 72); g.lineTo(30, 72); g.closePath(); g.fillStyle = '#d6f0b8'; g.fill(); g.restore();
+      for (const [x, y, r] of [[36, 52, 3], [48, 46, 3.5], [58, 52, 2.6], [44, 58, 2.4]]) ell(g, x, y, r, r, '#6cb84a');
+      const blink = (t % 3) > 2.85;
+      if (blink) { g.strokeStyle = '#3a2a1a'; g.lineWidth = 2; g.beginPath(); g.moveTo(83, 18); g.lineTo(87, 18); g.stroke(); } else { ell(g, 85, 18, 2.2, 2.6, '#3a2a1a'); ell(g, 84.3, 17.2, .8, .8, '#fff'); }
+      g.strokeStyle = '#3a2a1a'; g.lineWidth = 1.5; g.lineCap = 'round'; g.beginPath(); g.moveTo(84, 24); g.quadraticCurveTo(88, 26, 92, 23); g.stroke();
+    } },
+  { id: 'octopus', name: 'タコ', emoji: '🐙', fill: '#ff8fa3', bg: '#e0f4ff', hard: true,
+    path() {
+      const a = P().m(50, 8).c(74, 8, 84, 28, 80, 46);
+      for (let k = 0; k < 5; k++) {
+        const x0 = 80 - 12 * k, tx = x0 - 6 + (k % 2 ? -2 : 2);
+        a.q(x0 + 4, 66, tx + 3, 86).q(tx, 92, tx - 3, 86).q(x0 - 8, 66, x0 - 12, k < 4 ? 50 : 46);
+      }
+      return a.c(16, 28, 26, 8, 50, 8).pts;
+    },
+    anim(t) { return { dy: Math.sin(t * 2) * 4, sx: 1 + Math.sin(t * 4) * .04, sy: 1 - Math.sin(t * 4) * .04, oy: 50 }; },
+    art(g, t) {
+      for (let k = 0; k < 5; k++) { const x = 80 - 12 * k - 6; for (const y of [62, 72]) ell(g, x + (y - 62) * -.1, y, 1.6, 1.6, '#ffd1dc'); }
+      for (const x of [38, 62]) { ell(g, x, 32, 6, 7, '#fff'); ell(g, x + Math.sin(t) * 1.2, 33, 3.2, 3.8, '#3a2a1a'); ell(g, x - 1 + Math.sin(t) * 1.2, 31.6, 1, 1.1, '#fff'); }
+      ell(g, 50, 44, 4, 3.4, '#e06080'); ell(g, 50, 44, 2, 1.7, '#b04060');
+      ell(g, 30, 42, 5, 3, 'rgba(255,90,130,.4)'); ell(g, 70, 42, 5, 3, 'rgba(255,90,130,.4)');
+      for (let i = 0; i < 3; i++) { const k = (t * .5 + i / 3) % 1; ring(g, 84 + Math.sin(t * 3 + i) * 2, 26 - k * 30, 1.5 + k * 2, 'rgba(70,150,220,.7)'); }
+    } },
+  { id: 'crown', name: 'おうかん', emoji: '👑', fill: '#ffd23f', bg: '#fff3c0', hard: true,
+    path() { return P().m(10, 30).l(26, 56).l(34, 22).l(44, 52).l(50, 14).l(56, 52).l(66, 22).l(74, 56).l(90, 30).l(84, 72).l(84, 84).l(16, 84).l(16, 72).l(10, 30).pts; },
+    anim(t) { return { rot: Math.sin(t * 2) * .05, s: 1 + Math.sin(t * 4) * .03 }; },
+    art(g, t) {
+      rect(g, 16, 72, 68, 12, '#f0b400');
+      for (const [x, c] of [[30, '#ff5a5a'], [50, '#5aa9ff'], [70, '#7bc96f']]) { ell(g, x, 78, 4, 4, c); ell(g, x - 1.2, 76.8, 1.2, 1.2, '#fff'); }
+      for (const [x, y] of [[10, 30], [34, 22], [50, 14], [66, 22], [90, 30]]) ell(g, x, y - 3, 3.4, 3.4, '#ff6f91');
+      ell(g, 50, 60, 5, 6, '#c58cff'); ell(g, 48.5, 58, 1.5, 1.8, '#fff');
+      for (let i = 0; i < 5; i++) { const a = t * 1.5 + i * 1.26; sparkle(g, 50 + Math.cos(a) * 48, 50 + Math.sin(a) * 44, 2.6 + Math.sin(t * 5 + i), '#ffcf3a'); }
+    } },
+  { id: 'tree', name: 'クリスマスツリー', emoji: '🎄', fill: '#4caf50', bg: '#e6f6ff', hard: true,
+    path() { return P().m(50, 10).l(70, 34).l(62, 34).l(80, 56).l(70, 56).l(88, 78).l(56, 78).l(56, 92).l(44, 92).l(44, 78).l(12, 78).l(30, 56).l(20, 56).l(38, 34).l(30, 34).l(50, 10).pts; },
+    anim(t) { return { rot: Math.sin(t * 1.6) * .02, oy: 92 }; },
+    art(g, t) {
+      rect(g, 44, 78, 12, 14, '#8a5a3a');
+      g.strokeStyle = '#ffd23f'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(40, 30); g.quadraticCurveTo(52, 38, 62, 32); g.moveTo(30, 52); g.quadraticCurveTo(50, 62, 72, 52); g.moveTo(22, 74); g.quadraticCurveTo(50, 84, 80, 74); g.stroke();
+      const C = ['#ff5a5a', '#5aa9ff', '#ffd23f', '#ff8fc8', '#ffffff'];
+      [[44, 26], [56, 28], [36, 46], [52, 44], [64, 48], [28, 68], [44, 66], [60, 70], [74, 68], [50, 56]].forEach(([x, y], i) => { const on = Math.sin(t * 4 + i * 1.7) > -.3; ell(g, x, y, 2.6, 2.6, on ? C[i % C.length] : 'rgba(255,255,255,.4)'); });
+      sparkle(g, 50, 8, 7 + Math.sin(t * 4) * 1, '#ffd23f');
+    } },
+  { id: 'train', name: 'きしゃ', emoji: '🚂', fill: '#ff5a5a', bg: '#e8f4e0', hard: true,
+    path() { return P().m(10, 24).l(44, 24).l(44, 44).l(60, 44).l(62, 30).l(58, 26).l(74, 26).l(70, 30).l(72, 44).l(84, 44).c(90, 44, 92, 48, 92, 54).l(92, 66).l(98, 76).l(8, 76).l(8, 30).l(10, 24).pts; },
+    anim(t) {
+      const p = t % 5;
+      if (p < 1.4) return { dy: Math.abs(Math.sin(t * 16)) * -.8 };
+      if (p < 2.8) return { dx: Math.pow((p - 1.4) / 1.4, 2) * 180 };
+      return { dx: -180 * (1 - ease((p - 2.8) / 2.2)) };
+    },
+    back(g, t) {
+      for (let i = 0; i < 4; i++) { const k = (t * .9 + i / 4) % 1; g.globalAlpha *= 1 - k; ell(g, 66 - k * 14, 20 - k * 26, 3 + k * 6, 3 + k * 6, '#e6e6e6'); g.globalAlpha /= Math.max(.001, 1 - k); }
+    },
+    art(g, t) {
+      rect(g, 6, 20, 42, 6, '#4a3b2a');
+      rect(g, 16, 30, 20, 12, '#e8f7ff');
+      rect(g, 46, 46, 44, 4, '#ffd23f'); rect(g, 8, 62, 84, 3, '#4a3b2a');
+      rect(g, 59, 26, 16, 4, '#4a3b2a');
+      ell(g, 91, 54, 2.6, 3, '#ffe066');
+      const p = t % 5, spin = p < 1.4 ? 0 : (p < 2.8 ? Math.pow((p - 1.4) / 1.4, 2) * 18 : -(1 - ease((p - 2.8) / 2.2)) * 18);
+      for (const [x, r] of [[22, 11], [48, 9], [70, 9]]) wheel(g, x, 76, r, spin);
+      g.strokeStyle = '#999'; g.lineWidth = 2; g.beginPath(); g.moveTo(22 + Math.cos(spin) * 6, 76 + Math.sin(spin) * 6); g.lineTo(70 + Math.cos(spin) * 5, 76 + Math.sin(spin) * 5); g.stroke();
+    } },
+  { id: 'elephant', name: 'ぞう', emoji: '🐘', fill: '#a9b8d6', bg: '#eef2ff', hard: true,
+    path() { return P().m(20, 30).c(40, 22, 62, 24, 70, 30).c(80, 24, 92, 30, 92, 42).c(92, 52, 94, 64, 96, 72).l(90, 76).c(88, 68, 86, 58, 82, 54).l(78, 60).l(76, 86).l(66, 86).l(66, 72).l(40, 72).l(40, 86).l(30, 86).l(30, 74).c(20, 70, 14, 58, 14, 48).l(6, 56).l(12, 44).c(14, 36, 16, 32, 20, 30).pts; },
+    anim(t) { return { rot: Math.sin(t * 1.6) * .03, dx: Math.sin(t * .8) * 3, oy: 86 }; },
+    art(g, t) {
+      g.save(); g.translate(66, 44); g.rotate(Math.sin(t * 3) * .12); ell(g, 0, 0, 12, 15, '#8fa0c4'); ell(g, 0, 0, 8, 11, '#ffc4d0'); g.restore();
+      ell(g, 82, 38, 2.2, 2.6, '#1d2b4a'); ell(g, 81.4, 37.2, .8, .8, '#fff');
+      g.strokeStyle = '#fff'; g.lineWidth = 2.4; g.lineCap = 'round'; g.beginPath(); g.moveTo(84, 56); g.quadraticCurveTo(86, 62, 82, 64); g.stroke();
+      for (const x of [68, 72, 32, 36]) ell(g, x, 85, 1.6, 1.2, '#fff');
+      const p = t % 3; if (p < 1) for (let i = 0; i < 6; i++) { const k = p; ell(g, 96 + i * 1.5 + k * 6, 72 - k * 30 - i * 3, 1.4, 1.8, 'rgba(90,184,240,.8)'); }
     } }
 ];
 const PIC_BY = Object.fromEntries(PICS.map(p => [p.id, p]));
-const CRY = { star: 'きらりん！', heart: 'どきどき！', fish: 'すいすい！', house: 'ただいまー！', apple: 'しゃりっ！', cat: 'にゃーん！', rocket: 'はっしゃー！', yacht: 'ざぶーん！', mush: 'ぽこっ！', whale: 'ぷしゅー！', bfly: 'ひらひら！', rabbit: 'ぴょん、ぴょん！', car: 'ぶっぶー！', custom: 'やったね！' };
+const CRY = { star: 'きらりん！', heart: 'どきどき！', fish: 'すいすい！', house: 'ただいまー！', apple: 'しゃりっ！', cat: 'にゃーん！', rocket: 'はっしゃー！', yacht: 'ざぶーん！', mush: 'ぽこっ！', whale: 'ぷしゅー！', bfly: 'ひらひら！', rabbit: 'ぴょん、ぴょん！', car: 'ぶっぶー！', custom: 'やったね！',
+  tulip: 'ゆらゆら！', umbrella: 'ぱっ！', snowman: 'さむいね！', balloon: 'ふわふわー！', icecream: 'つめたーい！', bear: 'がおー！', pig: 'ぶーぶー！', turtle: 'のそのそ！', chick: 'ぴよぴよ！',
+  plane: 'びゅーん！', dolphin: 'きゅいきゅい！', castle: 'ぱんぱかぱーん！', dino: 'がおーっ！', octopus: 'にょろにょろ！', crown: 'きらきら！', tree: 'メリークリスマス！', train: 'ぽっぽー！', elephant: 'ぱおーん！' };
 for (const p of PICS) { TTS_TEXT['done_' + p.id] = p.name + 'が、できたね！'; TTS_TEXT['cry_' + p.id] = CRY[p.id]; }
 TTS_TEXT.done_custom = 'えが、できたね！'; TTS_TEXT.cry_custom = CRY.custom;
 
@@ -744,16 +1016,18 @@ function labelOf(mode, i) {
   return { t: String(i + 1), key: 'n' + (i + 1) };
 }
 const MODES = [
-  { id: 'num', label: '1・2・3', max: 30 },
+  { id: 'num', label: '1・2・3', max: 60 },
   { id: 'skip', label: '2・4・6', max: 30 },
-  { id: 'kana', label: 'あ・い・う', max: 30 },
+  { id: 'kana', label: 'あ・い・う', max: 46 },
   { id: 'abc', label: 'A・B・C', max: 26 }
 ];
 const LEVELS = [
   { n: 5, label: '★', age: '2さい〜' },
   { n: 10, label: '★★', age: '3さい〜' },
   { n: 15, label: '★★★', age: '4さい〜' },
-  { n: 20, label: '★★★★', age: '5さい〜' }
+  { n: 20, label: '★★★★', age: '5さい〜' },
+  { n: 30, label: '★5', age: '6さい〜' },
+  { n: 45, label: 'むずかしい', age: '7さい〜' }
 ];
 let dotN = store.get('tentsu-n', 10);
 let mode = store.get('tentsu-mode', 'num');
@@ -990,13 +1264,14 @@ function labelSpots(u) {
   for (let i = 0; i < n; i++) {
     const [x, y] = dots[i], [nx, ny] = pz.out[i];
     let best = null, bestScore = -1;
-    for (const r of [0, .45, -.45, .9, -.9, 1.4, -1.4, Math.PI]) for (const d of [14, 18]) {
+    const ds = n > 32 ? [11, 14] : [14, 18];
+    for (const r of [0, .45, -.45, .9, -.9, 1.4, -1.4, Math.PI]) for (const d of ds) {
       const c = Math.cos(r), sn = Math.sin(r), vx = nx * c - ny * sn, vy = nx * sn + ny * c;
       const lx = x + vx * d * u, ly = y + vy * d * u;
       let m = 1e9;
       dots.forEach((p, j) => { if (j !== i) m = Math.min(m, Math.hypot(p[0] - lx, p[1] - ly) / u); });
       for (const q of placed) m = Math.min(m, Math.hypot(q[0] - lx, q[1] - ly) / u * .8);
-      const score = Math.min(m, 16) - Math.abs(r) * 2 - (d - 14) * .2;
+      const score = Math.min(m, 16) - Math.abs(r) * 2 - (d - ds[0]) * .2;
       if (score > bestScore) { bestScore = score; best = [vx, vy, d]; }
     }
     res.push(best); placed.push([x + best[0] * best[2] * u, y + best[1] * best[2] * u]);
@@ -1016,10 +1291,10 @@ function drawDots(now, u, tgt, strong) {
       ctx.fillStyle = 'rgba(255,210,63,.55)'; ctx.beginPath(); ctx.arc(x, y, (11 + Math.sin(now / 150) * 2) * u, 0, 7); ctx.fill();
     }
     ctx.fillStyle = on ? '#ff8a3d' : (isT ? '#ff8a3d' : '#4a3b2a');
-    ctx.beginPath(); ctx.arc(x, y, (isT ? 7 : on ? 5.5 : 4.5) * u, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, (isT ? 7 : n > 32 ? (on ? 4.5 : 3.6) : on ? 5.5 : 4.5) * u, 0, 7); ctx.fill();
     // ばんごう
     const [nx, ny, dd] = pz.lab[i], L = pz.labels[i].t;
-    const fs = (isT ? 21 : 15) * (L.length > 1 ? .92 : 1);
+    const fs = (isT ? 21 : n > 32 ? 12.5 : 15) * (L.length > 1 ? .92 : 1);
     const lx = x + nx * (dd + (isT ? 5 : 0)) * u, ly = y + ny * (dd + (isT ? 5 : 0)) * u;
     ctx.font = `900 ${fs * u}px "Hiragino Maru Gothic ProN","Rounded Mplus 1c","Kosugi Maru","Hiragino Sans","Noto Sans JP",sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1095,8 +1370,10 @@ function goTitle() {
 function nextPic(exclude) {
   const book = store.get('tentsu-book', {});
   const all = allPics().filter(p => !exclude || p.id !== exclude.id);
-  const fresh = all.filter(p => !book[p.id] && !p.custom);
-  return pick(fresh.length ? fresh : all);
+  // 点が おおいときは むずかしい え、すくないときは かんたんな え を さきに
+  const fit = p => curN() >= 25 ? p.hard : curN() <= 12 ? !p.hard : true;
+  for (const list of [all.filter(p => !book[p.id] && !p.custom && fit(p)), all.filter(p => !book[p.id] && !p.custom), all.filter(fit)]) if (list.length) return pick(list);
+  return pick(all);
 }
 $('#lvl').onclick = e => { const b = e.target.closest('button'); if (!b) return; dotN = +b.dataset.n; store.set('tentsu-n', dotN); audio(); sfx.tap(); renderTitle(); };
 $('#nMinus').onclick = () => { dotN = clamp(curN() - 1, 3, maxN()); store.set('tentsu-n', dotN); audio(); sfx.tap(); renderTitle(); };
@@ -1330,7 +1607,7 @@ $('#mkOk').onclick = () => {
 
 /* ---------- こえを ろくおん ---------- */
 const REC_TABS = [
-  { id: 'num', label: '1・2・3', items: () => Array.from({ length: 30 }, (_, i) => ({ key: 'n' + (i + 1), t: String(i + 1) })) },
+  { id: 'num', label: '1・2・3', items: () => Array.from({ length: 60 }, (_, i) => ({ key: 'n' + (i + 1), t: String(i + 1) })) },
   { id: 'skip', label: '2・4・6', items: () => Array.from({ length: 30 }, (_, i) => ({ key: 'n' + (i + 1) * 2, t: String((i + 1) * 2) })) },
   { id: 'kana', label: 'あ・い・う', items: () => [...KANA].map((c, i) => ({ key: 'k' + i, t: c })) },
   { id: 'abc', label: 'A・B・C', items: () => [...ABC].map((c, i) => ({ key: 'a' + i, t: c })) },
