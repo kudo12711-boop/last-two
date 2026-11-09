@@ -127,6 +127,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
   <div class="box"><b id="tCats"></b><div class="row" id="cats"></div></div>
   <div class="box"><b id="tLv"></b><div class="row" id="lvs"></div></div>
   <div class="box"><b id="tFat"></b><div class="row" id="fats"></div></div>
+  <div class="box"><b id="tBack"></b><div class="row" id="backs"></div></div>
   <button class="big" id="bookB"><span class="ico">📖</span><span><span id="tBook"></span><small id="bookN"></small></span></button>
   <button class="big" id="photoB"><span class="ico">📷</span><span><span id="tPhotos"></span><small id="tPhotosSub"></small></span></button>
   <div class="foot"><button id="setB"></button><button id="langB">English</button></div>
@@ -198,7 +199,8 @@ const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans
 const TEXT = {
   ja: {
     title: 'けずって なにかな？', sub: 'ゆびで ごしごし。なにが でてくるかな？', start: 'はじめる',
-    cats: 'どれで あそぶ？', lv: 'むずかしさ', fat: 'けずる ふとさ（うえの「？」で ためせます）', fatName: ['ほそい', 'ふつう', 'ふとい', 'とても ふとい'], book: 'ずかん', photos: 'おうちの しゃしん',
+    cats: 'どれで あそぶ？', lv: 'むずかしさ', fat: 'けずる ふとさ（うえの「？」で ためせます）', fatName: ['ほそい', 'ふつう', 'ふとい', 'とても ふとい'],
+    back: 'けずった ところが また かくれる', backName: ['かくれない', 'ゆっくり', 'はやい'], backSub: ['', 'じっくり', 'いそいで！'], book: 'ずかん', photos: 'おうちの しゃしん',
     photosSub: 'かぞくや ペットの しゃしんを かくして あそべます', settings: '⚙️ おうちの人の せってい',
     scratch: 'ゆびで けずってね', next: 'つぎへ ▶', found: n => `ずかん ${n}`, newMark: 'NEW!',
     bookN: (a, b) => `${a} / ${b} こ みつけたよ`, bookSum: (a, b) => `${a} / ${b} こ　（✨は きらきら）`,
@@ -220,7 +222,8 @@ const TEXT = {
   },
   en: {
     title: 'Scratch & Guess', sub: 'Rub with your finger. What will appear?', start: 'Play',
-    cats: 'Pick a theme', lv: 'Level', fat: 'Scratch size (try it on the "?" card above)', fatName: ['Thin', 'Normal', 'Thick', 'Extra thick'], book: 'Picture book', photos: 'Family photos',
+    cats: 'Pick a theme', lv: 'Level', fat: 'Scratch size (try it on the "?" card above)', fatName: ['Thin', 'Normal', 'Thick', 'Extra thick'],
+    back: 'Scratched spots cover up again', backName: ['Off', 'Slow', 'Fast'], backSub: ['', 'take your time', 'hurry!'], book: 'Picture book', photos: 'Family photos',
     photosSub: 'Hide photos of family or pets and play', settings: '⚙️ Settings for grown-ups',
     scratch: 'Scratch with your finger', next: 'Next ▶', found: n => `Book ${n}`, newMark: 'NEW!',
     bookN: (a, b) => `Found ${a} of ${b}`, bookSum: (a, b) => `${a} / ${b} found  (✨ = sparkly)`,
@@ -507,6 +510,8 @@ const LV = [ // ちょいす: えらぶ数、th: どのくらい けずったら
 let lv = store.get('kezuri-lv', 1), cat = store.get('kezuri-cat', 'all');
 const FAT = [.045, .075, .11, .16]; // けずる ふとさ（カードの はばに たいする 半径）
 let fat = clamp(store.get('kezuri-fat', 1), 0, FAT.length - 1);
+const BACK = [0, .5, 1.2]; // けずった ところが もどる はやさ（1びょうあたり。0=もどらない）
+let back = clamp(store.get('kezuri-back', 0), 0, BACK.length - 1);
 let book = store.get('kezuri-book', {}); // id -> { n, s(きらきらの数) }
 function catList() { const l = ['all', ...Object.keys(CATS)]; if (photos.length) l.push('home'); return l; }
 function renderTitle() {
@@ -541,6 +546,14 @@ function renderTitle() {
     if (i === fat) b.className = 'sel';
     b.onclick = () => { fat = i; store.set('kezuri-fat', i); sfx.tap(); demoInit(); renderTitle(); };
     $('#fats').appendChild(b);
+  });
+  $('#tBack').textContent = t.back; $('#backs').innerHTML = '';
+  BACK.forEach((v, i) => {
+    const b = document.createElement('button');
+    b.innerHTML = `${['🚫', '🐢', '🐇'][i]} ${t.backName[i]}${t.backSub[i] ? `<small>${t.backSub[i]}</small>` : ''}`;
+    if (i === back) b.className = 'sel';
+    b.onclick = () => { back = i; store.set('kezuri-back', i); sfx.tap(); demoInit(); renderTitle(); };
+    $('#backs').appendChild(b);
   });
   const all = ITEMS.length + photos.length, got = ITEMS.filter(i => book[i.id]).length + photos.filter(p => book[p.id]).length;
   $('#bookN').textContent = t.bookN(got, all);
@@ -629,7 +642,7 @@ function newCard(first) {
   const shiny = !it.photo && Math.random() < 1 / 8;
   st = {
     it, shiny, state: 'scratch', t0: performance.now(), lastScratch: performance.now(), hinted: false,
-    grid: new Uint8Array(GRID * GRID), cov: COVERS[Math.floor(Math.random() * COVERS.length)],
+    grid: new Float32Array(GRID * GRID), cov: COVERS[Math.floor(Math.random() * COVERS.length)],
     // えの いち（すこし ずらして、どこに いるか さがす たのしさ）
     px: it.photo ? .5 : rnd(.38, .62), py: it.photo ? .5 : rnd(.38, .6), ps: it.photo ? 1 : rnd(.56, .68), rot: it.photo ? 0 : rnd(-.18, .18),
     choices: makeChoices(it, LV[lv].choices), openT: 0, flakes: [], hintAt: null
@@ -655,6 +668,7 @@ function renderProg() {
 
 // けずる まく（オフスクリーン）
 let covC = document.createElement('canvas'), covG = covC.getContext('2d');
+const covBase = document.createElement('canvas'); // けずる まえの まく（また かくれる モードで つかう）
 function buildCover(keep) {
   const { S, dpr } = lay, px = Math.round(S * dpr);
   covC.width = px; covC.height = px;
@@ -675,11 +689,12 @@ function buildCover(keep) {
   // きらっとした ななめの ひかり
   c.fillStyle = 'rgba(255,255,255,.35)';
   c.beginPath(); c.moveTo(S * .1, 0); c.lineTo(S * .22, 0); c.lineTo(0, S * .22); c.lineTo(0, S * .1); c.fill();
+  covBase.width = px; covBase.height = px; covBase.getContext('2d').drawImage(covC, 0, 0);
   // もう けずった ところを けしなおす（画面の むきが かわったとき）
   if (keep) {
     c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000';
     const cs = S / GRID;
-    for (let i = 0; i < st.grid.length; i++) if (st.grid[i]) { const gx = i % GRID, gy = Math.floor(i / GRID); c.beginPath(); c.arc((gx + .5) * cs, (gy + .5) * cs, cs * .95, 0, 7); c.fill(); }
+    for (let i = 0; i < st.grid.length; i++) if (st.grid[i] > .5) { const gx = i % GRID, gy = Math.floor(i / GRID); c.beginPath(); c.arc((gx + .5) * cs, (gy + .5) * cs, cs * .95, 0, 7); c.fill(); }
     c.globalCompositeOperation = 'source-over';
   }
 }
@@ -799,7 +814,7 @@ $('#gBookB').onclick = () => { scratchSound(0); openBook('game'); };
 $('#hintB').onclick = () => { if (st && st.state !== 'open') { audio(); giveHint(true); } };
 function giveHint(force) {
   // まだ けずっていない、えの ところを ひからせる
-  const left = st.picCells.filter(i => !st.grid[i]);
+  const left = st.picCells.filter(i => st.grid[i] < .5);
   if (!left.length) return;
   const i = pick(left);
   st.hintAt = { x: (i % GRID + .5) / GRID, y: (Math.floor(i / GRID) + .5) / GRID, t: performance.now() };
@@ -851,6 +866,14 @@ function frame(now) {
   if (!st || !$('#game').classList.contains('on')) return;
   // けずる おと
   if (st.state !== 'open') { scratchSound(ptrs.size ? speed : 0); speed *= .8; }
+  // また かくれる モード: けずる まえの まくを うすく かさねて、すこしずつ もどす
+  // （まいフレームだと うすすぎて いろが のこるので、0.15びょうごとに まとめて かさねる）
+  if (BACK[back] && st.state !== 'open' && (st.backT = (st.backT || 0) + dt) >= .15) {
+    const k = 1 - Math.exp(-BACK[back] * st.backT); st.backT = 0;
+    covG.save(); covG.setTransform(1, 0, 0, 1, 0, 0); covG.globalCompositeOperation = 'source-over'; covG.globalAlpha = k;
+    covG.drawImage(covBase, 0, 0); covG.restore();
+    for (let i = 0; i < st.grid.length; i++) st.grid[i] *= 1 - k;
+  }
   // ほうっておくと ヒント
   if (st.state === 'scratch' && !st.hintAt && now - st.lastScratch > 8000 && LV[lv].choices !== 4) { giveHint(false); st.lastScratch = now; }
   const { S, dpr, ox, oy } = lay;
@@ -908,12 +931,14 @@ function demoInit() {
   const gr = x.createLinearGradient(0, 0, S, S); gr.addColorStop(0, '#c9ced6'); gr.addColorStop(.5, '#eef1f5'); gr.addColorStop(1, '#c9ced6');
   x.fillStyle = gr; x.fillRect(0, 0, S, S);
   x.fillStyle = '#aab1bc'; x.font = `900 ${S * .5}px sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('?', S / 2, S / 2);
-  dm = { S, dpr, c, x, e: pick(['🐘', '🚒', '🍓', '🐙', '🦋', '🦁', '🚀']) };
+  const base = document.createElement('canvas'); base.width = c.width; base.height = c.height; base.getContext('2d').drawImage(c, 0, 0);
+  dm = { S, dpr, c, x, base, last: performance.now(), e: pick(['🐘', '🚒', '🍓', '🐙', '🦋', '🦁', '🚀']) };
 }
 function drawDemo(now) {
   if (!$('#title').classList.contains('on')) return;
   if (!dm || demo.width === 0) demoInit();
-  const { S, dpr } = dm;
+  const { S, dpr } = dm, ddt = Math.min(.05, (now - dm.last) / 1000); dm.last = now;
+  if (BACK[back] && (dm.backT = (dm.backT || 0) + ddt) >= .15) { const x = dm.x; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1 - Math.exp(-BACK[back] * dm.backT); dm.backT = 0; x.drawImage(dm.base, 0, 0); x.restore(); }
   dg.setTransform(dpr, 0, 0, dpr, 0, 0);
   dg.fillStyle = '#fff3c9'; dg.fillRect(0, 0, S, S);
   dg.font = `${S * .62}px ${EMOJI_FONT}`; dg.textAlign = 'center'; dg.textBaseline = 'middle';
