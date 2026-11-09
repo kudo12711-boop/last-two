@@ -96,6 +96,33 @@ h1.logo{font-size:clamp(34px,10vw,56px);margin:0;text-align:center;letter-spacin
 .prog .nx{font-size:13px;color:var(--sub);white-space:nowrap;flex:none;max-width:65%;overflow:hidden;text-overflow:ellipsis}
 .scene-wrap{flex:1;position:relative;min-height:0;background:linear-gradient(#8fd3ff 0 45%,#9fe08a 45%)}
 #newKBtn{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 14px);transform:translateX(-50%);white-space:nowrap;z-index:2}
+.scene-wrap.st1{background:linear-gradient(#8fd3ff 0 45%,#f3dca6 45%)}
+.scene-wrap.st2{background:linear-gradient(#8fd3ff 0 45%,#eef4fb 45%)}
+.stage-chip{position:absolute;left:10px;top:8px;z-index:2;background:rgba(255,255,255,.85);color:#4a3446;border-radius:999px;padding:4px 12px;font-size:14px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.snow{animation:snowfall 9s linear infinite}
+@keyframes snowfall{from{transform:translateY(-40px)}to{transform:translateY(640px)}}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card2{width:88px;height:104px;border-radius:18px;border:3px solid #9fd0ef;background:linear-gradient(#bfe6ff,#7cc4f2);font-size:44px;display:grid;place-items:center;padding:0;box-shadow:0 3px 0 #7cb6dc}
+.card2.up{background:var(--panel)}
+.card2.ok{border-color:var(--ok);box-shadow:0 0 0 3px #bdf0d4}
+.bells{display:flex;gap:16px;justify-content:center}
+.bell{width:92px;height:92px;border-radius:50%;border:4px solid rgba(255,255,255,.8);font-size:44px;padding:0;box-shadow:0 4px 0 rgba(0,0,0,.15);transition:transform .1s, filter .1s}
+.bell.lit{transform:scale(1.18);filter:brightness(1.25) drop-shadow(0 0 12px #fff6a8)}
+.bigitem{font-size:90px;line-height:1;min-height:100px}
+.bins{display:flex;gap:14px;justify-content:center}
+.bin{width:150px;min-height:150px;border-radius:22px;border:3px solid var(--line);background:var(--panel);padding:8px;display:flex;flex-direction:column;align-items:center;box-shadow:0 3px 0 var(--line)}
+.bin .in{font-size:22px;min-height:28px;word-break:break-all}
+.acorns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:#dff3d6;border-radius:24px;padding:12px}
+.acorn{width:62px;height:62px;border:0;background:transparent;font-size:44px;padding:0}
+.basket{display:flex;align-items:center;gap:12px;font-size:56px}
+.basket .num{font-size:44px;font-weight:700;min-width:50px;color:var(--accent)}
+.basket .in{font-size:24px;max-width:180px}
+.sizes{display:flex;gap:10px;justify-content:center;align-items:flex-end;min-height:140px}
+.szb{border:3px solid var(--line);background:var(--panel);border-radius:20px;padding:6px 10px;line-height:1.1;position:relative;box-shadow:0 3px 0 var(--line)}
+.szb.done{border-color:var(--ok)}
+.szb .nb{position:absolute;top:-10px;left:-10px;background:var(--ok);color:#fff;border-radius:50%;width:28px;height:28px;font-size:16px;display:grid;place-items:center;font-weight:700}
+.shadowbox{font-size:110px;line-height:1;min-height:130px;background:#fff8d6;border-radius:50%;width:170px;height:170px;display:grid;place-items:center}
+.sil{filter:brightness(0);opacity:.78}
 .scene-wrap.night{background:linear-gradient(#5b5fb8 0 45%,#9fe08a 45%)}
 #scene{position:absolute;inset:0;width:100%;height:100%}
 .tap{cursor:pointer}
@@ -138,6 +165,7 @@ h1.logo{font-size:clamp(34px,10vw,56px);margin:0;text-align:center;letter-spacin
 .item:active{transform:translateY(2px);box-shadow:none}
 .item.done{opacity:.25;pointer-events:none}
 .bush.hint{animation:pop .8s ease-in-out infinite}
+.szb.hint{animation:pop .8s ease-in-out infinite;border-color:var(--gold)}
 .item.hint{animation:pop .8s ease-in-out infinite;border-color:var(--gold)}
 .order{display:flex;gap:8px;background:var(--panel);border:3px dashed var(--line);border-radius:18px;padding:8px 14px;font-size:34px}
 .order span{position:relative}
@@ -238,7 +266,7 @@ input[type=range]{width:220px;accent-color:var(--accent)}
   </div>
   <div class="prog"><div class="bar"><div class="fill" id="pf"></div></div><div class="nx" id="pn"></div></div>
   <div class="scene-wrap"><svg id="scene" viewBox="0 0 400 600" preserveAspectRatio="xMidYMax meet"></svg>
-    <button class="big" id="newKBtn" style="display:none"></button></div>
+    <button class="big" id="newKBtn" style="display:none"></button><div class="stage-chip" id="stageChip"></div></div>
 </section>
 
 <!-- ミニゲーム -->
@@ -278,7 +306,12 @@ var TEXT = {
     start:"はじめる", cont:"つづきから", newGame:"さいしょから やりなおす", whoAreYou:"だれに なる？",
     decide:"これで けってい！", quit:"やめる", end:"おわる", otherGames:"← ほかの ゲームで あそぶ",
     endAsk:"きょうは ここで おわりに する？\nおうこくは ちゃんと ほぞん されているよ。つぎは「つづきから」で あそべるよ。", endYes:"おわる", endNo:"まだ あそぶ", bye:"またね！",
-    quitAsk:"この おねがいを やめて おうこくに もどる？", quitYes:"やめる", quitNo:"つづける", back:"もどる", paint:"かいてもらう", mail:"おてがみ", closet:"きがえ", gallery:"しょうぞうが", menu:"せってい",
+    quitAsk:"この おねがいを やめて おうこくに もどる？",
+    stages:["🌸 はなの おうこく","🌊 うみべの おうこく","❄️ ゆきの おうこく"], stageArrive:"{s}に ついたよ！", stageBack:"{s}に もどってきたよ！",
+    stageClear:"🎉 ステージ クリア！", stageNext:"つぎは {s}へ いこう！", nextStage:"▶ つぎの ステージへ",
+    allTitle:"👑 すべての おうこくが かんせい！", allMsg:"{t}の おかげで、3つの おうこくの みんなが しあわせに なったよ。ほんとうに ありがとう！",
+    againStart:"🏰 さいしょの おうこくから もういちど", againAsk:"はなの おうこくから もういちど あそぶ？\nきせかえと しょうぞうがは そのまま もっていけるよ。",
+    listen:"もういちど きく", binFruit:"くだもの", binToy:"おもちゃ", countOk:"これで いい？", quitYes:"やめる", quitNo:"つづける", back:"もどる", paint:"かいてもらう", mail:"おてがみ", closet:"きがえ", gallery:"しょうぞうが", menu:"せってい",
     roles:{princess:"プリンセス", prince:"おうじさま", knight:"きしさま", samurai:"さむらいさま"},
     tabs:{role:"だれ", skin:"はだ", hair:"かみがた", hairColor:"かみのいろ", color:"ふくのいろ", acc:"かざり", pet:"なかま", photo:"かお", name:"なまえ"},
     namePh:"なまえ（なくてもOK）", nameNote:"おうちのひとが いれてね",
@@ -305,7 +338,7 @@ var TEXT = {
     items:{
       long:"ロング", bob:"ボブ", short:"ショート", bun:"おだんご", twin:"ツイン", wavy:"ふわふわ",
       tiara:"ティアラ", crown:"おうかん", helmet:"かぶと（きし）", hachimaki:"はちまき", none:"なし", flowercrown:"はなかんむり", ribbon:"リボン", feather:"はねぼうし", circlet:"きんの わ", kabuto:"かぶと（さむらい）",
-      cat:"ねこ", dog:"いぬ", dragon:"ドラゴン", unicorn:"ユニコーン", bunny:"うさぎ", chick:"ひよこ", penguin:"ペンギン", fox:"きつね",
+      whale:"くじら", frog:"かえる", panda:"パンダ", squirrel:"りす", elephant:"ぞう", butterfly:"ちょうちょ", cat:"ねこ", dog:"いぬ", dragon:"ドラゴン", unicorn:"ユニコーン", bunny:"うさぎ", chick:"ひよこ", penguin:"ペンギン", fox:"きつね",
       pink:"ピンク", sky:"みずいろ", mint:"みどり", lavender:"むらさき", red:"あか", navy:"こん", yellow:"きいろ", gold:"きん", silver:"ぎん", black:"くろ", white:"しろ",
       hcBlack:"くろ", hcBrown:"ちゃいろ", hcBlond:"きんいろ", hcRed:"あかちゃ", hcPink:"ピンク", hcBlue:"そらいろ", hcSilver:"ぎんいろ"
     },
@@ -317,7 +350,13 @@ var TEXT = {
       lost:{who:"ふくろうの おばあさん", ask:"{x}を なくしちゃったの。さがして くれる？", how:"きを タップして さがしてね", wrong:"ここには ないみたい", done:"みつけてくれて ありがとう！",
         things:{glasses:"めがね", key:"かぎ", hat:"ぼうし", yarn:"けいと"}},
       letters:{who:"ゆうびんやの ペンギン", ask:"おてがみを とどけるのを てつだって！", how:"おなじ いろの おうちを タップしてね", wrong:"その おうちじゃ ないよ", done:"ぜんぶ とどいたね！"},
-      lanterns:{who:"ひがしの くにの たぬきさん", ask:"おまつりの ちょうちんを ならべて！", how:"つぎは どの いろ？", wrong:"おしい！ もういちど", done:"すてきな おまつりに なるね！"}
+      lanterns:{who:"ひがしの くにの たぬきさん", ask:"おまつりの ちょうちんを ならべて！", how:"つぎは どの いろ？", wrong:"おしい！ もういちど", done:"すてきな おまつりに なるね！"},
+      pairs:{who:"うみべの かにさん", ask:"なみで かいがらが ばらばらに なっちゃった！", how:"おなじ えを 2まい さがしてね", wrong:"ちがうね。もういちど！", done:"ぜんぶ そろったね！"},
+      bells:{who:"うたの すきな かえるさん", ask:"おまつりの うたを いっしょに ならそう！", how:"おなじ じゅんばんで ならしてね", wrong:"おしい！ もういっかい きいてね", done:"すてきな うただね！"},
+      sorting:{who:"パンダの おみせやさん", ask:"おもちゃと くだものが まざっちゃった。かたづけて！", how:"くだものは かごへ、おもちゃは はこへ", wrong:"そこじゃないよ", done:"ぴかぴかに なったね！"},
+      counting:{who:"りすの おかあさん", ask:"ふゆの じゅんび。どんぐりを あつめて！", how:"かずを かぞえて かごに いれてね", wrong:"あれ？ もういちど かぞえてみよう", done:"これで ふゆも あんしん！", askN:"どんぐりを {n}こ ちょうだい"},
+      sizes:{who:"ゆきやまの ぞうさん", ask:"おおきさくらべを てつだって！", how:"おおきい じゅんに タップしてね", wrong:"もっと おおきいのは どれかな？", done:"よく わかったね！"},
+      shadow:{who:"まほうつかいの ねこ", ask:"まほうで みんなが かげに なっちゃった！", how:"かげと おなじ ものは どれかな？", wrong:"かたちを よく みてね", done:"まほうが とけたよ！"}
     }
   },
   en:{
@@ -325,7 +364,12 @@ var TEXT = {
     start:"Start", cont:"Continue", newGame:"Start over", whoAreYou:"Who will you be?",
     decide:"All set!", quit:"Stop", end:"Quit", otherGames:"← Play other games",
     endAsk:"Stop playing for today?\nYour kingdom is saved. Tap \"Continue\" next time.", endYes:"Quit", endNo:"Keep playing", bye:"See you!",
-    quitAsk:"Stop this request and go back to the kingdom?", quitYes:"Stop", quitNo:"Keep going", back:"Back", paint:"Paint me", mail:"Mail", closet:"Dress up", gallery:"Portraits", menu:"Settings",
+    quitAsk:"Stop this request and go back to the kingdom?",
+    stages:["🌸 Flower Kingdom","🌊 Seaside Kingdom","❄️ Snow Kingdom"], stageArrive:"Welcome to the {s}!", stageBack:"Back to the {s}!",
+    stageClear:"🎉 Stage clear!", stageNext:"Next, let's go to the {s}!", nextStage:"▶ Next stage",
+    allTitle:"👑 Every kingdom is complete!", allMsg:"Thanks to you, {t}, everyone in all three kingdoms is happy. Thank you so much!",
+    againStart:"🏰 Play again from the first kingdom", againAsk:"Play again from the Flower Kingdom?\nYour outfits and portraits come with you.",
+    listen:"Listen again", binFruit:"Fruit", binToy:"Toys", countOk:"Done!", quitYes:"Stop", quitNo:"Keep going", back:"Back", paint:"Paint me", mail:"Mail", closet:"Dress up", gallery:"Portraits", menu:"Settings",
     roles:{princess:"Princess", prince:"Prince", knight:"Knight", samurai:"Samurai"},
     tabs:{role:"Who", skin:"Skin", hair:"Hair", hairColor:"Hair color", color:"Outfit", acc:"Head", pet:"Buddy", photo:"Face", name:"Name"},
     namePh:"Name (optional)", nameNote:"A grown-up can type it",
@@ -352,7 +396,7 @@ var TEXT = {
     items:{
       long:"Long", bob:"Bob", short:"Short", bun:"Bun", twin:"Pigtails", wavy:"Wavy",
       tiara:"Tiara", crown:"Crown", helmet:"Knight helmet", hachimaki:"Headband", none:"None", flowercrown:"Flower crown", ribbon:"Bow", feather:"Feather hat", circlet:"Gold circlet", kabuto:"Samurai helmet",
-      cat:"Cat", dog:"Dog", dragon:"Dragon", unicorn:"Unicorn", bunny:"Bunny", chick:"Chick", penguin:"Penguin", fox:"Fox",
+      whale:"Whale", frog:"Frog", panda:"Panda", squirrel:"Squirrel", elephant:"Elephant", butterfly:"Butterfly", cat:"Cat", dog:"Dog", dragon:"Dragon", unicorn:"Unicorn", bunny:"Bunny", chick:"Chick", penguin:"Penguin", fox:"Fox",
       pink:"Pink", sky:"Sky blue", mint:"Green", lavender:"Purple", red:"Red", navy:"Navy", yellow:"Yellow", gold:"Gold", silver:"Silver", black:"Black", white:"White",
       hcBlack:"Black", hcBrown:"Brown", hcBlond:"Blond", hcRed:"Auburn", hcPink:"Pink", hcBlue:"Blue", hcSilver:"Silver"
     },
@@ -364,7 +408,13 @@ var TEXT = {
       lost:{who:"Grandma Owl", ask:"I lost my {x}. Can you find it?", how:"Tap the trees to look", wrong:"Not here", done:"You found it! Thank you!",
         things:{glasses:"glasses", key:"key", hat:"hat", yarn:"yarn"}},
       letters:{who:"Postman Penguin", ask:"Help me deliver the letters!", how:"Tap the house with the same color", wrong:"Not that house", done:"All delivered!"},
-      lanterns:{who:"Tanuki from the East", ask:"Line up the festival lanterns!", how:"Which color comes next?", wrong:"So close! Try again", done:"What a lovely festival!"}
+      lanterns:{who:"Tanuki from the East", ask:"Line up the festival lanterns!", how:"Which color comes next?", wrong:"So close! Try again", done:"What a lovely festival!"},
+      pairs:{who:"Beach Crab", ask:"The waves scattered my seashells!", how:"Find two pictures that match", wrong:"Not a match. Try again!", done:"All matched!"},
+      bells:{who:"Singing Frog", ask:"Let's ring the festival song together!", how:"Ring the bells in the same order", wrong:"So close! Listen again", done:"What a lovely song!"},
+      sorting:{who:"Panda Shopkeeper", ask:"The toys and fruit got mixed up. Please tidy up!", how:"Fruit in the basket, toys in the box", wrong:"Not there", done:"All neat and tidy!"},
+      counting:{who:"Mother Squirrel", ask:"Winter is coming. Help me gather acorns!", how:"Count and put them in the basket", wrong:"Hmm? Let's count again", done:"Now we're ready for winter!", askN:"Please give me {n} acorns"},
+      sizes:{who:"Snowy Elephant", ask:"Help me compare sizes!", how:"Tap from biggest to smallest", wrong:"Which one is bigger?", done:"You got it!"},
+      shadow:{who:"Wizard Cat", ask:"My magic turned everyone into shadows!", how:"Which one matches the shadow?", wrong:"Look closely at the shape", done:"The spell is broken!"}
     }
   }
 };
@@ -376,11 +426,12 @@ var HAIRS = ["long","bob","short","bun","twin","wavy"];
 var HAIRC = {hcBlack:"#33261f", hcBrown:"#7a4a2a", hcBlond:"#e6bf62", hcRed:"#b9512f", hcPink:"#f49ac1", hcBlue:"#7fa8f0", hcSilver:"#cfd4de"};
 var COLORS = {pink:"#ff8fbd", sky:"#7cc4f2", mint:"#6fd1a5", lavender:"#b48cf0", red:"#e8545c", navy:"#3f5aa8", yellow:"#f5cf4d", gold:"#e2b13c", silver:"#bfc8d4", black:"#34323f", white:"#f4f1ec"};
 var ACCS = ["tiara","crown","helmet","hachimaki","none","flowercrown","ribbon","feather","circlet","kabuto"];
-var PETS = {none:"", cat:"🐱", dog:"🐶", dragon:"🐲", unicorn:"🦄", bunny:"🐰", chick:"🐤", penguin:"🐧", fox:"🦊"};
+var PETS = {none:"", cat:"🐱", dog:"🐶", dragon:"🐲", unicorn:"🦄", bunny:"🐰", chick:"🐤", penguin:"🐧", fox:"🦊", whale:"🐳", frog:"🐸", panda:"🐼", squirrel:"🐿️", elephant:"🐘", butterfly:"🦋"};
 // 最初から使えるもの
 var FREE = ["long","bob","short","bun","hcBlack","hcBrown","hcBlond","hcRed","pink","sky","mint","lavender","red","navy","yellow","tiara","crown","helmet","hachimaki","none"];
 // おねがいを はじめて かなえたときの おれい
-var FIRST_GIFT = {cake:["acc","ribbon"], flowers:["acc","flowercrown"], dragon:["pet","dragon"], lost:["acc","feather"], letters:["pet","penguin"], lanterns:["acc","kabuto"]};
+var FIRST_GIFT = {cake:["acc","ribbon"], flowers:["acc","flowercrown"], dragon:["pet","dragon"], lost:["acc","feather"], letters:["pet","penguin"], lanterns:["acc","kabuto"],
+  pairs:["pet","whale"], bells:["pet","frog"], sorting:["pet","panda"], counting:["pet","squirrel"], sizes:["pet","elephant"], shadow:["pet","butterfly"]};
 // おてがみで とどく もの（ランダム）
 var MAIL_POOL = [["pet","cat"],["pet","dog"],["pet","unicorn"],["pet","bunny"],["pet","chick"],["pet","fox"],["hair","twin"],["hair","wavy"],
   ["hairColor","hcPink"],["hairColor","hcBlue"],["hairColor","hcSilver"],["color","gold"],["color","silver"],["color","black"],["color","white"],["acc","circlet"]];
@@ -391,14 +442,16 @@ var DEF_LOOK = {
   knight:{skin:1,hair:"short",hairColor:"hcBrown",color:"red",acc:"helmet",pet:"none"},
   samurai:{skin:1,hair:"bun",hairColor:"hcBlack",color:"navy",acc:"hachimaki",pet:"none"}
 };
-var RES = [ // むらの ひとと いる ばしょ
-  {id:"cake", emo:"🐻", x:72, y:360},
-  {id:"flowers", emo:"🐰", x:332, y:350},
-  {id:"dragon", emo:"🐲", x:330, y:520},
-  {id:"lost", emo:"🦉", x:58, y:500},
-  {id:"letters", emo:"🐧", x:140, y:560},
-  {id:"lanterns", emo:"🦝", x:265, y:575}
+// ステージ（おうこく）ごとの むらの ひと。どの ステージも 半分は 新しい ミッション。
+var STAGES = [
+  ["cake","flowers","dragon","lost","letters","lanterns"],   // はなの おうこく
+  ["pairs","cake","bells","letters","sorting","dragon"],     // うみべの おうこく（新3）
+  ["counting","flowers","sizes","lost","shadow","lanterns"]  // ゆきの おうこく（新3）
 ];
+var EMO = {cake:"🐻", flowers:"🐰", dragon:"🐲", lost:"🦉", letters:"🐧", lanterns:"🦝", pairs:"🦀", bells:"🐸", sorting:"🐼", counting:"🐿️", sizes:"🐘", shadow:"🐱"};
+var POS = [[72,360],[332,350],[330,520],[58,500],[140,560],[265,575]];
+function stageNo(){ return Math.min(S && S.stage || 0, STAGES.length-1); }
+function stageRes(){ return STAGES[stageNo()].map(function(id,i){ return {id:id, emo:EMO[id], x:POS[i][0], y:POS[i][1]}; }); }
 
 /* ---------- ほぞん ---------- */
 var KEY="oukoku-save", FACE_KEY="oukoku-face", PORT_KEY="oukoku-portraits";
@@ -407,7 +460,7 @@ function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ ret
 function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
 function today(){ var d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
 var S = null;
-function fresh(){ return {v:1, role:null, look:null, name:"", hearts:0, done:{}, unlocked:FREE.slice(), lastMail:"", active:["cake","flowers","dragon"], welcomed:false, voice:true}; }
+function fresh(){ return {v:1, role:null, look:null, name:"", hearts:0, done:{}, unlocked:FREE.slice(), lastMail:"", active:["cake","flowers","dragon"], welcomed:false, voice:true, stage:0}; }
 function load(){ try{ var j=JSON.parse(lsGet(KEY)); if(j && j.v===1) return j; }catch(e){} return null; }
 function save(){ lsSet(KEY, JSON.stringify(S)); }
 var FACE = lsGet(FACE_KEY) || "";
@@ -744,7 +797,7 @@ function has(id){ for(var i=0;i<DECOS.length;i++) if(DECOS[i][0]===id) return S.
 function sceneSVG(){
   var h=[], night=has("fireworks");
   h.push('<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+(night?"#5b5fb8":"#8fd3ff")+'"/><stop offset="1" stop-color="'+(night?"#f7b6d2":"#e9f7ff")+'"/></linearGradient>'+
-    '<linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fe08a"/><stop offset="1" stop-color="#6cc46a"/></linearGradient></defs>');
+    '<linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+["#9fe08a","#f6e3b0","#ffffff"][stageNo()]+'"/><stop offset="1" stop-color="'+["#6cc46a","#e8c98a","#dbe6f4"][stageNo()]+'"/></linearGradient></defs>');
   h.push('<rect width="400" height="600" fill="url(#sky)"/>');
   if(!night) h.push('<circle cx="340" cy="60" r="28" fill="#ffe27a"/><circle cx="340" cy="60" r="40" fill="#ffe27a" opacity=".25"/>');
   else { for(var i=0;i<14;i++) h.push('<circle class="twinkle" style="animation-delay:'+(i*0.23).toFixed(2)+'s" cx="'+(20+i*27)+'" cy="'+(20+(i*37)%110)+'" r="1.8" fill="#fff"/>'); }
@@ -754,7 +807,10 @@ function sceneSVG(){
   if(has("balloon")) h.push('<g class="bob"><path d="M62 92 Q40 92 40 66 Q40 40 62 40 Q84 40 84 66 Q84 92 62 92Z" fill="#ff8fbd"/><path d="M62 40 Q52 66 62 92 Q72 66 62 40" fill="#ffe36b"/><path d="M54 92 L58 104 M70 92 L66 104" stroke="#8a6a5a" stroke-width="1.5"/><rect x="55" y="104" width="14" height="10" rx="2" fill="#b0784e"/></g>');
   if(night){ [[90,90,"#ffd34d"],[300,120,"#ff7fb0"],[200,60,"#9fd8ff"]].forEach(function(f,i){ var s='<g class="twinkle" style="animation-delay:'+(i*0.5)+'s">'; for(var k=0;k<12;k++){ var a=k*Math.PI/6; s+='<line x1="'+f[0]+'" y1="'+f[1]+'" x2="'+(f[0]+26*Math.cos(a)).toFixed(1)+'" y2="'+(f[1]+26*Math.sin(a)).toFixed(1)+'" stroke="'+f[2]+'" stroke-width="3" stroke-linecap="round"/>'; } h.push(s+'</g>'); }); }
   // とおくの おか
-  h.push('<path d="M0 250 Q80 200 170 240 Q260 190 400 240 L400 600 L0 600Z" fill="#b8e8a4"/>');
+  var stn=stageNo();
+  if(stn===2){ h.push('<path d="M-10 250 L70 150 L150 250Z M250 250 L330 140 L420 250Z" fill="#b9c7da"/><path d="M48 177 L70 150 L92 177 L80 172 L70 180 L60 172Z M306 170 L330 140 L354 170 L342 165 L330 174 L318 165Z" fill="#fff"/>'); }
+  if(stn===1){ h.push('<rect x="0" y="222" width="400" height="60" fill="#5fb6e8"/><path d="M0 236 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" stroke="#fff" stroke-width="2" fill="none" opacity=".7"/><text class="cloud" x="0" y="238" font-size="26" style="animation-duration:60s">⛵</text>'); }
+  else h.push('<path d="M0 250 Q80 200 170 240 Q260 190 400 240 L400 600 L0 600Z" fill="'+(stn===2?"#e8eff8":"#b8e8a4")+'"/>');
   // おしろ
   var w="#fbf3ea", w2="#e8d9c8", rf="#7b8cf0";
   h.push('<g>');
@@ -771,7 +827,7 @@ function sceneSVG(){
   h.push('</g>');
   // じめん と みち
   h.push('<path d="M0 262 Q200 240 400 262 L400 600 L0 600Z" fill="url(#gr)"/>');
-  h.push('<path d="M182 250 L218 250 L262 600 L138 600Z" fill="#f2dfb4"/>');
+  h.push('<path d="M182 250 L218 250 L262 600 L138 600Z" fill="'+["#f2dfb4","#fff4d6","#cfdcec"][stn]+'"/>');
   if(has("lanterns")){ h.push('<path d="M20 284 Q110 304 182 284 M218 284 Q290 304 380 284" stroke="#8a6a5a" stroke-width="2" fill="none"/>');
     [40,80,120,160,240,280,320,360].forEach(function(x,i){ var y=284+ (x<200? 20*Math.sin((x-20)/162*Math.PI):20*Math.sin((x-218)/162*Math.PI)); h.push('<ellipse cx="'+x+'" cy="'+(y+8).toFixed(1)+'" rx="7" ry="9" fill="'+(i%2?"#ff6b5a":"#fff3d6")+'" stroke="#c0503f" stroke-width="1"/>'); }); }
   if(has("gate")) h.push('<g><rect x="16" y="222" width="10" height="56" fill="#c0503f"/><rect x="58" y="222" width="10" height="56" fill="#c0503f"/><rect x="26" y="226" width="32" height="40" fill="#f6e7c8"/><path d="M30 266 L30 236 Q42 226 54 236 L54 266Z" fill="#7a4a2a"/>'+
@@ -780,10 +836,16 @@ function sceneSVG(){
   if(has("fountain")) h.push('<g><ellipse cx="200" cy="330" rx="40" ry="12" fill="#cfd6df"/><ellipse cx="200" cy="327" rx="34" ry="8" fill="#8fd3ff"/><rect x="195" y="300" width="10" height="26" fill="#cfd6df"/><path class="twinkle" d="M200 300 Q186 284 178 318 M200 300 Q214 284 222 318 M200 300 L200 282" stroke="#8fd3ff" stroke-width="3" fill="none" stroke-linecap="round"/></g>');
   if(has("pond")) h.push('<g><ellipse cx="88" cy="440" rx="50" ry="18" fill="#7cc4f2"/><text x="80" y="446" font-size="22" text-anchor="middle">🦢</text></g>');
   // き
-  h.push('<g><rect x="30" y="460" width="10" height="30" fill="#8a5a3a"/><circle cx="35" cy="450" r="24" fill="#5aa85a"/></g>');
-  h.push('<g><rect x="360" y="410" width="10" height="30" fill="#8a5a3a"/><circle cx="365" cy="400" r="22" fill="#5aa85a"/></g>');
+  if(stn===0){
+    h.push('<g><rect x="30" y="460" width="10" height="30" fill="#8a5a3a"/><circle cx="35" cy="450" r="24" fill="#5aa85a"/></g>');
+    h.push('<g><rect x="360" y="410" width="10" height="30" fill="#8a5a3a"/><circle cx="365" cy="400" r="22" fill="#5aa85a"/></g>');
+  } else {
+    var tr=stn===1?"🌴":"🌲"; h.push('<text x="35" y="492" font-size="54" text-anchor="middle">'+tr+'</text><text x="365" y="440" font-size="48" text-anchor="middle">'+tr+'</text>');
+    if(stn===1) h.push('<text x="300" y="300" font-size="22">🐚</text><text x="90" y="330" font-size="20">⭐</text>');
+    else { h.push('<text x="300" y="300" font-size="30">⛄</text>'); for(var q=0;q<14;q++) h.push('<text class="snow" style="animation-delay:-'+(q*0.65).toFixed(2)+'s" x="'+(14+q*28)+'" y="0" font-size="'+(10+(q%3)*4)+'" fill="#fff" opacity=".9">❄</text>'); }
+  }
   // むらの ひと
-  RES.forEach(function(r){
+  stageRes().forEach(function(r){
     var act=!cleared() && S.active.indexOf(r.id)>=0;
     h.push('<g class="tap" data-res="'+r.id+'"><circle cx="'+r.x+'" cy="'+(r.y-12)+'" r="34" fill="transparent"/><ellipse cx="'+r.x+'" cy="'+(r.y+6)+'" rx="20" ry="5" fill="rgba(0,0,0,.12)"/><text x="'+r.x+'" y="'+r.y+'" font-size="40" text-anchor="middle">'+r.emo+'</text>'+
       (act?'<g class="bob"><circle cx="'+(r.x+20)+'" cy="'+(r.y-48)+'" r="14" fill="#fff" stroke="#ff6fa8" stroke-width="3"/><text x="'+(r.x+20)+'" y="'+(r.y-42)+'" font-size="16" text-anchor="middle" font-weight="700" fill="#ff6fa8">!</text></g>':'')+'</g>');
@@ -794,14 +856,15 @@ function sceneSVG(){
   return h.join("");
 }
 function renderKingdom(){
-  var sc=$("#scene"); sc.innerHTML=sceneSVG(); sc.parentNode.classList.toggle("night", has("fireworks"));
+  var sc=$("#scene"); sc.innerHTML=sceneSVG(); sc.parentNode.classList.toggle("night", has("fireworks")); sc.parentNode.classList.toggle("st1", stageNo()===1); sc.parentNode.classList.toggle("st2", stageNo()===2);
+  $("#stageChip").textContent=T().stages[stageNo()];
   sc.querySelectorAll("[data-res]").forEach(function(g){ g.addEventListener("click",function(){ openRequest(g.getAttribute("data-res")); }); });
   var me=sc.querySelector("#me"); me.addEventListener("click",function(){ sfx("ok"); me.classList.remove("shake"); void me.getBBox(); me.classList.add("shake"); voice("role_"+S.role, titleOf()); });
   $("#hc").textContent=S.hearts;
   var next=null, prev=0; for(var i=0;i<DECOS.length;i++){ if(S.hearts<DECOS[i][1]){ next=DECOS[i]; break; } prev=DECOS[i][1]; }
   if(next){ $("#pf").style.width=Math.round((S.hearts-prev)/(next[1]-prev)*100)+"%"; $("#pn").textContent=fmt(T().nextDeco,{d:T().decos[next[0]], n:next[1]-S.hearts}); }
   else { $("#pf").style.width="100%"; $("#pn").textContent=T().endDone; }
-  var nb=$("#newKBtn"); nb.textContent=T().newKingdom; nb.style.display=cleared()?"":"none";
+  var nb=$("#newKBtn"); nb.textContent=stageNo()<STAGES.length-1?T().nextStage:T().againStart; nb.style.display=cleared()?"":"none";
   var mb=$("#btnMail"), bd=mb.querySelector(".badge"); if(bd) bd.remove();
   if(S.lastMail!==today()) mb.appendChild(el("span","badge","1"));
 }
@@ -867,7 +930,7 @@ function showGift(g, head, icon, after, vkey){
    おねがい と ミニゲーム
    ========================================================= */
 var CUR=null;
-function resOf(id){ for(var i=0;i<RES.length;i++) if(RES[i].id===id) return RES[i]; }
+function resOf(id){ var R=stageRes(); for(var i=0;i<R.length;i++) if(R[i].id===id) return R[i]; return {id:id, emo:EMO[id]}; }
 function openRequest(id){
   var r=resOf(id), G=T().games[id], act=!cleared() && S.active.indexOf(id)>=0;
   sfx("tap");
@@ -905,7 +968,7 @@ function finishGame(){
   S.done[id]=(S.done[id]||0)+1; gain=Math.min(gain, MAXH-S.hearts); S.hearts+=gain;
   // つぎの おねがい：かなえた ひとを はずし、ほかの ひとから 1人
   S.active=S.active.filter(function(x){ return x!==id; });
-  var others=RES.map(function(x){ return x.id; }).filter(function(x){ return S.active.indexOf(x)<0 && x!==id; });
+  var others=stageRes().map(function(x){ return x.id; }).filter(function(x){ return S.active.indexOf(x)<0 && x!==id; });
   S.active.push(pick(others));
   var giftG=null; if(first && FIRST_GIFT[id] && S.unlocked.indexOf(FIRST_GIFT[id][1])<0){ giftG=FIRST_GIFT[id]; S.unlocked.push(giftG[1]); }
   save();
@@ -927,23 +990,32 @@ function finishGame(){
 function showEnding(){
   S.endSeen=true; save(); renderKingdom();
   sfx("deco"); confetti(30,["🎉","✨","⭐","💖","👑","🎆"]);
-  var m=fmt(T().endMsg,{t:titleOf()});
-  var c=dialog('<div class="who">👑</div><p class="say" style="font-size:24px">'+esc(T().endTitle)+'</p><p class="say" style="font-size:17px">'+esc(m)+'</p>'+
-    '<p style="font-size:34px;margin:4px 0 14px">'+RES.map(function(r){ return r.emo; }).join("")+'</p>'+
-    '<div class="btns" style="flex-direction:column;align-items:center"><button class="big" id="eP">'+esc(T().endPaint)+'</button>'+
+  var last=stageNo()>=STAGES.length-1;
+  var m=fmt(last?T().allMsg:T().endMsg,{t:titleOf()}), next=last?"":fmt(T().stageNext,{s:T().stages[stageNo()+1]});
+  var c=dialog('<div class="who">👑</div><p class="say" style="font-size:24px">'+esc(last?T().allTitle:T().stageClear)+'</p><p class="say" style="font-size:17px">'+esc(m)+(next?'<br>'+esc(next):'')+'</p>'+
+    '<p style="font-size:34px;margin:4px 0 14px">'+stageRes().map(function(r){ return r.emo; }).join("")+'</p>'+
+    '<div class="btns" style="flex-direction:column;align-items:center">'+(last?'':'<button class="big" id="eN">'+esc(T().nextStage)+'</button>')+
+    '<button class="big'+(last?'':' sub')+'" id="eP">'+esc(T().endPaint)+'</button>'+
     '<button class="big sub" id="eL">'+esc(T().endLook)+'</button></div>');
-  voice("deco_all", T().allDeco+" "+m);
+  voice(last?"all_clear":"stage_clear", (last?T().allTitle:T().stageClear)+" "+m+" "+next);
   c.querySelector("#eL").onclick=closeDialog;
+  if(!last) c.querySelector("#eN").onclick=function(){ closeDialog(); goStage(stageNo()+1); };
   c.querySelector("#eP").onclick=function(){ closeDialog(); renderGallery(); show("gallery"); $("#galNew").click(); };
+}
+function goStage(n){
+  S.stage=n; S.hearts=0; S.endSeen=false; if(n===0) S.round=(S.round||1)+1;
+  S.active=shuffle(STAGES[n].slice()).slice(0,3); save();
+  renderKingdom(); sfx("win"); confetti(16,["✨","⭐","💖",["🌸","🌊","❄️"][n]]);
+  var msg=fmt(n===0?T().stageBack:T().stageArrive,{s:T().stages[n]});
+  var c=dialog('<div class="who">'+["🌸","🌊","❄️"][n]+'</div><p class="say">'+esc(msg)+'</p><p style="font-size:34px;margin:4px 0 14px">'+stageRes().map(function(r){ return r.emo; }).join("")+'</p><div class="btns"><button class="big" id="sOk">OK</button></div>');
+  c.querySelector("#sOk").onclick=closeDialog; voice("stage_"+n, msg);
 }
 $("#newKBtn").onclick=function(){
   sfx("tap");
-  var c=dialog('<div class="who">🏰</div><p class="say">'+esc(T().newKAsk).replace(/\n/g,"<br>")+'</p><div class="btns"><button class="big sub" id="nN">'+T().no+'</button><button class="big" id="nY">'+esc(T().newKGo)+'</button></div>');
+  if(stageNo()<STAGES.length-1){ goStage(stageNo()+1); return; }
+  var c=dialog('<div class="who">🏰</div><p class="say">'+esc(T().againAsk).replace(/\n/g,"<br>")+'</p><div class="btns"><button class="big sub" id="nN">'+T().no+'</button><button class="big" id="nY">'+esc(T().newKGo)+'</button></div>');
   c.querySelector("#nN").onclick=closeDialog;
-  c.querySelector("#nY").onclick=function(){
-    closeDialog(); S.hearts=0; S.active=shuffle(RES.map(function(r){ return r.id; })).slice(0,3); S.endSeen=false; S.round=(S.round||1)+1; save();
-    renderKingdom(); sfx("win"); confetti(16); toast(T().newKStart); voice("newk", T().newKStart);
-  };
+  c.querySelector("#nY").onclick=function(){ closeDialog(); goStage(0); };
 };
 function checkDeco(before){
   for(var i=0;i<DECOS.length;i++){
@@ -957,6 +1029,115 @@ function checkDeco(before){
 }
 
 var GAMES = {
+  /* かいがらの ペア（しんけいすいじゃく） */
+  pairs:function(a,G){
+    var pool=shuffle(["🐚","🐠","⭐","🐙","🐬","🦐"]).slice(0,3), cards=shuffle(pool.concat(pool)), open=[], got=0, lock=false;
+    var grid=el("div","cards"); a.appendChild(grid);
+    cards.forEach(function(x){
+      var b=el("button","card2","🌊"); grid.appendChild(b);
+      b.onclick=function(){
+        if(lock || b.classList.contains("up")) return;
+        b.classList.add("up","grow"); b.textContent=x; sfx("tap"); open.push(b);
+        if(open.length<2) return;
+        var p=open; open=[];
+        if(p[0].textContent===p[1].textContent){ sfx("ok"); p.forEach(function(q){ q.classList.add("ok"); }); got++; if(got===pool.length) later(finishGame,700); }
+        else { lock=true; sfx("no"); say(G.wrong); later(function(){ p.forEach(function(q){ q.classList.remove("up","grow"); q.textContent="🌊"; }); lock=false; },1000); }
+      };
+    });
+  },
+  /* ベルの おとあて（おなじ じゅんばんで ならす） */
+  bells:function(a,G){
+    var B=[["#ff7b7b",523],["#5fa8f2",659],["#f5c94d",784]], lens=[2,3,3], ri=0, seq=[], pos=0, busy=true;
+    var row=el("div","bells"), again=el("button","big sub","🔁 "+esc(T().listen));
+    a.appendChild(row); a.appendChild(again);
+    var bs=B.map(function(b,i){ var e=el("button","bell","🔔"); e.style.background=b[0]; e.onclick=function(){ press(i); }; row.appendChild(e); return e; });
+    function flash(i){ bs[i].classList.add("lit"); tone(B[i][1],.4,"triangle",0,.25); setTimeout(function(){ bs[i].classList.remove("lit"); },320); }
+    function play(){ busy=true; pos=0; seq.forEach(function(i,k){ later(function(){ flash(i); }, 400+k*700); }); later(function(){ busy=false; }, 400+seq.length*700); }
+    function round(){ seq=[]; for(var k=0;k<lens[ri];k++) seq.push(Math.floor(Math.random()*3)); play(); }
+    function press(i){
+      if(busy) return; flash(i);
+      if(i===seq[pos]){ pos++; if(pos===seq.length){ busy=true; sfx("ok"); ri++; if(ri<lens.length) later(round,1100); else later(finishGame,800); } }
+      else { busy=true; later(function(){ sfx("no"); say(G.wrong); },300); later(play,2400); }
+    }
+    again.onclick=function(){ if(!busy) play(); };
+    later(round,2400);
+  },
+  /* おかたづけ（くだもの と おもちゃ） */
+  sorting:function(a,G){
+    var F=["🍎","🍌","🍇","🍓","🍊","🍑"], Y=["🧸","⚽","🚗","🎈","🧩","🎲"];
+    var items=shuffle(shuffle(F.slice()).slice(0,3).concat(shuffle(Y.slice()).slice(0,3))), i=0;
+    var cur=el("div","bigitem grow"), bins=el("div","bins"); a.appendChild(cur); a.appendChild(bins);
+    [["fruit","🧺",T().binFruit],["toy","📦",T().binToy]].forEach(function(b){
+      var e=el("button","bin",'<div style="font-size:56px;line-height:1.2">'+b[1]+'</div><b>'+esc(b[2])+'</b><div class="in"></div>');
+      e.onclick=function(){ put(b[0], e); }; bins.appendChild(e);
+    });
+    function showItem(){ cur.textContent=items[i]; cur.classList.remove("grow"); void cur.offsetWidth; cur.classList.add("grow"); }
+    function put(kind,e){
+      if(i>=items.length) return;
+      var x=items[i];
+      if((F.indexOf(x)>=0)===(kind==="fruit")){ sfx("ok"); e.querySelector(".in").textContent+=x; i++; if(i<items.length) showItem(); else { cur.textContent="✨"; later(finishGame,700); } }
+      else { sfx("no"); e.classList.remove("shake"); void e.offsetWidth; e.classList.add("shake"); say(G.wrong); }
+    }
+    showItem();
+  },
+  /* どんぐりを かぞえる */
+  counting:function(a,G){
+    var rounds=shuffle([2,3,4,5]).slice(0,3), ri=0, cnt=0;
+    var tree=el("div","acorns"), bk=el("div","basket",'🧺<div class="num">0</div><div class="in"></div>'), okb=el("button","big","✔ "+esc(T().countOk));
+    a.appendChild(tree); a.appendChild(bk); a.appendChild(okb);
+    function setup(){
+      cnt=0; bk.querySelector(".num").textContent="0"; bk.querySelector(".in").textContent=""; tree.innerHTML="";
+      for(var k=0;k<8;k++){ (function(){ var b=el("button","acorn","🌰"); b.onclick=function(){
+        if(b.dataset.used) return; b.dataset.used=1; b.style.visibility="hidden"; cnt++;
+        bk.querySelector(".num").textContent=cnt; bk.querySelector(".in").textContent+="🌰"; sfx("tap"); voice("num"+cnt, String(cnt)); };
+        tree.appendChild(b); })(); }
+    }
+    function round(){ var n=rounds[ri]; setup(); say(fmt(G.askN,{n:n}), "counting_n"+n); }
+    okb.onclick=function(){
+      var n=rounds[ri];
+      if(cnt===n){ sfx("ok"); confetti(6,["🌰","✨"]); ri++; if(ri<rounds.length) later(round,1200); else later(finishGame,800); }
+      else { sfx("no"); say(G.wrong); later(round,2200); }
+    };
+    setup(); later(round,2200);
+  },
+  /* おおきい じゅんに ならべる */
+  sizes:function(a,G){
+    var E=shuffle(["🍎","🐟","⭐","🎈","🐢","🍩"]).slice(0,3), ri=0;
+    var row=el("div","sizes"); a.appendChild(row);
+    function round(){
+      var e=E[ri], sz=[100,66,38], order=0, miss=0; row.innerHTML="";
+      shuffle([0,1,2]).forEach(function(k){
+        var b=el("button","szb grow",e); b.style.fontSize=sz[k]+"px"; b.dataset.k=k; row.appendChild(b);
+        b.onclick=function(){
+          if(b.dataset.done) return;
+          if(k===order){ sfx("ok"); b.dataset.done=1; b.classList.add("done"); b.appendChild(el("span","nb",String(order+1))); order++;
+            if(order===3){ ri++; if(ri<E.length) later(round,1000); else later(finishGame,700); } }
+          else { sfx("no"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); say(G.wrong); miss++;
+            if(miss>=2) row.querySelectorAll(".szb").forEach(function(q){ q.classList.toggle("hint", +q.dataset.k===order); }); }
+        };
+      });
+    }
+    round();
+  },
+  /* かげあて */
+  shadow:function(a,G){
+    var P=["🐘","🐰","🦒","🐢","🦋","🐟","🚗","✈️","🍄","⭐","🐌","🦀","🐳","🌵"], rounds=shuffle(P.slice()).slice(0,3), ri=0;
+    var sh=el("div","shadowbox"), tray=el("div","tray"); a.appendChild(sh); a.appendChild(tray);
+    function round(){
+      var t=rounds[ri], miss=0; sh.innerHTML='<span class="sil grow">'+t+'</span>';
+      var opts=shuffle([t].concat(shuffle(P.filter(function(x){ return x!==t; })).slice(0,2))); tray.innerHTML="";
+      opts.forEach(function(x){
+        var b=el("button","item",x); tray.appendChild(b);
+        b.onclick=function(){
+          if(x===t){ sfx("ok"); sh.innerHTML='<span class="grow">'+t+'</span>'; tray.querySelectorAll("button").forEach(function(q){ q.disabled=true; });
+            ri++; if(ri<rounds.length) later(round,1100); else later(finishGame,800); }
+          else { sfx("no"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); say(G.wrong); miss++;
+            if(miss>=2) tray.querySelectorAll(".item").forEach(function(q){ if(q.textContent===t) q.classList.add("hint"); }); }
+        };
+      });
+    }
+    round();
+  },
   /* ケーキ：おなじ くだものを のせる */
   cake:function(a,G){
     var all=["🍓","🍇","🍒","🍫","🍊","🥝","🍌","🍑"], need=shuffle(all.slice()).slice(0,3), extra=shuffle(all.filter(function(x){ return need.indexOf(x)<0; })).slice(0,2);
@@ -1149,6 +1330,7 @@ function roundRect(x,a,b,w,h,r){ x.beginPath(); x.moveTo(a+r,b); x.arcTo(a+w,b,a
 
 /* ---------- はじまり ---------- */
 S=load(); if(S && S.hearts>MAXH) S.hearts=MAXH;
+if(S && S.role){ if(!S.stage) S.stage=0; var ids=STAGES[stageNo()]; S.active=(S.active||[]).filter(function(x){ return ids.indexOf(x)>=0; }); while(S.active.length<3){ var rest=ids.filter(function(x){ return S.active.indexOf(x)<0; }); S.active.push(pick(rest)); } }
 renderTitle();
 document.addEventListener("pointerdown",function(){ actx(); },{passive:true});
 </script>
