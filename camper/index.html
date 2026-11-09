@@ -25,7 +25,7 @@ body{background:var(--wall);color:var(--ink);font-family:var(--font);overflow:hi
 button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
-#app{height:100%;display:grid;grid-template-rows:auto 1fr auto;
+#app{height:100%;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr auto;
   padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
 header{display:flex;align-items:flex-end;gap:10px;padding:10px 16px 4px}
 header .l{flex:1;min-width:0;cursor:pointer}
@@ -106,6 +106,20 @@ header .r{text-align:right;white-space:nowrap}
 .filebtn{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--line);background:#fff;border-radius:14px;padding:10px 12px;font-weight:700;font-size:14px;cursor:pointer}
 #b-full{position:absolute;right:10px;bottom:10px;z-index:5;height:38px;padding:0 14px;border-radius:19px;font-weight:700;font-size:14px!important;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:20px;line-height:1;backdrop-filter:blur(4px)}
 #fsinfo{display:none}
+#b-gaze{position:absolute;right:10px;top:10px;z-index:5;height:34px;padding:0 12px;border-radius:17px;border:0;background:rgba(0,0,0,.35);color:#fff;font-weight:700;font-size:13px;backdrop-filter:blur(4px)}
+.f-retro #b-gaze{right:20px;top:20px}.f-round #b-gaze{right:24%;top:9%}
+body.full #b-gaze{display:none}
+#gzcover,#gzclock,#gzbar{display:none}
+body.gaze #gzcover{display:block;position:absolute;inset:0;z-index:7;background:transparent;transition:background 2s}
+body.gaze.gz-dim #gzcover{background:rgba(0,0,0,.45)}
+body.gaze #b-snd,body.gaze #b-full,body.gaze #b-info,body.gaze #fsinfo,body.gaze #fsmap,body.gaze #toasts{display:none!important}
+body.gaze #gzclock:not([hidden]){display:block;position:absolute;left:6%;bottom:8%;z-index:8;color:#fff;pointer-events:none;text-shadow:0 2px 12px rgba(0,0,0,.55);transition:left 3s,bottom 3s}
+#gzclock b{display:block;font-size:clamp(56px,16vmin,130px);font-weight:300;line-height:1;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+#gzclock span{display:block;font-size:clamp(14px,3.2vmin,22px);opacity:.9;margin-top:6px}#gzclock .gz-pl{font-size:clamp(12px,2.6vmin,17px);opacity:.75}
+body.gaze.gz-dim #gzclock{opacity:.6}
+body.gaze #gzbar:not([hidden]){display:flex;flex-wrap:wrap;justify-content:center;gap:8px;position:absolute;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:9}
+#gzbar button{border:0;border-radius:99px;padding:10px 14px;font-weight:700;font-size:14px;background:rgba(255,250,240,.92);color:#3a2c22;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#gzbar button[data-gz=back]{background:var(--accent);color:#fff}
 /* 角が丸い窓ではボタンが隠れないよう内側へ */
 .f-retro #b-snd{left:20px;bottom:24px}.f-retro #b-full{right:20px;bottom:24px}
 .f-round #b-snd{left:21%;bottom:11%}.f-round #b-full{right:21%;bottom:11%}
@@ -168,7 +182,7 @@ nav button span{font-size:22px;line-height:1}
 nav button:active{transform:translateY(2px);box-shadow:0 1px 0 #4b3423}
 /* 横向き（iPad・スマホ横）では、パネルを右側に */
 @media (min-aspect-ratio:5/4){
-  #app{grid-template-columns:1fr minmax(280px,30%);grid-template-rows:auto 1fr}
+  #app{grid-template-columns:minmax(0,1fr) minmax(280px,30%);grid-template-rows:auto 1fr}
   header{grid-column:1/3}
   #winwrap{grid-row:2}
   #panel{grid-row:2;grid-column:2;overflow:auto;padding:16px 16px 16px 0;justify-content:center}
@@ -265,7 +279,7 @@ svg.map{touch-action:none;cursor:grab;width:100%;aspect-ratio:1.5/1;border-radiu
     <div class="r"><div id="clock"></div><div id="wx"></div></div>
   </header>
   <div id="winwrap">
-    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button><button id="b-full" aria-label="全画面">⛶ 全画面</button><button id="b-info" aria-label="情報の表示">ℹ️</button><div id="fsinfo"></div><div id="fsmap" hidden role="button" aria-label="地図をひらく"></div></div>
+    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button><button id="b-full" aria-label="全画面">⛶ 全画面</button><button id="b-gaze" aria-label="ながめるモード">🖼 ながめる</button><div id="gzcover"></div><div id="gzclock" hidden></div><div id="gzbar" hidden></div><button id="b-info" aria-label="情報の表示">ℹ️</button><div id="fsinfo"></div><div id="fsmap" hidden role="button" aria-label="地図をひらく"></div></div>
     <div id="sill"></div>
   </div>
   <section id="panel">
@@ -860,7 +874,8 @@ function autoPick(lap, i) {
 }
 // 追加ルート（いまはお試し版なので、買っても本物のお金はかかりません）
 const PRICE = 480, BUNDLE = 980;
-function owns(id) { return !LEG[id].paid || OWNED.includes(id) || QS.has('allroutes'); }
+// ファミリーパス（../common/kakin.js、あそびのいりぐち共通）を持っていれば、追加ルートもぜんぶ選べる
+function owns(id) { return !LEG[id].paid || OWNED.includes(id) || QS.has('allroutes') || !!(window.Kakin && Kakin.hasPass()); }
 const PAID = () => Object.keys(LEG).filter(id => LEG[id].paid);
 function buyRoutes(ids) { OWNED = [...new Set([...OWNED, ...ids])]; try { localStorage.setItem('camper-owned', JSON.stringify(OWNED)); } catch (e) { } }
 function showShop(focus, back) {
@@ -871,7 +886,10 @@ function showShop(focus, back) {
      ${has ? '<div class="tag pick">✓ 持っています</div>' : `<button class="big" data-buyr="${id}">¥${PRICE} で買う</button>`}</div>`; }).join('')}
    ${left.length > 1 ? `<button class="big" data-buyr="all">🎁 ぜんぶセット ¥${BUNDLE}（${left.length}ルート）</button>` : ''}
    <p class="note">※ いまはお試し版です。ボタンを押しても本物のお金はかかりません。</p>
+   <p class="note">👪 子ども向けゲームと共通の「ファミリーパス」（月額・お試し）でも、追加ルートがぜんぶ選べます。</p>
+   ${window.Kakin ? '<button class="big ghost" id="shop-pass">👪 ファミリーパスを見る</button>' : ''}
    <button class="big ghost" id="shop-close">とじる</button>`);
+  if (window.Kakin) { Kakin.setup({ game: 'camper', lang: () => 'ja', noFull: true, name: { ja: 'キャンピングカー世界一周', en: 'Camper Trip' }, free: null, full: null, onChange: () => showShop(focus, back) }); $('#shop-pass').onclick = () => Kakin.open(); }
   $('#shop-close').onclick = () => back ? back() : closeModal();
   document.querySelectorAll('[data-buyr]').forEach(b => b.onclick = () => {
     const want = b.dataset.buyr === 'all' ? left : [b.dataset.buyr];
@@ -1923,6 +1941,7 @@ function walkStops(fn, maxLegs) {
 let toastQ = [];
 function toast(html, ms = 3800) {
   if (st && st.preview) return;
+  if (document.body.classList.contains('gaze')) return; // ながめるモードでは何も出さない
   const el = document.createElement('div'); el.className = 'toast'; el.innerHTML = html; $('#toasts').appendChild(el);
   setTimeout(() => el.classList.add('out'), ms); setTimeout(() => el.remove(), ms + 600);
 }
@@ -2600,13 +2619,41 @@ function cycleInfo() {
   fsInfo(); toast({ full: 'ℹ️ 情報と地図：くわしく', map: 'ℹ️ 地図と現在地だけ', mini: 'ℹ️ 現在地だけ', off: 'ℹ️ 表示しない（景色だけ）' }[FSI], 1600);
 }
 function poke() { document.body.classList.remove('calm'); clearTimeout(calmT); if (document.body.classList.contains('full')) calmT = setTimeout(() => document.body.classList.add('calm'), 3500); }
-async function setFull(on) {
-  document.body.classList.toggle('full', on); $('#b-full').textContent = on ? '✕' : '⛶ 全画面';
+async function setFull(on, gaze) {
+  document.body.classList.toggle('full', on); document.body.classList.toggle('gaze', !!(on && gaze)); if (on && gaze) gazeTick(); $('#b-full').textContent = on ? '✕' : '⛶ 全画面';
   const el = document.documentElement;
   try { if (on && el.requestFullscreen && !document.fullscreenElement) await el.requestFullscreen({ navigationUI: 'hide' }); else if (!on && document.fullscreenElement) await document.exitFullscreen(); } catch (e) { }
   try { if (on && navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); else if (!on && wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) { }
   fsInfo(); poke(); setTimeout(resize, 50); setTimeout(resize, 400);
 }
+// ながめるモード：ボタンも文字も消して景色だけ。置き時計のように飾る。タップでメニュー
+let GZ = (() => { try { return Object.assign({ clock: true, dim: true }, JSON.parse(localStorage.getItem('camper-gaze') || '{}')); } catch (e) { return { clock: true, dim: true }; } })();
+let gzBarT = 0, gzMoveAt = 0;
+function gazeTick() {
+  if (!document.body.classList.contains('gaze')) return;
+  const now = new Date(), hr = now.getHours(), c = $('#gzclock');
+  document.body.classList.toggle('gz-dim', GZ.dim && (hr >= 23 || hr < 6));
+  c.hidden = !GZ.clock;
+  if (GZ.clock && P) {
+    c.innerHTML = `<b>${hr}:${String(now.getMinutes()).padStart(2, '0')}</b><span>${now.getMonth() + 1}月${now.getDate()}日（${'日月火水木金土'[now.getDay()]}）</span><span class="gz-pl">🚐 ${$('#place').textContent}　${$('#clock').textContent}　${$('#wx').textContent.trim().replace(/\s+/g, ' ')}</span>`;
+    // 画面の焼きつきを防ぐため、数分ごとに少しずつ位置を変える
+    if (Date.now() > gzMoveAt) { gzMoveAt = Date.now() + 3 * 60e3; c.style.left = (4 + Math.random() * 10).toFixed(1) + '%'; c.style.bottom = (5 + Math.random() * 10).toFixed(1) + '%'; }
+  }
+}
+setInterval(gazeTick, 10e3);
+function gazeBar() {
+  const b = $('#gzbar');
+  b.innerHTML = `<button data-gz="back">◀ もどる</button><button data-gz="clock">${GZ.clock ? '🕰 時計：あり' : '🕰 時計：なし'}</button><button data-gz="dim">${GZ.dim ? '🌙 夜は暗く：する' : '🌙 夜は暗く：しない'}</button><button data-gz="snd">${SOUND ? '🔊 音：あり' : '🔇 音：なし'}</button>`;
+  b.hidden = false; clearTimeout(gzBarT); gzBarT = setTimeout(() => { b.hidden = true; }, 5000);
+}
+$('#gzcover').onclick = e => { e.stopPropagation(); const b = $('#gzbar'); if (b.hidden) gazeBar(); else { b.hidden = true; } };
+$('#gzbar').onclick = e => {
+  e.stopPropagation(); const k = e.target.closest('[data-gz]'); if (!k) return; const g = k.dataset.gz;
+  if (g === 'back') { $('#gzbar').hidden = true; setFull(false); return; }
+  if (g === 'snd') setSound(!SOUND); else { GZ[g] = !GZ[g]; try { localStorage.setItem('camper-gaze', JSON.stringify(GZ)); } catch (er) { } }
+  gazeTick(); gazeBar();
+};
+$('#b-gaze').onclick = e => { e.stopPropagation(); gzMoveAt = 0; setFull(true, true); };
 document.querySelector('header .l').onclick = () => showPlace(); $('#fsinfo').onclick = e => { e.stopPropagation(); showPlace(); };
 // 地図はふだん半透明。1回タップでくっきり、くっきりしているときのタップで大きな地図
 let mmSolidT = 0;
