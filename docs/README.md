@@ -1,6 +1,6 @@
 # ゲーム開発の記録（目次）
 
-最終更新: 2026-11-03
+最終更新: 2026-11-09
 
 くどうさんと Claude が「ゲーム開発」プロジェクトで作ってきたゲームの記録です。ゲームごとに、生まれたきっかけ、くどうさんの声と直したこと、遊ぶ場所、これからやることをまとめています。各ファイルの下のほうにある「技術メモ」は、次に作業する Claude（や開発者）向けの作り方の説明です。
 
@@ -23,7 +23,7 @@
 | ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
 | もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
 | ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、着せかえと肖像画つき | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
-| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
+| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 
 「Claude のページ」は、くどうさんが claude.ai にログインしたときだけ開けます。「公開ページ」は誰でもログインなしで開けます。
 
