@@ -231,7 +231,7 @@ const W = 600, H = 720; // かおの おおきさ（パーツの ざひょう）
 const T = {
   ja: {
     title: 'ふくわらい', sub: 'パーツを おいて、へんな かおを つくろう',
-    easy: 'かんたん', easyS: 'ぴたっと くっつく・2さい〜', blind: 'めかくし', blindS: 'おくまで みえない・4さい〜',
+    easy: 'かんたん', easyS: 'みえる・うごかせる・2さい〜', blind: 'めかくし', blindS: 'おくまで みえない・4さい〜',
     choose: 'どの かおで あそぶ？', addPhoto: 'しゃしんで つくる', album: 'アルバム', help: 'おうちの かたへ', games: 'ほかの あそび',
     look: 'よーく みてね', blindOn: 'めかくし ちゅう', seno: 'せーの！', match: 'そっくりど',
     save: 'アルバムへ', saved: 'いれたよ！', again: 'もういちど', other: 'ほかの かお', answer: 'こたえ',
@@ -244,8 +244,10 @@ const T = {
     brow: 'まゆ', eye: 'め', nose: 'はな', mouth: 'くち',
     delFace: 'この かおを けしますか？', delPic: 'この しゃしんを けしますか？', full: 'いっぱいに なったので ふるい ものを けしました',
     hVoice: 'こえ', hDev: 'スマホの こえ', hOff: 'なし', hSound: 'おと', hOn: 'あり', hLang: 'ことば / Language',
+    moveHint: 'パーツは ゆびで うごかして なおせるよ',
+    hSnap: 'ぴたっと くっつく（かんたん）', snapStrong: 'つよい', snapWeak: 'よわい', snapOff: 'なし',
     hAbout: 'あそびかた',
-    hAboutT: '<b>かんたん</b>: パーツを かおの うえに おくと、ちかければ「ぴたっ」と くっつきます。<br><b>めかくし</b>: さいしょに かおを よく みてから、めかくし。おいた パーツは みえません。ぜんぶ おいたら「せーの！」で みんなで みよう。<br>「こたえ」を おしている あいだは、もとの かおが みえます。',
+    hAboutT: '<b>かんたん</b>: パーツを かおの うえに おくと、ちかければ「ぴたっ」と くっつきます。<br><b>めかくし</b>: さいしょに かおを よく みてから、めかくし。おいた パーツは みえません。ぜんぶ おいたら「せーの！」で みんなで みよう。<br>おいた パーツは ゆびで うごかして、すこしずつ ばしょを なおせます（かんたんの とちゅうと、できあがった あと）。「ぴたっ」が じゃまなときは、下の せっていで よわく・なしに できます。<br>「こたえ」を おしている あいだは、もとの かおが みえます。',
     hPhoto: 'しゃしんの こと',
     hPhotoT: 'かおの いちを みつける しくみも ふくめて、ぜんぶ この きかいの なかで うごきます。しゃしんは インターネットに おくりません。つくった かおと アルバムは この きかいの ブラウザに ほぞんされます。',
     hClear: 'しゃしんの かおと アルバムを ぜんぶ けす', hClearQ: 'しゃしんで つくった かおと アルバムを ぜんぶ けしますか？', hClose: 'とじる',
@@ -253,7 +255,7 @@ const T = {
   },
   en: {
     title: 'FUKUWARAI', sub: 'Put the face parts on — make a funny face!',
-    easy: 'Easy', easyS: 'Parts snap into place · 2+', blind: 'Blindfold', blindS: 'Parts stay hidden · 4+',
+    easy: 'Easy', easyS: 'Parts stay visible · 2+', blind: 'Blindfold', blindS: 'Parts stay hidden · 4+',
     choose: 'Pick a face', addPhoto: 'Make from a photo', album: 'Album', help: 'For parents', games: 'More games',
     look: 'Take a good look!', blindOn: 'Eyes closed!', seno: 'Ready... Look!', match: 'Match',
     save: 'To album', saved: 'Saved!', again: 'Play again', other: 'Other faces', answer: 'Answer',
@@ -266,8 +268,10 @@ const T = {
     brow: 'brow', eye: 'eye', nose: 'nose', mouth: 'mouth',
     delFace: 'Delete this face?', delPic: 'Delete this picture?', full: 'Storage was full, so the oldest one was removed',
     hVoice: 'Voice', hDev: 'Device voice', hOff: 'Off', hSound: 'Sound', hOn: 'On', hLang: 'Language / ことば',
+    moveHint: 'You can drag the parts to fix them',
+    hSnap: 'Snap into place (Easy)', snapStrong: 'Strong', snapWeak: 'Weak', snapOff: 'Off',
     hAbout: 'How to play',
-    hAboutT: '<b>Easy</b>: drop a part near its spot and it snaps into place.<br><b>Blindfold</b>: look at the face first, then the screen goes dark and the parts you place are hidden. When all are placed, tap the button to reveal the funny face together.<br>Hold “Answer” to see the original face.',
+    hAboutT: '<b>Easy</b>: drop a part near its spot and it snaps into place.<br><b>Blindfold</b>: look at the face first, then the screen goes dark and the parts you place are hidden. When all are placed, tap the button to reveal the funny face together.<br>Drag a placed part to fine-tune where it sits (during Easy mode and after the face is finished). If snapping gets in the way, make it weaker or turn it off below.<br>Hold “Answer” to see the original face.',
     hPhoto: 'About photos',
     hPhotoT: 'Everything, including finding the face, runs on this device. Photos are never sent over the internet. Faces you make and the album are stored in this browser only.',
     hClear: 'Delete all photo faces and the album', hClearQ: 'Delete all photo faces and the album?', hClose: 'Close',
@@ -678,17 +682,8 @@ function endDrag() {
   let fx = (d.x - r.left - lay.ox) / lay.s, fy = (d.y - r.top - lay.oy) / lay.s;
   const inside = d.x >= r.left && d.x <= r.right && d.y >= r.top - 20 && d.y <= r.bottom;
   if (!inside || d.x === undefined) { if (d.el) d.el.classList.remove('gone'); if (d.prev) G.placed[d.p.id] = d.prev, G.order.includes(d.p.id) || G.order.push(d.p.id); sfx.soft(); updDots(); return; }
-  fx = Math.max(-60, Math.min(W + 60, fx)); fy = Math.max(-60, Math.min(H + 60, fy));
-  let slot = null;
-  if (mode === 'easy') { // ちかければ ぴたっ（おなじ しゅるいの あいている ばしょ）
-    let best = 78 * (G.face.photo ? 1.1 : 1);
-    for (const q of G.face.parts) {
-      if (q.type !== d.p.type) continue;
-      if (Object.entries(G.placed).some(([id, v]) => id !== d.p.id && v.slot === q.id)) continue;
-      const dd = Math.hypot(fx - q.tx, fy - q.ty);
-      if (dd < best) { best = dd; slot = q; }
-    }
-  }
+  [fx, fy] = clampFace(fx, fy);
+  const slot = findSlot(d.p, fx, fy);
   if (slot) { fx = slot.tx; fy = slot.ty; }
   G.placed[d.p.id] = { x: fx, y: fy, t: performance.now(), slot: slot ? slot.id : null };
   if (!G.order.includes(d.p.id)) G.order.push(d.p.id);
@@ -699,20 +694,64 @@ function endDrag() {
   if (G.order.length === G.face.parts.length) allPlaced();
   else if (G.order.length === 1 && Math.random() < .5) setTimeout(() => G && G.phase === 'play' && speak('pick'), 900);
 }
+const SNAP_R = { strong: 70, weak: 34, off: 0 };
+let snapMode = store.get('fuku-snap', 'weak');
+function findSlot(p, fx, fy) { // かんたん: ちかければ ぴたっ（おなじ しゅるいの あいている ばしょ）
+  if (mode !== 'easy' || !G || G.phase !== 'play') return null;
+  let best = (SNAP_R[snapMode] ?? 34) * (G.face.photo ? 1.1 : 1), slot = null;
+  for (const q of G.face.parts) {
+    if (q.type !== p.type) continue;
+    if (Object.entries(G.placed).some(([id, v]) => id !== p.id && v.slot === q.id)) continue;
+    const dd = Math.hypot(fx - q.tx, fy - q.ty);
+    if (dd < best) { best = dd; slot = q; }
+  }
+  return slot;
+}
+function clampFace(fx, fy) { // ボードの なかなら どこでも おける
+  const x0 = -lay.ox / lay.s + 10, x1 = (lay.w - lay.ox) / lay.s - 10, y0 = -lay.oy / lay.s + 10, y1 = (lay.h - lay.oy) / lay.s - 10;
+  return [Math.max(x0, Math.min(x1, fx)), Math.max(y0, Math.min(y1, fy))];
+}
 window.addEventListener('pointermove', moveDrag, { passive: true });
 window.addEventListener('pointerup', endDrag);
 window.addEventListener('pointercancel', endDrag);
-cv.addEventListener('pointerdown', e => { // かんたんモードでは おいた パーツを うごかせる
-  if (!G || G.phase !== 'play' || mode !== 'easy') return;
-  const r = cv.getBoundingClientRect(), fx = (e.clientX - r.left - lay.ox) / lay.s, fy = (e.clientY - r.top - lay.oy) / lay.s;
+/* おいた パーツを ゆびで うごかして こまかく なおす（かんたんの とちゅう／できあがった あと） */
+let bmove = null;
+function boardPt(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left - lay.ox) / lay.s, (e.clientY - r.top - lay.oy) / lay.s]; }
+cv.addEventListener('pointerdown', e => {
+  if (!G || drag || !((G.phase === 'play' && mode === 'easy') || G.phase === 'done')) return;
+  const [fx, fy] = boardPt(e), pad = 28 / lay.s;
+  let hit = null, hd = 1e9;
   for (let i = G.order.length - 1; i >= 0; i--) {
     const id = G.order[i], v = G.placed[id], p = G.face.parts.find(q => q.id === id);
-    if (Math.abs(fx - v.x) < p.img.width / 2 + 10 && Math.abs(fy - v.y) < p.img.height / 2 + 10) {
-      delete G.placed[id]; G.order.splice(i, 1); updDots();
-      startDrag(e, p, null); drag.prev = v; drag.touch = false; moveDrag(e); return;
-    }
+    const hw = Math.max(p.img.width / 2, pad), hh = Math.max(p.img.height / 2, pad);
+    if (Math.abs(fx - v.x) < hw && Math.abs(fy - v.y) < hh) { const dd = Math.hypot(fx - v.x, fy - v.y); if (dd < hd) { hd = dd; hit = id; } }
   }
+  if (!hit) return;
+  e.preventDefault(); audio();
+  try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+  const v = G.placed[hit];
+  bmove = { id: hit, pid: e.pointerId, dx: v.x - fx, dy: v.y - fy };
+  v.slot = null; G.order.splice(G.order.indexOf(hit), 1); G.order.push(hit); // いちばん うえに
+  G.moving = hit; if (G.phase === 'done') G.calm = true;
+  sfx.grab();
 });
+cv.addEventListener('pointermove', e => {
+  if (!bmove || e.pointerId !== bmove.pid || !G) return;
+  const [fx, fy] = boardPt(e), v = G.placed[bmove.id];
+  [v.x, v.y] = clampFace(fx + bmove.dx, fy + bmove.dy);
+});
+function endMove(e) {
+  if (!bmove || (e && e.pointerId !== bmove.pid)) return;
+  const id = bmove.id; bmove = null;
+  if (!G || !G.placed[id]) return;
+  G.moving = null;
+  const v = G.placed[id], p = G.face.parts.find(q => q.id === id), slot = findSlot(p, v.x, v.y);
+  if (slot) { v.x = slot.tx; v.y = slot.ty; v.slot = slot.id; v.t = performance.now(); sfx.snap(); }
+  else sfx.soft();
+  if (G.phase === 'done') { const b = $('#saveBtn'); b.disabled = false; b.querySelector('[data-t]').textContent = t('save'); }
+}
+cv.addEventListener('pointerup', endMove);
+cv.addEventListener('pointercancel', endMove);
 
 function allPlaced() {
   if (mode === 'blind') {
@@ -759,7 +798,7 @@ function finish() {
   G.phase = 'done'; G.doneT = performance.now();
   const sc = scoreOf(), good = sc >= 82;
   const stars = sc >= 90 ? 3 : sc >= 70 ? 2 : 1;
-  $('#score').innerHTML = `<span class="st">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span><br>${t('match')} ${sc}%`;
+  $('#score').innerHTML = `<span class="st">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span><br>${t('match')} ${sc}%<br><small style="font-size:12px;font-weight:400;opacity:.7">${t('moveHint')}</small>`;
   $('#tray').classList.add('hidden'); $('#panel').classList.add('on');
   requestAnimationFrame(layout);
   if (good) { sfx.good(); setTimeout(() => speak('good'), 300); confetti(); }
@@ -797,7 +836,8 @@ function frame(now) {
       let k = 1, rot = 0, dy = 0;
       const since = now - (mode === 'blind' && G.revealT[id] ? G.revealT[id] : v.t);
       if (since < 400) { const q = since / 400; k = 1 + Math.sin(q * Math.PI) * .35; }
-      if (G.phase === 'done') { const tt = (now - G.doneT) / 1000, i = face.parts.indexOf(p); rot = Math.sin(tt * 3.2 + i) * .07; dy = Math.sin(tt * 4 + i * 1.7) * 4; k *= 1 + Math.sin(tt * 5 + i) * .03; }
+      if (G.moving === id) k *= 1.08;
+      if (G.phase === 'done' && !G.calm) { const tt = (now - G.doneT) / 1000, i = face.parts.indexOf(p); rot = Math.sin(tt * 3.2 + i) * .07; dy = Math.sin(tt * 4 + i * 1.7) * 4; k *= 1 + Math.sin(tt * 5 + i) * .03; }
       g.save(); g.translate(v.x, v.y + dy); g.rotate(rot); g.scale(k, k);
       g.drawImage(p.img, -p.img.width / 2, -p.img.height / 2); g.restore();
     }
@@ -1036,6 +1076,8 @@ function renderHelp() {
     <h3>${t('hAbout')}</h3><p class="note" style="opacity:1;font-size:14px">${t('hAboutT')}</p>
     <h3>${t('hVoice')}</h3>
     <div class="opt" id="vOpt">${lang === 'ja' ? AI_VOICES.map(v => vb('ai:' + v.id, 'AI ' + v.n)).join('') : ''}${vb('dev', t('hDev'))}${vb('off', t('hOff'))}</div>
+    <h3>${t('hSnap')}</h3>
+    <div class="opt" id="pOpt">${['strong', 'weak', 'off'].map(k => `<button data-p="${k}" class="${snapMode === k ? 'sel' : ''}">${t('snap' + k[0].toUpperCase() + k.slice(1))}</button>`).join('')}</div>
     <h3>${t('hSound')}</h3>
     <div class="opt" id="sOpt"><button data-s="1" class="${soundOn ? 'sel' : ''}">${t('hOn')}</button><button data-s="0" class="${soundOn ? '' : 'sel'}">${t('hOff')}</button></div>
     <h3>${t('hLang')}</h3>
@@ -1044,6 +1086,7 @@ function renderHelp() {
     <div class="opt"><button id="clrBtn">${t('hClear')}</button></div>
     <button class="big" id="helpClose">${t('hClose')}</button>`;
   $('#vOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; voiceMode = b.dataset.v; store.set('fuku-voice', voiceMode); if (voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3)); renderHelp(); setTimeout(() => speak('good'), 200); };
+  $('#pOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; snapMode = b.dataset.p; store.set('fuku-snap', snapMode); renderHelp(); };
   $('#sOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; soundOn = b.dataset.s === '1'; store.set('fuku-sound', soundOn); $('#sndBtn').textContent = soundOn ? '🔊' : '🔇'; renderHelp(); };
   $('#lOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; setLang(b.dataset.l); renderHelp(); };
   $('#clrBtn').onclick = () => { if (!confirm(t('hClearQ'))) return; photoFaces = []; album = []; store.set('fuku-faces', []); store.set('fuku-album', []); for (const k in builtPhoto) delete builtPhoto[k]; renderHome(); };

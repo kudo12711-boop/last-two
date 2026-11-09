@@ -91,6 +91,7 @@ h1.logo{font-size:clamp(34px,10vw,56px);margin:0;text-align:center;letter-spacin
 .prog .fill{height:100%;background:linear-gradient(90deg,#ff9ec6,#ff6fa8);border-radius:999px;transition:width .6s}
 .prog .nx{font-size:13px;color:var(--sub);white-space:nowrap;flex:none;max-width:65%;overflow:hidden;text-overflow:ellipsis}
 .scene-wrap{flex:1;position:relative;min-height:0;background:linear-gradient(#8fd3ff 0 45%,#9fe08a 45%)}
+#newKBtn{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 14px);transform:translateX(-50%);white-space:nowrap;z-index:2}
 .scene-wrap.night{background:linear-gradient(#5b5fb8 0 45%,#9fe08a 45%)}
 #scene{position:absolute;inset:0;width:100%;height:100%}
 .tap{cursor:pointer}
@@ -230,7 +231,8 @@ input[type=range]{width:220px;accent-color:var(--accent)}
     <button class="icon-btn" id="btnMenu" aria-label="menu">⚙️<span class="lbl" data-t="menu"></span></button>
   </div>
   <div class="prog"><div class="bar"><div class="fill" id="pf"></div></div><div class="nx" id="pn"></div></div>
-  <div class="scene-wrap"><svg id="scene" viewBox="0 0 400 600" preserveAspectRatio="xMidYMax meet"></svg></div>
+  <div class="scene-wrap"><svg id="scene" viewBox="0 0 400 600" preserveAspectRatio="xMidYMax meet"></svg>
+    <button class="big" id="newKBtn" style="display:none"></button></div>
 </section>
 
 <!-- ミニゲーム -->
@@ -277,7 +279,10 @@ var TEXT = {
     welcome:"ようこそ、{t}！\nここは あなたの ちいさな おうこく。むらの みんなの おねがいを きいてあげてね。",
     welcomeSam:"ようこそ、ひがしの くにから きた {t}！\nここは ちいさな おうこく。むらの みんなの おねがいを きいてあげてね。",
     help:"てつだう！", later:"あとで", thanks:"ありがとう、{t}！", backKingdom:"おうこくに もどる",
-    newDeco:"おうこくに {d} が できたよ！", allDeco:"おうこくが ぜんぶ かんせい！ これからも おねがいを きいてね",
+    newDeco:"おうこくに {d} が できたよ！", allDeco:"おうこくが ぜんぶ かんせい！",
+    endTitle:"👑 おうこく かんせい！", endMsg:"{t}の おかげで、むらの みんなが しあわせに なったよ。ありがとう！",
+    endDone:"おうこく かんせい！🎉", newKingdom:"🏰 あたらしい おうこくへ", endLook:"おうこくを ながめる", endPaint:"🎨 きねんの しょうぞうが",
+    newKAsk:"あたらしい おうこくを つくりに いきますか？\nきせかえと しょうぞうがは そのまま もっていけるよ。", newKGo:"いく！", newKStart:"あたらしい おうこくの はじまり！",
     nextDeco:"{d}まで あと❤️{n}", complete:"ぜんぶ そろったよ！",
     gift:"おれいに {i} を もらったよ！", giftNew:"あたらしい きせかえ", tryOn:"きてみる",
     mailTitle:"きょうの おてがみ", mailNone:"きょうの おてがみは もう よんだよ。\nまた あした みてね！", mailGift:"おうさまから プレゼントが とどいたよ！", mailHearts:"おうさまから ❤️3 が とどいたよ！",
@@ -319,7 +324,10 @@ var TEXT = {
     welcome:"Welcome, {t}!\nThis is your little kingdom. Please help everyone in the village.",
     welcomeSam:"Welcome, {t} from the Eastern Land!\nThis is the little kingdom. Please help everyone in the village.",
     help:"I'll help!", later:"Later", thanks:"Thank you, {t}!", backKingdom:"Back to the kingdom",
-    newDeco:"A new {d} in your kingdom!", allDeco:"Your kingdom is complete! Keep helping the village.",
+    newDeco:"A new {d} in your kingdom!", allDeco:"Your kingdom is complete!",
+    endTitle:"👑 Kingdom complete!", endMsg:"Thanks to you, {t}, everyone in the village is happy. Thank you!",
+    endDone:"Kingdom complete! 🎉", newKingdom:"🏰 Build a new kingdom", endLook:"Look around", endPaint:"🎨 Celebration portrait",
+    newKAsk:"Go build a new kingdom?\nYour outfits and portraits come with you.", newKGo:"Let's go!", newKStart:"A new kingdom begins!",
     nextDeco:"{n}❤️ to {d}", complete:"Everything is built!",
     gift:"You got {i} as a thank-you!", giftNew:"New dress-up item", tryOn:"Try it on",
     mailTitle:"Today's letter", mailNone:"You already read today's letter.\nCome back tomorrow!", mailGift:"A present from the King and Queen!", mailHearts:"The King and Queen sent you 3 ❤️!",
@@ -606,7 +614,7 @@ function renderTitle(){
 document.querySelectorAll(".langs button").forEach(function(b){ b.onclick=function(){ LANG=b.dataset.lang; lsSet("oukoku-lang",LANG); applyText(); }; });
 $("#startBtn").onclick=function(){
   sfx("tap");
-  if(S && S.role){ enterKingdom(); }
+  if(S && S.role){ enterKingdom(); if(S.welcomed && cleared() && !S.endSeen) setTimeout(showEnding, 400); }
   else { S=fresh(); renderRoles(); show("rolepick"); }
 };
 $("#resetBtn").onclick=function(){
@@ -719,6 +727,8 @@ function cropFace(img, done){
 /* =========================================================
    おうこく（まちの え）
    ========================================================= */
+var MAXH=DECOS[DECOS.length-1][1];
+function cleared(){ return S.hearts>=MAXH; }
 function decoCount(){ var n=0; DECOS.forEach(function(d){ if(S.hearts>=d[1]) n++; }); return n; }
 function has(id){ for(var i=0;i<DECOS.length;i++) if(DECOS[i][0]===id) return S.hearts>=DECOS[i][1]; return false; }
 function sceneSVG(){
@@ -764,7 +774,7 @@ function sceneSVG(){
   h.push('<g><rect x="360" y="410" width="10" height="30" fill="#8a5a3a"/><circle cx="365" cy="400" r="22" fill="#5aa85a"/></g>');
   // むらの ひと
   RES.forEach(function(r){
-    var act=S.active.indexOf(r.id)>=0;
+    var act=!cleared() && S.active.indexOf(r.id)>=0;
     h.push('<g class="tap" data-res="'+r.id+'"><circle cx="'+r.x+'" cy="'+(r.y-12)+'" r="34" fill="transparent"/><ellipse cx="'+r.x+'" cy="'+(r.y+6)+'" rx="20" ry="5" fill="rgba(0,0,0,.12)"/><text x="'+r.x+'" y="'+r.y+'" font-size="40" text-anchor="middle">'+r.emo+'</text>'+
       (act?'<g class="bob"><circle cx="'+(r.x+20)+'" cy="'+(r.y-48)+'" r="14" fill="#fff" stroke="#ff6fa8" stroke-width="3"/><text x="'+(r.x+20)+'" y="'+(r.y-42)+'" font-size="16" text-anchor="middle" font-weight="700" fill="#ff6fa8">!</text></g>':'')+'</g>');
   });
@@ -780,7 +790,8 @@ function renderKingdom(){
   $("#hc").textContent=S.hearts;
   var next=null, prev=0; for(var i=0;i<DECOS.length;i++){ if(S.hearts<DECOS[i][1]){ next=DECOS[i]; break; } prev=DECOS[i][1]; }
   if(next){ $("#pf").style.width=Math.round((S.hearts-prev)/(next[1]-prev)*100)+"%"; $("#pn").textContent=fmt(T().nextDeco,{d:T().decos[next[0]], n:next[1]-S.hearts}); }
-  else { $("#pf").style.width="100%"; $("#pn").textContent=T().complete; }
+  else { $("#pf").style.width="100%"; $("#pn").textContent=T().endDone; }
+  var nb=$("#newKBtn"); nb.textContent=T().newKingdom; nb.style.display=cleared()?"":"none";
   var mb=$("#btnMail"), bd=mb.querySelector(".badge"); if(bd) bd.remove();
   if(S.lastMail!==today()) mb.appendChild(el("span","badge","1"));
 }
@@ -814,7 +825,8 @@ $("#btnMail").onclick=function(){
   }
   S.lastMail=today();
   var pool=MAIL_POOL.filter(function(g){ return S.unlocked.indexOf(g[1])<0; });
-  if(!pool.length){ S.hearts+=3; save(); renderKingdom(); var c1=dialog('<button class="x">×</button><div class="who">💌</div><p class="say">'+esc(T().mailHearts)+'</p>'); voice("mail_hearts", T().mailHearts); confetti(); checkDeco(S.hearts-3); return; }
+  if(!pool.length && cleared()){ S.lastMail=""; var cz=dialog('<button class="x">×</button><div class="who">📮</div><p class="say">'+esc(T().mailNone).replace(/\n/g,"<br>")+'</p>'); voice("mail_none", T().mailNone); return; }
+  if(!pool.length){ S.hearts=Math.min(MAXH,S.hearts+3); save(); renderKingdom(); var c1=dialog('<button class="x">×</button><div class="who">💌</div><p class="say">'+esc(T().mailHearts)+'</p>'); voice("mail_hearts", T().mailHearts); confetti(); checkDeco(S.hearts-3); return; }
   var g=pick(pool); S.unlocked.push(g[1]); save(); renderKingdom();
   showGift(g, T().mailGift, "💌", null, "mail_gift");
 };
@@ -841,7 +853,7 @@ function showGift(g, head, icon, after, vkey){
 var CUR=null;
 function resOf(id){ for(var i=0;i<RES.length;i++) if(RES[i].id===id) return RES[i]; }
 function openRequest(id){
-  var r=resOf(id), G=T().games[id], act=S.active.indexOf(id)>=0;
+  var r=resOf(id), G=T().games[id], act=!cleared() && S.active.indexOf(id)>=0;
   sfx("tap");
   if(!act){ var msg=fmt(T().thanks,{t:titleOf()}); toast(r.emo+" "+msg); voice("thanks_"+id+"_"+S.role, msg); return; }
   var ctx={}; if(id==="lost"){ ctx.thing=pick(["glasses","key","hat","yarn"]); }
@@ -867,7 +879,7 @@ function finishGame(){
   if(!CUR || CUR.over) return; CUR.over=true;
   var id=CUR.id, r=resOf(id), G=T().games[id];
   var before=S.hearts, first=!S.done[id], gain=first?3:2;
-  S.done[id]=(S.done[id]||0)+1; S.hearts+=gain;
+  S.done[id]=(S.done[id]||0)+1; gain=Math.min(gain, MAXH-S.hearts); S.hearts+=gain;
   // つぎの おねがい：かなえた ひとを はずし、ほかの ひとから 1人
   S.active=S.active.filter(function(x){ return x!==id; });
   var others=RES.map(function(x){ return x.id; }).filter(function(x){ return S.active.indexOf(x)<0 && x!==id; });
@@ -878,7 +890,7 @@ function finishGame(){
   var msg=G.done+" "+fmt(T().thanks,{t:titleOf()});
   say(G.done, id+"_done");
   setTimeout(function(){
-    var c=dialog('<div class="who">'+r.emo+'</div><p class="say">'+esc(fmt(T().thanks,{t:titleOf()}))+'</p><p style="font-size:34px;margin:6px 0 14px">'+"❤️".repeat(gain)+'</p>'+
+    var c=dialog('<div class="who">'+r.emo+'</div><p class="say">'+esc(fmt(T().thanks,{t:titleOf()}))+'</p><p style="font-size:34px;margin:6px 0 14px">'+"❤️".repeat(Math.max(gain,1))+'</p>'+
       '<div class="btns"><button class="big" id="fB">'+esc(T().backKingdom)+'</button></div>');
     voice("thanks_"+id+"_"+S.role, fmt(T().thanks,{t:titleOf()}));
     c.querySelector("#fB").onclick=function(){
@@ -889,9 +901,31 @@ function finishGame(){
     };
   }, 1700);
 }
+function showEnding(){
+  S.endSeen=true; save(); renderKingdom();
+  sfx("deco"); confetti(30,["🎉","✨","⭐","💖","👑","🎆"]);
+  var m=fmt(T().endMsg,{t:titleOf()});
+  var c=dialog('<div class="who">👑</div><p class="say" style="font-size:24px">'+esc(T().endTitle)+'</p><p class="say" style="font-size:17px">'+esc(m)+'</p>'+
+    '<p style="font-size:34px;margin:4px 0 14px">'+RES.map(function(r){ return r.emo; }).join("")+'</p>'+
+    '<div class="btns" style="flex-direction:column;align-items:center"><button class="big" id="eP">'+esc(T().endPaint)+'</button>'+
+    '<button class="big sub" id="eL">'+esc(T().endLook)+'</button></div>');
+  voice("deco_all", T().allDeco+" "+m);
+  c.querySelector("#eL").onclick=closeDialog;
+  c.querySelector("#eP").onclick=function(){ closeDialog(); renderGallery(); show("gallery"); $("#galNew").click(); };
+}
+$("#newKBtn").onclick=function(){
+  sfx("tap");
+  var c=dialog('<div class="who">🏰</div><p class="say">'+esc(T().newKAsk).replace(/\n/g,"<br>")+'</p><div class="btns"><button class="big sub" id="nN">'+T().no+'</button><button class="big" id="nY">'+esc(T().newKGo)+'</button></div>');
+  c.querySelector("#nN").onclick=closeDialog;
+  c.querySelector("#nY").onclick=function(){
+    closeDialog(); S.hearts=0; S.active=shuffle(RES.map(function(r){ return r.id; })).slice(0,3); S.endSeen=false; S.round=(S.round||1)+1; save();
+    renderKingdom(); sfx("win"); confetti(16); toast(T().newKStart); voice("newk", T().newKStart);
+  };
+};
 function checkDeco(before){
   for(var i=0;i<DECOS.length;i++){
     var d=DECOS[i]; if(before<d[1] && S.hearts>=d[1]){
+      if(i===DECOS.length-1){ setTimeout(showEnding, 500); return; }
       var last=i===DECOS.length-1, vk=last?"deco_all":"deco_"+d[0], m=last?T().allDeco:fmt(T().newDeco,{d:T().decos[d[0]]});
       setTimeout(function(){ sfx("deco"); confetti(22,["🎉","✨","⭐","💖"]); var c=dialog('<div class="who">🏰</div><p class="say">'+esc(m)+'</p><div class="btns"><button class="big" id="dOk">OK</button></div>'); c.querySelector("#dOk").onclick=closeDialog; voice(vk, m); }, 500);
       return;
@@ -1091,7 +1125,7 @@ function paintPortrait(bg, cb){
 function roundRect(x,a,b,w,h,r){ x.beginPath(); x.moveTo(a+r,b); x.arcTo(a+w,b,a+w,b+h,r); x.arcTo(a+w,b+h,a,b+h,r); x.arcTo(a,b+h,a,b,r); x.arcTo(a,b,a+w,b,r); x.closePath(); }
 
 /* ---------- はじまり ---------- */
-S=load();
+S=load(); if(S && S.hearts>MAXH) S.hearts=MAXH;
 renderTitle();
 document.addEventListener("pointerdown",function(){ actx(); },{passive:true});
 </script>
