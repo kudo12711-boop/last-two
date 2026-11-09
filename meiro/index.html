@@ -33,6 +33,8 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 .lvl button{padding:8px 12px;border-radius:16px;background:var(--soft);font-weight:700;line-height:1.25;min-width:72px}
 .lvl button small{display:block;font-size:11px;font-weight:400;opacity:.8}
 .lvl button.sel{background:var(--accent);color:#fff}
+#btnRandom{justify-content:center;background:linear-gradient(135deg,#fff,#ffeec9)}
+.big small{display:block;font-size:13px;font-weight:400;opacity:.7;margin-top:2px}
 #heroes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(420px,100%)}
 #heroes button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 4px 10px;border-radius:22px;background:var(--card);
   box-shadow:var(--shadow);font-size:14px;font-weight:700}
@@ -92,6 +94,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
   <p class="sub">ゆびで みちを なぞって ゴールまで つれていってね</p>
 
   <div class="lvl" id="lvl"></div>
+  <button class="big" id="btnRandom"><span class="ico">🎲</span><span>おまかせ<small>だれが でるかな？ まいかい かわるよ</small></span></button>
   <div id="heroes"></div>
 
   <div id="book"><b>あつめた シール</b> <span id="bookCount"></span><div id="bookList"></div></div>
@@ -275,6 +278,8 @@ const LEVELS = [
 let level = store.get('meiro-level', 1);
 let guide = store.get('meiro-guide', 'always');
 let theme = THEMES[0];
+let omakase = false; // おまかせ：めいろごとに キャラを ランダムに えらぶ
+function randomTheme() { return pick(THEMES.filter(t => t !== theme)); }
 
 /* ---------- めいろを つくる ---------- */
 const N = 1, E = 2, S = 4, W = 8;
@@ -371,6 +376,7 @@ function startGame(th) {
     layout();
     renderItems();
     nudgeUntil = performance.now() + 2500;
+    if (omakase) showSay(`${theme.hero} ${theme.name}！`); // おまかせで だれが でたか 大きく見せる
     setTimeout(() => speak('start', true), 300);
   });
 }
@@ -603,10 +609,11 @@ function goTitle() {
   renderTitle();
 }
 $('#lvl').onclick = e => { const b = e.target.closest('button'); if (!b) return; level = +b.dataset.l; store.set('meiro-level', level); audio(); sfx.tap(); renderTitle(); };
-$('#heroes').onclick = e => { const b = e.target.closest('button'); if (!b) return; audio(); prepVoice(); sfx.tap(); startGame(THEMES[+b.dataset.t]); };
+$('#heroes').onclick = e => { const b = e.target.closest('button'); if (!b) return; audio(); prepVoice(); sfx.tap(); omakase = false; startGame(THEMES[+b.dataset.t]); };
+$('#btnRandom').onclick = () => { audio(); prepVoice(); sfx.tap(); omakase = true; startGame(randomTheme()); };
 $('#btnHome').onclick = () => { sfx.tap(); goTitle(); };
 $('#btnBack').onclick = () => { sfx.tap(); goTitle(); };
-$('#btnNext').onclick = () => { sfx.tap(); startGame(theme); };
+$('#btnNext').onclick = () => { sfx.tap(); startGame(omakase ? randomTheme() : theme); };
 $('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('meiro-sound', soundOn); if (soundOn) { audio(); sfx.tap(); } renderTitle(); };
 function renderHelp() {
   document.querySelectorAll('#optGuide button').forEach(b => b.classList.toggle('sel', b.dataset.v === guide));
