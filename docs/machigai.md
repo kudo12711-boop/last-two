@@ -1,6 +1,6 @@
 # まちがいさがし（幼児向け）
 
-最終更新: 2026-10-25 ／ いまの版: v0.4
+最終更新: 2026-11-09 ／ いまの版: v0.5
 
 ## ひとことで
 
@@ -33,6 +33,7 @@
 | 10/24 | v0.3 | 「全部見つけた時の声が機械」「録音を何パターンか、ランダムに」「もっと人間っぽく」 | 録音を複数パターン・ランダムに。AI で作った自然な声（4種×17セリフ）を最初から入れた |
 | 10/24 | — | 「iPad で GitHub に弾かれた」 | 変更の記録のページではなく、上の遊ぶURLを開くよう案内 |
 | 10/24 | v0.4 | 「あった、やったの声が変」 | 声を作り直し。聞き取りAIで「あった！」が「また」に聞こえていたのを確認し、質のよいモデルで1セリフ12通り作って一番はっきりしたものを選んだ（全68こ正しく聞き取れた） |
+| 11/9 | v0.5 | 「タップを連続的に行うと画面が拡大して、元の縮小に戻せない」 | iPhone・iPad の Safari で、連続タップ（ダブルタップ）やピンチで画面が拡大しないようにした。もし拡大されても自動で元の大きさにもどす |
 
 ## これから
 
@@ -46,4 +47,5 @@
 - リポジトリ `machigai/index.html`（1ファイル）＋ `machigai/voice/<声>/<場面><番号>.mp3`。声は jf_alpha（標準）・jf_gongitsune・jf_nezumi・jf_tebukuro。場面は ok0–5・miss0–3・hint0–1・clear0–2・start0–1。読み込みに `?v=2` をつけてキャッシュを避けている。
 - 保存: シール帳 localStorage `machigai-book`、声の設定 `machigai-voice3`（`ai:jf_alpha` / `dev` / `off`）、録音は IndexedDB `machigai`（キー `場面:時刻`）。
 - 声の作り方（`/mnt/project-files/machigai/tools/`）: Kokoro-82M fp16（npm `kokoro-fp16-shards`）＋ 声データ（npm `kokoro-js`）＋ 読み変換 misaki[ja]（PyPI）。HuggingFace と GitHub Releases はこの作業環境から取れないので npm/PyPI 経由。`cand.py` で1セリフ12候補（速さ・言い方ちがい）を作り、`asr2.mjs`（whisper-tiny、npm `sts-whisper-tiny` を @huggingface/transformers で）で聞き取り、`pick.py` で一番合うものを選ぶ。古い版の `gen.py`・`build.py` も残っている。
+- 拡大の防止（v0.5）: viewport の `user-scalable=no` は iOS Safari が無視するため、ゲーム画面に `touch-action:none`、400ms 以内の2回目の `touchend` と2本指の `touchstart` を `preventDefault`（「おうちのかたへ」の中は除く）、`gesturestart` 系と `dblclick` も止める。拡大されたら `visualViewport.scale` を見て viewport の meta を書きかえて戻す。Playwright の Chromium では拡大自体が起きないので、iPhone・iPad の実機でしか確かめられない。
 - 注意: misaki の JAG2P は文字列を返す（タプルではないので `[0]` しない）。
