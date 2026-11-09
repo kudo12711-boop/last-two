@@ -19,7 +19,7 @@
 | 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | PR #14 まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
 | ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
-| てんつなぎ | 幼児向け、番号順に点をつないで絵を完成 | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
+| てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（31まい、点は最大60こ） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
 | ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
 | もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
 | ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、着せかえと肖像画つき | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
@@ -44,6 +44,7 @@
 13. **2026-11-03** 「女の子向けの、プリンセスになれるゲームを考えたい」から、プリンセス・王子・騎士・侍を選べる「ちいさな おうこく」を作成（くどうさんが3案から選び、侍も追加）。
 14. **2026-11-03** 幼児向け けずって なにかな？（スクラッチであてっこ＋ずかん、写真モード）を作成。くどうさん「子供向けにスクラッチすると何かが表示されるゲームを考えたいです」→ 5案から「あてっこ＋ずかん」を選択。
 15. **2026-11-09** ふくわらい v0.2: パーツの置き場所を細かく調整できるように（くどうさん「各パーツを置ける場所がかなり限られている…もっと細かく調整できるように」）。
+16. **2026-11-09** てんつなぎ: 名前から「すうじで」を外し（ABCでも遊べるため）、v0.2 で絵を31まいに（かどの多い むずかしい絵も）、点は最大60こに（くどうさん「題材が少ないのでもっと増やして」「複雑な図形も」）。
 
 ## お金の方針（2026-10-23 決定）
 
