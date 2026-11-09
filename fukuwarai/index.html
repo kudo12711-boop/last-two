@@ -813,9 +813,9 @@ function updDots() { [...$('#dots').children].forEach((d, i) => d.classList.togg
 const ghost = $('#ghost'), gctx = ghost.getContext('2d');
 let drag = null;
 function startDrag(e, p, el) {
-  if (!G || G.phase !== 'play') return;
+  if (!G || G.phase !== 'play' || drag || bmove) return; // 2本めの ゆびは むし（パーツが きえないように）
   e.preventDefault(); audio();
-  drag = { p, el, touch: e.pointerType !== 'mouse' };
+  drag = { p, el, pid: e.pointerId, touch: e.pointerType !== 'mouse' };
   const dpr = lay.dpr, w = p.img.width * lay.s, h = p.img.height * lay.s;
   ghost.width = Math.ceil(w * dpr); ghost.height = Math.ceil(h * dpr); ghost.style.width = w + 'px'; ghost.style.height = h + 'px';
   gctx.setTransform(dpr * lay.s, 0, 0, dpr * lay.s, 0, 0); gctx.clearRect(0, 0, p.img.width, p.img.height); gctx.drawImage(p.img, 0, 0);
@@ -824,12 +824,12 @@ function startDrag(e, p, el) {
 }
 function liftOf() { return drag && drag.touch ? Math.min(40, drag.p.img.height * lay.s * .5 + 10) : 0; }
 function moveDrag(e) {
-  if (!drag) return;
+  if (!drag || (e.pointerId !== undefined && e.pointerId !== drag.pid)) return;
   drag.x = e.clientX; drag.y = e.clientY - liftOf();
   ghost.style.transform = `translate(${drag.x - ghost.offsetWidth / 2}px,${drag.y - ghost.offsetHeight / 2}px) scale(1.08)`;
 }
-function endDrag() {
-  if (!drag) return;
+function endDrag(e) {
+  if (!drag || (e && e.pointerId !== undefined && e.pointerId !== drag.pid)) return;
   const d = drag; drag = null; ghost.style.display = 'none';
   const r = cv.getBoundingClientRect();
   let fx = (d.x - r.left - lay.ox) / lay.s, fy = (d.y - r.top - lay.oy) / lay.s;
@@ -871,7 +871,7 @@ window.addEventListener('pointercancel', endDrag);
 let bmove = null;
 function boardPt(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left - lay.ox) / lay.s, (e.clientY - r.top - lay.oy) / lay.s]; }
 cv.addEventListener('pointerdown', e => {
-  if (!G || drag || !((G.phase === 'play' && mode === 'easy') || G.phase === 'done')) return;
+  if (!G || drag || bmove || !((G.phase === 'play' && mode === 'easy') || G.phase === 'done')) return;
   const [fx, fy] = boardPt(e), pad = 28 / lay.s;
   let hit = null, hd = 1e9;
   for (let i = G.order.length - 1; i >= 0; i--) {
@@ -958,11 +958,26 @@ function finish() {
   else { sfx.funny(); setTimeout(() => speak('funny'), 250); bigSay(lang === 'ja' ? 'わはは！' : 'Ha ha!'); }
 }
 
+/* まもり: どこにも ない パーツを トレイに もどす／がめんの そとに でた パーツを なかへ */
+let lastRescue = 0;
+function rescue(now) {
+  if (now - lastRescue < 400) return; lastRescue = now;
+  if (G.phase === 'play' && !drag) {
+    document.querySelectorAll('#tray .pc.gone').forEach(el => { if (!G.placed[el.dataset.id]) el.classList.remove('gone'); });
+  }
+  if (G.phase !== 'look') for (const id of G.order) {
+    if (bmove && bmove.id === id) continue;
+    const v = G.placed[id]; if (!v) continue;
+    const [x, y] = clampFace(v.x, v.y); if (x !== v.x || y !== v.y) { v.x = x; v.y = y; v.slot = null; }
+  }
+  for (const id of [...G.order]) if (!G.placed[id]) G.order.splice(G.order.indexOf(id), 1);
+}
 /* えがく */
 function frame(now) {
   requestAnimationFrame(frame);
   if (!G || !$('#game').classList.contains('on')) return;
   layout();
+  rescue(now);
   const g = cx, { s, ox, oy, dpr } = lay;
   g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, lay.w, lay.h);
   g.save(); g.translate(ox, oy); g.scale(s, s);
