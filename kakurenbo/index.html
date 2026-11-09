@@ -50,7 +50,8 @@ h1 .q{color:var(--accent);display:inline-block;animation:bob 2.2s ease-in-out in
 #scenes button .emo{font-size:48px}
 
 /* ゲーム */
-#game{padding:0}
+#game{padding:0;touch-action:none}
+#eyes,#spots{touch-action:none}
 .bar{display:flex;align-items:center;gap:8px;height:64px;flex:none;padding:env(safe-area-inset-top) 10px 0;box-sizing:content-box;position:relative;z-index:4}
 .round{width:50px;height:50px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);font-size:24px;display:grid;place-items:center;flex:none}
 .round:active{transform:translateY(3px);box-shadow:none}
@@ -1234,6 +1235,25 @@ $('#recList').onclick = async e => {
   else if (b.dataset.a === 'play' && recBuf[k]) playBuf(recBuf[k]);
   else if (b.dataset.a === 'del') { delete recBuf[k]; try { await dbDel('voice', k); } catch (e) {} renderHelp(); }
 };
+
+/* 連続タップやピンチで画面が拡大しないようにする（iPhone・iPad の Safari は viewport の指定だけでは止まらない） */
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTouchEnd < 400 && !e.target.closest('#help,#crop')) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+for (const ev of ['gesturestart', 'gesturechange', 'gestureend', 'dblclick']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
+// もし拡大されてしまっても、元の大きさにもどす
+const vpMeta = document.querySelector('meta[name=viewport]'), vpBase = vpMeta.content;
+function resetZoom() {
+  if (!window.visualViewport || visualViewport.scale <= 1.01) return;
+  vpMeta.content = vpBase.replace('maximum-scale=1', 'maximum-scale=1.01');
+  setTimeout(() => { vpMeta.content = vpBase; }, 50);
+}
+if (window.visualViewport) visualViewport.addEventListener('resize', () => setTimeout(resetZoom, 300));
+document.addEventListener('contextmenu', e => e.preventDefault());
 
 /* かみふぶき */
 function confetti() {
