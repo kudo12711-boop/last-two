@@ -4049,7 +4049,7 @@ function cycleInfo() {
 const FINE = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches; // マウスのある端末（パソコン）
 function fsHint() {
   const h = $('#fshint'); if (!h) return;
-  h.innerHTML = FINE ? J('⌨️ <b>Esc</b> キーで もとの画面に もどれます', '⌨️ Press <b>Esc</b> to go back') : J('画面をタップすると ボタンが出ます', 'Tap the screen to show the buttons');
+  h.innerHTML = FINE ? J('🖱 景色を<b>ダブルクリック</b>か <b>Esc</b> キーで もとの画面に もどれます', '🖱 <b>Double-click</b> the view or press <b>Esc</b> to go back') : J('タップでボタン、<b>2回つづけてタップ</b>で もとの画面に もどれます', 'Tap to show the buttons, <b>double-tap</b> to go back');
   h.hidden = false; clearTimeout(h._t); h._t = setTimeout(() => { h.hidden = true; }, 4500);
 }
 function poke() { document.body.classList.remove('calm'); clearTimeout(calmT); if (document.body.classList.contains('full')) calmT = setTimeout(() => document.body.classList.add('calm'), 3500); }
@@ -4109,6 +4109,16 @@ $('#b-info').onclick = e => { e.stopPropagation(); cycleInfo(); poke(); };
 $('#b-full').onclick = e => { e.stopPropagation(); setFull(!document.body.classList.contains('full')); };
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('full')) setFull(false); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('full')) setFull(false); });
+// 全画面の景色をダブルクリック（スマホは2回つづけてタップ）で、もとの画面にもどる。ボタン・地図・カードの上は対象外
+const fsScene = e => document.body.classList.contains('full') && !e.target.closest('button,a,input,textarea,label,#modal,#sheet,#fsmap,#fsinfo,#fspark,#gzbar,.modal');
+let lastTap = 0, lastTapX = 0, lastTapY = 0;
+document.addEventListener('dblclick', e => { if (!fsScene(e)) return; e.preventDefault(); lastTap = 0; $('#gzbar').hidden = true; gzMoveT = Date.now() + 1500; setFull(false); });
+document.addEventListener('pointerup', e => {
+  if (e.pointerType === 'mouse' || !fsScene(e)) return;
+  const now = Date.now();
+  if (now - lastTap < 350 && Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 40) { lastTap = 0; $('#gzbar').hidden = true; setFull(false); return; }
+  lastTap = now; lastTapX = e.clientX; lastTapY = e.clientY;
+}, { passive: true });
 document.addEventListener('pointerdown', poke, { passive: true });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && document.body.classList.contains('full') && navigator.wakeLock) navigator.wakeLock.request('screen').then(w => wakeLock = w).catch(() => { }); });
 $('#b-snd').onclick = e => { e.stopPropagation(); setSound(!SOUND); toast(SOUND ? J('🔊 音を鳴らします', '🔊 Sound on') : J('🔇 音を消しました', '🔇 Sound off'), 1800); }; $('#b-snd').textContent = SOUND ? '🔊' : '🔇';
