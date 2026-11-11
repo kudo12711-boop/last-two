@@ -410,7 +410,7 @@ const TEXT = {
 <p><b>Hide & seek at home</b>: take a photo of a room and everyone hides inside it. Add family faces and the family hides too.</p>
 <p><b>Your turn to hide</b>: the child picks a hiding place and the seeker looks for them. Stay hidden to win a medal.</p>
 <p>Friends you find go into the friend book. Sometimes a secret friend is hiding too.</p>`,
-    voiceH: 'Voice', test: '▶ Test', voices: [], dev: 'Device voice', off: 'No voice',
+    voiceH: 'Voice', test: '▶ Test', voices: ['AI voice 1', 'AI voice 2', 'AI voice 3', 'AI voice 4'], dev: 'Device voice', off: 'No voice',
     recH: 'Record your own voice', recNote: 'A recording plays instead of the built-in voice for that moment (up to 3 s).',
     rec: '● Record', stop: '■ Stop', play1: '▶', del: '✕', close: 'Close',
     recCats: { ready: '"Ready!"', mada: '"Not yet!"', found: '"Found you!"', miss: '"Not here"', clear: '"You found everyone!"', here: '"Here I am!"' },
@@ -454,8 +454,9 @@ const sfx = {
   pop() { tone(500, 0, .12, 'sine', .2, 1000); },
 };
 
-/* ---------- こえ: ろくおん → AIの こえ（日本語） → 端末の よみあげ ---------- */
-const AI_VOICES = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'];
+/* ---------- こえ: ろくおん → AIの こえ → 端末の よみあげ ---------- */
+// AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<場面><番号>.mp3）
+const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const VOICE_TEXT = {
   ja: {
     intro: ['かくれんぼ、しよう！', 'みんな、かくれるよ。めを、つぶってね。'],
@@ -488,12 +489,11 @@ const VOICE_TEXT = {
     win: ['You stayed hidden! Amazing!'], lose: ['Found you! Let’s play again!'],
   }
 };
-const AI_COUNT = Object.fromEntries(Object.entries(VOICE_TEXT.ja).map(([k, v]) => [k, v.length]));
 const aiBuf = {};
 let curSrc = null;
 function aiLoad(id) {
   const a = audio(); if (!a) return;
-  for (const [cat, n] of Object.entries(AI_COUNT)) for (let i = 0; i < n; i++) {
+  for (const [cat, lines] of Object.entries(VOICE_TEXT[lang] || VOICE_TEXT.ja)) for (let i = 0; i < lines.length; i++) {
     const k = `${id}/${cat}${i}`;
     if (aiBuf[k]) continue;
     aiBuf[k] = 'loading';
@@ -532,7 +532,9 @@ function pickIdx(cat, n) {
   return (lastTake[cat] = pick(c));
 }
 // 'ai:jf_alpha' / 'dev' / 'off'
-let voiceMode = store.get('kakurenbo-voice', 'ai:jf_alpha');
+let voiceMode = store.get('kakurenbo-voice', 'ai:1'); // 'ai:1'〜'ai:4' / 'dev' / 'off'。むかしの 'ai:jf_alpha' なども よめる
+{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+const aiId = () => (AI_VOICES[lang] || AI_VOICES.ja)[(+voiceMode.slice(3) || 1) - 1] || AI_VOICES.ja[0];
 function playBuf(buf) {
   const a = audio(); if (!a) return;
   try { if (curSrc) curSrc.stop(); } catch (e) {}
@@ -543,14 +545,14 @@ function speak(cat, idx) {
   if (recBuf[cat]) { playBuf(recBuf[cat]); return; }
   const lines = (VOICE_TEXT[lang] || VOICE_TEXT.ja)[cat]; if (!lines) return;
   const i = idx ?? pickIdx(cat, lines.length);
-  if (lang === 'ja' && voiceMode.startsWith('ai:')) {
-    const id = voiceMode.slice(3); aiLoad(id);
+  if (voiceMode.startsWith('ai:')) {
+    const id = aiId(); aiLoad(id);
     const b = aiBuf[`${id}/${cat}${i}`];
     if (b && typeof b !== 'string') { playBuf(b); return; }
   }
   tts(lines[i]);
 }
-function prepVoice() { if (lang === 'ja' && voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3)); }
+function prepVoice() { if (voiceMode.startsWith('ai:')) aiLoad(aiId()); }
 
 /* ---------- ほぞん（IndexedDB: ろくおん・へやの しゃしん・かお） ---------- */
 let dbP = null;
@@ -1207,15 +1209,15 @@ $('#btnOther').onclick = () => {
   if (mode === 'B') { show('photo'); renderPhotoScreen(); } else { renderWhere(); show('where'); }
 };
 $('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('kakurenbo-sound', soundOn); if (soundOn) { audio(); sfx.tap(); } renderTitle(); };
-$('#btnLang').onclick = () => { lang = lang === 'ja' ? 'en' : 'ja'; store.set('kakurenbo-lang', lang); loadDevVoice(); renderTitle(); };
+$('#btnLang').onclick = () => { lang = lang === 'ja' ? 'en' : 'ja'; store.set('kakurenbo-lang', lang); loadDevVoice(); renderTitle(); prepVoice(); };
 $('#btnGames').onclick = () => { location.href = '../games/' + (lang === 'ja' ? '' : '?lang=' + lang); };
 
 /* おうちのかたへ */
 function renderHelp() {
   applyText(); renderKk();
-  const vs = lang === 'ja' ? AI_VOICES.map((v, i) => `<option value="ai:${v}">${T('voices')[i]}</option>`).join('') : '';
+  const vs = [1, 2, 3, 4].map(n => `<option value="ai:${n}">${T('voices')[n - 1]}</option>`).join('');
   $('#voiceSel').innerHTML = vs + `<option value="dev">${T('dev')}</option><option value="off">${T('off')}</option>`;
-  $('#voiceSel').value = (lang !== 'ja' && voiceMode.startsWith('ai:')) ? 'dev' : voiceMode;
+  $('#voiceSel').value = voiceMode;
   $('#recList').innerHTML = Object.entries(T('recCats')).map(([k, l]) =>
     `<div class="recrow" data-k="${k}"><span>${l}</span><button class="rb" data-a="rec">${T('rec')}</button><button class="rb" data-a="play" ${recBuf[k] ? '' : 'disabled'}>${T('play1')}</button><button class="rb" data-a="del" ${recBuf[k] ? '' : 'disabled'}>${T('del')}</button></div>`).join('');
 }

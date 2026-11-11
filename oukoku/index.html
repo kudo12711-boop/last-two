@@ -503,11 +503,12 @@ function speak(txt){
     speechSynthesis.speak(u);
   }catch(e){}
 }
-/* AI の こえ（日本語）: voice/<キー>.mp3 を WebAudio で ならす。ないときや 英語は ブラウザの よみあげ */
+/* AI の こえ: 日本語は voice/<キー>.mp3、英語は voice/en/<キー>.mp3 を WebAudio で ならす。ないときは ブラウザの よみあげ */
 var AC=null, VBUF={}, VSRC=null, VSEQ=0;
 function actx(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state==="suspended") AC.resume(); return AC; }
 function stopVoice(){ VSEQ++; if(VSRC){ try{ VSRC.stop(); }catch(e){} VSRC=null; } if(window.speechSynthesis) try{ speechSynthesis.cancel(); }catch(e){} }
 function vbuf(key){
+  key=(LANG==="ja"?"":"en/")+key;
   if(!VBUF[key]) VBUF[key]=fetch("voice/"+key+".mp3?v=1").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
     .then(function(b){ return new Promise(function(res,rej){ actx().decodeAudioData(b,res,rej); }); })
     .catch(function(e){ delete VBUF[key]; throw e; });
@@ -516,7 +517,7 @@ function vbuf(key){
 function voice(key, text){
   if(!S || !S.voice) return;
   stopVoice();
-  if(LANG!=="ja" || !actx()){ speak(text); return; }
+  if(!actx()){ speak(text); return; }
   var my=VSEQ;
   vbuf(key).then(function(b){ if(my!==VSEQ) return; var src=AC.createBufferSource(); src.buffer=b; src.connect(AC.destination); src.start(); VSRC=src; })
     .catch(function(){ if(my===VSEQ) speak(text); });

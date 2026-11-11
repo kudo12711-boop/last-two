@@ -132,57 +132,57 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 <body>
 
 <section id="title" class="screen on">
-  <h1><span>て</span><span>ん</span><span>つ</span><span>な</span><span>ぎ</span></h1>
-  <p class="sub">じゅんばんに てんを つないで えを かんせいさせよう</p>
-  <button class="big go" id="btnStart"><span class="ico">▶️</span>はじめる</button>
+  <h1 id="h1"></h1>
+  <p class="sub" data-t="sub"></p>
+  <button class="big go" id="btnStart"><span class="ico">▶️</span><span data-t="start"></span></button>
 
   <div class="box">
-    <b>むずかしさ</b>
+    <b data-t="level"></b>
     <div class="row" id="lvl"></div>
-    <div class="cnt"><button id="nMinus" aria-label="へらす">−</button><span id="nShow"></span><button id="nPlus" aria-label="ふやす">＋</button></div>
+    <div class="cnt"><button id="nMinus" data-ta="minus">−</button><span id="nShow"></span><button id="nPlus" data-ta="plus">＋</button></div>
   </div>
   <div class="box">
-    <b>かぞえかた</b>
+    <b data-t="counting"></b>
     <div class="row" id="modes"></div>
   </div>
   <div class="box">
-    <b>シールちょう</b> <span id="bookCount"></span>
-    <div class="note" style="margin:2px 0 0">？の えも えらべるよ。なにが できるかな？</div>
+    <b data-t="book"></b> <span id="bookCount"></span>
+    <div class="note" style="margin:2px 0 0" data-t="bookNote"></div>
     <div id="pics"></div>
   </div>
-  <div class="foot"><button id="btnMake">✏️ じぶんで つくる</button><button id="btnRec">🎙️ こえを ろくおん</button><button id="btnHelp">おうちのかたへ・せってい</button><button id="btnSnd">🔊 おと あり</button></div>
+  <div class="foot"><button id="btnMake" data-t="make"></button><button id="btnRec" data-t="recBtn"></button><button id="btnHelp" data-t="help"></button><button id="btnSnd"></button><button id="btnLang"></button></div>
 </section>
 
 <section id="game" class="screen">
   <div class="bar">
-    <button class="round" id="btnHome" aria-label="もどる">🏠</button>
+    <button class="round" id="btnHome" data-ta="home">🏠</button>
     <div id="prog"></div>
-    <button class="round" id="btnHint" aria-label="ヒント">💡</button>
+    <button class="round" id="btnHint" data-ta="hint">💡</button>
   </div>
   <div id="board"><canvas id="cv"></canvas></div>
 </section>
 
 <section id="maker" class="screen">
   <div class="bar">
-    <button class="round" id="mkHome" aria-label="もどる">↩️</button>
-    <b>じぶんで つくる</b>
+    <button class="round" id="mkHome" data-ta="home">↩️</button>
+    <b data-t="makeH"></b>
     <span style="width:50px"></span>
   </div>
   <div id="mkBoard"><canvas id="mkCv"></canvas></div>
   <div id="mkTools">
     <div id="mkMsg"></div>
     <div class="line" id="mkPhoto" style="display:none">
-      <span style="font-size:13px">こさ</span><input type="range" id="mkTh" min="20" max="235" value="128">
-      <button id="mkInv">◐ はんてん</button>
+      <span style="font-size:13px" data-t="mkTh"></span><input type="range" id="mkTh" min="20" max="235" value="128">
+      <button id="mkInv" data-t="mkInv"></button>
     </div>
     <div class="line">
-      <button id="mkDraw">✏️ ゆびで かく</button>
-      <button id="mkPic">📷 しゃしん・え から</button>
+      <button id="mkDraw" data-t="mkDraw"></button>
+      <button id="mkPic" data-t="mkPic"></button>
       <input type="file" id="mkFile" accept="image/*" hidden>
     </div>
     <div class="line">
       <div class="colors" id="mkColors"></div>
-      <button class="go" id="mkOk" disabled>これで つくる</button>
+      <button class="go" id="mkOk" disabled data-t="mkOk"></button>
     </div>
   </div>
 </section>
@@ -191,51 +191,49 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 <canvas id="confetti"></canvas>
 <div id="clear"><div class="panel">
   <div id="reward">⭐</div>
-  <p id="clearName">できたね！</p>
-  <span style="font-size:14px;opacity:.75">シールを もらったよ！</span>
+  <p id="clearName"></p>
+  <span style="font-size:14px;opacity:.75" data-t="gotSticker"></span>
   <div class="btns">
-    <button id="btnBack">🏠 もどる</button>
-    <button id="btnAgain">🔁 もう1かい</button>
-    <button class="go" id="btnNext">▶️ つぎの え</button>
+    <button id="btnBack" data-t="backBtn"></button>
+    <button id="btnAgain" data-t="again"></button>
+    <button class="go" id="btnNext" data-t="nextPic"></button>
   </div>
 </div></div>
 
 <div id="help" class="modal"><div class="panel">
-  <h2>おうちのかたへ</h2>
-  ・光っている点から、つぎの点へ指でなぞると線がつながります。点をタップするだけでもつながるので、小さい子でも遊べます。<br>
-  ・全部つなぐと、絵に色がついて動き出し、声や音が出ます。できた絵はシールちょうにたまります。<br>
-  ・「むずかしさ」で点の数（5・10・15・20・30・45）を選び、−／＋で3〜60まで細かく変えられます（ABCは26まで、あいうえおは46まで）。点が多いときは、おしろ・きょうりゅう・タコなどの むずかしい絵が出てきます。点が少ないときは、絵の残りの部分が はじめから描いてあります。<br>
-  ・「かぞえかた」で 1,2,3／2,4,6（2とびの数え方）／あいうえお順／ABC順 を選べます。つなぐたびに声で読みあげるので、数や文字を覚える練習にもなります。<br>
-  ・「じぶんで つくる」で、おうちの人が指で描いた形や、紙に描いた絵・写真のりんかくから、オリジナルの点つなぎが作れます。
-  <h3>💡 つぎの点</h3>
+  <h2 data-t="parents"></h2>
+  <div data-th="howto"></div>
+  <h3 data-t="guideH"></h3>
   <div class="opt" id="optGuide">
-    <button data-v="always">いつも ひからせる</button><button data-v="hint">💡のときだけ</button>
+    <button data-v="always" data-t="always"></button><button data-v="hint" data-t="onHint"></button>
   </div>
-  <h3>✋ つなぎかた</h3>
+  <h3 data-t="touchH"></h3>
   <div class="opt" id="optTouch">
-    <button data-v="easy">タップでも OK</button><button data-v="trace">なぞる だけ</button>
+    <button data-v="easy" data-t="easy"></button><button data-v="trace" data-t="trace"></button>
   </div>
-  <div class="note">「なぞる だけ」にすると、まえの点から指をはなさずに なぞったときだけ つながります。</div>
-  <h3>🗣️ こえ</h3>
-  <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest">▶ ためす</button></div>
-  <div class="note">「AIのこえ」は、あらかじめ AI で作っておいた声です（Kokoro-82M／Apache-2.0）。</div>
-  <button class="rb" id="btnRec2" style="margin-top:4px">🎙️ じぶんの こえを ろくおんする</button>
-  <h3>✏️ じぶんで つくった え</h3>
+  <div class="note" data-t="traceNote"></div>
+  <h3 data-t="voiceH"></h3>
+  <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest" data-t="test"></button></div>
+  <div class="note" data-t="voiceNote"></div>
+  <button class="rb" id="btnRec2" style="margin-top:4px" data-t="rec2"></button>
+  <h3>🌐 ことば / Language</h3>
+  <div class="opt" id="optLang"><button data-v="ja">日本語</button><button data-v="en">English</button></div>
+  <h3 data-t="myH"></h3>
   <div id="myList"></div>
-  <h3>🔓 ぜんぶ版</h3>
-  <div class="note">むりょうでは 5まいの絵（ほし・ハート・さかな・おうち・りんご）、かぞえかた「1・2・3」、じぶんで つくる 1まい が使えます。ぜんぶ版（買い切り）か ファミリーパスで、絵が13まいに ふえ、2とび・あいうえお・ABC と、じぶんで つくる 8まい が使えます。広告は出しません。</div>
+  <h3 data-t="fullH"></h3>
+  <div class="note" data-t="fullNote"></div>
   <div id="kkSlot"></div>
-  <button class="big" id="btnHelpClose">とじる</button>
+  <button class="big" id="btnHelpClose" data-t="close"></button>
 </div></div>
 
 <div id="recM" class="modal"><div class="panel">
-  <h2>🎙️ こえを ろくおん</h2>
-  <div class="note">おうちの人の声で「いち」「エー」などを録音すると、AIの声のかわりに その声で読みあげます。録音は この端末の中だけに保存され、どこにも送られません。</div>
+  <h2 data-t="recH"></h2>
+  <div class="note" data-t="recIntro"></div>
   <div id="recTabs"></div>
   <div id="recGrid"></div>
-  <div id="recCtl"><b id="recCur"></b><button id="recGo">● ろくおん</button><button id="recPlay">▶ きく</button><button id="recDel">🗑</button></div>
-  <div class="note" id="recNote">ますを えらんで「● ろくおん」→ 言いおわったら「■ とめる」（3びょうで じどうで とまります）。録音すると つぎの ますに すすみます。</div>
-  <button class="big" id="recClose">とじる</button>
+  <div id="recCtl"><b id="recCur"></b><button id="recGo"></button><button id="recPlay" data-t="listen"></button><button id="recDel">🗑</button></div>
+  <div class="note" id="recNote" data-t="recHow"></div>
+  <button class="big" id="recClose" data-t="close"></button>
 </div></div>
 
 <script src="../common/kakin.js"></script>
@@ -251,6 +249,97 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
 };
 const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+
+/* ---------- ことば（言語を足すときは TEXT に1つ足す。声のセリフは say、絵の名前は pics、鳴き声は cry、数の読みは num） ---------- */
+const TEXT = {
+  ja: {
+    title: 'てんつなぎ', h1: ['てんつなぎ'], sub: 'じゅんばんに てんを つないで えを かんせいさせよう', start: 'はじめる',
+    level: 'むずかしさ', minus: 'へらす', plus: 'ふやす', counting: 'かぞえかた', book: 'シールちょう', bookNote: '？の えも えらべるよ。なにが できるかな？',
+    make: '✏️ じぶんで つくる', recBtn: '🎙️ こえを ろくおん', help: 'おうちのかたへ・せってい', sndOn: '🔊 おと あり', sndOff: '🔇 おと なし', lang: 'English', home: 'もどる', hint: 'ヒント',
+    makeH: 'じぶんで つくる', mkTh: 'こさ', mkInv: '◐ はんてん', mkDraw: '✏️ ゆびで かく', mkPic: '📷 しゃしん・え から', mkOk: 'これで つくる',
+    gotSticker: 'シールを もらったよ！', backBtn: '🏠 もどる', again: '🔁 もう1かい', nextPic: '▶️ つぎの え',
+    parents: 'おうちのかたへ',
+    howto: '・光っている点から、つぎの点へ指でなぞると線がつながります。点をタップするだけでもつながるので、小さい子でも遊べます。<br>・全部つなぐと、絵に色がついて動き出し、声や音が出ます。できた絵はシールちょうにたまります。<br>・「むずかしさ」で点の数（5・10・15・20・30・45）を選び、−／＋で3〜60まで細かく変えられます（ABCは26まで、あいうえおは46まで）。点が多いときは、おしろ・きょうりゅう・タコなどの むずかしい絵が出てきます。点が少ないときは、絵の残りの部分が はじめから描いてあります。<br>・「かぞえかた」で 1,2,3／2,4,6（2とびの数え方）／あいうえお順／ABC順 を選べます。つなぐたびに声で読みあげるので、数や文字を覚える練習にもなります。<br>・「じぶんで つくる」で、おうちの人が指で描いた形や、紙に描いた絵・写真のりんかくから、オリジナルの点つなぎが作れます。',
+    guideH: '💡 つぎの点', always: 'いつも ひからせる', onHint: '💡のときだけ', touchH: '✋ つなぎかた', easy: 'タップでも OK', trace: 'なぞる だけ',
+    traceNote: '「なぞる だけ」にすると、まえの点から指をはなさずに なぞったときだけ つながります。',
+    voiceH: '🗣️ こえ', test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です（Kokoro-82M／Apache-2.0）。', rec2: '🎙️ じぶんの こえを ろくおんする',
+    aiVoice: n => `AIのこえ ${n}`, devVoice: 'スマホの よみあげ', noVoice: 'こえ なし',
+    myH: '✏️ じぶんで つくった え', myNone: 'まだ ありません。タイトルの「✏️ じぶんで つくる」から作れます。', del: 'けす',
+    fullH: '🔓 ぜんぶ版', fullNote: 'むりょうでは 5まいの絵（ほし・ハート・さかな・おうち・りんご）、かぞえかた「1・2・3」、じぶんで つくる 1まい が使えます。ぜんぶ版（買い切り）か ファミリーパスで、絵が31まいに ふえ、2とび・あいうえお・ABC と、じぶんで つくる 8まい が使えます。広告は出しません。',
+    close: 'とじる', recH: '🎙️ こえを ろくおん',
+    recIntro: 'おうちの人の声で「いち」「エー」などを録音すると、AIの声のかわりに その声で読みあげます。録音は この端末の中だけに保存され、どこにも送られません。',
+    recHow: 'ますを えらんで「● ろくおん」→ 言いおわったら「■ とめる」（3びょうで じどうで とまります）。録音すると つぎの ますに すすみます。',
+    listen: '▶ きく', stop: '■ とめる', redo: '● とりなおす', rec: '● ろくおん', words: 'ことば', q: t => `「${t}」`,
+    noRec: 'このブラウザでは録音できません。Safari か Chrome で開いてください。', noMic: 'マイクが使えませんでした。マイクの使用を「許可」してください。',
+    dots: n => `てん ${n}こ`, nextIs: 'つぎは', done: 'できた！', doneOf: name => `${name}！`, clearCustom: 'できたね！', clearOf: name => `${name}が できたね！`, meow: 'にゃー',
+    ages: ['2さい〜', '3さい〜', '4さい〜', '5さい〜', '6さい〜', '7さい〜'], hardLabel: 'むずかしい',
+    mkStart: 'ゆびで ぐるっと かたちを かいてください（はじめと おわりは じどうで つながります）', mkDrawMsg: 'ゆびで ぐるっと かたちを かいてください', mkBadImg: 'がぞうを よみこめませんでした',
+    mkBigger: 'もうすこし 大きく かいてください', mkGood: 'いいですね！ 色をえらんで「これで つくる」', mkNoEdge: 'りんかくが 見つかりません。「こさ」や「はんてん」を ためしてください', mkSmall: 'りんかくが 小さすぎます', mkFound: 'りんかくが できました。うまく いかないときは「こさ」を うごかしてね',
+    say: { start0: 'なにが、できるかな？', start1: 'じゅんばんに、つなごうね。', here0: 'つぎは、ここだよ。', here1: 'ひかってる、てんだよ。', cheer0: 'そのちょうし！', cheer1: 'いいね！', last0: 'あと、ひとつ！', close0: 'さいごは、はじめの、てんに、もどろう！', praise0: 'できたー！すごいね！', praise1: 'じょうずに、できました！', done_custom: 'えが、できたね！' },
+    doneSay: name => name + 'が、できたね！',
+    cry: { star: 'きらりん！', heart: 'どきどき！', fish: 'すいすい！', house: 'ただいまー！', apple: 'しゃりっ！', cat: 'にゃーん！', rocket: 'はっしゃー！', yacht: 'ざぶーん！', mush: 'ぽこっ！', whale: 'ぷしゅー！', bfly: 'ひらひら！', rabbit: 'ぴょん、ぴょん！', car: 'ぶっぶー！', custom: 'やったね！',
+      tulip: 'ゆらゆら！', umbrella: 'ぱっ！', snowman: 'さむいね！', balloon: 'ふわふわー！', icecream: 'つめたーい！', bear: 'がおー！', pig: 'ぶーぶー！', turtle: 'のそのそ！', chick: 'ぴよぴよ！',
+      plane: 'びゅーん！', dolphin: 'きゅいきゅい！', castle: 'ぱんぱかぱーん！', dino: 'がおーっ！', octopus: 'にょろにょろ！', crown: 'きらきら！', tree: 'メリークリスマス！', train: 'ぽっぽー！', elephant: 'ぱおーん！' },
+    pics: null, // 日本語の名前は PICS の name
+    letters: ['エー', 'ビー', 'シー', 'ディー', 'イー', 'エフ', 'ジー', 'エイチ', 'アイ', 'ジェー', 'ケー', 'エル', 'エム', 'エヌ', 'オー', 'ピー', 'キュー', 'アール', 'エス', 'ティー', 'ユー', 'ブイ', 'ダブリュー', 'エックス', 'ワイ', 'ゼット'],
+    num(n) { const N = ['いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう', 'じゅう']; if (n <= 10) return N[n - 1]; const t = Math.floor(n / 10), o = n % 10; return ['', 'じゅう', 'にじゅう', 'さんじゅう', 'よんじゅう', 'ごじゅう', 'ろくじゅう'][t] + (o ? N[o - 1] : ''); },
+    kana: true
+  },
+  en: {
+    title: 'Connect the Dots', h1: ['Connect', 'the Dots'], sub: 'Join the dots in order and finish the picture!', start: 'Start',
+    level: 'Difficulty', minus: 'Fewer', plus: 'More', counting: 'Count with', book: 'Sticker book', bookNote: 'You can pick a “?” picture too. What will it be?',
+    make: '✏️ Make your own', recBtn: '🎙️ Record voice', help: 'For grown-ups', sndOn: '🔊 Sound on', sndOff: '🔇 Sound off', lang: '日本語', home: 'Back', hint: 'Hint',
+    makeH: 'Make your own', mkTh: 'Contrast', mkInv: '◐ Invert', mkDraw: '✏️ Draw with finger', mkPic: '📷 From a photo or drawing', mkOk: 'Make it!',
+    gotSticker: 'You got a sticker!', backBtn: '🏠 Home', again: '🔁 Again', nextPic: '▶️ Next picture',
+    parents: 'For grown-ups',
+    howto: '• Trace with a finger from the glowing dot to the next one to draw a line. Simply tapping the dots also works, so even little ones can play.<br>• When all dots are joined, the picture fills with color, moves and makes sounds. Finished pictures go into the sticker book.<br>• “Difficulty” sets the number of dots (5, 10, 15, 20, 30, 45); fine-tune from 3 to 60 with − / + (up to 26 for ABC). With many dots, harder pictures such as the castle, dinosaur or octopus appear. With few dots, the rest of the picture is already drawn.<br>• “Count with” chooses 1, 2, 3 / 2, 4, 6 (counting by twos) / A, B, C. Each dot is read aloud, so it’s good practice for numbers and letters.<br>• “Make your own” turns a shape drawn with a finger, or the outline of a drawing or photo, into your own dot-to-dot.',
+    guideH: '💡 Next dot', always: 'Always glow', onHint: 'Only with 💡', touchH: '✋ How to connect', easy: 'Tapping is OK', trace: 'Tracing only',
+    traceNote: 'With “Tracing only”, dots connect only when traced from the previous dot without lifting the finger.',
+    voiceH: '🗣️ Voice', test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI (Kokoro-82M / Apache-2.0).', rec2: '🎙️ Record your own voice',
+    aiVoice: n => `AI voice ${n}`, devVoice: 'Device voice', noVoice: 'No voice',
+    myH: '✏️ Your own pictures', myNone: 'None yet. Make one with “✏️ Make your own” on the title screen.', del: 'Delete',
+    fullH: '🔓 Full version', fullNote: 'Free: 5 pictures (star, heart, fish, house, apple), counting 1-2-3 and 1 picture of your own. The full version (one-time purchase) or the Family Pass gives 31 pictures, counting by 2s and ABC, and up to 8 pictures of your own. No ads.',
+    close: 'Close', recH: '🎙️ Record voice',
+    recIntro: 'Record your own voice saying “one”, “A” and so on, and it will be used instead of the AI voice. Recordings are saved only on this device and never sent anywhere.',
+    recHow: 'Pick a box, tap “● Record”, then “■ Stop” when done (it stops by itself after 3 seconds). After recording it moves to the next box.',
+    listen: '▶ Play', stop: '■ Stop', redo: '● Record again', rec: '● Record', words: 'Words', q: t => `“${t}”`,
+    noRec: 'This browser can’t record. Please open the game in Safari or Chrome.', noMic: 'The microphone could not be used. Please allow microphone access.',
+    dots: n => `${n} dots`, nextIs: 'Next', done: 'Done!', doneOf: name => `${name}!`, clearCustom: 'You did it!', clearOf: name => `You made a ${name.toLowerCase()}!`, meow: 'meow',
+    ages: ['Age 2+', 'Age 3+', 'Age 4+', 'Age 5+', 'Age 6+', 'Age 7+'], hardLabel: 'Hard',
+    mkStart: 'Draw a shape all the way around with your finger (the start and end join up by themselves).', mkDrawMsg: 'Draw a shape all the way around with your finger.', mkBadImg: 'The picture could not be loaded.',
+    mkBigger: 'Please draw it a little bigger.', mkGood: 'Nice! Pick a color and tap “Make it!”', mkNoEdge: 'No outline found. Try moving “Contrast” or tapping “Invert”.', mkSmall: 'The outline is too small.', mkFound: 'Outline ready. If it doesn’t look right, move the “Contrast” slider.',
+    say: { start0: 'What will it be?', start1: 'Let’s connect them in order.', here0: 'Next is here!', here1: 'The shining dot!', cheer0: 'Keep going!', cheer1: 'Nice!', last0: 'Just one more!', close0: 'Last one! Go back to the first dot!', praise0: 'You did it! Amazing!', praise1: 'Great job!', done_custom: 'You made a picture!' },
+    doneSay: name => `You made a ${name.toLowerCase()}!`,
+    cry: { star: 'Twinkle!', heart: 'Ba-dump!', fish: 'Swish, swish!', house: 'I’m home!', apple: 'Crunch!', cat: 'Meow!', rocket: 'Blast off!', yacht: 'Splash!', mush: 'Pop!', whale: 'Whoosh!', bfly: 'Flutter, flutter!', rabbit: 'Hop, hop!', car: 'Beep beep!', custom: 'Hooray!',
+      tulip: 'Sway, sway!', umbrella: 'Pop! It’s open!', snowman: 'Brrr, it’s cold!', balloon: 'Up, up and away!', icecream: 'So cold!', bear: 'Roar!', pig: 'Oink, oink!', turtle: 'Slow and steady!', chick: 'Cheep, cheep!',
+      plane: 'Zoom!', dolphin: 'Eee, eee!', castle: 'Ta-da!', dino: 'Rawr!', octopus: 'Wiggle, wiggle!', crown: 'Sparkle!', tree: 'Merry Christmas!', train: 'Choo choo!', elephant: 'Toot!' },
+    pics: { star: 'Star', heart: 'Heart', fish: 'Fish', house: 'House', apple: 'Apple', cat: 'Cat', rocket: 'Rocket', yacht: 'Sailboat', mush: 'Mushroom', whale: 'Whale', bfly: 'Butterfly', rabbit: 'Bunny', car: 'Car',
+      tulip: 'Tulip', umbrella: 'Umbrella', snowman: 'Snowman', balloon: 'Balloon', icecream: 'Ice cream', bear: 'Bear', pig: 'Pig', turtle: 'Turtle', chick: 'Chick', plane: 'Airplane', dolphin: 'Dolphin', castle: 'Castle', dino: 'Dinosaur', octopus: 'Octopus', crown: 'Crown', tree: 'Christmas tree', train: 'Train', elephant: 'Elephant' },
+    letters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+    num(n) { const O = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'], D = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty']; return n < 20 ? O[n] : D[Math.floor(n / 10)] + (n % 10 ? '-' + O[n % 10] : ''); },
+    kana: false // あいうえお は 日本語のときだけ
+  }
+};
+function pickLang() {
+  const q = new URLSearchParams(location.search).get('lang'); if (q && TEXT[q]) return q;
+  const s = store.get('tentsu-lang', null); if (s && TEXT[s]) return s;
+  try { const gl = localStorage.getItem('games-lang'); if (gl && TEXT[gl]) return gl; } catch (e) {} // 入口ページで えらんだ ことば
+  const nav = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').slice(0, 2);
+  return TEXT[nav] ? nav : 'en';
+}
+let LANG = pickLang();
+const T = () => TEXT[LANG];
+const picName = p => (T().pics && T().pics[p.id]) || p.name;
+function applyText() {
+  const t = T();
+  document.documentElement.lang = LANG; document.title = t.title;
+  $('#h1').innerHTML = t.h1.map(w => [...w].map(c => c === ' ' ? ' ' : `<span>${c}</span>`).join('')).join('<br>');
+  document.querySelectorAll('[data-t]').forEach(e => { e.textContent = t[e.dataset.t]; });
+  document.querySelectorAll('[data-th]').forEach(e => { e.innerHTML = t[e.dataset.th]; });
+  document.querySelectorAll('[data-ta]').forEach(e => e.setAttribute('aria-label', t[e.dataset.ta]));
+  document.querySelectorAll('#optLang button').forEach(b => b.classList.toggle('sel', b.dataset.v === LANG));
+}
+function setLang(l) { LANG = l; store.set('tentsu-lang', l); applyText(); renderTitle(); if ($('#help').classList.contains('on')) renderHelp(); }
 
 /* ---------- おと ---------- */
 let soundOn = store.get('tentsu-sound', true);
@@ -321,30 +410,22 @@ const sfx = {
 };
 
 /* ---------- こえ ---------- */
-const AI_VOICES = [
-  { id: 'jf_alpha', name: 'AIのこえ 1' }, { id: 'jf_gongitsune', name: 'AIのこえ 2' },
-  { id: 'jf_nezumi', name: 'AIのこえ 3' }, { id: 'jf_tebukuro', name: 'AIのこえ 4' }
-];
-const NUMS = ['いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう', 'じゅう'];
-function numRead(n) {
-  if (n <= 10) return NUMS[n - 1];
-  const t = Math.floor(n / 10), o = n % 10;
-  return ['', 'じゅう', 'にじゅう', 'さんじゅう', 'よんじゅう', 'ごじゅう', 'ろくじゅう'][t] + (o ? NUMS[o - 1] : '');
-}
+// AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<key>.mp3）
+const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const KANA = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん';
 const ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const ABC_READ = ['エー', 'ビー', 'シー', 'ディー', 'イー', 'エフ', 'ジー', 'エイチ', 'アイ', 'ジェー', 'ケー', 'エル', 'エム', 'エヌ', 'オー', 'ピー', 'キュー', 'アール', 'エス', 'ティー', 'ユー', 'ブイ', 'ダブリュー', 'エックス', 'ワイ', 'ゼット'];
-// 声ファイル（voice/<声>/<key>.mp3）と、ないときの よみあげ文
-const TTS_TEXT = {
-  start0: 'なにが、できるかな？', start1: 'じゅんばんに、つなごうね。',
-  here0: 'つぎは、ここだよ。', here1: 'ひかってる、てんだよ。',
-  cheer0: 'そのちょうし！', cheer1: 'いいね！', last0: 'あと、ひとつ！',
-  close0: 'さいごは、はじめの、てんに、もどろう！',
-  praise0: 'できたー！すごいね！', praise1: 'じょうずに、できました！'
-};
-for (let n = 1; n <= 60; n++) TTS_TEXT['n' + n] = numRead(n);
-for (let i = 0; i < KANA.length; i++) TTS_TEXT['k' + i] = KANA[i];
-for (let i = 0; i < ABC.length; i++) TTS_TEXT['a' + i] = ABC_READ[i];
+// 声ファイル（voice/<声>/<key>.mp3）と、ないときの よみあげ文（ことばごと）
+const TTS_BY = {};
+function buildTTS() {
+  for (const [l, t] of Object.entries(TEXT)) {
+    const o = TTS_BY[l] = { ...t.say };
+    for (let n = 1; n <= 60; n++) o['n' + n] = t.num(n);
+    if (t.kana) for (let i = 0; i < KANA.length; i++) o['k' + i] = KANA[i];
+    for (let i = 0; i < ABC.length; i++) o['a' + i] = t.letters[i];
+    for (const p of PICS) { o['done_' + p.id] = t.doneSay((t.pics && t.pics[p.id]) || p.name); o['cry_' + p.id] = t.cry[p.id]; }
+    o.cry_custom = t.cry.custom;
+  }
+}
 const aiBuf = {}; // 'jf_alpha/n3' -> AudioBuffer | 'loading' | 'none'
 let aiSrc = null;
 function aiLoad(id, keys) {
@@ -358,18 +439,18 @@ function aiLoad(id, keys) {
       .then(buf => { aiBuf[k] = buf; }).catch(() => { aiBuf[k] = 'none'; });
   }
 }
-let voiceList = [], jaVoice = null;
+let voiceList = [];
 function voiceScore(v) {
   const n = v.name; let s = 0;
   if (/拡張|Enhanced|Premium|プレミアム/i.test(n)) s += 50;
   if (/Natural|Neural|Online/i.test(n)) s += 45;
   if (/Google/i.test(n)) s += 30;
-  if (/Kyoko|O-ren|Nanami|Hattori|Ayumi|Haruka/i.test(n)) s += 10;
-  if (/Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley/i.test(n)) s -= 40;
+  if (/Kyoko|O-ren|Nanami|Hattori|Ayumi|Haruka|Samantha|Karen|Jenny|Aria/i.test(n)) s += 10;
+  if (/Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Bad|Bells|Bubbles|Jester|Whisper|Zarvox|Albert|Trinoids|Organ|Cellos|Boing|Wobble|Superstar/i.test(n)) s -= 60;
   return s;
 }
 function loadVoice() {
-  try { voiceList = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a)); jaVoice = voiceList[0] || null; } catch (e) {}
+  try { voiceList = speechSynthesis.getVoices(); } catch (e) {}
 }
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
 function tts(text, onend) {
@@ -377,15 +458,18 @@ function tts(text, onend) {
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP'; u.pitch = 1.15; u.rate = .95; if (jaVoice) u.voice = jaVoice;
+    const vs = voiceList.filter(v => v.lang.replace('_', '-').toLowerCase().startsWith(LANG)).sort((a, b) => voiceScore(b) - voiceScore(a));
+    u.lang = LANG === 'ja' ? 'ja-JP' : 'en-US'; u.pitch = 1.15; u.rate = LANG === 'ja' ? .95 : .9; if (vs[0]) u.voice = vs[0];
     if (onend) { let done = false; const f = () => { if (!done) { done = true; onend(); } }; u.onend = f; setTimeout(f, 2500); }
     speechSynthesis.speak(u);
   } catch (e) {}
 }
-// 'ai:jf_alpha' / 'dev'（端末の読み上げ）/ 'off'
-let voiceMode = store.get('tentsu-voice', 'ai:jf_alpha');
+// 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
+let voiceMode = store.get('tentsu-voice', 'ai:1');
+{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+const aiId = () => AI_VOICES[LANG][(+voiceMode.slice(3) || 1) - 1] || AI_VOICES[LANG][0];
 let lastSpeak = 0, speakToken = 0;
-function voiceText(key) { return TTS_TEXT[key] || ''; }
+function voiceText(key) { return TTS_BY[LANG][key] || ''; }
 // key をしゃべる。おわったら onend
 function say(key, force, onend) {
   if (!soundOn || voiceMode === 'off') { if (onend) setTimeout(onend, 300); return; }
@@ -401,7 +485,7 @@ function say(key, force, onend) {
     return;
   }
   if (voiceMode.startsWith('ai:')) {
-    const id = voiceMode.slice(3), a = audio();
+    const id = aiId(), a = audio();
     if (a) {
       aiLoad(id, [key]);
       const b = aiBuf[`${id}/${key}`];
@@ -421,7 +505,7 @@ function playBuf(b, off, dur) {
   const src = a.createBufferSource(); src.buffer = b; src.connect(a.destination); src.start(0, off, dur); aiSrc = src;
 }
 function sayCat(cat, force) { // start → start0 / start1 など（録音があれば そちらを）
-  const keys = Object.keys(TTS_TEXT).filter(k => k.replace(/\d+$/, '') === cat);
+  const keys = Object.keys(TTS_BY[LANG]).filter(k => k.replace(/\d+$/, '') === cat);
   const mine = keys.filter(k => recBuf[k]);
   if (keys.length) say(pick(mine.length ? mine : keys), force);
 }
@@ -452,7 +536,7 @@ function decodeRec(key) {
 function decodeAllRecs() { if (!actx) return; for (const k in recs) if (!recBuf[k] || (recBuf[k].pending && !recBuf[k].busy)) decodeRec(k); }
 vdb.all().then(o => { Object.assign(recs, o); for (const k in recs) recBuf[k] = { pending: true }; decodeAllRecs(); }).catch(() => {});
 document.addEventListener('pointerdown', () => { if (audio()) decodeAllRecs(); }, { passive: true });
-function prepVoice(keys) { if (voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3), keys); }
+function prepVoice(keys) { if (voiceMode.startsWith('ai:')) aiLoad(aiId(), keys); }
 
 /* ---------- え（りんかくの かきかた） ---------- */
 // 0〜100 の ます目に りんかくを かく。m=はじめ l=まっすぐ c=カーブ
@@ -548,7 +632,7 @@ const PICS = [
       g.lineWidth = 1.6; g.beginPath();
       for (const s of [-1, 1]) for (const k of [-1, 0, 1]) { g.moveTo(50 + s * 14, 66 + k * 3); g.lineTo(50 + s * 32, 63 + k * 6 + w * s); }
       g.stroke();
-      if ((t % 3) < 1) { g.fillStyle = '#4a3b2a'; g.font = `bold 10px ${EMOJI_FONT}`; g.textAlign = 'center'; g.fillText('にゃー', 84 + Math.sin(t * 8), 10); }
+      if ((t % 3) < 1) { g.fillStyle = '#4a3b2a'; g.font = `bold 10px ${EMOJI_FONT}`; g.textAlign = 'center'; g.fillText(T().meow, 84 + Math.sin(t * 8), 10); }
     } },
   { id: 'rocket', name: 'ロケット', emoji: '🚀', fill: '#e8edf7', bg: '#d8dcff',
     path() { return P().m(50, 6).c(64, 16, 68, 36, 66, 60).l(80, 76).l(80, 90).l(64, 80).l(36, 80).l(20, 90).l(20, 76).l(34, 60).c(32, 36, 36, 16, 50, 6).pts; },
@@ -894,11 +978,7 @@ const PICS = [
     } }
 ];
 const PIC_BY = Object.fromEntries(PICS.map(p => [p.id, p]));
-const CRY = { star: 'きらりん！', heart: 'どきどき！', fish: 'すいすい！', house: 'ただいまー！', apple: 'しゃりっ！', cat: 'にゃーん！', rocket: 'はっしゃー！', yacht: 'ざぶーん！', mush: 'ぽこっ！', whale: 'ぷしゅー！', bfly: 'ひらひら！', rabbit: 'ぴょん、ぴょん！', car: 'ぶっぶー！', custom: 'やったね！',
-  tulip: 'ゆらゆら！', umbrella: 'ぱっ！', snowman: 'さむいね！', balloon: 'ふわふわー！', icecream: 'つめたーい！', bear: 'がおー！', pig: 'ぶーぶー！', turtle: 'のそのそ！', chick: 'ぴよぴよ！',
-  plane: 'びゅーん！', dolphin: 'きゅいきゅい！', castle: 'ぱんぱかぱーん！', dino: 'がおーっ！', octopus: 'にょろにょろ！', crown: 'きらきら！', tree: 'メリークリスマス！', train: 'ぽっぽー！', elephant: 'ぱおーん！' };
-for (const p of PICS) { TTS_TEXT['done_' + p.id] = p.name + 'が、できたね！'; TTS_TEXT['cry_' + p.id] = CRY[p.id]; }
-TTS_TEXT.done_custom = 'えが、できたね！'; TTS_TEXT.cry_custom = CRY.custom;
+buildTTS();
 
 /* ---------- え（こまかいところを かく道具） ---------- */
 function ell(g, x, y, rx, ry, c) { g.fillStyle = c; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill(); }
@@ -1031,13 +1111,15 @@ const LEVELS = [
   { n: 15, label: '★★★', age: '4さい〜' },
   { n: 20, label: '★★★★', age: '5さい〜' },
   { n: 30, label: '★5', age: '6さい〜' },
-  { n: 45, label: 'むずかしい', age: '7さい〜' }
+  { n: 45, label: null, age: '7さい〜' }
 ];
 let dotN = store.get('tentsu-n', 10);
 let mode = store.get('tentsu-mode', 'num');
 let guide = store.get('tentsu-guide', 'always');
 let touchMode = store.get('tentsu-touch', 'easy');
 const maxN = () => MODES.find(m => m.id === mode).max;
+const modeLabel = l => LANG === 'ja' ? l : l.replace(/・/g, ', ');
+const modeShown = m => m !== 'kana' || T().kana; // あいうえお は 日本語のときだけ
 const curN = () => clamp(dotN, 3, maxN());
 
 /* ---------- じぶんで つくった え ---------- */
@@ -1093,9 +1175,9 @@ function startGame(pic) {
 }
 function renderProg() {
   const t = target(), L = pz.labels;
-  if (state !== 'play') { $('#prog').innerHTML = `${curPic.custom ? 'できた！' : curPic.name + '！'}`; return; }
+  if (state !== 'play') { $('#prog').innerHTML = `${curPic.custom ? T().done : T().doneOf(picName(curPic))}`; return; }
   const nx = t >= 0 ? L[t].t : '';
-  $('#prog').innerHTML = `つぎは <span style="color:var(--accent);font-size:28px">${nx}</span><small>${Math.min(done, L.length)} / ${L.length}</small>`;
+  $('#prog').innerHTML = `${T().nextIs} <span style="color:var(--accent);font-size:28px">${nx}</span><small>${Math.min(done, L.length)} / ${L.length}</small>`;
 }
 
 /* ---------- ゆびの うごき ---------- */
@@ -1169,11 +1251,11 @@ function complete() {
   sfx.done();
   const key = curPic.custom ? 'custom' : curPic.id;
   setTimeout(() => { if (state === 'done') { (sfx[key] || sfx.custom)(); say('cry_' + key, true, () => { if (state === 'done') say('done_' + key, true); }); } }, 1100);
-  setTimeout(() => { if (state === 'done') { showSay(curPic.custom ? 'できた！' : curPic.name + '！'); confetti(); } }, 1200);
+  setTimeout(() => { if (state === 'done') { showSay(curPic.custom ? T().done : T().doneOf(picName(curPic))); confetti(); } }, 1200);
   const book = store.get('tentsu-book', {});
   book[curPic.id] = (book[curPic.id] || 0) + 1; store.set('tentsu-book', book);
   $('#reward').textContent = curPic.custom ? '🖼️' : curPic.emoji;
-  $('#clearName').textContent = curPic.custom ? 'できたね！' : `${curPic.name}が できたね！`;
+  $('#clearName').textContent = curPic.custom ? T().clearCustom : T().clearOf(picName(curPic));
   setTimeout(() => { if (state === 'done') $('#clear').classList.add('on'); }, 3600);
 }
 
@@ -1345,21 +1427,21 @@ const FREE_PICS = ['star', 'heart', 'fish', 'house', 'apple'], FREE_MODES = ['nu
 const picOpen = p => p.custom || FREE_PICS.includes(p.id) || Kakin.full();
 const modeOpen = m => FREE_MODES.includes(m) || Kakin.full();
 Kakin.setup({
-  game: 'tentsunagi', lang: () => 'ja', onChange: () => { if (!modeOpen(mode)) mode = 'num'; renderTitle(); },
-  name: { ja: 'すうじで てんつなぎ', en: 'Connect the Dots' },
+  game: 'tentsunagi', lang: () => LANG, onChange: () => { if (!modeOpen(mode)) mode = 'num'; renderTitle(); },
+  name: { ja: 'てんつなぎ', en: 'Connect the Dots' },
   free: { ja: ['絵 5まい（ほし・ハート・さかな・おうち・りんご）', 'かぞえかた 1・2・3', 'じぶんで つくる（1まい）', 'こえの ろくおん'], en: ['5 pictures', 'Counting 1-2-3', 'Make your own (1)', 'Record your voice'] },
-  full: { ja: ['絵が 13まいに（ねこ・ロケット・くじら など8まい）', 'かぞえかた 2・4・6／あ・い・う／A・B・C', 'じぶんで つくる（8まいまで）'], en: ['13 pictures (8 more)', 'Counting by 2s, Japanese kana and ABC', 'Make your own (up to 8)'] },
+  full: { ja: ['絵が 31まいに（ねこ・ロケット・くじら など26まい）', 'かぞえかた 2・4・6／あ・い・う／A・B・C', 'じぶんで つくる（8まいまで）'], en: ['31 pictures (26 more)', 'Counting by 2s and ABC', 'Make your own (up to 8)'] },
 });
 $('#kkSlot').appendChild(Kakin.parentButton());
 function renderTitle() {
-  $('#lvl').innerHTML = LEVELS.map((L, i) => `<button data-n="${L.n}" class="${L.n === dotN ? 'sel' : ''}">${L.label}<small>${L.age}</small></button>`).join('');
-  $('#nShow').textContent = `てん ${curN()}こ`;
-  if (!modeOpen(mode)) mode = 'num';
-  $('#modes').innerHTML = MODES.map(m => `<button data-m="${m.id}" class="${m.id === mode ? 'sel' : ''}${modeOpen(m.id) ? '' : ' kk-lock'}">${m.label}</button>`).join('');
+  $('#lvl').innerHTML = LEVELS.map((lv, i) => `<button data-n="${lv.n}" class="${lv.n === dotN ? 'sel' : ''}">${lv.label || T().hardLabel}<small>${T().ages[i]}</small></button>`).join('');
+  if (!modeOpen(mode) || !modeShown(mode)) mode = 'num';
+  $('#nShow').textContent = T().dots(curN());
+  $('#modes').innerHTML = MODES.filter(m => modeShown(m.id)).map(m => `<button data-m="${m.id}" class="${m.id === mode ? 'sel' : ''}${modeOpen(m.id) ? '' : ' kk-lock'}">${modeLabel(m.label)}</button>`).join('');
   const book = store.get('tentsu-book', {});
   const all = allPics();
   const got = all.filter(p => book[p.id]).length;
-  $('#bookCount').textContent = `（${got} / ${all.length}）`;
+  $('#bookCount').textContent = LANG === 'ja' ? `（${got} / ${all.length}）` : `(${got} / ${all.length})`;
   const box = $('#pics'); box.innerHTML = '';
   all.forEach((p, i) => {
     const b = document.createElement('button'); b.dataset.i = i;
@@ -1369,7 +1451,7 @@ function renderTitle() {
     if (!picOpen(p)) b.classList.add('kk-lock');
     box.appendChild(b);
   });
-  $('#btnSnd').textContent = soundOn ? '🔊 おと あり' : '🔇 おと なし';
+  $('#btnSnd').textContent = soundOn ? T().sndOn : T().sndOff; $('#btnLang').textContent = T().lang;
 }
 function thumbOutline(pic) {
   const c = document.createElement('canvas'); c.width = c.height = 112;
@@ -1406,13 +1488,14 @@ $('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('tentsu-sound', sou
 function renderHelp() {
   document.querySelectorAll('#optGuide button').forEach(b => b.classList.toggle('sel', b.dataset.v === guide));
   document.querySelectorAll('#optTouch button').forEach(b => b.classList.toggle('sel', b.dataset.v === touchMode));
-  $('#voiceSel').innerHTML = AI_VOICES.map(v => `<option value="ai:${v.id}">${v.name}</option>`).join('') +
-    '<option value="dev">スマホの よみあげ</option><option value="off">こえ なし</option>';
+  $('#voiceSel').innerHTML = [1, 2, 3, 4].map(n => `<option value="ai:${n}">${T().aiVoice(n)}</option>`).join('') +
+    `<option value="dev">${T().devVoice}</option><option value="off">${T().noVoice}</option>`;
+  document.querySelectorAll('#optLang button').forEach(b => b.classList.toggle('sel', b.dataset.v === LANG));
   $('#voiceSel').value = voiceMode;
-  const L = $('#myList'); L.innerHTML = customs.length ? '' : '<span class="note">まだ ありません。タイトルの「✏️ じぶんで つくる」から作れます。</span>';
+  const L = $('#myList'); L.innerHTML = customs.length ? '' : `<span class="note">${T().myNone}</span>`;
   customs.forEach((c, i) => {
     const d = document.createElement('div'); d.appendChild(thumbOutline(customPic(c)));
-    const x = document.createElement('button'); x.textContent = '🗑'; x.setAttribute('aria-label', 'けす');
+    const x = document.createElement('button'); x.textContent = '🗑'; x.setAttribute('aria-label', T().del);
     x.onclick = () => { customs.splice(i, 1); store.set('tentsu-custom', customs); renderHelp(); renderTitle(); };
     d.appendChild(x); L.appendChild(d);
   });
@@ -1422,6 +1505,8 @@ $('#btnHelpClose').onclick = () => $('#help').classList.remove('on');
 $('#optGuide').onclick = e => { const b = e.target.closest('button'); if (!b) return; guide = b.dataset.v; store.set('tentsu-guide', guide); renderHelp(); };
 $('#optTouch').onclick = e => { const b = e.target.closest('button'); if (!b) return; touchMode = b.dataset.v; store.set('tentsu-touch', touchMode); renderHelp(); };
 $('#voiceSel').onchange = e => { voiceMode = e.target.value; store.set('tentsu-voice', voiceMode); prepVoice(['praise0']); };
+$('#btnLang').onclick = () => { sfx.tap(); setLang(LANG === 'ja' ? 'en' : 'ja'); };
+$('#optLang').onclick = e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.v); };
 $('#voiceTest').onclick = () => { audio(); prepVoice(['praise0']); setTimeout(() => say('praise0', true), voiceMode.startsWith('ai:') ? 500 : 0); };
 
 /* ---------- じぶんで つくる ---------- */
@@ -1441,7 +1526,7 @@ function openMaker() {
   mk = { ...mk, stroke: null, pts: null, img: null, imgEl: null, gray: null, inv: false, box: null, drawing: true };
   $('#mkPhoto').style.display = 'none';
   $('#mkColors').innerHTML = COLORS.map(c => `<button data-c="${c}" style="background:${c}" class="${c === mk.color ? 'sel' : ''}"></button>`).join('');
-  mkMsg('ゆびで ぐるっと かたちを かいてください（はじめと おわりは じどうで つながります）');
+  mkMsg(T().mkStart);
   requestAnimationFrame(() => { mkLayout(); mkDraw(); });
   mkUpdate();
 }
@@ -1450,13 +1535,13 @@ function mkUpdate() { $('#mkOk').disabled = !(mk.pts && mk.pts.length > 8); }
 $('#btnMake').onclick = () => { audio(); sfx.tap(); if (!Kakin.full() && customs.length >= FREE_CUSTOM) { Kakin.ask(); return; } openMaker(); };
 $('#mkHome').onclick = () => { sfx.tap(); goTitle(); };
 $('#mkColors').onclick = e => { const b = e.target.closest('button'); if (!b) return; mk.color = b.dataset.c; $('#mkColors').querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === b)); mkDraw(); };
-$('#mkDraw').onclick = () => { mk.img = null; mk.imgEl = null; mk.gray = null; mk.pts = null; mk.drawing = true; $('#mkPhoto').style.display = 'none'; mkLayout(); mkMsg('ゆびで ぐるっと かたちを かいてください'); mkDraw(); mkUpdate(); };
+$('#mkDraw').onclick = () => { mk.img = null; mk.imgEl = null; mk.gray = null; mk.pts = null; mk.drawing = true; $('#mkPhoto').style.display = 'none'; mkLayout(); mkMsg(T().mkDrawMsg); mkDraw(); mkUpdate(); };
 $('#mkPic').onclick = () => $('#mkFile').click();
 $('#mkFile').onchange = e => {
   const f = e.target.files[0]; if (!f) return; e.target.value = '';
   const url = URL.createObjectURL(f), im = new Image();
   im.onload = () => { loadPhoto(im); URL.revokeObjectURL(url); };
-  im.onerror = () => mkMsg('がぞうを よみこめませんでした');
+  im.onerror = () => mkMsg(T().mkBadImg);
   im.src = url;
 };
 const mkToBox = e => { const r = mkCv.getBoundingClientRect(); return [(e.clientX - r.left - mkLay.ox) / mkLay.s, (e.clientY - r.top - mkLay.oy) / mkLay.s]; };
@@ -1471,9 +1556,9 @@ const mkEnd = () => {
   if (!mk.stroke) return;
   const s = mk.stroke; mk.stroke = null;
   let len = 0; for (let i = 1; i < s.length; i++) len += Math.hypot(s[i][0] - s[i - 1][0], s[i][1] - s[i - 1][1]);
-  if (len < 60) { mkMsg('もうすこし 大きく かいてください'); mkDraw(); return; }
+  if (len < 60) { mkMsg(T().mkBigger); mkDraw(); return; }
   mk.pts = normalizeShape(smooth(rdpClosed(s, .8), 2));
-  mkMsg('いいですね！ 色をえらんで「これで つくる」'); mkDraw(); mkUpdate();
+  mkMsg(T().mkGood); mkDraw(); mkUpdate();
 };
 mkCv.addEventListener('pointerup', mkEnd); mkCv.addEventListener('pointercancel', mkEnd);
 function rdp(pts, eps) {
@@ -1573,7 +1658,7 @@ function findOutline() {
     }
     if (cnt > bestN) { bestN = cnt; best = i; bestStart = first; }
   }
-  if (best < 0 || bestN < w * h * .01) { mk.pts = null; mkMsg('りんかくが 見つかりません。「こさ」や「はんてん」を ためしてください'); mkDraw(); mkUpdate(); return; }
+  if (best < 0 || bestN < w * h * .01) { mk.pts = null; mkMsg(T().mkNoEdge); mkDraw(); mkUpdate(); return; }
   const inB = (x, y) => x >= 0 && y >= 0 && x < w && y < h && lab[y * w + x] === best;
   // まわりを なぞる（ムーア近傍）
   const DIR = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
@@ -1588,14 +1673,14 @@ function findOutline() {
     }
     if (!found || (cx === sx && cy === sy && out.length > 2)) break;
   }
-  if (out.length < 12) { mk.pts = null; mkMsg('りんかくが 小さすぎます'); mkDraw(); mkUpdate(); return; }
+  if (out.length < 12) { mk.pts = null; mkMsg(T().mkSmall); mkDraw(); mkUpdate(); return; }
   const simp = smooth(rdpClosed(out, 1.1), 1);
   const res = normalizeShape(simp, true);
   mk.pts = res.pts;
   // しゃしんを おなじ ばしょに おく
   const [ax, ay] = res.map([0, 0]), [bx, by] = res.map([w, h]);
   mk.box = [ax, ay, bx - ax, by - ay];
-  mkMsg('りんかくが できました。うまく いかないときは「こさ」を うごかしてね');
+  mkMsg(T().mkFound);
   mkDraw(); mkUpdate();
 }
 $('#mkTh').oninput = e => { mk.th = +e.target.value; if (mk.gray) findOutline(); };
@@ -1628,31 +1713,32 @@ const REC_TABS = [
   { id: 'skip', label: '2・4・6', items: () => Array.from({ length: 30 }, (_, i) => ({ key: 'n' + (i + 1) * 2, t: String((i + 1) * 2) })) },
   { id: 'kana', label: 'あ・い・う', items: () => [...KANA].map((c, i) => ({ key: 'k' + i, t: c })) },
   { id: 'abc', label: 'A・B・C', items: () => [...ABC].map((c, i) => ({ key: 'a' + i, t: c })) },
-  { id: 'word', label: 'ことば', words: true, items: () => [
-    ...['start0', 'start1', 'here0', 'here1', 'cheer0', 'cheer1', 'last0', 'close0', 'praise0', 'praise1'].map(k => ({ key: k, t: TTS_TEXT[k] })),
-    ...PICS.map(p => ({ key: 'done_' + p.id, t: TTS_TEXT['done_' + p.id] })), { key: 'done_custom', t: TTS_TEXT.done_custom },
-    ...PICS.map(p => ({ key: 'cry_' + p.id, t: `${p.emoji} ${TTS_TEXT['cry_' + p.id]}` }))
+  { id: 'word', label: () => T().words, words: true, items: () => [
+    ...['start0', 'start1', 'here0', 'here1', 'cheer0', 'cheer1', 'last0', 'close0', 'praise0', 'praise1'].map(k => ({ key: k, t: TTS_BY[LANG][k] })),
+    ...PICS.map(p => ({ key: 'done_' + p.id, t: TTS_BY[LANG]['done_' + p.id] })), { key: 'done_custom', t: TTS_BY[LANG].done_custom },
+    ...PICS.map(p => ({ key: 'cry_' + p.id, t: `${p.emoji} ${TTS_BY[LANG]['cry_' + p.id]}` }))
   ] }
 ];
 let recTab = 'num', recSel = 0, recording = null;
 const recItems = () => REC_TABS.find(t => t.id === recTab).items();
 function renderRecM() {
-  $('#recTabs').innerHTML = REC_TABS.map(t => `<button data-t="${t.id}" class="${t.id === recTab ? 'sel' : ''}">${t.label}</button>`).join('');
+  if (recTab === 'kana' && !T().kana) recTab = 'num';
+  $('#recTabs').innerHTML = REC_TABS.filter(t => t.id !== 'kana' || T().kana).map(t => `<button data-r="${t.id}" class="${t.id === recTab ? 'sel' : ''}">${typeof t.label === 'function' ? t.label() : modeLabel(t.label)}</button>`).join('');
   const items = recItems(), tab = REC_TABS.find(t => t.id === recTab);
   recSel = clamp(recSel, 0, items.length - 1);
   $('#recGrid').className = tab.words ? 'words' : '';
   $('#recGrid').innerHTML = items.map((it, i) => `<button data-i="${i}" class="${recs[it.key] ? 'has' : ''} ${i === recSel ? 'cur' : ''}">${it.t}</button>`).join('');
   const cur = items[recSel];
-  $('#recCur').textContent = tab.words ? '' : `「${cur.t}」`;
-  $('#recGo').textContent = recording ? '■ とめる' : (recs[cur.key] ? '● とりなおす' : '● ろくおん');
+  $('#recCur').textContent = tab.words ? '' : T().q(cur.t);
+  $('#recGo').textContent = recording ? T().stop : (recs[cur.key] ? T().redo : T().rec);
   $('#recGo').classList.toggle('on', !!recording);
   $('#recPlay').disabled = !recs[cur.key]; $('#recDel').disabled = !recs[cur.key];
   $('#recPlay').style.opacity = $('#recDel').style.opacity = recs[cur.key] ? 1 : .4;
 }
-function openRec() { audio(); $('#help').classList.remove('on'); renderRecM(); $('#recM').classList.add('on'); }
+function openRec() { audio(); $('#help').classList.remove('on'); $('#recNote').textContent = T().recHow; renderRecM(); $('#recM').classList.add('on'); }
 $('#btnRec').onclick = openRec; $('#btnRec2').onclick = openRec;
 $('#recClose').onclick = () => { if (recording) recording.stop(); $('#recM').classList.remove('on'); };
-$('#recTabs').onclick = e => { const b = e.target.closest('button'); if (!b || recording) return; recTab = b.dataset.t; recSel = 0; renderRecM(); };
+$('#recTabs').onclick = e => { const b = e.target.closest('button'); if (!b || recording) return; recTab = b.dataset.r; recSel = 0; renderRecM(); };
 $('#recGrid').onclick = e => {
   const b = e.target.closest('button'); if (!b || recording) return;
   recSel = +b.dataset.i; renderRecM();
@@ -1662,10 +1748,10 @@ $('#recPlay').onclick = () => { const k = recItems()[recSel].key; if (recs[k]) {
 $('#recDel').onclick = async () => { const k = recItems()[recSel].key; if (!recs[k]) return; delete recs[k]; delete recBuf[k]; try { await vdb.del(k); } catch (e) {} renderRecM(); };
 $('#recGo').onclick = async () => {
   if (recording) { recording.stop(); return; }
-  if (!navigator.mediaDevices || !window.MediaRecorder) { $('#recNote').textContent = 'このブラウザでは録音できません。Safari か Chrome で開いてください。'; return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) { $('#recNote').textContent = T().noRec; return; }
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
-  catch (e) { $('#recNote').textContent = 'マイクが使えませんでした。マイクの使用を「許可」してください。'; return; }
+  catch (e) { $('#recNote').textContent = T().noMic; return; }
   const items = recItems(), idx = recSel, key = items[idx].key, tabAt = recTab;
   const mr = new MediaRecorder(stream), chunks = [];
   mr.ondataavailable = e => e.data.size && chunks.push(e.data);
@@ -1686,6 +1772,7 @@ $('#recGo').onclick = async () => {
   mr.start(); renderRecM();
 };
 
+applyText();
 renderTitle();
 </script>
 </body>
