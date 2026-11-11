@@ -134,9 +134,13 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
   <h3>🗣️ こえ</h3>
   <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest">▶ ためす</button></div>
   <div class="note">「AIのこえ」は、あらかじめ AI で作っておいた声です（Kokoro-82M／Apache-2.0）。</div>
+  <h3>🔓 ぜんぶ版</h3>
+  <div class="note">むりょうでは 🐶 わんちゃん と 🐰 うさぎさん で あそべます。ぜんぶ版（買い切り）か ファミリーパスで、🐧🐝🚀🚗 の めいろも あそべます。広告は出しません。</div>
+  <div id="kkSlot"></div>
   <button class="big" id="btnHelpClose" style="justify-content:center;margin-top:14px">とじる</button>
 </div></div>
 
+<script src="../common/kakin.js"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -279,7 +283,7 @@ let level = store.get('meiro-level', 1);
 let guide = store.get('meiro-guide', 'always');
 let theme = THEMES[0];
 let omakase = false; // おまかせ：めいろごとに キャラを ランダムに えらぶ
-function randomTheme() { return pick(THEMES.filter(t => t !== theme)); }
+function randomTheme() { const open = THEMES.filter((t, i) => t !== theme && heroOpen(i)); return pick(open.length ? open : THEMES.filter((t, i) => heroOpen(i))); } // おまかせは ひらいている キャラだけ
 
 /* ---------- めいろを つくる ---------- */
 const N = 1, E = 2, S = 4, W = 8;
@@ -592,10 +596,21 @@ function confetti() {
 }
 const REWARDS = ['🐻', '🐼', '🐨', '🦁', '🐯', '🐸', '🐵', '🐷', '🐮', '🐹', '🦊', '🐱', '🐶', '🐰', '🐧', '🐤', '🦄', '🐳', '🐬', '🐙', '🦋', '🐞', '🌈', '🍎', '🍓', '🍌', '🍉', '🍦', '🍩', '🧁', '🚂', '🚒', '🚑', '🚜', '✈️', '⛵', '🎈', '🎁', '⚽', '🌟'];
 
+/* ---------- 課金（../common/kakin.js、いまは おためし） ---------- */
+const FREE_HEROES = 2; // むりょうは 🐶 と 🐰
+const heroOpen = i => i < FREE_HEROES || Kakin.full();
+Kakin.setup({
+  game: 'meiro', lang: () => 'ja', onChange: () => renderTitle(),
+  name: { ja: 'ゆびで めいろ', en: 'Finger Maze' },
+  free: { ja: ['🐶 わんちゃん と 🐰 うさぎさん の めいろ', 'むずかしさ ★〜★★★★ ぜんぶ', 'シールあつめ'], en: ['Dog and Bunny mazes', 'All difficulty levels', 'Sticker collection'] },
+  full: { ja: ['🐧 ペンギン・🐝 はちさん・🚀 ロケット・🚗 くるま の めいろ'], en: ['Penguin, Bee, Rocket and Car mazes'] },
+});
+$('#kkSlot').appendChild(Kakin.parentButton());
+
 /* ---------- がめん ---------- */
 function renderTitle() {
   $('#lvl').innerHTML = LEVELS.map((L, i) => `<button data-l="${i}" class="${i === level ? 'sel' : ''}">${L.label}<small>${L.age}</small></button>`).join('');
-  $('#heroes').innerHTML = THEMES.map((t, i) => `<button data-t="${i}"><span class="ico">${t.hero}</span>${t.name}</button>`).join('');
+  $('#heroes').innerHTML = THEMES.map((t, i) => `<button data-t="${i}" class="${heroOpen(i) ? '' : 'kk-lock'}"><span class="ico">${t.hero}</span>${t.name}</button>`).join('');
   const book = store.get('meiro-book', []);
   $('#bookCount').textContent = book.length ? `（${book.length}まい）` : '';
   $('#bookList').innerHTML = book.length ? book.slice(-40).map(e => `<span>${e}</span>`).join('') : '<span class="empty">ゴールすると シールが もらえるよ</span>';
@@ -609,7 +624,7 @@ function goTitle() {
   renderTitle();
 }
 $('#lvl').onclick = e => { const b = e.target.closest('button'); if (!b) return; level = +b.dataset.l; store.set('meiro-level', level); audio(); sfx.tap(); renderTitle(); };
-$('#heroes').onclick = e => { const b = e.target.closest('button'); if (!b) return; audio(); prepVoice(); sfx.tap(); omakase = false; startGame(THEMES[+b.dataset.t]); };
+$('#heroes').onclick = e => { const b = e.target.closest('button'); if (!b) return; audio(); if (!heroOpen(+b.dataset.t)) { sfx.tap(); Kakin.ask(); return; } prepVoice(); sfx.tap(); omakase = false; startGame(THEMES[+b.dataset.t]); };
 $('#btnRandom').onclick = () => { audio(); prepVoice(); sfx.tap(); omakase = true; startGame(randomTheme()); };
 $('#btnHome').onclick = () => { sfx.tap(); goTitle(); };
 $('#btnBack').onclick = () => { sfx.tap(); goTitle(); };

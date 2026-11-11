@@ -216,6 +216,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 <canvas id="fx"></canvas>
 <div id="say"></div>
 
+<script src="../common/kakin.js"></script>
 <script>
 'use strict';
 /* ---------- ほぞん ---------- */
@@ -746,6 +747,15 @@ async function ensurePhotoFaces() {
     try { const im = await loadImg(rec.img); builtPhoto[rec.id] = buildPhotoFace(rec, im); } catch (e) {}
   }
 }
+/* ---------- 課金（../common/kakin.js、いまは おためし） ---------- */
+const FREE_FACES = ['okame', 'neko'], FREE_PHOTO_FACES = 1;
+const faceOpen = id => FREE_FACES.includes(id) || Kakin.full();
+Kakin.setup({
+  game: 'fukuwarai', lang: () => lang, onChange: () => { renderHome(); if ($('#help').classList.contains('on')) renderHelp(); },
+  name: { ja: 'ふくわらい', en: 'Funny Face' },
+  free: { ja: ['かお: おかめ・ねこ', 'しゃしんの かお 1つ', 'かんたん・めかくし の りょうほう', 'アルバム'], en: ['Faces: Okame and Kitty', '1 photo face', 'Easy and Blindfold modes', 'Album'] },
+  full: { ja: ['かお: くま・おに', 'しゃしんの かお 8つまで'], en: ['Faces: Bear and Little Oni', 'Up to 8 photo faces'] },
+});
 async function renderHome() {
   applyLang(); renderMode();
   await ensurePhotoFaces();
@@ -753,10 +763,11 @@ async function renderHome() {
   const list = [...FACES.map(f => ({ f, name: t('faceNames')[f.id] })),
     ...photoFaces.filter(r => builtPhoto[r.id]).map((r, i) => ({ f: builtPhoto[r.id], name: `${t('photoName')} ${i + 1}`, rec: r }))];
   for (const it of list) {
-    const b = document.createElement('button'); b.className = 'fc';
+    const b = document.createElement('button'); b.className = 'fc'; const open = it.rec || faceOpen(it.f.id);
+    if (!open) b.classList.add('kk-lock');
     const c = mk(200, 240); drawFull(c.getContext('2d'), it.f, 200, 240);
     b.append(c); const s = document.createElement('span'); s.textContent = it.name; b.append(s);
-    b.onclick = e => { if (e.target.closest('.x')) return; startGame(it.f); };
+    b.onclick = e => { if (e.target.closest('.x')) return; if (!open) { sfx.tap(); Kakin.ask(); return; } startGame(it.f); };
     if (it.rec) {
       const x = document.createElement('span'); x.className = 'x'; x.textContent = '✕';
       x.onclick = e => { e.stopPropagation(); if (!confirm(t('delFace'))) return; photoFaces = photoFaces.filter(r => r.id !== it.rec.id); delete builtPhoto[it.rec.id]; store.set('fuku-faces', photoFaces); renderHome(); };
@@ -766,7 +777,7 @@ async function renderHome() {
   }
   const add = document.createElement('button'); add.className = 'fc add';
   add.innerHTML = `<span class="ico">📷</span><span>${t('addPhoto')}</span>`;
-  add.onclick = () => { sfx.tap(); $('#photoM').classList.add('on'); };
+  add.onclick = () => { sfx.tap(); if (!Kakin.full() && photoFaces.length >= FREE_PHOTO_FACES) { Kakin.ask(); return; } $('#photoM').classList.add('on'); };
   box.append(add);
 }
 
@@ -1250,6 +1261,7 @@ function renderHelp() {
     <div class="opt" id="sOpt"><button data-s="1" class="${soundOn ? 'sel' : ''}">${t('hOn')}</button><button data-s="0" class="${soundOn ? '' : 'sel'}">${t('hOff')}</button></div>
     <h3>${t('hLang')}</h3>
     <div class="opt" id="lOpt"><button data-l="ja" class="${lang === 'ja' ? 'sel' : ''}">日本語</button><button data-l="en" class="${lang === 'en' ? 'sel' : ''}">English</button></div>
+    <h3>${lang === 'ja' ? '🔓 ぜんぶ版' : '🔓 Full version'}</h3><p class="note">${lang === 'ja' ? 'むりょうでは おかめ・ねこ と、しゃしんの かお 1つで あそべます。ぜんぶ版（買い切り）か ファミリーパスで、くま・おに と しゃしんの かお 8つまで。広告は出しません。' : 'Free: Okame, Kitty and 1 photo face. The full version (one-time) or the Family Pass adds Bear, Little Oni and up to 8 photo faces. No ads.'}</p><div id="kkSlot"></div>
     <h3>${t('hPhoto')}</h3><p class="note">${t('hPhotoT')}</p>
     <div class="opt"><button id="clrBtn">${t('hClear')}</button></div>
     <button class="big" id="helpClose">${t('hClose')}</button>`;
@@ -1259,6 +1271,7 @@ function renderHelp() {
   $('#lOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; setLang(b.dataset.l); renderHelp(); };
   $('#clrBtn').onclick = () => { if (!confirm(t('hClearQ'))) return; photoFaces = []; album = []; store.set('fuku-faces', []); store.set('fuku-album', []); for (const k in builtPhoto) delete builtPhoto[k]; renderHome(); };
   $('#helpClose').onclick = () => $('#help').classList.remove('on');
+  $('#kkSlot').appendChild(Kakin.parentButton());
 }
 function setLang(l) { lang = l; store.set('fuku-lang', l); renderHome(); }
 $('#helpBtn').onclick = () => { renderHelp(); $('#help').classList.add('on'); };
