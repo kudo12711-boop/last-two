@@ -122,7 +122,7 @@ body.full.parked:not(.gaze) #fspark{display:flex;flex-direction:column;align-ite
 .ph img{display:block;width:100%;height:100%;object-fit:cover}
 .ph.wide{height:190px}.ph.card{height:110px;margin:-4px -4px 6px;border-radius:12px}.ph.thumb{float:right;width:84px;height:64px;margin:0 0 4px 8px;border-radius:10px}
 .ph .cr{position:absolute;right:0;bottom:0;max-width:100%;font-size:10px;color:#fff;background:rgba(0,0,0,.45);padding:2px 6px;border-top-left-radius:8px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ph.thumb .cr{display:none}
+.ph.thumb .cr{display:none}.ph.tip{height:120px;margin:0 0 6px;border-radius:8px}.ph.tip .cr{display:none}
 .card .ph.card{margin:0 0 6px}
 .spl::after{content:"";display:block;clear:both}
 .pk-b.pulse{animation:pkpulse 1.6s ease-in-out infinite}
@@ -671,7 +671,7 @@ const CITY_C = {
 };
 // 町ごとの名物（グルメ・おみやげ・方言）。名所は spots: [絵, 名前, 時間, ひとこと]
 const CITY = {
-  '東京': { spots: [['🏮', '浅草寺と雷門', 2, '大きなちょうちんの門と、おみやげ屋さんが並ぶ仲見世通り'], ['🗼', '東京スカイツリー', 1, '高さ634m。日本でいちばん高いタワー'], ['🌸', '上野公園', 2, '動物園や博物館がある大きな公園']], food: [['🍣', '江戸前ずし', '東京湾の魚のおすし']], gift: [['🗼', 'タワーの置物', '東京タワーのミニチュア']] },
+  '東京': { spots: [['🏮', '浅草寺と雷門', 2, '大きなちょうちんの門と、おみやげ屋さんが並ぶ仲見世通り'], ['🗼', '東京スカイツリー', 1, '高さ634m。日本でいちばん高いタワー'], ['🌸', '上野公園', 2, '動物園や博物館がある大きな公園']], food: [['🍣', '江戸前ずし', '東京湾の魚のおすし']], gift: [['🗼', '東京タワーの置物', '東京タワーのミニチュア']] },
   '京都': { spots: [['⛩', '伏見稲荷大社', 2, '赤い鳥居が山の上までずっと続く'], ['🏯', '清水寺', 2, '崖の上にせり出した「清水の舞台」'], ['🎋', '嵐山の竹林', 3, '空までのびる竹の小道']], food: [['🍵', '抹茶パフェ', '宇治抹茶のあまいパフェ']], gift: [['🪭', '京せんす', 'みやびなもようのせんす']], words: ['おいでやす', 'おいでやす', 'おおきに', 'おおきに', '京都ことば'] },
   '大阪': { spots: [['🏯', '大阪城', 2, '金色のかざりがかがやくお城'], ['🌃', '道頓堀', 1, '川ぞいに大きな看板とネオンが並ぶ'], ['🐠', '海遊館', 2, 'ジンベエザメが泳ぐ大きな水そう']], food: [['🐙', 'たこ焼き', '外はカリッ、中はとろり']], gift: [['🐙', 'たこ焼きのキーホルダー', '大阪名物をいつも持ち歩ける']], words: ['まいど', 'まいど', 'おおきに', 'おおきに', '大阪ことば'] },
   '名古屋': { food: [['🍤', '天むす', 'えびの天ぷらのおにぎり']], gift: [['🐟', '金のしゃちほこの置物', '名古屋城の屋根のかざり']], words: ['どえりゃあ', 'どえりゃあ（とても）', 'ありがとさん', 'ありがとさん', '名古屋ことば'] },
@@ -1968,7 +1968,7 @@ function updateSill() {
   (st.shelf || []).forEach((k, i) => {
     const g = st.gifts && st.gifts[k]; if (!g) return; items[i + 1] = g.e;
     const dt = g.at ? new Date(g.at) : null, when = dt ? `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日` : '';
-    tips[i + 1] = `<b>${g.e} ${g.name}</b><small>🎁 ${g.city}で観光したときに買ったおみやげ${when ? `<br>📅 ${when}に手に入れました` : ''}${g.from && g.from.length ? `<br>👣 このとき行った所：${g.from.join('、')}` : ''}</small>${g.desc ? `<small>${g.desc}</small>` : ''}`;
+    tips[i + 1] = `${phBox(giftQ(g.name), giftQ2(g.name), 'tip')}<b>${g.e} ${g.name}</b><small>🎁 ${g.city}で観光したときに買ったおみやげ${when ? `<br>📅 ${when}に手に入れました` : ''}${g.from && g.from.length ? `<br>👣 このとき行った所：${g.from.join('、')}` : ''}</small>${g.desc ? `<small>${g.desc}</small>` : ''}`;
   });
   SILL_TIPS = tips;
   const key = items.join('') + tips.join('');
@@ -1991,7 +1991,7 @@ const SILL_DESC = {
   const sill = $('#sill'); let pinned = false;
   const show = sp => {
     const t = $('#silltip'); if (!t || !sp) return; const i = +sp.dataset.i;
-    t.innerHTML = SILL_TIPS[i] || ''; t.hidden = false; sill.classList.add('tipon');
+    t.innerHTML = SILL_TIPS[i] || ''; t.hidden = false; fillPhotos(t); sill.classList.add('tipon');
     const r = sp.getBoundingClientRect(), R = sill.getBoundingClientRect();
     t.style.left = Math.max(0, Math.min(R.width - 230, r.left - R.left + r.width / 2 - 115)) + 'px';
   };
@@ -2252,7 +2252,7 @@ function showRecord(tab = 'dex') {
   const empty = t => `<p class="note">${t}</p>`;
   if (tab === 'spot') { const v = Object.values(st.spots || {}); body = v.length ? `<p class="note">観光した場所 ${v.length}か所</p><div class="grid">${v.map(e => `<div class="card">${phBox((CITY[e.city] || {}).spots ? e.name : e.city, '', 'card')}<div class="em">${e.e}</div><b>${e.name}</b><small>${e.desc}</small><small class="m">${e.city}${e.n > 1 ? '・' + e.n + '回' : ''}</small>${infoLinks(e.name, e.city, !!(CITY[e.city] || {}).spots)}</div>`).join('')}</div>` : empty('まだありません。町で停車したら「🗺 観光する」から出かけてみましょう。'); }
   if (tab === 'food') { const v = Object.values(st.food || {}); body = v.length ? `<p class="note">食べたもの ${v.length}品</p><div class="grid">${v.map(e => `<div class="card">${phBox(e.name, '', 'card')}<div class="em">${e.e}</div><b>${e.name}</b><small>${e.desc}</small><small class="m">${e.city}</small></div>`).join('')}</div>` : empty('まだありません。観光の「ご当地グルメ」で食べると記録されます。'); }
-  if (tab === 'gift') { const v = Object.entries(st.gifts || {}); body = v.length ? `<p class="note">おみやげ ${v.length}個<br><small>「飾る」を押すと窓辺に置けます（2つまで）</small></p><div class="grid">${v.map(([k, e]) => `<div class="card"><div class="em">${e.e}</div><b>${e.name}</b><small class="m">${e.city}</small><button class="mini" data-shelf="${k}" ${(st.shelf || []).includes(k) ? 'disabled' : ''}>${(st.shelf || []).includes(k) ? '✓ 飾っています' : '窓辺に飾る'}</button></div>`).join('')}</div>${(st.shelf || []).length ? '<button class="big ghost" id="unshelf">窓辺のおみやげを片づける</button>' : ''}` : empty('まだありません。観光の「おみやげ」で買うと、ここにたまります。'); }
+  if (tab === 'gift') { const v = Object.entries(st.gifts || {}); body = v.length ? `<p class="note">おみやげ ${v.length}個<br><small>「飾る」を押すと窓辺に置けます（2つまで）</small></p><div class="grid">${v.map(([k, e]) => `<div class="card">${phBox(giftQ(e.name), giftQ2(e.name), 'card')}<div class="em">${e.e}</div><b>${e.name}</b><small class="m">${e.city}</small><button class="mini" data-shelf="${k}" ${(st.shelf || []).includes(k) ? 'disabled' : ''}>${(st.shelf || []).includes(k) ? '✓ 飾っています' : '窓辺に飾る'}</button></div>`).join('')}</div>${(st.shelf || []).length ? '<button class="big ghost" id="unshelf">窓辺のおみやげを片づける</button>' : ''}` : empty('まだありません。観光の「おみやげ」で買うと、ここにたまります。'); }
   if (tab === 'words') { const v = Object.values(st.words || {}); body = v.length ? `<p class="note">覚えたあいさつ ${v.length}</p>${v.map(e => `<div class="phrase sm"><small>${e.w[4]}（${e.city}）</small>${sayBtn(e.w[0], e.w[1], e.c || 'JP')}<b>${e.w[0]}</b><span>${e.w[1]}</span>${sayBtn(e.w[2], e.w[3], e.c || 'JP')}<b>${e.w[2]}</b><span>${e.w[3]}</span></div>`).join('')}` : empty('まだありません。観光の「地元のことば」で教えてもらえます。'); }
   if (tab === 'data') { const days = (Date.now() - st.started) / 864e5; body = `<div class="kv"><div><span>走ったきょり</span><b>${fmt(traveled())}km</b></div><div><span>地球何周ぶん？</span><b>${(traveled() / 40075).toFixed(2)}周</b></div><div><span>旅をはじめて</span><b>${Math.floor(days) + 1}日目</b></div><div><span>世界一周</span><b>${st.laps || 0}回 達成</b></div><div><span>出発地</span><b>${st.startName || '東京'}</b></div><div><span>拾ったボトル</span><b>${st.bottles || 0}本</b></div><div><span>いまの速さ</span><b>時速${st.speed}km</b></div><div><span>泊まった回数</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>`; }
   modal(`<h2>旅の記録</h2><div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>とじる</button>`, 'rec');
@@ -2482,6 +2482,9 @@ function pumpImg() {
     wikiImg(q).then(r => { if (r !== null) { IMGC[q] = r; saveImgC(); } delete imgWait[q]; res(r || 0); }).finally(() => { imgBusy--; pumpImg(); });
   }
 }
+// おみやげの写真：まず名前そのまま、なければ「○○の置物」などの○○で探す
+const giftQ = n => n.replace(/[（(].*$/, '');
+const giftQ2 = n => { const b = n.replace(/^(.+?)の(置物|キーホルダー|ぬいぐるみ|人形|小さなかざり|におい袋|せっけん|カップ|セーター)$/, '$1').replace(/^金の/, ''); return b !== n ? b : ''; };
 // <div class="ph" data-wq="さがす言葉" data-wq2="見つからないとき"> を写真に入れかえる
 const phBox = (q, q2, cls = '') => `<div class="ph ${cls}" data-wq="${q.replace(/"/g, '')}"${q2 ? ` data-wq2="${q2.replace(/"/g, '')}"` : ''}></div>`;
 function fillPhotos(root = document) {
@@ -2519,7 +2522,7 @@ function showPlace(which) {
      ${lmn ? `<div><span>🏛 窓から見える名所</span><b>${lmn}${st.lm[n] ? ' ✅' : ''}</b></div>` : ''}
      ${X.spots ? `<div><span>📍 観光スポット</span><b>${X.spots.map(p => `<span class="spl">${phBox(p[1], '', 'thumb')}${p[0]} ${p[1]}<small>${p[3]}</small>${infoLinks(p[1], n, true)}</span>`).join('')}</b></div>` : ''}
      <div><span>🍽 名物</span><b>${S0.food.map(f => `<span class="spl">${phBox(f[1], '', 'thumb')}${f[0]} ${f[1]}<small>${f[2]}</small></span>`).join('')}</b></div>
-     <div><span>🎁 おみやげ</span><b>${S0.gift.map(f => `${f[0]} ${f[1]}`).join('<br>')}</b></div>
+     <div><span>🎁 おみやげ</span><b>${S0.gift.map(f => `<span class="spl">${phBox(giftQ(f[1]), giftQ2(f[1]), 'thumb')}${f[0]} ${f[1]}<small>${f[2]}</small></span>`).join('')}</b></div>
      <div><span>📮 スタンプ</span><b>${visits ? `${visits}回 通りました` : 'まだ通っていません'}</b></div>
    </div>
    <p class="note">${n}について：${infoLinks(n, n, false)}</p>
@@ -2570,7 +2573,7 @@ function finishAct(quiet) {
     html = `<div class="sight-card">${phBox(it[1], '', 'wide')}<div class="big-em">${it[0]}</div><h2>${it[1]}を食べました！</h2><p>${it[2]}</p><div class="tag pick">🍽 グルメ図鑑にのりました</div></div>`;
   } else {
     st.gifts = st.gifts || {}; st.gifts[key] = { e: it[0], name: it[1], city: a.city, desc: it[2], at: Date.now(), from: (st.spots && Object.values(st.spots).filter(x => x.city === a.city).map(x => x.name)) || [] };
-    html = `<div class="sight-card"><div class="big-em">${it[0]}</div><h2>おみやげに「${it[1]}」を買いました</h2><p>${it[2]}</p><button class="big" data-shelf="${key}">窓辺に飾る</button></div>`;
+    html = `<div class="sight-card">${phBox(giftQ(it[1]), giftQ2(it[1]), 'wide')}<div class="big-em">${it[0]}</div><h2>おみやげに「${it[1]}」を買いました</h2><p>${it[2]}</p><button class="big" data-shelf="${key}">窓辺に飾る</button></div>`;
   }
   save(); updateHud();
   if (quiet) { toast(`${it[0]} ${it[1]}からもどりました`); return; }
@@ -2618,7 +2621,7 @@ function showSight() {
   const stay = ensureStay(), S0 = sightOf(st.parked), busy = !!st.act;
   const specific = !!(CITY[st.parked] || {}).spots;
   // 名前のはっきりした名所とグルメだけ写真を出す（「市場を歩く」などは上の町の写真で）
-  const pq = (kind, it) => kind === 'food' || (kind === 'spot' && specific) ? phBox(it[1], '', 'card') : '';
+  const pq = (kind, it) => kind === 'food' || (kind === 'spot' && specific) ? phBox(it[1], '', 'card') : kind === 'gift' ? phBox(giftQ(it[1]), giftQ2(it[1]), 'card') : '';
   const card = (kind, i, it, hours) => `<div class="spw"><button class="sp ${stay.done[kind + i] ? 'done' : ''}" data-start="${kind}:${i}" ${busy ? 'disabled' : ''}>${pq(kind, it)}<span class="em">${it[0]}</span><b>${it[1]}</b><small>${kind === 'spot' ? it[3] : it[2]}</small><i>⏱ ${durText(hours)}${stay.done[kind + i] ? '・✓ 行った' : ''}</i></button>${kind === 'spot' ? infoLinks(it[1], st.parked, specific) : ''}</div>`;
   modal(`<h2>🗺 ${st.parked}を観光</h2>${phBox(st.parked, '', 'wide')}<p class="note">${S0.C.name}・${FACTS[st.parked] || ''}</p>
    ${busy ? `<div class="busy">👣 いまは「${st.act.name}」です。もどってから次に出かけられます。</div>` : '<p class="note">出かけているあいだは車は止まったままです。アプリを閉じても、時間がたつともどってきます。</p>'}
@@ -2632,7 +2635,7 @@ function showSight() {
   document.querySelectorAll('[data-lodge]').forEach(b => b.onclick = () => {
     const k = b.dataset.lodge; if (stay.lodge !== k) { st.lodges = st.lodges || {}; st.lodges[k] = (st.lodges[k] || 0) + 1; }
     stay.lodge = k; save(); document.querySelectorAll('[data-lodge]').forEach(x => x.classList.toggle('on', x === b)); $('#sill').dataset.k = ''; updateSill();
-    toast(`${LODGING[k][0]} 今夜は${LODGING[k][1]}に泊まります`);
+    toast(`${LODGING[k][0]} ${{ camp: '今夜はキャンプ場に泊まります', hotel: '今夜はホテルに泊まります', car: '今夜は車中泊にします' }[k] || '今夜は' + LODGING[k][1] + 'に泊まります'}`);
   });
 }
 function checkAct() { if (st && st.act && Date.now() >= st.act.end) finishAct(false); }
