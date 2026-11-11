@@ -129,6 +129,7 @@ body.full.parked:not(.gaze) #fspark{display:flex;flex-direction:column;align-ite
 @keyframes pkpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}50%{box-shadow:0 0 0 7px rgba(255,255,255,0)}}
 .pk-msg small{display:block;font-size:11px;opacity:.85;font-weight:500}
 .arrive{text-align:center;margin:4px 0 6px}.arrive .big-em{font-size:46px}.arrive small{color:var(--ink2);font-size:13px}.arrive h2{margin:2px 0 6px}.arrive p{font-size:14px;line-height:1.7;background:#fff7e0;border-radius:14px;padding:10px 12px;text-align:left}
+.pcard{display:block;width:100%;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.25);margin:6px 0 4px}
 .langsw{display:flex;justify-content:flex-end;gap:6px;margin:-4px 0 4px}.langsw button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-weight:700;font-size:13px;color:var(--ink2)}.langsw button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ilinks{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.ilinks a{font-size:12px;font-weight:700;color:#2f6f9f;background:#eef6fc;border-radius:99px;padding:4px 10px;text-decoration:none;white-space:nowrap}
 .ilinks a:hover{background:#dcecf8}
@@ -3559,11 +3560,22 @@ async function postcard() {
   const pc = document.createElement('canvas'); pc.width = cv.width; pc.height = cv.height + 70 * DPR; const x = pc.getContext('2d');
   x.fillStyle = '#fffaf0'; x.fillRect(0, 0, pc.width, pc.height); x.drawImage(cv, 0, 0);
   x.fillStyle = '#3a2f25'; x.font = `700 ${20 * DPR}px sans-serif`; x.fillText(J(`${placeName()}より`, `From ${placeName()}`), 16 * DPR, cv.height + 30 * DPR);
-  x.font = `${13 * DPR}px sans-serif`; const ld = localDate(); x.fillText(J(`${$('#wx').textContent}　${ld.getUTCMonth() + 1}月${ld.getUTCDate()}日 現地${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}　走行${fmt(traveled())}km`, `${$('#wx').textContent}   ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][ld.getUTCMonth()]} ${ld.getUTCDate()}, local ${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}   ${fmt(traveled())} km driven`), 16 * DPR, cv.height + 54 * DPR);
-  pc.toBlob(async b => {
-    const file = new File([b], 'camper-postcard.png', { type: 'image/png' });
-    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: J('旅の絵はがき', 'Travel postcard') }); return; } } catch (e) { if (e.name === 'AbortError') return; }
-    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'camper-postcard.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  x.font = `${13 * DPR}px sans-serif`; const ld = localDate(); x.fillText(J(`${$('#wx').textContent}　${ld.getUTCMonth() + 1}月${ld.getUTCDate()}日 現地${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}　走行${fmt(traveled())}km`, `${$('#wx').textContent}   ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][ld.getUTCMonth()]} ${ld.getUTCDate()}, local ${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}   ${fmt(traveled())} km driven`), 16 * DPR, cv.height + 54 * DPR, pc.width - 32 * DPR);
+  // 先にできあがった絵はがきを見せて、「保存・送る」で送る（いきなり送る画面にならないように）
+  pc.toBlob(b => {
+    const file = new File([b], 'camper-postcard.png', { type: 'image/png' }), url = URL.createObjectURL(b);
+    const canSh = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+    modal(`<h2>📷 ${J('旅の絵はがき', 'Travel postcard')}</h2><img class="pcard" src="${url}" alt="">
+     <p class="note">${J('いま窓から見えている景色を、町の名前・日付・天気・走ったきょりといっしょに1枚の絵にしました。', 'The view from your window right now, with the town, date, weather and distance driven.')}</p>
+     <button class="big" id="pc-send">${canSh ? J('📤 保存・送る（LINE・写真など）', '📤 Save or send') : J('💾 画像を保存する', '💾 Save image')}</button>
+     <button class="big ghost" id="pc-again">🔄 ${J('いまの景色で撮りなおす', 'Take it again')}</button>
+     <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`);
+    $('#pc-send').onclick = async () => {
+      if (canSh) { try { await navigator.share({ files: [file], title: J('旅の絵はがき', 'Travel postcard') }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+      const a = document.createElement('a'); a.href = url; a.download = 'camper-postcard.png'; document.body.appendChild(a); a.click(); a.remove();
+      toast(J('💾 絵はがきを保存しました', '💾 Postcard saved'), 2500);
+    };
+    $('#pc-again').onclick = () => { URL.revokeObjectURL(url); closeModal(); setTimeout(postcard, 150); };
   }, 'image/png');
 }
 
