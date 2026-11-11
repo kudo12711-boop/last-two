@@ -69,7 +69,7 @@
 ## 技術メモ
 
 - 1ファイルの HTML。ステージのデータは HTML の中に埋め込み。直接編集して同じパスで Artifact を再公開します。
-- 公開ページ `nukenuke-ring/index.html` は、`/mnt/project-files/nukenuke-ring/nukenuke-ring.html` の先頭に `<!doctype html>`・`<head>`（文字コード、画面の幅、セーフエリアの余白）をかぶせただけのものです。直したら両方をそろえます（Artifact 用の `claude:viewport-fit-sides` の行は公開ページでは外しています）。
+- 公開ページ `nukenuke-ring/index.html` は、`/mnt/project-files/nukenuke-ring/nukenuke-ring.html` の先頭に `<!doctype html>`・`<head>`（文字コード、画面の幅、セーフエリアの余白）をかぶせただけのものです。直したら両方をそろえます（Artifact 用の `claude:viewport-fit-sides` の行は公開ページでは外しています）。v0.7（英語対応）からは公開ページの `nukenuke-ring/index.html` がもとで、Claude のページ（Artifact）は v0.6 のままです。
 - 保存キーは localStorage の `nkr3_` で始まるもの。ステージ id は `s0`…（本編）、`t0`…（つめぬけ）、`daily`、`vip`（パスの特別ステージ）、`u1`〜`u5`（練習面、0始まりのワールド番号に対応）。
 - カードの書き方: 数字 ＋ 100×フラグ（1=こおり、2=いかり、4=もどり）、0=ババ。ステージ形式は `[手札, カギの手札, 手数上限, 連鎖目標]`。
 - ステージ生成: `/mnt/project-files/nukenuke-ring/tools/`（engine.js, worlds.js, build.js, tsume.js）。`sh run.sh` で全ワールドを並列に作り `levels-packed.json` にまとめ、それを HTML に入れます。ビーム探索で解を探し、6ペア以下は総当たり。ステージ1-1だけは手作り。
