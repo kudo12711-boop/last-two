@@ -293,6 +293,7 @@ input[type=range]{width:220px;accent-color:var(--accent)}
 <div class="toast" id="toast"></div>
 <input type="file" id="fileIn" accept="image/*" hidden>
 
+<script src="../common/kakin.js"></script>
 <script>
 "use strict";
 /* =========================================================
@@ -452,6 +453,14 @@ var EMO = {cake:"🐻", flowers:"🐰", dragon:"🐲", lost:"🦉", letters:"�
 var POS = [[72,360],[332,350],[330,520],[58,500],[140,560],[265,575]];
 function stageNo(){ return Math.min(S && S.stage || 0, STAGES.length-1); }
 function stageRes(){ return STAGES[stageNo()].map(function(id,i){ return {id:id, emo:EMO[id], x:POS[i][0], y:POS[i][1]}; }); }
+/* 課金（../common/kakin.js、いまは おためし）: むりょうは さいしょの ステージ（はなの おうこく）、ぜんぶ版で うみべ・ゆき の ステージ */
+function stageOpen(n){ return !n || Kakin.full(); }
+Kakin.setup({
+  game: "oukoku", lang: function(){ return LANG; }, onChange: function(){ if($("#kingdom").classList.contains("on")) renderKingdom(); },
+  name: { ja: "ちいさな おうこく", en: "Little Kingdom" },
+  free: { ja: ["4人の やく（プリンセス・おうじさま・きしさま・さむらいさま）と きがえ", "🌸 はなの おうこく（6人の おねがい）", "おしろが そだつ・おてがみ・しょうぞうが"], en: ["All 4 roles and dress-up", "🌸 Flower Kingdom (6 villagers' requests)", "Growing castle, daily letter, portraits"] },
+  full: { ja: ["🌊 うみべの おうこく と ❄️ ゆきの おうこく", "あたらしい おねがい（カニさん・カエルさん・パンダさん・リスさん・ゾウさん・ネコさん）"], en: ["🌊 Seaside Kingdom and ❄️ Snow Kingdom", "New requests from Crab, Frog, Panda, Squirrel, Elephant and Cat"] },
+});
 
 /* ---------- ほぞん ---------- */
 var KEY="oukoku-save", FACE_KEY="oukoku-face", PORT_KEY="oukoku-portraits";
@@ -864,7 +873,7 @@ function renderKingdom(){
   var next=null, prev=0; for(var i=0;i<DECOS.length;i++){ if(S.hearts<DECOS[i][1]){ next=DECOS[i]; break; } prev=DECOS[i][1]; }
   if(next){ $("#pf").style.width=Math.round((S.hearts-prev)/(next[1]-prev)*100)+"%"; $("#pn").textContent=fmt(T().nextDeco,{d:T().decos[next[0]], n:next[1]-S.hearts}); }
   else { $("#pf").style.width="100%"; $("#pn").textContent=T().endDone; }
-  var nb=$("#newKBtn"); nb.textContent=stageNo()<STAGES.length-1?T().nextStage:T().againStart; nb.style.display=cleared()?"":"none";
+  var nb=$("#newKBtn"); nb.textContent=stageNo()<STAGES.length-1?(stageOpen(stageNo()+1)?"":"🔒 ")+T().nextStage:T().againStart; nb.style.display=cleared()?"":"none";
   var mb=$("#btnMail"), bd=mb.querySelector(".badge"); if(bd) bd.remove();
   if(S.lastMail!==today()) mb.appendChild(el("span","badge","1"));
 }
@@ -890,7 +899,8 @@ $("#btnMenu").onclick=function(){
   var c=dialog('<button class="x">×</button><p class="say">'+esc(T().menuTitle)+'</p><div class="btns" style="flex-direction:column;align-items:center">'+
     '<button class="big sub" id="mV">'+(S.voice?T().voiceOn:T().voiceOff)+'</button>'+
     '<div class="langs"><button data-l="ja" aria-pressed="'+(LANG==="ja")+'">にほんご</button><button data-l="en" aria-pressed="'+(LANG==="en")+'">English</button></div>'+
-    '<button class="big sub" id="mT">'+esc(T().toTitle)+'</button></div>');
+    '<button class="big sub" id="mT">'+esc(T().toTitle)+'</button><div id="mK"></div></div>');
+  c.querySelector("#mK").appendChild(Kakin.parentButton());
   c.querySelector("#mV").onclick=function(){ S.voice=!S.voice; save(); this.textContent=S.voice?T().voiceOn:T().voiceOff; };
   c.querySelectorAll("[data-l]").forEach(function(b){ b.onclick=function(){ LANG=b.dataset.l; lsSet("oukoku-lang",LANG); closeDialog(); applyText(); renderKingdom(); }; });
   c.querySelector("#mT").onclick=function(){ closeDialog(); renderTitle(); show("title"); };
@@ -994,7 +1004,7 @@ function showEnding(){
   var m=fmt(last?T().allMsg:T().endMsg,{t:titleOf()}), next=last?"":fmt(T().stageNext,{s:T().stages[stageNo()+1]});
   var c=dialog('<div class="who">👑</div><p class="say" style="font-size:24px">'+esc(last?T().allTitle:T().stageClear)+'</p><p class="say" style="font-size:17px">'+esc(m)+(next?'<br>'+esc(next):'')+'</p>'+
     '<p style="font-size:34px;margin:4px 0 14px">'+stageRes().map(function(r){ return r.emo; }).join("")+'</p>'+
-    '<div class="btns" style="flex-direction:column;align-items:center">'+(last?'':'<button class="big" id="eN">'+esc(T().nextStage)+'</button>')+
+    '<div class="btns" style="flex-direction:column;align-items:center">'+(last?'':'<button class="big" id="eN">'+(stageOpen(stageNo()+1)?'':'🔒 ')+esc(T().nextStage)+'</button>')+
     '<button class="big'+(last?'':' sub')+'" id="eP">'+esc(T().endPaint)+'</button>'+
     '<button class="big sub" id="eL">'+esc(T().endLook)+'</button></div>');
   voice(last?"all_clear":"stage_clear", (last?T().allTitle:T().stageClear)+" "+m+" "+next);
@@ -1003,6 +1013,7 @@ function showEnding(){
   c.querySelector("#eP").onclick=function(){ closeDialog(); renderGallery(); show("gallery"); $("#galNew").click(); };
 }
 function goStage(n){
+  if(!stageOpen(n)){ Kakin.ask(); return; }
   S.stage=n; S.hearts=0; S.endSeen=false; if(n===0) S.round=(S.round||1)+1;
   S.active=shuffle(STAGES[n].slice()).slice(0,3); save();
   renderKingdom(); sfx("win"); confetti(16,["✨","⭐","💖",["🌸","🌊","❄️"][n]]);
@@ -1330,7 +1341,7 @@ function roundRect(x,a,b,w,h,r){ x.beginPath(); x.moveTo(a+r,b); x.arcTo(a+w,b,a
 
 /* ---------- はじまり ---------- */
 S=load(); if(S && S.hearts>MAXH) S.hearts=MAXH;
-if(S && S.role){ if(!S.stage) S.stage=0; var ids=STAGES[stageNo()]; S.active=(S.active||[]).filter(function(x){ return ids.indexOf(x)>=0; }); while(S.active.length<3){ var rest=ids.filter(function(x){ return S.active.indexOf(x)<0; }); S.active.push(pick(rest)); } }
+if(S && S.role){ if(!S.stage || !stageOpen(S.stage)) S.stage=0; var ids=STAGES[stageNo()]; S.active=(S.active||[]).filter(function(x){ return ids.indexOf(x)>=0; }); while(S.active.length<3){ var rest=ids.filter(function(x){ return S.active.indexOf(x)<0; }); S.active.push(pick(rest)); } }
 renderTitle();
 document.addEventListener("pointerdown",function(){ actx(); },{passive:true});
 </script>

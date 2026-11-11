@@ -222,6 +222,9 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
   <button class="rb" id="btnRec2" style="margin-top:4px">🎙️ じぶんの こえを ろくおんする</button>
   <h3>✏️ じぶんで つくった え</h3>
   <div id="myList"></div>
+  <h3>🔓 ぜんぶ版</h3>
+  <div class="note">むりょうでは 5まいの絵（ほし・ハート・さかな・おうち・りんご）、かぞえかた「1・2・3」、じぶんで つくる 1まい が使えます。ぜんぶ版（買い切り）か ファミリーパスで、絵が13まいに ふえ、2とび・あいうえお・ABC と、じぶんで つくる 8まい が使えます。広告は出しません。</div>
+  <div id="kkSlot"></div>
   <button class="big" id="btnHelpClose">とじる</button>
 </div></div>
 
@@ -235,6 +238,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
   <button class="big" id="recClose">とじる</button>
 </div></div>
 
+<script src="../common/kakin.js"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -1336,10 +1340,22 @@ function thumb(pic, sizePx = 56) {
 
 /* ---------- がめん ---------- */
 function allPics() { return [...PICS, ...customs.map(customPic)]; }
+/* 課金（../common/kakin.js、いまは おためし） */
+const FREE_PICS = ['star', 'heart', 'fish', 'house', 'apple'], FREE_MODES = ['num'], FREE_CUSTOM = 1;
+const picOpen = p => p.custom || FREE_PICS.includes(p.id) || Kakin.full();
+const modeOpen = m => FREE_MODES.includes(m) || Kakin.full();
+Kakin.setup({
+  game: 'tentsunagi', lang: () => 'ja', onChange: () => { if (!modeOpen(mode)) mode = 'num'; renderTitle(); },
+  name: { ja: 'すうじで てんつなぎ', en: 'Connect the Dots' },
+  free: { ja: ['絵 5まい（ほし・ハート・さかな・おうち・りんご）', 'かぞえかた 1・2・3', 'じぶんで つくる（1まい）', 'こえの ろくおん'], en: ['5 pictures', 'Counting 1-2-3', 'Make your own (1)', 'Record your voice'] },
+  full: { ja: ['絵が 13まいに（ねこ・ロケット・くじら など8まい）', 'かぞえかた 2・4・6／あ・い・う／A・B・C', 'じぶんで つくる（8まいまで）'], en: ['13 pictures (8 more)', 'Counting by 2s, Japanese kana and ABC', 'Make your own (up to 8)'] },
+});
+$('#kkSlot').appendChild(Kakin.parentButton());
 function renderTitle() {
   $('#lvl').innerHTML = LEVELS.map((L, i) => `<button data-n="${L.n}" class="${L.n === dotN ? 'sel' : ''}">${L.label}<small>${L.age}</small></button>`).join('');
   $('#nShow').textContent = `てん ${curN()}こ`;
-  $('#modes').innerHTML = MODES.map(m => `<button data-m="${m.id}" class="${m.id === mode ? 'sel' : ''}">${m.label}</button>`).join('');
+  if (!modeOpen(mode)) mode = 'num';
+  $('#modes').innerHTML = MODES.map(m => `<button data-m="${m.id}" class="${m.id === mode ? 'sel' : ''}${modeOpen(m.id) ? '' : ' kk-lock'}">${m.label}</button>`).join('');
   const book = store.get('tentsu-book', {});
   const all = allPics();
   const got = all.filter(p => book[p.id]).length;
@@ -1350,6 +1366,7 @@ function renderTitle() {
     if (book[p.id]) { b.classList.add('done'); b.appendChild(thumb(p)); if (book[p.id] > 1) { const c = document.createElement('i'); c.textContent = '×' + book[p.id]; b.appendChild(c); } }
     else b.innerHTML = p.custom ? '' : '<span class="q">？</span>';
     if (p.custom && !book[p.id]) b.appendChild(thumbOutline(p));
+    if (!picOpen(p)) b.classList.add('kk-lock');
     box.appendChild(b);
   });
   $('#btnSnd').textContent = soundOn ? '🔊 おと あり' : '🔇 おと なし';
@@ -1369,7 +1386,7 @@ function goTitle() {
 }
 function nextPic(exclude) {
   const book = store.get('tentsu-book', {});
-  const all = allPics().filter(p => !exclude || p.id !== exclude.id);
+  const all = allPics().filter(p => picOpen(p) && (!exclude || p.id !== exclude.id));
   // 点が おおいときは むずかしい え、すくないときは かんたんな え を さきに
   const fit = p => curN() >= 25 ? p.hard : curN() <= 12 ? !p.hard : true;
   for (const list of [all.filter(p => !book[p.id] && !p.custom && fit(p)), all.filter(p => !book[p.id] && !p.custom), all.filter(fit)]) if (list.length) return pick(list);
@@ -1378,8 +1395,8 @@ function nextPic(exclude) {
 $('#lvl').onclick = e => { const b = e.target.closest('button'); if (!b) return; dotN = +b.dataset.n; store.set('tentsu-n', dotN); audio(); sfx.tap(); renderTitle(); };
 $('#nMinus').onclick = () => { dotN = clamp(curN() - 1, 3, maxN()); store.set('tentsu-n', dotN); audio(); sfx.tap(); renderTitle(); };
 $('#nPlus').onclick = () => { dotN = clamp(curN() + 1, 3, maxN()); store.set('tentsu-n', dotN); audio(); sfx.tap(); renderTitle(); };
-$('#modes').onclick = e => { const b = e.target.closest('button'); if (!b) return; mode = b.dataset.m; store.set('tentsu-mode', mode); audio(); sfx.tap(); renderTitle(); };
-$('#pics').onclick = e => { const b = e.target.closest('button'); if (!b) return; audio(); sfx.tap(); startGame(allPics()[+b.dataset.i]); };
+$('#modes').onclick = e => { const b = e.target.closest('button'); if (!b) return; if (!modeOpen(b.dataset.m)) { sfx.tap(); Kakin.ask(); return; } mode = b.dataset.m; store.set('tentsu-mode', mode); audio(); sfx.tap(); renderTitle(); };
+$('#pics').onclick = e => { const b = e.target.closest('button'); if (!b) return; audio(); sfx.tap(); if (!picOpen(allPics()[+b.dataset.i])) { Kakin.ask(); return; } startGame(allPics()[+b.dataset.i]); };
 $('#btnStart').onclick = () => { audio(); sfx.tap(); startGame(nextPic()); };
 $('#btnHome').onclick = () => { sfx.tap(); goTitle(); };
 $('#btnBack').onclick = () => { sfx.tap(); goTitle(); };
@@ -1430,7 +1447,7 @@ function openMaker() {
 }
 function mkMsg(t) { $('#mkMsg').textContent = t; }
 function mkUpdate() { $('#mkOk').disabled = !(mk.pts && mk.pts.length > 8); }
-$('#btnMake').onclick = () => { audio(); sfx.tap(); openMaker(); };
+$('#btnMake').onclick = () => { audio(); sfx.tap(); if (!Kakin.full() && customs.length >= FREE_CUSTOM) { Kakin.ask(); return; } openMaker(); };
 $('#mkHome').onclick = () => { sfx.tap(); goTitle(); };
 $('#mkColors').onclick = e => { const b = e.target.closest('button'); if (!b) return; mk.color = b.dataset.c; $('#mkColors').querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === b)); mkDraw(); };
 $('#mkDraw').onclick = () => { mk.img = null; mk.imgEl = null; mk.gray = null; mk.pts = null; mk.drawing = true; $('#mkPhoto').style.display = 'none'; mkLayout(); mkMsg('ゆびで ぐるっと かたちを かいてください'); mkDraw(); mkUpdate(); };

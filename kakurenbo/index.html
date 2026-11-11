@@ -308,12 +308,14 @@ input[type=file]{display:none}
   <h3 data-t="recH"></h3>
   <div class="note" data-t="recNote"></div>
   <div id="recList"></div>
+  <h3 id="kkH"></h3><div class="note" id="kkNote"></div><div id="kkSlot"></div>
   <button class="big" id="btnHelpClose" style="margin-top:16px;justify-content:center"><span data-t="close"></span></button>
 </div></div>
 
 <div id="say"></div>
 <canvas id="confetti"></canvas>
 
+<script src="../common/kakin.js"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -640,9 +642,19 @@ function goTitle() { runId++; stopIdle(); show('title'); setTheme('#d9f2c4'); re
 function setTheme(c) { document.querySelector('meta[name=theme-color]').content = c; }
 
 let mode = 'A', sceneId = 'mori', curRoom = null;
+
+/* ---------- 課金（../common/kakin.js、いまは おためし） ---------- */
+const FREE_SCENES = ['mori'];
+const sceneOpen = id => FREE_SCENES.includes(id) || Kakin.full();
+Kakin.setup({
+  game: 'kakurenbo', lang: () => lang, onChange: () => { if ($('#where').classList.contains('on')) renderWhere(); },
+  name: { ja: 'もういいかい？ かくれんぼ', en: 'Hide and Seek' },
+  free: { ja: ['🌳 もり（みんなを さがそう・きみが かくれる番）', '📷 おうちで かくれんぼ（へやの しゃしん・かぞくの かお）', 'おうちの人の こえの録音'], en: ['Woods (Seek and Your turn to hide)', 'Hide and seek in your own room photo, family faces', 'Record your own voice'] },
+  full: { ja: ['🏠 おうち・🏖️ うみ・⛄ ゆきやま の ばめん', 'その ばめんに かくれる どうぶつたち'], en: ['House, Beach and Snow scenes', 'The animals who hide there'] },
+});
 function renderWhere() {
   $('#scenes').innerHTML = Object.entries(SCENES).map(([id, s]) =>
-    `<button data-s="${id}" style="background:${s.card}"><span class="emo">${s.icon}</span>${T('scenes')[id]}</button>`).join('');
+    `<button data-s="${id}" style="background:${s.card}" class="${sceneOpen(id) ? '' : 'kk-lock'}"><span class="emo">${s.icon}</span>${T('scenes')[id]}</button>`).join('');
 }
 
 /* ---------- ステージの おおきさ ---------- */
@@ -1178,7 +1190,7 @@ $('#mA').onclick = () => { audio(); sfx.tap(); prepVoice(); mode = 'A'; renderWh
 $('#mC').onclick = () => { audio(); sfx.tap(); prepVoice(); mode = 'C'; renderWhere(); show('where'); };
 $('#mB').onclick = () => { audio(); sfx.tap(); prepVoice(); show('photo'); renderPhotoScreen(); };
 $('#scenes').onclick = async e => {
-  const b = e.target.closest('button'); if (!b) return; sfx.tap(); sceneId = b.dataset.s;
+  const b = e.target.closest('button'); if (!b) return; sfx.tap(); if (!sceneOpen(b.dataset.s)) { Kakin.ask(); return; } sceneId = b.dataset.s;
   await loadFaces();
   if (mode === 'C') openCPick(); else startA(sceneId);
 };
@@ -1200,7 +1212,7 @@ $('#btnGames').onclick = () => { location.href = '../games/' + (lang === 'ja' ? 
 
 /* おうちのかたへ */
 function renderHelp() {
-  applyText();
+  applyText(); renderKk();
   const vs = lang === 'ja' ? AI_VOICES.map((v, i) => `<option value="ai:${v}">${T('voices')[i]}</option>`).join('') : '';
   $('#voiceSel').innerHTML = vs + `<option value="dev">${T('dev')}</option><option value="off">${T('off')}</option>`;
   $('#voiceSel').value = (lang !== 'ja' && voiceMode.startsWith('ai:')) ? 'dev' : voiceMode;
@@ -1208,6 +1220,11 @@ function renderHelp() {
     `<div class="recrow" data-k="${k}"><span>${l}</span><button class="rb" data-a="rec">${T('rec')}</button><button class="rb" data-a="play" ${recBuf[k] ? '' : 'disabled'}>${T('play1')}</button><button class="rb" data-a="del" ${recBuf[k] ? '' : 'disabled'}>${T('del')}</button></div>`).join('');
 }
 $('#btnHelp').onclick = () => { audio(); renderHelp(); $('#help').classList.add('on'); };
+function renderKk() {
+  $('#kkH').textContent = lang === 'ja' ? '🔓 ぜんぶ版' : '🔓 Full version';
+  $('#kkNote').textContent = lang === 'ja' ? 'むりょうでは「もり」と「おうちで かくれんぼ」で あそべます。ぜんぶ版（買い切り）か ファミリーパスで、おうち・うみ・ゆきやま の ばめんも あそべます。広告は出しません。' : 'Free: the Woods scene and hide and seek in your own room. The full version (one-time) or the Family Pass adds the House, Beach and Snow scenes. No ads.';
+  if (!$('#kkSlot').firstChild) $('#kkSlot').appendChild(Kakin.parentButton()); else $('#kkSlot').firstChild._kkUpdate();
+}
 $('#btnHelpClose').onclick = () => { stopRec(); $('#help').classList.remove('on'); };
 $('#voiceSel').onchange = e => { voiceMode = e.target.value; store.set('kakurenbo-voice', voiceMode); prepVoice(); };
 $('#voiceTest').onclick = () => { audio(); prepVoice(); setTimeout(() => speak('found', 0), voiceMode.startsWith('ai:') ? 500 : 0); };
