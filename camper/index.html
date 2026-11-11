@@ -129,6 +129,7 @@ body.full.parked:not(.gaze) #fspark{display:flex;flex-direction:column;align-ite
 @keyframes pkpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}50%{box-shadow:0 0 0 7px rgba(255,255,255,0)}}
 .pk-msg small{display:block;font-size:11px;opacity:.85;font-weight:500}
 .arrive{text-align:center;margin:4px 0 6px}.arrive .big-em{font-size:46px}.arrive small{color:var(--ink2);font-size:13px}.arrive h2{margin:2px 0 6px}.arrive p{font-size:14px;line-height:1.7;background:#fff7e0;border-radius:14px;padding:10px 12px;text-align:left}
+.langsw{display:flex;justify-content:flex-end;gap:6px;margin:-4px 0 4px}.langsw button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-weight:700;font-size:13px;color:var(--ink2)}.langsw button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ilinks{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.ilinks a{font-size:12px;font-weight:700;color:#2f6f9f;background:#eef6fc;border-radius:99px;padding:4px 10px;text-decoration:none;white-space:nowrap}
 .ilinks a:hover{background:#dcecf8}
 .spw{display:flex;flex-direction:column;gap:2px}.spw .sp{flex:1}.spw .ilinks{padding:0 4px}
@@ -327,6 +328,7 @@ svg.map{touch-action:none;cursor:grab;width:100%;aspect-ratio:1.5/1;border-radiu
   </section>
 </div>
 <div id="modal" class="modal" hidden><div id="sheet"></div></div>
+<script src="../common/kakin.js"></script>
 <script>
 // ルートのデータ。各区間(leg)は「止まる町」の並び。町: [名前, 緯度, 経度, 町のまわりの景色, そこまでの道の景色, 'r'=道/'s'=船, 海域, 名所]
 const LEGS = {
@@ -793,7 +795,1238 @@ Object.assign(CITY, {
   'ケアンズ': { spots: [['🐠', 'グレートバリアリーフ', 3, 'カラフルな魚とサンゴの海'], ['🐨', 'コアラだっこ', 1, '動物園でコアラとふれあう'], ['🚞', 'キュランダ高原列車', 2, '熱帯雨林の中を走る']] },
 });
 
+// 英語の表示用。日本語のことば → 英語（町の名前・名所・グルメ・おみやげ・豆知識など）
+const EN_T = {"日本〜韓国〜中国":"Japan, Korea & China",
+"東京":"Tokyo",
+"富士山のふもと":"Foot of Mt. Fuji",
+"名古屋":"Nagoya",
+"京都":"Kyoto",
+"大阪":"Osaka",
+"広島":"Hiroshima",
+"福岡":"Fukuoka",
+"釜山":"Busan",
+"ソウル":"Seoul",
+"仁川":"Incheon",
+"天津":"Tianjin",
+"北京":"Beijing",
+"シルクロード":"The Silk Road",
+"砂漠とオアシス、青いタイルの町をぬけてイスタンブールへ。ラクダや気球に会えるかも。":"Through deserts, oases and blue-tiled towns to Istanbul. You might meet camels and hot-air balloons.",
+"敦煌":"Dunhuang",
+"西安":"Xi'an",
+"蘭州":"Lanzhou",
+"トルファン":"Turpan",
+"ウルムチ":"Ürümqi",
+"アルマトイ":"Almaty",
+"タシケント":"Tashkent",
+"サマルカンド":"Samarkand",
+"ブハラ":"Bukhara",
+"アシガバート":"Ashgabat",
+"マシュハド":"Mashhad",
+"テヘラン":"Tehran",
+"タブリーズ":"Tabriz",
+"カッパドキア":"Cappadocia",
+"イスタンブール":"Istanbul",
+"ソフィア":"Sofia",
+"ベオグラード":"Belgrade",
+"ブダペスト":"Budapest",
+"ウィーン":"Vienna",
+"シベリアと草原":"Siberia & the Steppe",
+"モンゴルの大草原、世界一深いバイカル湖、どこまでも続く森をぬけてモスクワへ。":"The great Mongolian steppe, Lake Baikal (the world's deepest), and endless forests all the way to Moscow.",
+"イルクーツク":"Irkutsk",
+"エレンホト":"Erenhot",
+"ウランバートル":"Ulaanbaatar",
+"ウランウデ":"Ulan-Ude",
+"バイカル湖":"Lake Baikal",
+"クラスノヤルスク":"Krasnoyarsk",
+"ノヴォシビルスク":"Novosibirsk",
+"オムスク":"Omsk",
+"エカテリンブルク":"Yekaterinburg",
+"カザン":"Kazan",
+"モスクワ":"Moscow",
+"ミンスク":"Minsk",
+"ワルシャワ":"Warsaw",
+"クラクフ":"Kraków",
+"プラハ":"Prague",
+"地中海":"The Mediterranean",
+"水の都ベネチア、ローマのコロッセオ。そしてフェリーで海をわたってスペインへ。":"Venice, the city on water, and the Colosseum in Rome. Then a ferry across the sea to Spain.",
+"ローマ":"Rome",
+"ベネチア":"Venice",
+"フィレンツェ":"Florence",
+"チビタベッキア":"Civitavecchia",
+"バルセロナ":"Barcelona",
+"サラゴサ":"Zaragoza",
+"マドリード":"Madrid",
+"アルプスとパリ":"The Alps & Paris",
+"雪のアルプスの山々を越えて、エッフェル塔の町パリへ。ぶどう畑のボルドーも。":"Over the snowy Alps to Paris, city of the Eiffel Tower. Vineyards of Bordeaux too.",
+"パリ":"Paris",
+"ザルツブルク":"Salzburg",
+"ミュンヘン":"Munich",
+"チューリッヒ":"Zürich",
+"ボルドー":"Bordeaux",
+"ビルバオ":"Bilbao",
+"北欧とオーロラ":"Scandinavia & the Northern Lights",
+"北極圏の町トロムソでオーロラを、サンタクロース村やフィヨルドの絶景を。北のはてまで行く大回りのルート。":"Northern lights in Tromsø above the Arctic Circle, Santa Claus Village and stunning fjords. A long detour to the far north.",
+"トロムソ":"Tromsø",
+"ベルリン":"Berlin",
+"コペンハーゲン":"Copenhagen",
+"ストックホルム":"Stockholm",
+"ロヴァニエミ":"Rovaniemi",
+"ロフォーテン諸島":"Lofoten Islands",
+"ベルゲン":"Bergen",
+"イベリア半島":"Iberian Peninsula",
+"リスボン":"Lisbon",
+"北大西洋とアメリカ横断":"North Atlantic & Across America",
+"クジラの島アゾレスを通ってニューヨークへ。大平原とロッキー山脈、赤い岩の大地。":"Via the Azores, islands of whales, to New York. Great Plains, the Rocky Mountains and red-rock country.",
+"ニューヨーク":"New York",
+"アゾレス諸島":"The Azores",
+"ピッツバーグ":"Pittsburgh",
+"シカゴ":"Chicago",
+"オマハ":"Omaha",
+"デンバー":"Denver",
+"ロッキー山脈":"Rocky Mountains",
+"モアブ":"Moab",
+"モニュメントバレー":"Monument Valley",
+"グランドキャニオン":"Grand Canyon",
+"南の海とカリブ":"Southern Seas & the Caribbean",
+"カナリア諸島からカリブ海へ。ウミガメやトビウオ、マイアミのビーチ、白い砂漠。":"From the Canary Islands to the Caribbean. Sea turtles, flying fish, Miami beaches and a white desert.",
+"マイアミ":"Miami",
+"カナリア諸島":"Canary Islands",
+"サンフアン":"San Juan",
+"ニューオーリンズ":"New Orleans",
+"ヒューストン":"Houston",
+"エルパソ":"El Paso",
+"ホワイトサンズ":"White Sands",
+"アルバカーキ":"Albuquerque",
+"セドナ":"Sedona",
+"アフリカと南アメリカ":"Africa & South America",
+"サハラ砂漠をラクダとならんで走り、大西洋をわたってリオへ。イグアスの滝、ウユニ塩湖、マチュピチュをめぐる大冒険。":"Ride beside camels across the Sahara, cross the Atlantic to Rio, then Iguazu Falls, the Uyuni salt flat and Machu Picchu. A grand adventure.",
+"ウユニ塩湖":"Uyuni Salt Flat",
+"カサブランカ":"Casablanca",
+"マラケシュ":"Marrakesh",
+"サハラ砂漠":"Sahara Desert",
+"ダカール":"Dakar",
+"フェルナンド・デ・ノローニャ":"Fernando de Noronha",
+"リオデジャネイロ":"Rio de Janeiro",
+"イグアスの滝":"Iguazu Falls",
+"ブエノスアイレス":"Buenos Aires",
+"メンドーサ":"Mendoza",
+"サンティアゴ":"Santiago",
+"アタカマ砂漠":"Atacama Desert",
+"クスコ":"Cusco",
+"リマ":"Lima",
+"ガラパゴス諸島":"Galápagos Islands",
+"パナマ":"Panama",
+"グアテマラ":"Guatemala",
+"メキシコシティ":"Mexico City",
+"チワワ":"Chihuahua",
+"ツーソン":"Tucson",
+"アメリカ西部":"The American West",
+"ラスベガス":"Las Vegas",
+"ロサンゼルス":"Los Angeles",
+"南の島ハワイ":"Hawaii, Island Paradise",
+"青い太平洋をハワイ経由で日本へ。ウミガメやマンタ、ザトウクジラに会えるかも。":"Across the blue Pacific to Japan via Hawaii. Sea turtles, manta rays and humpback whales.",
+"ホノルル":"Honolulu",
+"北の海":"The Northern Sea",
+"シアトルからアリューシャン列島をぬけて北海道へ。シャチやラッコ、夜はオーロラも？":"From Seattle through the Aleutian Islands to Hokkaido. Orcas, sea otters, maybe even northern lights?",
+"アリューシャン列島":"Aleutian Islands",
+"サンフランシスコ":"San Francisco",
+"シアトル":"Seattle",
+"バンクーバー":"Vancouver",
+"ダッチハーバー":"Dutch Harbor",
+"釧路":"Kushiro",
+"札幌":"Sapporo",
+"函館":"Hakodate",
+"青森":"Aomori",
+"仙台":"Sendai",
+"南太平洋とオーストラリア":"South Pacific & Australia",
+"タヒチやフィジーの青い海をわたってオーストラリアへ。オペラハウス、赤い大岩ウルル、カンガルーにも会えるかも。":"Across the blue seas of Tahiti and Fiji to Australia. The Opera House, the great red rock Uluru, and kangaroos.",
+"シドニー":"Sydney",
+"タヒチ":"Tahiti",
+"フィジー":"Fiji",
+"オークランド":"Auckland",
+"ブルーマウンテンズ":"Blue Mountains",
+"ウルル":"Uluru",
+"アリススプリングス":"Alice Springs",
+"ケアンズ":"Cairns",
+"グアム":"Guam",
+"ブランデンブルク門は、東西に分かれていたドイツがひとつになった象徴。":"The Brandenburg Gate is the symbol of Germany becoming one again after being split into East and West.",
+"人魚姫の像と、カラフルな家が並ぶニューハウン運河の町。":"Home of the Little Mermaid statue and Nyhavn canal lined with colorful houses.",
+"14の島の上にできた「北のベネチア」。ノーベル賞の授賞式の町。":"The \"Venice of the North,\" built on 14 islands. The Nobel Prize ceremony is held here.",
+"北極圏のすぐ上。サンタクロース村があり、一年中サンタに会えます。":"Just above the Arctic Circle. Santa Claus Village is here, so you can meet Santa all year round.",
+"北極圏の町。冬は太陽がのぼらない「極夜」、夏は沈まない「白夜」。オーロラの名所。":"An Arctic town. Polar night in winter (no sun), midnight sun in summer. Famous for the northern lights.",
+"海からとがった岩山がそびえる島々。赤い漁師小屋と干しダラが名物。":"Islands of jagged peaks rising from the sea. Red fishing huts and dried cod are famous here.",
+"フィヨルドへの入り口。カラフルな木の倉庫ブリッゲンは世界遺産。":"Gateway to the fjords. Bryggen, its colorful wooden warehouses, is a World Heritage Site.",
+"海の上に建つハッサン2世モスクの塔は、高さ210m。":"The minaret of the Hassan II Mosque, built over the sea, is 210 m tall.",
+"赤い壁の町。夜のジャマ・エル・フナ広場はヘビ使いや屋台でにぎやか。":"The red-walled city. At night Jemaa el-Fnaa square buzzes with snake charmers and food stalls.",
+"日本が25こ入るほど広い、世界最大の暑い砂漠。夜は星がふるよう。":"The world's largest hot desert, big enough to hold Japan 25 times. At night the stars seem to rain down.",
+"アフリカ大陸のいちばん西のはし。昔はパリ・ダカール・ラリーのゴール。":"The westernmost tip of Africa. It used to be the finish of the Paris–Dakar Rally.",
+"イルカがたくさん集まるブラジルの島。1日に入れる人数が決まっている。":"A Brazilian island where dolphins gather. The number of visitors per day is limited.",
+"山の上から両手を広げたキリスト像が町を見守る。カーニバルが有名。":"The statue of Christ watches over the city with open arms from a mountaintop. Famous for Carnival.",
+"275本もの滝が集まる世界最大級の滝。「悪魔ののど笛」はすごい迫力。":"One of the world's largest waterfalls, with 275 falls. The \"Devil's Throat\" is breathtaking.",
+"タンゴが生まれた町。世界でいちばん幅が広い大通りがある。":"The birthplace of tango. It has the widest avenue in the world.",
+"南北アメリカでいちばん高いアコンカグア山（6961m）のふもと。":"At the foot of Aconcagua (6,961 m), the highest mountain in the Americas.",
+"アンデス山脈の雪山がすぐうしろに見える、チリの首都。":"Chile's capital, with the snowy Andes right behind it.",
+"世界でいちばん雨がふらない砂漠。星空観測の聖地。":"The driest desert in the world. A paradise for stargazing.",
+"一面まっ白な塩の大地。雨のあとは空をうつす「天空の鏡」になる。":"A pure white plain of salt. After rain it becomes the \"mirror of the sky.\"",
+"標高3400mのインカ帝国の都。近くの山の上に天空の都市マチュピチュ。":"The Inca capital at 3,400 m. Machu Picchu, the city in the sky, is on a mountain nearby.",
+"ペルーの首都。セビーチェなど、おいしい料理で世界的に有名。":"Peru's capital, world-famous for delicious food like ceviche.",
+"ゾウガメやウミイグアナなど、ここにしかいない生きものの島。":"Islands of creatures found nowhere else, like giant tortoises and marine iguanas.",
+"太平洋と大西洋をつなぐパナマ運河。船が階段のように水門をのぼる。":"The Panama Canal links the Pacific and the Atlantic. Ships climb through the locks like stairs.",
+"火山にかこまれた国。マヤ文明の遺跡ティカルもある。":"A country surrounded by volcanoes. The Maya ruins of Tikal are here too.",
+"近くに太陽のピラミッドがある古代都市テオティワカン。":"Near the ancient city of Teotihuacan and its Pyramid of the Sun.",
+"小さな犬「チワワ」の名前は、この町から。":"The tiny Chihuahua dog is named after this city.",
+"人の背より高いサワロサボテンの森が広がる。":"Forests of saguaro cacti taller than people.",
+"南太平洋の楽園。画家ゴーギャンが愛した島。":"A paradise in the South Pacific, loved by the painter Gauguin.",
+"333の島からなる国。あいさつは元気に「ブラ！」。":"A country of 333 islands. Say a cheerful \"Bula!\"",
+"ヨットの町。スカイタワーは高さ328m。":"The City of Sails. The Sky Tower is 328 m tall.",
+"貝がらのようなオペラハウスと、ハーバーブリッジの港町。":"A harbor city with the shell-like Opera House and the Harbour Bridge.",
+"ユーカリの森から出る油で、山が青くかすんで見える。":"Oil from the eucalyptus forests makes the mountains look hazy blue.",
+"高さ348mの一枚岩。先住民アボリジニの聖地で、夕日で赤くもえる。":"A single rock 348 m high. Sacred to the Aboriginal people, it glows red at sunset.",
+"オーストラリアのまんなか。カンガルーに注意の道路標識がいっぱい。":"The middle of Australia. Lots of \"watch out for kangaroos\" road signs.",
+"世界最大のサンゴ礁グレートバリアリーフへの入り口。":"Gateway to the Great Barrier Reef, the world's largest coral reef.",
+"日本から飛行機で約4時間。青い海とヤシの木の島。":"About 4 hours by plane from Japan. An island of blue sea and palm trees.",
+"世界でいちばん人が多い都市圏。世界一周のスタートでゴール！":"The most populous metropolitan area in the world. The start and finish of your trip around the world!",
+"富士山は日本でいちばん高い山（3776m）。晴れていると大きく見えます。":"Mt. Fuji is Japan's highest mountain (3,776 m). On a clear day it looks huge.",
+"名古屋城の屋根には金のしゃちほこがのっています。":"Golden shachihoko (fish-tigers) sit on the roof of Nagoya Castle.",
+"1000年以上も日本の都だった町。お寺や神社がとても多い。":"Japan's capital for more than 1,000 years. Full of temples and shrines.",
+"「天下の台所」と呼ばれた、食いだおれの町。":"Once called \"the nation's kitchen\" — a city famous for eating till you drop.",
+"海に浮かぶ宮島の大鳥居が有名。もみじまんじゅうも名物。":"Famous for the great torii gate of Miyajima floating in the sea. Momiji manju cakes too.",
+"屋台がたくさん並ぶ町。ここからフェリーで韓国へ。":"A city of many food stalls. Take the ferry to Korea from here.",
+"韓国でいちばん大きな港町。海にかかる光安大橋が夜に光ります。":"Korea's biggest port city. Gwangan Bridge lights up over the sea at night.",
+"韓国の首都。山の上のNソウルタワーから町が見わたせます。":"Korea's capital. See the whole city from N Seoul Tower on the mountain.",
+"大きな港と空港がある町。ここから船で中国へ。":"A city with a big port and airport. Take a ship to China from here.",
+"北京の玄関口にあたる港町。":"The port city that serves as Beijing's gateway.",
+"中国の首都。近くの山には万里の長城がつづきます。ここが分かれ道！":"China's capital. The Great Wall winds over the nearby mountains. A fork in the road!",
+"昔は長安と呼ばれた、シルクロードの出発点。":"Once called Chang'an, the starting point of the Silk Road.",
+"黄河のほとりの町。蘭州ラーメンが名物。":"A city on the Yellow River, famous for Lanzhou noodles.",
+"砂の山「鳴沙山」とオアシスの町。ラクダに乗れます。":"An oasis town with the singing sand dunes. You can ride a camel.",
+"夏はとても暑い盆地。ぶどうの産地です。":"A basin that gets very hot in summer. Famous for grapes.",
+"世界で海からいちばん遠い大都市といわれます。":"Said to be the big city farthest from any sea.",
+"カザフスタンの町。雪をかぶった天山山脈が見えます。":"A city in Kazakhstan with views of the snowy Tian Shan mountains.",
+"ウズベキスタンの首都。中央アジアでいちばん大きな町。":"Uzbekistan's capital and the biggest city in Central Asia.",
+"青いタイルのレギスタン広場で有名なシルクロードの町。":"A Silk Road city famous for the blue-tiled Registan square.",
+"2000年以上の歴史がある、土色の古い町並み。":"An old earth-colored town with over 2,000 years of history.",
+"トルクメニスタンの首都。白い大理石の建物がいっぱい。":"Turkmenistan's capital, full of white marble buildings.",
+"イランで2番目に大きな町。":"Iran's second-largest city.",
+"イランの首都。北に雪をかぶったアルボルズ山脈がそびえます。":"Iran's capital, with the snowy Alborz Mountains to the north.",
+"世界最古級の屋根つき市場（バザール）がある町。":"Home to one of the oldest covered markets (bazaars) in the world.",
+"キノコのような岩の大地。朝はたくさんの気球が空に浮かびます。":"A land of mushroom-shaped rocks. In the morning the sky fills with balloons.",
+"アジアとヨーロッパにまたがる町。ここからヨーロッパ！":"A city spanning Asia and Europe. Europe starts here!",
+"ブルガリアの首都。ヨーグルトの国です。":"Bulgaria's capital, in the land of yogurt.",
+"ドナウ川とサヴァ川、2つの大きな川が出会う町。":"Where two big rivers, the Danube and the Sava, meet.",
+"ドナウ川をはさんだ「ブダ」と「ペスト」が合わさった町。":"\"Buda\" and \"Pest\" on either side of the Danube joined into one city.",
+"音楽の都。モーツァルトも暮らしていました。ここが分かれ道！":"The city of music, where Mozart once lived. A fork in the road!",
+"中国とモンゴルの国境の町。恐竜の化石が多く見つかります。":"A border town between China and Mongolia. Many dinosaur fossils are found here.",
+"モンゴルの首都。まわりの草原にはゲル（丸いテント）が。":"Mongolia's capital. Gers (round tents) dot the grasslands around it.",
+"バイカル湖の近くの町。とても大きなレーニンの頭の像があります。":"A city near Lake Baikal with a giant statue of Lenin's head.",
+"世界でいちばん深い湖（約1600m）。冬は湖が凍ります。":"The deepest lake in the world (about 1,600 m). It freezes in winter.",
+"「シベリアのパリ」と呼ばれた、木の家が残る町。":"Once called \"the Paris of Siberia,\" with old wooden houses still standing.",
+"大きなエニセイ川が流れるシベリアの町。":"A Siberian city on the mighty Yenisei River.",
+"シベリアでいちばん大きな町。":"The biggest city in Siberia.",
+"シベリアの草原の中にある町。":"A city in the Siberian steppe.",
+"ここはアジアとヨーロッパのさかい目。記念の柱が立っています。":"The border between Asia and Europe, marked by a monument.",
+"ヴォルガ川のほとりの町。白い城壁のクレムリンがあります。":"A city on the Volga with a white-walled kremlin.",
+"ロシアの首都。玉ねぎのような屋根の聖ワシリイ大聖堂が有名。":"Russia's capital, famous for St. Basil's Cathedral with its onion domes.",
+"ベラルーシの首都。広い大通りの町。":"Belarus's capital, a city of wide avenues.",
+"ポーランドの首都。ショパンが育った町。":"Poland's capital, where Chopin grew up.",
+"ポーランドの古い都。中世の町並みが残ります。":"Poland's old capital, with a well-kept medieval town.",
+"丘の上のプラハ城と、石の橋カレル橋が有名。":"Famous for Prague Castle on the hill and the stone Charles Bridge.",
+"水の都。車は入れないので、町の中の移動は船です。":"The city on water. No cars allowed — you get around by boat.",
+"赤いドームの大聖堂が目印の、ルネサンスの町。":"A Renaissance city marked by the red dome of its cathedral.",
+"2000年前のコロッセオが今も残る町。":"The 2,000-year-old Colosseum still stands here.",
+"ローマの港。ここからフェリーでスペインへ。":"Rome's port. Take the ferry to Spain from here.",
+"140年以上建てているサグラダ・ファミリアがある町。":"Home of the Sagrada Família, under construction for over 140 years.",
+"エブロ川のほとりの、スペインの古い町。":"An old Spanish city on the Ebro River.",
+"スペインの首都。ヨーロッパで標高がいちばん高いところにある首都のひとつ。":"Spain's capital, one of the highest capitals in Europe.",
+"モーツァルトが生まれた町。丘の上にお城があります。":"Mozart's birthplace, with a castle on the hill.",
+"ドイツ南部の町。秋のビール祭りが有名。":"A city in southern Germany, famous for its autumn beer festival.",
+"スイスでいちばん大きな町。遠くにアルプスの山々。":"Switzerland's biggest city, with the Alps in the distance.",
+"エッフェル塔の町。パン屋さんがあちこちに。":"City of the Eiffel Tower, with bakeries everywhere.",
+"まわりは一面のぶどう畑。ワインの町です。":"Surrounded by vineyards. A city of wine.",
+"スペイン北部の港町。銀色にかがやく美術館が有名。":"A port in northern Spain, famous for its shining silver art museum.",
+"坂道を黄色い路面電車が走る港町。ここが分かれ道！":"A hilly port city with yellow trams. A fork in the road!",
+"大西洋のまん中の火山の島々。クジラがよく見られます。":"Volcanic islands in the middle of the Atlantic. Whales are often seen.",
+"自由の女神がむかえてくれる大都会。アメリカ大陸に上陸！":"The big city where the Statue of Liberty welcomes you. You've reached America!",
+"川と橋がとても多い町。":"A city of many rivers and bridges.",
+"超高層ビルが生まれた町。「風の町」とも呼ばれます。":"Birthplace of the skyscraper, also called \"the Windy City.\"",
+"とうもろこし畑が広がる大平原の町。":"A city on the Great Plains among cornfields.",
+"標高がちょうど1マイル（約1600m）の「マイル・ハイ・シティ」。":"The \"Mile High City,\" exactly one mile (about 1,600 m) above sea level.",
+"北アメリカの背骨のような大きな山脈。":"A great mountain range like the backbone of North America.",
+"天然の岩のアーチが2000以上ある「アーチーズ国立公園」の町。":"Home to Arches National Park, with over 2,000 natural stone arches.",
+"西部劇の舞台になった、赤い岩の大地。":"Red-rock country where many westerns were filmed.",
+"コロラド川が何百万年もかけてけずった大峡谷。":"A giant canyon carved by the Colorado River over millions of years.",
+"アフリカの沖に浮かぶスペインの島々。カナリアという鳥の名前のもと。":"Spanish islands off Africa. The canary bird is named after them.",
+"カリブ海の島プエルトリコの、カラフルな港町。":"A colorful port city on the Caribbean island of Puerto Rico.",
+"ヤシの木と白い砂浜のビーチの町。":"A beach city of palm trees and white sand.",
+"ジャズが生まれた町。":"The birthplace of jazz.",
+"宇宙飛行士を見守るNASAの管制センターがある町。":"Home of NASA's Mission Control, which watches over astronauts.",
+"メキシコとの国境にある町。":"A city on the border with Mexico.",
+"真っ白な砂の砂漠。雪景色のように見えます。":"A desert of pure white sand that looks like snow.",
+"毎年10月、世界最大級の熱気球のお祭りがあります。":"Every October it hosts one of the world's biggest hot-air balloon festivals.",
+"赤い岩山にかこまれた町。":"A town surrounded by red rock mountains.",
+"砂漠の中のネオンの町。":"A neon city in the desert.",
+"丘の上のHOLLYWOODの看板が目印。ここが分かれ道！":"The HOLLYWOOD sign on the hill is the landmark. A fork in the road!",
+"ハワイの町。ダイヤモンドヘッドとワイキキの海。":"A Hawaiian city with Diamond Head and the sea at Waikiki.",
+"赤いゴールデン・ゲート・ブリッジと坂道とケーブルカーの町。":"City of the red Golden Gate Bridge, steep hills and cable cars.",
+"宇宙船のような塔「スペース・ニードル」が目印。":"Marked by the Space Needle, a tower that looks like a spaceship.",
+"海と山にかこまれたカナダの町。":"A Canadian city between the sea and the mountains.",
+"アリューシャン列島の港。カニ漁の船の基地です。":"A port in the Aleutian Islands, home base for crab-fishing boats.",
+"北海道の東の港町。タンチョウ（ツル）のふるさと。":"A port in eastern Hokkaido, home of the red-crowned crane.",
+"北海道でいちばん大きな町。冬は雪まつり。":"Hokkaido's biggest city. The Snow Festival is held in winter.",
+"夜景で有名な港町。ここからフェリーで本州へ。":"A port city famous for its night view. Take the ferry to Honshu from here.",
+"りんごとねぶた祭りの町。":"A city of apples and the Nebuta Festival.",
+"「杜の都」と呼ばれる、緑の多い町。":"Called \"the City of Trees,\" full of greenery.",
+"日本":"Japan",
+"こんにちは":"Hello",
+"ありがとう":"Thank you",
+"日本語":"Japanese",
+"おすし":"Sushi",
+"新鮮な魚をのせたごはん":"Fresh fish on rice",
+"風鈴":"Wind chime",
+"ちりんと鳴る夏の音":"The tinkling sound of summer",
+"韓国":"South Korea",
+"アンニョンハセヨ":"annyeonghaseyo",
+"カムサハムニダ":"gamsahamnida",
+"韓国語":"Korean",
+"ビビンバ":"Bibimbap",
+"ごはんと野菜をまぜて食べる":"Rice and vegetables mixed together",
+"金属のおはし":"Metal chopsticks",
+"韓国のおはしは平たい金属":"Korean chopsticks are flat and made of metal",
+"中国":"China",
+"你好":"你好",
+"ニーハオ":"nǐ hǎo",
+"谢谢":"谢谢",
+"シエシエ":"xièxie",
+"中国語":"Chinese",
+"小籠包":"Xiaolongbao",
+"なかに熱いスープ入り":"Dumplings with hot soup inside",
+"パンダのぬいぐるみ":"Panda plush toy",
+"中国の人気者":"China's favorite animal",
+"モンゴル":"Mongolia",
+"サインバイノー":"sain baina uu",
+"バヤルラー":"bayarlalaa",
+"モンゴル語":"Mongolian",
+"ボーズ":"Buuz",
+"羊肉の蒸しぎょうざ":"Steamed mutton dumplings",
+"馬の置物":"Horse figurine",
+"馬とくらす国":"A country that lives with horses",
+"ロシア":"Russia",
+"ズドラーストヴィチェ":"zdravstvuyte",
+"スパシーバ":"spasibo",
+"ロシア語":"Russian",
+"ボルシチ":"Borscht",
+"赤いビーツのスープ":"Red beet soup",
+"ペリメニ":"Pelmeni",
+"シベリアの水ぎょうざ":"Siberian boiled dumplings",
+"マトリョーシカ":"Matryoshka doll",
+"中から小さな人形が次々出てくる":"Smaller and smaller dolls come out, one after another",
+"カザフスタン":"Kazakhstan",
+"サレメトスィズベ":"sälemetsiz be",
+"ラフメット":"rakhmet",
+"カザフ語":"Kazakh",
+"ベシュバルマク":"Beshbarmak",
+"肉と平たい麺の料理":"Meat with flat noodles",
+"りんご":"Apples",
+"アルマトイはりんごのふるさと":"Almaty is the homeland of the apple",
+"ウズベキスタン":"Uzbekistan",
+"アッサローム・アレイクム":"assalomu alaykum",
+"ラフマット":"rahmat",
+"ウズベク語":"Uzbek",
+"プロフ":"Plov",
+"にんじんと肉のピラフ":"Pilaf with carrots and meat",
+"ノン":"Non",
+"スタンプもようの丸いパン":"Round bread with stamped patterns",
+"青い陶器":"Blue pottery",
+"シルクロードの青いもよう":"Blue Silk Road patterns",
+"トルクメニスタン":"Turkmenistan",
+"サラム":"salam",
+"サグボルン":"sag boluň",
+"トルクメン語":"Turkmen",
+"メロン":"Melon",
+"メロンの日がある国":"A country with its own Melon Day",
+"じゅうたん":"Carpet",
+"赤い手織りのじゅうたん":"Red hand-woven carpet",
+"イラン":"Iran",
+"サラーム":"salaam",
+"メルスィー":"merci",
+"ペルシャ語":"Persian",
+"キャバブ":"Kebab",
+"サフランライスと串焼き":"Saffron rice and grilled skewers",
+"ペルシャじゅうたん":"Persian carpet",
+"細かいもようの手織り":"Finely patterned and hand-woven",
+"トルコ":"Türkiye",
+"メルハバ":"merhaba",
+"テシェッキュルレル":"teşekkürler",
+"トルコ語":"Turkish",
+"ケバブ":"Döner kebab",
+"くるくる回して焼く肉":"Meat roasted on a turning spit",
+"のびるアイス":"Stretchy ice cream",
+"もちもちのドンドゥルマ":"Chewy dondurma",
+"ナザール・ボンジュウ":"Nazar boncuğu",
+"青い目玉のお守り":"A blue-eye charm",
+"ブルガリア":"Bulgaria",
+"ズドラヴェイテ":"zdraveyte",
+"ブラゴダリャ":"blagodarya",
+"ブルガリア語":"Bulgarian",
+"ヨーグルト":"Yogurt",
+"本場のヨーグルト":"The real Bulgarian yogurt",
+"バラのせっけん":"Rose soap",
+"バラの谷のかおり":"Scent from the Valley of Roses",
+"セルビア":"Serbia",
+"ズドラーヴォ":"zdravo",
+"フヴァーラ":"hvala",
+"セルビア語":"Serbian",
+"チェバプチチ":"Ćevapčići",
+"小さな焼き肉だんご":"Small grilled meat sausages",
+"手作りの器":"Handmade dish",
+"素朴な焼きもの":"Simple pottery",
+"ハンガリー":"Hungary",
+"スィア":"szia",
+"ケセネム":"köszönöm",
+"ハンガリー語":"Hungarian",
+"グヤーシュ":"Goulash",
+"パプリカのスープ":"Paprika soup",
+"パプリカの粉":"Paprika powder",
+"料理を赤くするスパイス":"The spice that turns food red",
+"オーストリア":"Austria",
+"グリュースゴット":"grüß Gott",
+"ダンケ":"danke",
+"ドイツ語":"German",
+"ザッハトルテ":"Sachertorte",
+"ウィーンのチョコケーキ":"Vienna's chocolate cake",
+"シュニッツェル":"Schnitzel",
+"うすいカツレツ":"Thin breaded cutlet",
+"モーツァルトチョコ":"Mozart chocolates",
+"モーツァルトの顔つきの丸いチョコ":"Round chocolates with Mozart's face",
+"ベラルーシ":"Belarus",
+"ドブリ・ジェニ":"dobry dzień",
+"ジャークイ":"dziakuj",
+"ベラルーシ語":"Belarusian",
+"ドラニキ":"Draniki",
+"じゃがいものパンケーキ":"Potato pancakes",
+"わら細工":"Straw craft",
+"わらで編んだかざり":"Ornaments woven from straw",
+"ポーランド":"Poland",
+"ジェン・ドブリ":"dzień dobry",
+"ジェンクイェ":"dziękuję",
+"ポーランド語":"Polish",
+"ピエロギ":"Pierogi",
+"ポーランドのぎょうざ":"Polish dumplings",
+"水玉もようの陶器":"Polka-dot pottery",
+"ボレスワヴィエツ焼き":"Bolesławiec pottery",
+"チェコ":"Czechia",
+"ドブリー・デン":"dobrý den",
+"ジェクイ":"děkuji",
+"チェコ語":"Czech",
+"トルデルニーク":"Trdelník",
+"筒の形の焼き菓子":"Tube-shaped pastry",
+"ボヘミアガラス":"Bohemian glass",
+"きらきらのガラス細工":"Sparkling glasswork",
+"イタリア":"Italy",
+"チャオ":"ciao",
+"グラツィエ":"grazie",
+"イタリア語":"Italian",
+"ピッツァ":"Pizza",
+"本場のマルゲリータ":"An authentic margherita",
+"ジェラート":"Gelato",
+"イタリアのアイス":"Italian ice cream",
+"オリーブオイル":"Olive oil",
+"料理の味の決め手":"The key to the flavor",
+"スペイン":"Spain",
+"オラ":"hola",
+"グラシアス":"gracias",
+"スペイン語":"Spanish",
+"パエリア":"Paella",
+"大きななべで炊く米料理":"Rice cooked in a big pan",
+"せんす（アバニコ）":"Folding fan (abanico)",
+"フラメンコでも使う":"Used in flamenco too",
+"ドイツ":"Germany",
+"グーテンターク":"guten Tag",
+"プレッツェル":"Pretzel",
+"結び目の形のパン":"Knot-shaped bread",
+"ソーセージ":"Sausage",
+"白いソーセージも名物":"White sausages are famous too",
+"テディベア":"Teddy bear",
+"ドイツ生まれのくま":"A bear born in Germany",
+"スイス":"Switzerland",
+"グリュエツィ":"grüezi",
+"メルスィ":"merci",
+"スイスドイツ語":"Swiss German",
+"チーズフォンデュ":"Cheese fondue",
+"とけたチーズにパンをからめる":"Bread dipped in melted cheese",
+"カウベル":"Cowbell",
+"牛の首につける鐘":"The bell cows wear around their necks",
+"フランス":"France",
+"ボンジュール":"bonjour",
+"メルシー":"merci",
+"フランス語":"French",
+"クロワッサン":"Croissant",
+"焼きたてのパン屋さんで":"Fresh from the bakery",
+"ラベンダーのにおい袋":"Lavender sachet",
+"南フランスのかおり":"The scent of southern France",
+"ポルトガル":"Portugal",
+"オブリガード":"obrigado",
+"ポルトガル語":"Portuguese",
+"エッグタルト":"Egg tart",
+"パステル・デ・ナタ":"Pastel de nata",
+"バルセロスのにわとり":"Rooster of Barcelos",
+"幸運のにわとりの置物":"A lucky rooster figurine",
+"アメリカ":"USA",
+"ハロー":"hello",
+"サンキュー":"thank you",
+"英語":"English",
+"ハンバーガー":"Hamburger",
+"大きなハンバーガー":"A big burger",
+"ベースボールキャップ":"Baseball cap",
+"野球の帽子":"A baseball hat",
+"アメリカ（ハワイ）":"USA (Hawaii)",
+"アロハ":"aloha",
+"マハロ":"mahalo",
+"ハワイ語":"Hawaiian",
+"シェイブアイス":"Shave ice",
+"ハワイのかき氷":"Hawaiian shaved ice",
+"ロコモコ":"Loco moco",
+"ハンバーグと目玉焼きのごはん":"Rice with a hamburger patty and fried egg",
+"レイ":"Lei",
+"花のくびかざり":"A flower necklace",
+"プエルトリコ":"Puerto Rico",
+"モフォンゴ":"Mofongo",
+"つぶした青いバナナの料理":"Mashed green plantains",
+"コキーのおもちゃ":"Coquí toy",
+"コキーと鳴く小さなカエル":"The little frog that sings \"co-quí\"",
+"カナダ":"Canada",
+"ハロー / ボンジュール":"hello / bonjour",
+"サンキュー / メルシー":"thank you / merci",
+"英語とフランス語":"English and French",
+"サーモン":"Salmon",
+"太平洋のサーモン":"Pacific salmon",
+"メープルシロップ":"Maple syrup",
+"カエデのあまいシロップ":"Sweet syrup from maple trees",
+"浅草寺と雷門":"Sensō-ji Temple & Kaminarimon Gate",
+"大きなちょうちんの門と、おみやげ屋さんが並ぶ仲見世通り":"A gate with a giant lantern and Nakamise street lined with souvenir shops",
+"東京スカイツリー":"Tokyo Skytree",
+"高さ634m。日本でいちばん高いタワー":"634 m tall, the tallest tower in Japan",
+"上野公園":"Ueno Park",
+"動物園や博物館がある大きな公園":"A large park with a zoo and museums",
+"江戸前ずし":"Edomae sushi",
+"東京湾の魚のおすし":"Sushi made with fish from Tokyo Bay",
+"東京タワーの置物":"Tokyo Tower figurine",
+"東京タワーのミニチュア":"A miniature Tokyo Tower",
+"伏見稲荷大社":"Fushimi Inari Shrine",
+"赤い鳥居が山の上までずっと続く":"Red torii gates run all the way up the mountain",
+"清水寺":"Kiyomizu-dera Temple",
+"崖の上にせり出した「清水の舞台」":"The famous wooden stage jutting out over a cliff",
+"嵐山の竹林":"Arashiyama Bamboo Grove",
+"空までのびる竹の小道":"A path through bamboo that reaches to the sky",
+"抹茶パフェ":"Matcha parfait",
+"宇治抹茶のあまいパフェ":"A sweet parfait with Uji matcha",
+"京せんす":"Kyoto folding fan",
+"みやびなもようのせんす":"A fan with elegant patterns",
+"おいでやす":"oideyasu",
+"おおきに":"ōkini",
+"京都ことば":"Kyoto dialect",
+"大阪城":"Osaka Castle",
+"金色のかざりがかがやくお城":"A castle shining with golden decorations",
+"道頓堀":"Dōtonbori",
+"川ぞいに大きな看板とネオンが並ぶ":"Giant signs and neon along the canal",
+"海遊館":"Kaiyukan Aquarium",
+"ジンベエザメが泳ぐ大きな水そう":"A huge tank where a whale shark swims",
+"たこ焼き":"Takoyaki",
+"外はカリッ、中はとろり":"Crispy outside, gooey inside",
+"たこ焼きのキーホルダー":"Takoyaki keychain",
+"大阪名物をいつも持ち歩ける":"Carry Osaka's famous snack everywhere",
+"まいど":"maido",
+"大阪ことば":"Osaka dialect",
+"天むす":"Tenmusu",
+"えびの天ぷらのおにぎり":"Rice ball with shrimp tempura",
+"金のしゃちほこの置物":"Golden shachihoko figurine",
+"名古屋城の屋根のかざり":"The roof ornament of Nagoya Castle",
+"どえりゃあ":"doeryaa",
+"どえりゃあ（とても）":"doeryaa (very)",
+"ありがとさん":"arigatosan",
+"名古屋ことば":"Nagoya dialect",
+"富士宮やきそば":"Fujinomiya yakisoba",
+"もちもちの太めの麺":"Chewy thick noodles",
+"富士山の置物":"Mt. Fuji figurine",
+"雪をかぶった富士山":"Snow-capped Mt. Fuji",
+"お好み焼き":"Okonomiyaki",
+"そば入りの広島風":"Hiroshima style, with noodles inside",
+"もみじまんじゅう":"Momiji manju",
+"もみじの形のおまんじゅう":"Maple-leaf-shaped cakes",
+"たいぎい":"taigii",
+"たいぎい（めんどう）":"taigii (what a bother)",
+"広島ことば":"Hiroshima dialect",
+"太宰府天満宮":"Dazaifu Tenmangu Shrine",
+"学問の神さまをまつる神社。梅の木がいっぱい":"A shrine to the god of learning, full of plum trees",
+"福岡タワー":"Fukuoka Tower",
+"海辺に立つ高さ234mのタワー":"A 234 m tower by the sea",
+"中洲の屋台":"Nakasu food stalls",
+"夜になると川ぞいに屋台が並ぶ":"At night, food stalls line the river",
+"とんこつラーメン":"Tonkotsu ramen",
+"白いスープの細い麺":"Thin noodles in white pork broth",
+"博多人形":"Hakata doll",
+"素焼きの人形":"Unglazed clay doll",
+"なんしよーと？":"nanshiyooto?",
+"なんしよーと（何してるの？）":"nanshiyooto (what are you doing?)",
+"博多ことば":"Hakata dialect",
+"札幌市時計台":"Sapporo Clock Tower",
+"140年以上時を知らせる木の時計台":"A wooden clock tower that has told the time for over 140 years",
+"大通公園とテレビ塔":"Ōdōri Park & TV Tower",
+"冬は雪まつりの会場になる公園":"The park becomes the Snow Festival venue in winter",
+"藻岩山の夜景":"Night view from Mt. Moiwa",
+"ロープウェイで登る山から町の灯り":"City lights from a mountain reached by ropeway",
+"みそラーメン":"Miso ramen",
+"こってりみそ味":"Rich miso flavor",
+"木彫りのクマ":"Carved wooden bear",
+"北海道のおなじみの置物":"Hokkaido's classic figurine",
+"なまら":"namara",
+"なまら（とても）":"namara (very)",
+"北海道ことば":"Hokkaido dialect",
+"海鮮丼":"Seafood rice bowl",
+"朝市のイクラやウニ":"Salmon roe and sea urchin from the morning market",
+"イカのおつまみ":"Dried squid snack",
+"函館はイカの町":"Hakodate is a squid town",
+"とれたてのりんご":"Fresh apples",
+"ねぶたの小さなかざり":"Little Nebuta ornament",
+"夏祭りの大きな灯籠":"The giant lantern floats of the summer festival",
+"めやぐだ":"meyaguda",
+"めやぐだ（ありがとう・すまないね）":"meyaguda (thanks / sorry to trouble you)",
+"津軽ことば":"Tsugaru dialect",
+"牛たん":"Gyūtan",
+"厚切りの焼き牛たん":"Thick-sliced grilled beef tongue",
+"こけし":"Kokeshi doll",
+"東北の木の人形":"A wooden doll from Tōhoku",
+"いぎなり":"iginari",
+"いぎなり（とても）":"iginari (very)",
+"仙台ことば":"Sendai dialect",
+"炉ばた焼き":"Robatayaki",
+"炭火で焼く海の幸":"Seafood grilled over charcoal",
+"タンチョウの置物":"Red-crowned crane figurine",
+"赤い頭のツル":"The crane with a red head",
+"景福宮":"Gyeongbokgung Palace",
+"昔の王さまの宮殿。門の前で衛兵の交代式":"The old royal palace, with a changing of the guard at the gate",
+"Nソウルタワー":"N Seoul Tower",
+"山の上のタワーから町が一望できる":"See the whole city from the tower on the mountain",
+"明洞":"Myeongdong",
+"屋台と買い物でにぎわう町":"A busy district of street food and shopping",
+"トッポッキ":"Tteokbokki",
+"甘辛いおもち":"Sweet and spicy rice cakes",
+"チャガルチ市場の海鮮":"Jagalchi Market seafood",
+"韓国最大級の魚市場":"One of Korea's biggest fish markets",
+"万里の長城（八達嶺）":"Great Wall (Badaling)",
+"山の尾根をどこまでも続く城壁":"Walls stretching endlessly along the ridges",
+"故宮":"Forbidden City",
+"昔の皇帝が住んだ、とても広い宮殿":"The huge palace where emperors lived",
+"頤和園":"Summer Palace",
+"大きな湖のある皇帝の庭園":"An imperial garden with a big lake",
+"北京ダック":"Peking duck",
+"パリパリの皮を薄い皮で包む":"Crispy skin wrapped in thin pancakes",
+"ビャンビャン麺":"Biangbiang noodles",
+"はばの広いもちもち麺":"Wide, chewy noodles",
+"蘭州牛肉麺":"Lanzhou beef noodles",
+"目の前で麺をのばしてくれる":"Noodles pulled right in front of you",
+"天津の肉まん":"Tianjin steamed buns",
+"ひだがきれいな肉まん":"Buns with beautiful pleats",
+"干しぶどう":"Raisins",
+"暑い盆地で干したぶどう":"Grapes dried in the hot basin",
+"羊の串焼き":"Lamb skewers",
+"スパイスをふった串焼き":"Skewers dusted with spices",
+"チンギス・ハーン騎馬像":"Genghis Khan Equestrian Statue",
+"草原に立つ高さ40mの銀色の像":"A 40 m silver statue on the steppe",
+"ガンダン寺":"Gandan Monastery",
+"モンゴルでいちばん大きなお寺":"The biggest monastery in Mongolia",
+"草原で乗馬":"Horse riding on the steppe",
+"遊牧民といっしょに草原をかける":"Gallop across the grassland with nomads",
+"スーテーツァイ":"Suutei tsai",
+"塩味のミルクティー":"Salty milk tea",
+"レギスタン広場":"Registan Square",
+"青いタイルの3つの建物にかこまれた広場":"A square framed by three blue-tiled buildings",
+"シャーヒ・ズィンダ廟群":"Shah-i-Zinda",
+"青いタイルの建物が通りに並ぶ":"A street lined with blue-tiled tombs",
+"ウルグ・ベクの天文台":"Ulugh Beg Observatory",
+"600年前に星を観測した天文台":"An observatory that studied the stars 600 years ago",
+"ブルーモスク":"Blue Mosque",
+"中は青いタイルでいっぱい":"Inside, it's covered in blue tiles",
+"グランドバザール":"Grand Bazaar",
+"4000をこえるお店がある屋根つき市場":"A covered market with over 4,000 shops",
+"ボスポラス海峡クルーズ":"Bosphorus cruise",
+"アジアとヨーロッパのあいだを船で":"Sail between Asia and Europe",
+"サバサンド":"Fish sandwich",
+"港で焼いたサバのサンドイッチ":"Mackerel grilled at the port, in a sandwich",
+"つぼ焼きケバブ":"Pottery kebab",
+"つぼを割って食べる煮こみ":"A stew served by breaking the clay pot",
+"赤の広場と聖ワシリイ大聖堂":"Red Square & St. Basil's Cathedral",
+"玉ねぎ屋根のカラフルな大聖堂":"A colorful cathedral with onion domes",
+"地下鉄の駅めぐり":"Metro station tour",
+"シャンデリアのある宮殿のような駅":"Stations like palaces, with chandeliers",
+"ボリショイ劇場":"Bolshoi Theatre",
+"世界的に有名なバレエの劇場":"A world-famous ballet theater",
+"ブリヌイ":"Blini",
+"ロシアのクレープ":"Russian crêpes",
+"シェーンブルン宮殿":"Schönbrunn Palace",
+"1441の部屋がある黄色い宮殿":"A yellow palace with 1,441 rooms",
+"プラーターの大観覧車":"Prater Ferris wheel",
+"100年以上回りつづける観覧車":"A Ferris wheel turning for over 100 years",
+"楽友協会でコンサート":"Concert at the Musikverein",
+"金色にかがやく音楽ホール":"A concert hall glowing with gold",
+"モーツァルトのふるさとの名物":"A treat from Mozart's hometown",
+"イカスミパスタ":"Squid ink pasta",
+"まっ黒なパスタ":"Jet-black pasta",
+"ベネチアの仮面":"Venetian mask",
+"カーニバルの仮面":"A carnival mask",
+"ビステッカ":"Bistecca",
+"分厚いTボーンステーキ":"A thick T-bone steak",
+"コロッセオ":"Colosseum",
+"2000年前の円形闘技場":"A 2,000-year-old amphitheater",
+"トレビの泉":"Trevi Fountain",
+"コインを投げると、またローマに来られるといわれる":"Toss a coin and they say you'll come back to Rome",
+"バチカン":"Vatican City",
+"世界でいちばん小さな国":"The smallest country in the world",
+"広場で食べる本場のアイス":"The real thing, eaten in a piazza",
+"コロッセオの置物":"Colosseum figurine",
+"ローマのミニチュア":"A miniature of Rome",
+"魚介たっぷりの米料理":"A rice dish full of seafood",
+"チュロスとチョコラテ":"Churros con chocolate",
+"熱いチョコにつけて食べる":"Dipped in hot chocolate",
+"ピンチョス":"Pintxos",
+"小さなパンにのせたおつまみ":"Snacks on little slices of bread",
+"パパス・アルガダス":"Papas arrugadas",
+"しわしわの塩ゆでポテト":"Wrinkly salt-boiled potatoes",
+"プレッツェルと白ソーセージ":"Pretzel & white sausage",
+"ミュンヘンの朝ごはん":"Munich's breakfast",
+"エッフェル塔":"Eiffel Tower",
+"てっぺんからパリの町が一望できる":"See all of Paris from the top",
+"ルーヴル美術館":"The Louvre",
+"モナ・リザがある世界最大級の美術館":"One of the world's biggest museums, home of the Mona Lisa",
+"モンマルトルの丘":"Montmartre",
+"白いサクレ・クール寺院と画家の広場":"The white Sacré-Cœur and the painters' square",
+"マカロン":"Macarons",
+"カラフルなお菓子":"Colorful little sweets",
+"エッフェル塔の置物":"Eiffel Tower figurine",
+"パリのミニチュア":"A miniature of Paris",
+"カヌレ":"Canelé",
+"外がカリッとした焼き菓子":"A little cake with a crispy outside",
+"路面電車28番":"Tram 28",
+"黄色い電車で坂道の町をめぐる":"Ride the yellow tram through the hilly city",
+"ベレンの塔":"Belém Tower",
+"大航海時代の船を見送った塔":"The tower that saw off ships in the Age of Discovery",
+"サン・ジョルジェ城":"São Jorge Castle",
+"丘の上から町と川を見わたす":"Look over the city and river from the hilltop",
+"イワシの炭火焼き":"Grilled sardines",
+"夏祭りの味":"The taste of the summer festival",
+"アゾレスのパイナップル":"Azores pineapple",
+"温室で育てる島の名物":"The island's specialty, grown in greenhouses",
+"自由の女神":"Statue of Liberty",
+"フェリーで島にわたって間近で見る":"Take the ferry to the island for a close look",
+"セントラルパーク":"Central Park",
+"大都会のまん中の大きな公園":"A huge park in the middle of the big city",
+"エンパイア・ステート・ビル":"Empire State Building",
+"展望台から摩天楼を見下ろす":"Look down on the skyscrapers from the observation deck",
+"ホットドッグ":"Hot dog",
+"屋台のホットドッグ":"A hot dog from a street cart",
+"自由の女神の置物":"Statue of Liberty figurine",
+"緑色のミニチュア":"A green miniature",
+"シカゴピザ":"Chicago pizza",
+"深いお皿で焼く厚いピザ":"Thick pizza baked in a deep dish",
+"ステーキ":"Steak",
+"大平原の牛肉":"Beef from the Great Plains",
+"レッドロックス野外劇場":"Red Rocks Amphitheatre",
+"赤い大岩のあいだにある劇場":"A theater set between giant red rocks",
+"州議事堂の「1マイルの段」":"The \"Mile High\" step at the State Capitol",
+"階段のここがちょうど標高1マイル":"This step is exactly one mile above sea level",
+"バイソンの牧場":"Bison ranch",
+"バイソンの群れが見られる公園":"A park where you can see herds of bison",
+"カウボーイハット":"Cowboy hat",
+"西部の帽子":"A hat of the Wild West",
+"ベニエ":"Beignets",
+"粉ざとうたっぷりの揚げパン":"Fried dough covered in powdered sugar",
+"テクス・メクス":"Tex-Mex",
+"テキサス風のタコス":"Texas-style tacos",
+"グリーンチリ料理":"Green chile dishes",
+"ニューメキシコの青とうがらし":"New Mexico's green chili peppers",
+"サイコロのキーホルダー":"Dice keychain",
+"ネオンの町の記念":"A souvenir of the neon city",
+"サウスビーチ":"South Beach",
+"カラフルな建物と白い砂浜":"Colorful buildings and white sand",
+"エバーグレーズ":"Everglades",
+"エアボートでワニのすむ湿地へ":"Take an airboat into alligator swamps",
+"ウィンウッドの壁画":"Wynwood Walls",
+"町じゅうが大きな絵でいっぱい":"A neighborhood covered in giant murals",
+"キューバサンド":"Cuban sandwich",
+"キューバ風のホットサンド":"A Cuban-style pressed sandwich",
+"ハリウッドの星の歩道":"Hollywood Walk of Fame",
+"有名人の名前の星が並ぶ歩道":"A sidewalk of stars with celebrities' names",
+"テーマパーク":"Theme park",
+"映画の世界のアトラクション":"Rides from the world of the movies",
+"サンタモニカの桟橋":"Santa Monica Pier",
+"海の上の遊園地と観覧車":"An amusement park and Ferris wheel over the sea",
+"タコス":"Tacos",
+"屋台の本場のタコス":"Real tacos from a food stand",
+"ハリウッドの星":"Hollywood star",
+"名前入りの星のかざり":"A star ornament with your name",
+"ゴールデン・ゲート・ブリッジ":"Golden Gate Bridge",
+"赤い大きな橋を歩いてわたる":"Walk across the big red bridge",
+"ケーブルカー":"Cable car",
+"急な坂道をのぼる昔ながらの電車":"The old-fashioned tram that climbs steep hills",
+"アルカトラズ島":"Alcatraz Island",
+"元刑務所があった湾の島":"An island in the bay that was once a prison",
+"クラムチャウダー":"Clam chowder",
+"パンの器に入ったスープ":"Soup in a bread bowl",
+"ケーブルカーの置物":"Cable car figurine",
+"坂の町の名物":"The specialty of the hilly city",
+"シアトルのコーヒー":"Seattle coffee",
+"コーヒーの町の一杯":"A cup from the coffee city",
+"マグカップ":"Mug",
+"コーヒーの町の記念":"A souvenir of the coffee city",
+"スモークサーモン":"Smoked salmon",
+"タラバガニ":"King crab",
+"カニ漁の港の大きなカニ":"Huge crabs from the crab-fishing port",
+"ワイキキビーチ":"Waikiki Beach",
+"ダイヤモンドヘッドを見ながら海で遊ぶ":"Play in the sea with a view of Diamond Head",
+"ダイヤモンドヘッド登山":"Diamond Head hike",
+"火山のふちまで登って海を見わたす":"Climb to the crater rim and look out over the ocean",
+"ハナウマ湾":"Hanauma Bay",
+"シュノーケルで熱帯の魚と泳ぐ":"Snorkel with tropical fish",
+"エル・モロ要塞":"El Morro fortress",
+"海を守った古い石のとりで":"An old stone fort that guarded the sea",
+"旧市街のカラフルな通り":"Colorful streets of Old San Juan",
+"パステルカラーの家が並ぶ":"Rows of pastel-colored houses",
+"光る湾":"Bioluminescent bay",
+"夜の海が青く光る湾":"A bay where the sea glows blue at night",
+"市場を歩く":"Walk through the market",
+"地元の人でにぎわう市場をぶらぶら":"Wander a market full of locals",
+"町の広場でひと休み":"Rest in the town square",
+"ベンチにすわって町をながめる":"Sit on a bench and watch the town",
+"町の博物館":"Town museum",
+"この町の歴史を知る":"Learn the history of this town",
+"農家の朝市":"Farmers' morning market",
+"とれたての野菜や果物":"Fresh vegetables and fruit",
+"田舎道をサイクリング":"Cycling on country roads",
+"畑のあいだを風を切って":"Ride through the fields with the wind",
+"古いお寺や教会":"Old temples and churches",
+"村の人が大切にしてきた建物":"Buildings the villagers have cherished",
+"森の散歩":"Forest walk",
+"木もれ日の中をゆっくり歩く":"A slow walk in dappled sunlight",
+"きのこ探し":"Mushroom hunting",
+"森の中で見つけられるかな":"What can you find in the forest?",
+"湖でボート":"Boating on the lake",
+"静かな湖にこぎ出す":"Row out onto a quiet lake",
+"ハイキング":"Hiking",
+"山の上の見晴らし台まで":"Up to the lookout on the mountain",
+"山の湖":"Mountain lake",
+"山にかこまれた青い湖":"A blue lake surrounded by mountains",
+"ロープウェイ":"Ropeway",
+"空中散歩で山の上へ":"A walk in the sky to the mountaintop",
+"ラクダに乗る":"Camel ride",
+"ゆらゆら揺れながら砂の上を":"Swaying gently over the sand",
+"オアシスでひと休み":"Rest at the oasis",
+"砂漠の中の水辺":"Water in the middle of the desert",
+"星空観察":"Stargazing",
+"砂漠の夜は星がいっぱい":"Desert nights are full of stars",
+"乗馬":"Horse riding",
+"広い草原を馬で":"Ride across the wide grassland",
+"草原のテントを訪ねる":"Visit a tent on the steppe",
+"遊牧のくらしを見せてもらう":"See how nomads live",
+"草原でピクニック":"Picnic on the steppe",
+"地平線を見ながらお昼ごはん":"Lunch with a view of the horizon",
+"浜辺を散歩":"Beach walk",
+"波の音を聞きながら":"Listening to the waves",
+"港の市場":"Harbor market",
+"朝とれた魚が並ぶ":"Fish caught this morning",
+"灯台へ":"To the lighthouse",
+"岬の先の灯台まで歩く":"Walk to the lighthouse at the tip of the cape",
+"ジープツアー":"Jeep tour",
+"赤い岩のあいだをジープで":"Ride a jeep between red rocks",
+"岩山の展望台":"Rock lookout",
+"どこまでも続く赤い大地":"Red land as far as the eye can see",
+"温泉":"Hot spring",
+"山を見ながら露天風呂":"An outdoor bath with mountain views",
+"キャンプ場":"Campground",
+"たき火をかこんで、星を見ながら":"Around the campfire, looking at the stars",
+"ホテル":"Hotel",
+"ふかふかのベッドとお風呂":"A fluffy bed and a hot bath",
+"車中泊":"Sleeping in the van",
+"いつものキャンピングカーで":"In our trusty camper van",
+"デンマーク":"Denmark",
+"ハイ":"hej",
+"ターク":"tak",
+"デンマーク語":"Danish",
+"スモーブロー":"Smørrebrød",
+"パンに具をのせたオープンサンド":"Open sandwiches topped with all sorts",
+"ブロックのおもちゃ":"Toy bricks",
+"デンマーク生まれの組み立てブロック":"Building bricks born in Denmark",
+"スウェーデン":"Sweden",
+"ヘイ":"hej",
+"タック":"tack",
+"スウェーデン語":"Swedish",
+"ミートボール":"Meatballs",
+"こけももジャムをそえて":"With lingonberry jam",
+"ダーラナホース":"Dala horse",
+"赤くぬった木の馬":"A painted red wooden horse",
+"フィンランド":"Finland",
+"キートス":"kiitos",
+"フィンランド語":"Finnish",
+"ブルーベリーパイ":"Blueberry pie",
+"森でつんだベリーのパイ":"Pie with berries picked in the forest",
+"サンタからの手紙":"Letter from Santa",
+"サンタクロース村から届く":"Sent from Santa Claus Village",
+"ノルウェー":"Norway",
+"ノルウェー語":"Norwegian",
+"ノルウェーの海で育ったサーモン":"Salmon raised in Norway's sea",
+"トロールの人形":"Troll doll",
+"森にすむいたずら好きの妖精":"A mischievous creature of the forest",
+"モロッコ":"Morocco",
+"アッサラーム・アライクム":"as-salāmu ʿalaykum",
+"シュクラン":"shukran",
+"アラビア語":"Arabic",
+"タジン":"Tagine",
+"とんがり帽子のなべで蒸し煮":"Stewed in a pot with a pointed lid",
+"モロッコランプ":"Moroccan lamp",
+"すかしもようの光がきれい":"Beautiful light through cut-out patterns",
+"セネガル":"Senegal",
+"ナンガデフ":"nanga def",
+"ジェレジェフ":"jërëjëf",
+"ウォロフ語":"Wolof",
+"チェブジェン":"Thieboudienne",
+"魚と野菜の炊きこみごはん":"Rice cooked with fish and vegetables",
+"ジャンベ":"Djembe",
+"手でたたく木の太鼓":"A wooden hand drum",
+"ブラジル":"Brazil",
+"シュラスコ":"Churrasco",
+"大きな串で焼いた肉":"Meat grilled on big skewers",
+"オウムの置物":"Parrot figurine",
+"カラフルな森の鳥":"A colorful bird of the forest",
+"アルゼンチン":"Argentina",
+"アサード":"Asado",
+"炭火でじっくり焼く牛肉":"Beef slow-grilled over charcoal",
+"マテ茶のカップ":"Mate cup",
+"ストローで飲むお茶の入れもの":"A gourd for drinking tea through a straw",
+"チリ":"Chile",
+"エンパナーダ":"Empanada",
+"具をつつんで焼いたパイ":"Baked pastry with a filling",
+"モアイの置物":"Moai figurine",
+"チリのイースター島の石像":"The stone statues of Chile's Easter Island",
+"ボリビア":"Bolivia",
+"サルテーニャ":"Salteña",
+"スープ入りのあまからパイ":"A sweet-and-spicy pastry with soup inside",
+"ウユニの塩":"Uyuni salt",
+"塩湖でとれたまっ白な塩":"Pure white salt from the salt flat",
+"ペルー":"Peru",
+"セビーチェ":"Ceviche",
+"魚をレモンでしめたマリネ":"Fish marinated in lime",
+"アルパカのセーター":"Alpaca sweater",
+"ふわふわであたたかい":"Fluffy and warm",
+"エクアドル":"Ecuador",
+"パタコン":"Patacón",
+"青いバナナを揚げたもの":"Fried green plantains",
+"ゾウガメの置物":"Giant tortoise figurine",
+"ガラパゴスの大きなカメ":"The big tortoise of the Galápagos",
+"サンコーチョ":"Sancocho",
+"鶏肉といもの煮こみスープ":"Chicken and root vegetable stew",
+"パナマ帽":"Panama hat",
+"草であんだ夏の帽子":"A summer hat woven from straw",
+"タマレス":"Tamales",
+"とうもろこしの生地をバナナの葉で蒸す":"Corn dough steamed in banana leaves",
+"カラフルな織物":"Colorful textile",
+"マヤの人たちの手織り":"Hand-woven by Maya people",
+"メキシコ":"Mexico",
+"とうもろこしの皮で具をはさむ":"Fillings wrapped in a corn tortilla",
+"ピニャータ":"Piñata",
+"たたいて割るとお菓子が出てくる":"Hit it until it breaks and candy falls out",
+"タヒチ（フランス領ポリネシア）":"Tahiti (French Polynesia)",
+"イアオラナ":"ia ora na",
+"マウルール":"māuruuru",
+"タヒチ語":"Tahitian",
+"ポワソン・クリュ":"Poisson cru",
+"魚をココナッツミルクであえたもの":"Raw fish in coconut milk",
+"黒真珠":"Black pearl",
+"タヒチの海で育つ黒い真珠":"Black pearls grown in Tahiti's sea",
+"ブラ":"bula",
+"ヴィナカ":"vinaka",
+"フィジー語":"Fijian",
+"ロボ料理":"Lovo",
+"土の中で蒸し焼きにするごちそう":"A feast cooked in an earth oven",
+"貝のネックレス":"Shell necklace",
+"南の島の貝がら":"Seashells from the southern islands",
+"ニュージーランド":"New Zealand",
+"キアオラ":"kia ora",
+"ナーミーヒ":"ngā mihi",
+"マオリ語":"Māori",
+"キウイフルーツ":"Kiwifruit",
+"あまずっぱい緑の果物":"A sweet-and-sour green fruit",
+"ひつじのぬいぐるみ":"Sheep plush toy",
+"人より羊のほうが多い国":"A country with more sheep than people",
+"オーストラリア":"Australia",
+"ハファデイ":"håfa adai",
+"ブランデンブルク門":"Brandenburg Gate",
+"平和の象徴の大きな門":"A great gate, symbol of peace",
+"ベルリンの壁":"Berlin Wall",
+"絵がかかれた壁が残っている":"Painted sections of the wall still stand",
+"博物館島":"Museum Island",
+"川の中の島に5つの博物館":"Five museums on an island in the river",
+"ガムラスタン":"Gamla Stan",
+"石だたみの古い町並み":"Old cobblestone streets",
+"ヴァーサ号博物館":"Vasa Museum",
+"370年前に沈んだ大きな船":"A great ship that sank 370 years ago",
+"市庁舎":"City Hall",
+"ノーベル賞の晩さん会の会場":"Where the Nobel banquet is held",
+"サンタクロース村":"Santa Claus Village",
+"サンタと握手。北極線をまたげる":"Shake hands with Santa and step across the Arctic Circle",
+"トナカイのそり":"Reindeer sleigh",
+"雪の森をトナカイがひく":"Reindeer pull you through the snowy forest",
+"犬ぞり":"Dog sledding",
+"ハスキー犬といっしょに走る":"Run with husky dogs",
+"オーロラ鑑賞ツアー":"Northern lights tour",
+"町の明かりをはなれて空を見上げる":"Leave the city lights and look up at the sky",
+"山の上からフィヨルドと町を一望":"See the fjords and town from the mountain",
+"北極教会":"Arctic Cathedral",
+"三角形が重なった白い教会":"A white church of stacked triangles",
+"北の海の大きなカニ":"Big crabs from the northern sea",
+"ブリッゲン":"Bryggen",
+"カラフルな木の倉庫が並ぶ港":"A harbor of colorful wooden warehouses",
+"フィヨルドクルーズ":"Fjord cruise",
+"切り立つ崖のあいだを船で進む":"Sail between towering cliffs",
+"魚市場":"Fish market",
+"サーモンやエビがずらり":"Rows of salmon and shrimp",
+"ジャマ・エル・フナ広場":"Jemaa el-Fnaa",
+"ヘビ使いと屋台でにぎやか":"Bustling with snake charmers and food stalls",
+"マジョレル庭園":"Jardin Majorelle",
+"あざやかな青い建物の庭":"A garden with a vivid blue house",
+"スーク（市場）":"Souk (market)",
+"迷路のような市場でお買いもの":"Shop in a maze-like market",
+"砂丘の上をゆらゆら進む":"Swaying over the dunes",
+"砂丘の夕日":"Sunset over the dunes",
+"砂が赤くそまる時間":"When the sand turns red",
+"砂漠の星空":"Desert stars",
+"天の川がくっきり見える":"The Milky Way, crystal clear",
+"コルコバードのキリスト像":"Christ the Redeemer",
+"高さ30mの像と町の絶景":"A 30 m statue and a stunning view of the city",
+"ポン・ジ・アスーカル":"Sugarloaf Mountain",
+"ロープウェイで岩山の上へ":"Take the cable car up the rock",
+"コパカバーナ海岸":"Copacabana Beach",
+"波もようの歩道とビーチ":"A wave-patterned promenade and the beach",
+"悪魔ののど笛":"Devil's Throat",
+"滝の上の展望台。ずぶぬれ注意":"A lookout above the falls. You'll get soaked!",
+"ボートで滝の下へ":"Boat to the falls",
+"滝のしぶきの中につっこむ":"Plunge into the spray of the falls",
+"ジャングルの遊歩道":"Jungle trail",
+"チョウやハナグマに会える":"Meet butterflies and coatis",
+"タンゴショー":"Tango show",
+"情熱的なダンスを見る":"Watch a passionate dance",
+"カミニート":"Caminito",
+"カラフルな家が並ぶ小道":"A lane of colorful houses",
+"劇場を改造した本屋さん":"Bookstore in an old theater",
+"世界一美しいといわれる書店":"Said to be the most beautiful bookstore in the world",
+"天空の鏡":"Mirror of the sky",
+"空と大地がひとつになる":"Where sky and land become one",
+"トリック写真":"Trick photos",
+"遠近感がなくなる不思議な写真":"Fun photos where distance disappears",
+"列車の墓場":"Train cemetery",
+"古い機関車が並ぶ":"Rows of old locomotives",
+"マチュピチュ":"Machu Picchu",
+"山の上のインカの都市":"The Inca city on the mountain",
+"インカの石組み":"Inca stonework",
+"カミソリも通らない石垣":"Walls so tight not even a razor fits between the stones",
+"アルパカ牧場":"Alpaca farm",
+"ふわふわのアルパカとふれあう":"Meet fluffy alpacas",
+"アイリャンチュ":"allillanchu",
+"スルパイキ":"sulpayki",
+"ケチュア語":"Quechua",
+"ゾウガメ保護区":"Giant tortoise reserve",
+"100歳をこえるカメも":"Some tortoises are over 100 years old",
+"ウミイグアナの浜":"Marine iguana beach",
+"海で泳ぐイグアナ":"Iguanas that swim in the sea",
+"アシカとシュノーケル":"Snorkeling with sea lions",
+"アシカがいっしょに泳いでくれる":"Sea lions swim right along with you",
+"テオティワカン":"Teotihuacan",
+"太陽のピラミッドにのぼる":"Climb the Pyramid of the Sun",
+"フリーダ・カーロの青い家":"Frida Kahlo's Blue House",
+"画家が暮らした家":"The house where the painter lived",
+"ソチミルコの小舟":"Boats of Xochimilco",
+"カラフルな舟で運河めぐり":"Tour the canals in colorful boats",
+"水上コテージの海":"Overwater bungalow lagoon",
+"透明な青いラグーン":"A clear blue lagoon",
+"ウミガメとシュノーケル":"Snorkeling with sea turtles",
+"サンゴの海でカメと泳ぐ":"Swim with turtles over the coral",
+"タヒチアンダンス":"Tahitian dance",
+"腰をふる力強いおどり":"A powerful dance with swaying hips",
+"スカイタワー":"Sky Tower",
+"高さ328m。展望台の床がガラス":"328 m tall, with a glass floor on the deck",
+"ヨットクルーズ":"Yacht cruise",
+"「帆の町」の海へ":"Out to sea from the City of Sails",
+"マウント・イーデン":"Mount Eden",
+"町のまんなかの火山":"A volcano in the middle of the city",
+"オペラハウス":"Opera House",
+"貝がらの形の屋根":"A roof shaped like seashells",
+"ハーバーブリッジ":"Harbour Bridge",
+"橋のてっぺんまでのぼれる":"You can climb to the top of the bridge",
+"ボンダイビーチ":"Bondi Beach",
+"サーファーが集まる海":"A beach full of surfers",
+"ウルルの夕日":"Uluru sunset",
+"岩が赤からむらさきに変わる":"The rock turns from red to purple",
+"ウルルのまわりを一周":"Walk around Uluru",
+"1周10km。聖なる場所の話を聞く":"A 10 km loop, hearing stories of the sacred site",
+"光の野原":"Field of Light",
+"5万個のライトがかがやく":"50,000 lights glowing",
+"グレートバリアリーフ":"Great Barrier Reef",
+"カラフルな魚とサンゴの海":"A sea of colorful fish and coral",
+"コアラだっこ":"Hold a koala",
+"動物園でコアラとふれあう":"Meet koalas at the zoo",
+"キュランダ高原列車":"Kuranda Scenic Railway",
+"熱帯雨林の中を走る":"Riding through the rainforest",
+"東京タワーとスカイツリー":"Tokyo Tower & Skytree",
+"富士山":"Mt. Fuji",
+"名古屋城":"Nagoya Castle",
+"東寺の五重塔":"Tō-ji five-story pagoda",
+"大雁塔":"Giant Wild Goose Pagoda",
+"宮島の大鳥居":"Great torii of Miyajima",
+"光安大橋":"Gwangan Bridge",
+"万里の長城":"The Great Wall",
+"鳴沙山の砂丘":"Singing Sand Dunes",
+"天山山脈":"Tian Shan Mountains",
+"アルボルズ山脈":"Alborz Mountains",
+"アルプスの山々":"The Alps",
+"ロッキーの山々":"The Rockies",
+"奇岩と気球":"Fairy chimneys & balloons",
+"ゲルの村":"Ger village",
+"アジアとヨーロッパの境界の柱":"Europe–Asia border obelisk",
+"聖ワシリイ大聖堂":"St. Basil's Cathedral",
+"プラハ城":"Prague Castle",
+"ホーエンザルツブルク城":"Hohensalzburg Fortress",
+"サン・マルコの鐘楼":"St. Mark's Campanile",
+"花の大聖堂":"Florence Cathedral",
+"サグラダ・ファミリア":"Sagrada Família",
+"火山の島":"Volcanic island",
+"テイデ山の島":"Island of Mt. Teide",
+"シカゴの摩天楼":"Chicago skyscrapers",
+"デリケート・アーチ":"Delicate Arch",
+"モニュメントバレーの岩山":"Monument Valley buttes",
+"セドナの赤い岩山":"Sedona's red rocks",
+"真っ白な砂丘":"Pure white dunes",
+"たくさんの熱気球":"Lots of hot-air balloons",
+"ネオンの町":"City of neon",
+"ハリウッドサイン":"Hollywood Sign",
+"ダイヤモンドヘッド":"Diamond Head",
+"スペース・ニードル":"Space Needle",
+"北極圏の雪山":"Arctic snowy peaks",
+"海にそびえる岩山":"Peaks rising from the sea",
+"フィヨルド":"Fjords",
+"ハッサン2世モスク":"Hassan II Mosque",
+"サハラの大砂丘":"Great dunes of the Sahara",
+"アコンカグア山":"Aconcagua",
+"アンデス山脈":"The Andes",
+"月の谷":"Valley of the Moon",
+"火山の島々":"Volcanic islands",
+"アグア火山":"Volcán de Agua",
+"太陽のピラミッド":"Pyramid of the Sun",
+"タヒチの山":"Mountains of Tahiti",
+"ウルル（エアーズロック）":"Uluru (Ayers Rock)",
+"イルカの群れ":"Pod of dolphins",
+"船と競争するように跳ねる":"Leaping as if racing the ship",
+"トビウオ":"Flying fish",
+"胸びれを広げて海の上をすべる":"Gliding over the sea on spread fins",
+"ザトウクジラ":"Humpback whale",
+"潮をふいて、しっぽを見せる":"Spouting and showing its tail",
+"クジラの大ジャンプ":"Whale breaching",
+"めったに見られない大ジャンプ":"A rare, huge jump",
+"マッコウクジラ":"Sperm whale",
+"四角い頭の大きなクジラ":"A big whale with a square head",
+"シャチ":"Orca",
+"背びれが高い海のギャング":"The tall-finned gangster of the sea",
+"ウミガメ":"Sea turtle",
+"ぷかっと顔を出して息つぎ":"Pops its head up for a breath",
+"マンタ":"Manta ray",
+"海の中をつばさで飛ぶ大きなエイ":"A big ray that flies through the water",
+"マンボウ":"Ocean sunfish",
+"横になってぷかぷか":"Floating lazily on its side",
+"アホウドリ":"Albatross",
+"長いつばさで風に乗る海の鳥":"A seabird riding the wind on long wings",
+"カモメ":"Seagull",
+"港の近くで船についてくる":"Follows ships near the harbor",
+"ラッコ":"Sea otter",
+"あおむけでぷかぷか":"Floating on its back",
+"エトピリカ":"Tufted puffin",
+"オレンジのくちばしの北の海鳥":"A northern seabird with an orange beak",
+"夜光虫":"Glowing plankton",
+"夜の波が青く光る":"Night waves glowing blue",
+"虹":"Rainbow",
+"雨上がりの空にかかる":"Across the sky after the rain",
+"流れ星":"Shooting star",
+"夜空をすっと横切る":"Streaking across the night sky",
+"オーロラ":"Northern lights",
+"北の夜空にゆれる光のカーテン":"Curtains of light swaying in the northern sky",
+"渡り鳥の群れ":"Migrating birds",
+"Vの字で空を飛んでいく":"Flying in a V",
+"シカ":"Deer",
+"森のふちからこちらを見ている":"Watching you from the edge of the forest",
+"トナカイ":"Reindeer",
+"北の森をゆっくり歩く":"Walking slowly through the northern forest",
+"カンガルー":"Kangaroo",
+"ぴょんぴょん跳ねて道を横切る":"Hopping across the road",
+"リャマ":"Llama",
+"アンデスの高原でもぐもぐ":"Munching on the Andean highlands",
+"野を走る馬":"Wild horses",
+"草原をかけていく":"Galloping across the grassland",
+"ラクダのキャラバン":"Camel caravan",
+"砂漠をゆっくり歩く":"Walking slowly across the desert",
+"バイソン":"Bison",
+"アメリカの大平原の主":"Lord of the Great Plains",
+"ワシ":"Eagle",
+"空高く輪をえがく":"Circling high in the sky",
+"熱気球":"Hot-air balloon",
+"朝の空にふわり":"Floating in the morning sky",
+"並んで走る列車":"Train running alongside",
+"しばらくいっしょに走る":"Running side by side for a while",
+"はれ":"clear",
+"ほぼはれ":"mostly clear",
+"ときどきくもり":"partly cloudy",
+"くもり":"cloudy",
+"きり":"fog",
+"きりさめ":"drizzle",
+"こおる雨":"freezing rain",
+"小雨":"light rain",
+"雨":"rain",
+"大雨":"heavy rain",
+"小雪":"light snow",
+"雪":"snow",
+"大雪":"heavy snow",
+"にわか雨":"showers",
+"はげしいにわか雨":"heavy showers",
+"にわか雪":"snow showers",
+"はげしいにわか雪":"heavy snow showers",
+"かみなり雨":"thunderstorm",
+"ひょうとかみなり":"hail & thunder"};
+
 'use strict';
+/* ===== ことば（日本語／English） ===== */
+// ?lang=en / ?lang=ja、前に選んだことば、入口ページのことば、ブラウザのことば の順で決める
+const LG = (() => {
+  const q = new URLSearchParams(location.search).get('lang');
+  if (q === 'en' || q === 'ja') { try { localStorage.setItem('camper-lang', q); } catch (e) { } return q; }
+  try { const s = localStorage.getItem('camper-lang') || localStorage.getItem('games-lang'); if (s === 'en' || s === 'ja') return s; } catch (e) { }
+  return /^ja/i.test((navigator.languages && navigator.languages[0]) || navigator.language || 'ja') ? 'ja' : 'en';
+})();
+const EN = LG === 'en';
+const J = (ja, en) => EN ? en : ja; // 日本語と英語の2つを並べて書く
+const tr = s => (EN && s && EN_T[s]) || s; // データのことば（町の名前・名所・グルメなど）を英語に
+const ROMA = { 'こんにちは': 'konnichiwa', 'ありがとう': 'arigatō' };
+const rd = s => EN ? (ROMA[s] || EN_T[s] || s) : s; // あいさつの読みかた（英語ではローマ字）
+function setLang(l) { try { localStorage.setItem('camper-lang', l); } catch (e) { } const u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.toString(); }
+if (EN) { // 英語のときは、表示だけに使うデータを英語に置きかえる（町の名前など、保存のかぎに使うものはそのまま）
+  for (const id in LEGS) { const g = LEGS[id]; g.name = tr(g.name); if (g.desc) g.desc = tr(g.desc); if (g.keyName) g.keyName = tr(g.keyName); }
+  for (const k in FACTS) FACTS[k] = tr(FACTS[k]);
+  const ww = w => w && [w[0], rd(w[1]), w[2], rd(w[3]), tr(w[4])];
+  for (const k in COUNTRY) { COUNTRY[k].name = tr(COUNTRY[k].name); COUNTRY[k].words = ww(COUNTRY[k].words); }
+  for (const k in CITY) if (CITY[k].words) CITY[k].words = ww(CITY[k].words);
+  for (const k in LODGING) LODGING[k] = [LODGING[k][0], tr(LODGING[k][1]), tr(LODGING[k][2])];
+  document.documentElement.lang = 'en'; document.title = 'Around the World by Camper Van';
+  const q = x => document.querySelector(x);
+  q('#b-full').textContent = '⛶ Full screen'; q('#b-full').setAttribute('aria-label', 'Full screen');
+  q('#b-gaze').textContent = '🖼 Gaze mode'; q('#b-gaze').setAttribute('aria-label', 'Gaze mode');
+  q('#b-snd').setAttribute('aria-label', 'Sound'); q('#b-info').setAttribute('aria-label', 'Info display'); q('#fsmap').setAttribute('aria-label', 'Open map');
+  q('.stats').innerHTML = '<div>Distance<b id="total">0 km</b></div><div>Around the world<b id="lap">Lap 1</b></div><div>Speed<b id="spd"></b></div>';
+  [['#b-map', '🗺', 'Map'], ['#b-rec', '📖', 'Log'], ['#b-photo', '📷', 'Postcard'], ['#b-set', '⚙️', 'Settings']].forEach(([id, e, t]) => { q(id).innerHTML = `<span>${e}</span>${t}`; });
+}
 /* ===== 小道具 ===== */
 const $ = s => document.querySelector(s);
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -805,7 +2038,7 @@ function vnoise(x, s) { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 *
 function fbm(x, s) { return vnoise(x, s) * 0.55 + vnoise(x * 2.1, s + 7) * 0.28 + vnoise(x * 4.3, s + 13) * 0.17; }
 const mix = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
 const css = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
-const fmt = n => Math.round(n).toLocaleString('ja-JP');
+const fmt = n => Math.round(n).toLocaleString(EN ? 'en-US' : 'ja-JP');
 const R_E = 6371, D2R = Math.PI / 180;
 function hav(a, b) { const dLa = (b[0] - a[0]) * D2R, dLo = (b[1] - a[1]) * D2R; const x = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * D2R) * Math.cos(b[0] * D2R) * Math.sin(dLo / 2) ** 2; return 2 * R_E * Math.asin(Math.sqrt(x)); }
 function slerp(a, b, t) {
@@ -817,10 +2050,10 @@ function slerp(a, b, t) {
   return [Math.atan2(z, Math.hypot(x, y)) / D2R, Math.atan2(y, x) / D2R];
 }
 function durText(h) {
-  if (h < 1 / 60) return '1分未満';
-  if (h < 1) return Math.round(h * 60) + '分';
-  if (h < 24) { const m = Math.round((h % 1) * 60); return Math.floor(h) + '時間' + (m ? m + '分' : ''); }
-  const d = Math.floor(h / 24), hh = Math.round(h % 24); return d + '日' + (hh ? hh + '時間' : '');
+  if (h < 1 / 60) return J('1分未満', 'under a minute');
+  if (h < 1) return Math.round(h * 60) + J('分', ' min');
+  if (h < 24) { const m = Math.round((h % 1) * 60); return Math.floor(h) + J('時間', ' h') + (m ? (EN ? ' ' : '') + m + J('分', ' min') : ''); }
+  const d = Math.floor(h / 24), hh = Math.round(h % 24); return d + J('日', d > 1 ? ' days' : ' day') + (hh ? (EN ? ' ' : '') + hh + J('時間', ' h') : '');
 }
 
 /* ===== ルートの組み立て ===== */
@@ -877,6 +2110,7 @@ function findStart(name) {
   }
   return { km: 0, choices: {} };
 }
+const STARTS_G = { '日本': 'Japan', 'アジア': 'Asia', 'ヨーロッパ': 'Europe', 'アメリカ・太平洋': 'Americas & Pacific' };
 const STARTS = [['日本', ['東京', '大阪', '福岡', '札幌']], ['アジア', ['ソウル', '北京', 'ウランバートル', 'サマルカンド', 'イスタンブール']], ['ヨーロッパ', ['モスクワ', 'ウィーン', 'パリ', 'ローマ', 'リスボン']], ['アメリカ・太平洋', ['ニューヨーク', 'マイアミ', 'デンバー', 'ロサンゼルス', 'サンフランシスコ', 'ホノルル']]];
 
 /* ===== 道のり計算 ===== */
@@ -907,24 +2141,24 @@ const PAID = () => Object.keys(LEG).filter(id => LEG[id].paid);
 function buyRoutes(ids) { OWNED = [...new Set([...OWNED, ...ids])]; try { localStorage.setItem('camper-owned', JSON.stringify(OWNED)); } catch (e) { } }
 function showShop(focus, back) {
   const ids = PAID(), left = ids.filter(id => !owns(id));
-  modal(`<h2>🛒 追加ルート</h2><p class="note">いつもの道に、新しい分かれ道が増えます。買ったルートは、分かれ道で選べるようになります。</p>
+  modal(`<h2>🛒 ${J('追加ルート', 'Extra routes')}</h2><p class="note">${J('いつもの道に、新しい分かれ道が増えます。買ったルートは、分かれ道で選べるようになります。', 'New branches are added to your journey. Routes you buy can be chosen at the forks in the road.')}</p>
    ${ids.map(id => { const Lg = LEG[id], has = owns(id); return `<div class="shop ${focus === id ? 'focus' : ''}"><div class="oi">${Lg.icon}</div><b>${Lg.name}</b><p>${Lg.desc}</p>
-     <div class="meta">分かれ道：${FORK_AT[PLAN.findIndex(p => Array.isArray(p) && p.includes(id))]}から・約${fmt(Lg.len)}km・約${durText(Lg.len / st.speed)}</div>
-     ${has ? '<div class="tag pick">✓ 持っています</div>' : `<button class="big" data-buyr="${id}">¥${PRICE} で買う</button>`}</div>`; }).join('')}
-   ${left.length > 1 ? `<button class="big" data-buyr="all">🎁 ぜんぶセット ¥${BUNDLE}（${left.length}ルート）</button>` : ''}
-   <p class="note">※ いまはお試し版です。ボタンを押しても本物のお金はかかりません。</p>
-   <p class="note">👪 子ども向けゲームと共通の「ファミリーパス」（月額・お試し）でも、追加ルートがぜんぶ選べます。</p>
-   ${window.Kakin ? '<button class="big ghost" id="shop-pass">👪 ファミリーパスを見る</button>' : ''}
-   <button class="big ghost" id="shop-close">とじる</button>`);
-  if (window.Kakin) { Kakin.setup({ game: 'camper', lang: () => 'ja', noFull: true, name: { ja: 'キャンピングカー世界一周', en: 'Camper Trip' }, free: null, full: null, onChange: () => showShop(focus, back) }); $('#shop-pass').onclick = () => Kakin.open(); }
+     <div class="meta">${J(`分かれ道：${FORK_AT[PLAN.findIndex(p => Array.isArray(p) && p.includes(id))]}から・約${fmt(Lg.len)}km・約${durText(Lg.len / st.speed)}`, `Fork at ${tr(FORK_AT[PLAN.findIndex(p => Array.isArray(p) && p.includes(id))])} · about ${fmt(Lg.len)} km · about ${durText(Lg.len / st.speed)}`)}</div>
+     ${has ? `<div class="tag pick">✓ ${J('持っています', 'Owned')}</div>` : `<button class="big" data-buyr="${id}">${J(`¥${PRICE} で買う`, `Buy for ¥${PRICE}`)}</button>`}</div>`; }).join('')}
+   ${left.length > 1 ? `<button class="big" data-buyr="all">🎁 ${J(`ぜんぶセット ¥${BUNDLE}（${left.length}ルート）`, `All-routes set ¥${BUNDLE} (${left.length} routes)`)}</button>` : ''}
+   <p class="note">${J('※ いまはお試し版です。ボタンを押しても本物のお金はかかりません。', '* This is a trial version. No real money is charged.')}</p>
+   <p class="note">${J('👪 子ども向けゲームと共通の「ファミリーパス」（月額・お試し）でも、追加ルートがぜんぶ選べます。', '👪 The Family Pass (monthly, trial), shared with our kids\' games, also unlocks all extra routes.')}</p>
+   ${window.Kakin ? `<button class="big ghost" id="shop-pass">👪 ${J('ファミリーパスを見る', 'See the Family Pass')}</button>` : ''}
+   <button class="big ghost" id="shop-close">${J('とじる', 'Close')}</button>`);
+  if (window.Kakin) { Kakin.setup({ game: 'camper', lang: () => LG, noFull: true, name: { ja: 'キャンピングカー世界一周', en: 'Camper Trip' }, free: null, full: null, onChange: () => showShop(focus, back) }); $('#shop-pass').onclick = () => Kakin.open(); }
   $('#shop-close').onclick = () => back ? back() : closeModal();
   document.querySelectorAll('[data-buyr]').forEach(b => b.onclick = () => {
     const want = b.dataset.buyr === 'all' ? left : [b.dataset.buyr];
-    modal(`<h2>お買いもの（お試し）</h2><p>${want.map(id => `${LEG[id].icon} <b>${LEG[id].name}</b>`).join('<br>')}</p><p class="big-num">¥${want.length > 1 ? BUNDLE : PRICE}</p>
-      <p class="note">お試し版なので、本物のお金はかかりません。アプリになったら、ここが本当のお支払いになります。</p>
-      <button class="big" id="buy-ok">買う（お試し）</button><button class="big ghost" id="buy-no">やめる</button>`);
+    modal(`<h2>${J('お買いもの（お試し）', 'Purchase (trial)')}</h2><p>${want.map(id => `${LEG[id].icon} <b>${LEG[id].name}</b>`).join('<br>')}</p><p class="big-num">¥${want.length > 1 ? BUNDLE : PRICE}</p>
+      <p class="note">${J('お試し版なので、本物のお金はかかりません。アプリになったら、ここが本当のお支払いになります。', 'This is a trial, so no real money is charged. In the app, this will be a real payment.')}</p>
+      <button class="big" id="buy-ok">${J('買う（お試し）', 'Buy (trial)')}</button><button class="big ghost" id="buy-no">${J('やめる', 'Cancel')}</button>`);
     $('#buy-no').onclick = () => showShop(focus, back);
-    $('#buy-ok').onclick = () => { buyRoutes(want); toast(`🎉 ${want.map(id => LEG[id].name).join('・')}が選べるようになりました！`, 5000); back ? back() : showShop(focus); };
+    $('#buy-ok').onclick = () => { buyRoutes(want); toast(J(`🎉 ${want.map(id => LEG[id].name).join('・')}が選べるようになりました！`, `🎉 You can now choose: ${want.map(id => LEG[id].name).join(', ')}!`), 5000); back ? back() : showShop(focus); };
   });
 }
 // 距離を進め、通過した町・分かれ道の結果を返す
@@ -1024,6 +2258,7 @@ const WX = {
   71: ['小雪', '🌨'], 73: ['雪', '🌨'], 75: ['大雪', '❄️'], 77: ['雪', '🌨'], 80: ['にわか雨', '🌦'], 81: ['にわか雨', '🌧'], 82: ['はげしいにわか雨', '⛈'],
   85: ['にわか雪', '🌨'], 86: ['はげしいにわか雪', '❄️'], 95: ['かみなり雨', '⛈'], 96: ['ひょうとかみなり', '⛈'], 99: ['ひょうとかみなり', '⛈'],
 };
+if (EN) for (const k in WX) WX[k] = [tr(WX[k][0]), WX[k][1]];
 const RAIN = { 51: .2, 53: .3, 55: .4, 56: .3, 57: .4, 61: .4, 63: .6, 65: .9, 66: .5, 67: .7, 80: .4, 81: .6, 82: .9, 95: .8, 96: .8, 99: .9 };
 const SNOW = { 71: .35, 73: .6, 75: .9, 77: .3, 85: .5, 86: .8 };
 let wx = null, wxBusy = false, geo = null, geoBusy = false;
@@ -1101,6 +2336,7 @@ const LMNAME = {
   'クスコ': 'マチュピチュ', 'ガラパゴス諸島': '火山の島々', 'グアテマラ': 'アグア火山', 'メキシコシティ': '太陽のピラミッド', 'タヒチ': 'タヒチの山', 'オークランド': 'スカイタワー',
   'シドニー': 'オペラハウス', 'ウルル': 'ウルル（エアーズロック）',
 };
+if (EN) for (const k in LMNAME) LMNAME[k] = tr(LMNAME[k]);
 const LMR = { uluru: 55, salt: 45, falls: 35, machu: 40, fjord: 60, christ: 45, opera: 30, fuji: 70, snowpeaks: 60, canyon: 40, buttes: 40, dunes: 40, whitesands: 30, greatwall: 35, volcano: 60, diamondhead: 45 };
 const ALL_LM = []; (function () { const seen = new Set(); for (const id in LEGS) for (const s of LEGS[id].stops) if (s[7] && !seen.has(s[0])) { seen.add(s[0]); ALL_LM.push({ key: s[0], name: LMNAME[s[0]] || s[0], type: s[7] }); } })();
 
@@ -1115,6 +2351,7 @@ const DEX = {
   deer: ['🦌', 'シカ', '森のふちからこちらを見ている'], reindeer: ['🦌', 'トナカイ', '北の森をゆっくり歩く'], kangaroo: ['🦘', 'カンガルー', 'ぴょんぴょん跳ねて道を横切る'], llama: ['🦙', 'リャマ', 'アンデスの高原でもぐもぐ'], horses: ['🐎', '野を走る馬', '草原をかけていく'], camels: ['🐫', 'ラクダのキャラバン', '砂漠をゆっくり歩く'],
   bison: ['🦬', 'バイソン', 'アメリカの大平原の主'], eagle: ['🦅', 'ワシ', '空高く輪をえがく'], balloon: ['🎈', '熱気球', '朝の空にふわり'], train: ['🚆', '並んで走る列車', 'しばらくいっしょに走る'],
 };
+if (EN) for (const k in DEX) DEX[k] = [DEX[k][0], tr(DEX[k][1]), tr(DEX[k][2])];
 
 /* ===== 画面 ===== */
 const cv = $('#cv'), c = cv.getContext('2d');
@@ -1818,7 +3055,7 @@ function found(id, away) {
   const D = DEX[id]; if (!D) return;
   const e = st.dex[id] || (st.dex[id] = { n: 0, first: Date.now(), place: placeName() });
   e.n++; save();
-  if (!away) toast(`${D[0]} ${D[1]}！` + (e.n === 1 ? '<small>図鑑にのりました</small>' : ''));
+  if (!away) toast(`${D[0]} ${D[1]}!` + (e.n === 1 ? `<small>${J('図鑑にのりました', 'Added to your field guide')}</small>` : ''));
 }
 function seaY(hz, d) { return hz + (H * .78 - hz) * d ** 1.3; }
 function drawSeaEvents(hz, sc) {
@@ -1847,7 +3084,7 @@ function drawSeaEvents(hz, sc) {
       case 'albatross': case 'gull': case 'birds': drawBirds(e, p, hz, sc); break;
       case 'nightglow': { const a = Math.sin(p * Math.PI); for (let k = 0; k < 50; k++) { const yy = H * (.6 + h2(k, 1) * .18), xx = ((h2(k, 2) * W * 1.5 - S.off.sea * .8) % (W * 1.5) + W * 1.5) % (W * 1.5) - 30; c.fillStyle = `rgba(110,220,255,${a * (.3 + .5 * Math.abs(Math.sin(S.t * 2 + k)))})`; c.fillRect(xx, yy, 18 + h2(k, 3) * 30, 2); } break; }
       case 'bottle': { const bx = x - p * W * .3, by = y + Math.sin(S.t * 2) * 2 * s; e.hit = [bx, by, 30 * Math.max(1, s)]; c.save(); c.translate(bx, by); c.rotate(.6 + Math.sin(S.t * 1.7) * .2); c.fillStyle = 'rgba(80,170,110,.9)'; c.fillRect(-8 * s, -3 * s, 14 * s, 6 * s); c.fillRect(6 * s, -1.5 * s, 5 * s, 3 * s); c.fillStyle = '#c8a070'; c.fillRect(11 * s, -1.5 * s, 2 * s, 3 * s); c.fillStyle = 'rgba(255,250,230,.9)'; c.fillRect(-5 * s, -1.5 * s, 8 * s, 3 * s); c.restore();
-        if (p < .9) { c.fillStyle = `rgba(255,255,255,${.5 + .5 * Math.sin(S.t * 5)})`; c.font = `700 ${Math.max(11, 11 * sc)}px sans-serif`; c.textAlign = 'center'; c.fillText('タッチ！', bx, by - 14 * Math.max(1, s)); } break; }
+        if (p < .9) { c.fillStyle = `rgba(255,255,255,${.5 + .5 * Math.sin(S.t * 5)})`; c.font = `700 ${Math.max(11, 11 * sc)}px sans-serif`; c.textAlign = 'center'; c.fillText(J('タッチ！', 'Tap!'), bx, by - 14 * Math.max(1, s)); } break; }
       case 'ship': break;
     }
   }
@@ -1896,45 +3133,48 @@ function drawGroundEvents(gy, sc) {
 }
 
 /* ===== 画面の文字 ===== */
-function placeName() { if (!P) return ''; const s = P.seg; return P.segKm < 8 ? s.a.name : s.len - P.segKm < 8 ? s.b.name : `${s.a.name}〜${s.b.name}`; }
+function placeName() { if (!P) return ''; const s = P.seg; return P.segKm < 8 ? tr(s.a.name) : s.len - P.segKm < 8 ? tr(s.b.name) : `${tr(s.a.name)}${J('〜', ' – ')}${tr(s.b.name)}`; }
 function updateHud() {
   if (document.body.classList.contains('full')) setTimeout(fsInfo);
   if (!P) return;
   const s = P.seg, sea = s.mode === 's';
-  $('#place').textContent = st.parked ? `${st.parked}で停車中` : P.segKm < 8 ? `${s.a.name}` : s.len - P.segKm < 8 ? `${s.b.name}に到着` : `${s.a.name} → ${s.b.name}`;
-  $('#addr').textContent = sea ? `⛴ ${s.len > 1500 ? '大型フェリー' : 'フェリー'}で航海中${geo && geo.text ? '・' + geo.text + 'のあたり' : ''}` : (geo && geo.text ? '📍 ' + geo.text : '📍 ' + (P.leg.name || ''));
+  $('#place').textContent = st.parked ? J(`${st.parked}で停車中`, `Parked in ${tr(st.parked)}`) : P.segKm < 8 ? `${tr(s.a.name)}` : s.len - P.segKm < 8 ? J(`${s.b.name}に到着`, `Arriving in ${tr(s.b.name)}`) : `${tr(s.a.name)} → ${tr(s.b.name)}`;
+  $('#addr').textContent = sea ? `⛴ ${J(`${s.len > 1500 ? '大型フェリー' : 'フェリー'}で航海中${geo && geo.text ? '・' + geo.text + 'のあたり' : ''}`, `On a ${s.len > 1500 ? 'big ferry' : 'ferry'}${geo && geo.text ? ' near ' + geo.text : ''}`)}` : (geo && geo.text ? '📍 ' + geo.text : '📍 ' + (P.leg.name || ''));
   const w = wx || fakeWx(P.ll), ld = localDate(), alt = sunAlt(P.ll[0], P.ll[1], nowMs());
   const [wt, we] = WX[w.code] || ['', ''];
   const emoji = (w.code <= 1 && alt < -3) ? '🌙' : we;
-  $('#clock').textContent = `現地 ${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}`;
-  $('#wx').innerHTML = `${emoji} ${Math.round(w.temp)}℃ <small>${wt}${w.real ? '' : '（予想）'}</small>`;
+  $('#clock').textContent = `${J('現地', 'Local')} ${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}`;
+  $('#wx').innerHTML = `${emoji} ${Math.round(w.temp)}℃ <small>${wt}${w.real ? '' : J('（予想）', ' (est.)')}</small>`;
   // 次の町
   const remain = s.len - P.segKm, eta = remain / st.speed;
-  $('#from').textContent = s.a.name; $('#to').textContent = s.b.name;
   $('#bar i').style.width = (P.segKm / s.len * 100).toFixed(2) + '%';
   $('#bar b').textContent = sea ? '🚢' : '🚐';
   $('#bar b').style.left = (P.segKm / s.len * 100).toFixed(2) + '%';
   const pk = $('#park'); pk.hidden = !st.parked; document.body.classList.toggle('parked', !!st.parked && !st.act);
-  const fp = $('#fspark'); if (fp) { const h = st.parked && !st.act ? `<b>🅿️ ${st.parked}で停車中</b><small>町を観光できます</small><span><button class="go1" data-act="sight">🗺 観光する</button><button data-act="go">▶ 出発</button></span>` : ''; if (fp.dataset.h !== h) { fp.dataset.h = h; fp.innerHTML = h; } }
+  const fp = $('#fspark'); if (fp) { const h = st.parked && !st.act ? `<b>🅿️ ${J(`${st.parked}で停車中`, `Parked in ${tr(st.parked)}`)}</b><small>${J('町を観光できます', 'You can go sightseeing')}</small><span><button class="go1" data-act="sight">🗺 ${J('観光する', 'Sightsee')}</button><button data-act="go">▶ ${J('出発', 'Drive on')}</button></span>` : ''; if (fp.dataset.h !== h) { fp.dataset.h = h; fp.innerHTML = h; } }
   if (st.parked) {
-    const html = st.act ? `<div class="pk-msg">👣 ${st.act.e} ${st.act.name}<small>あと${durText(Math.max(0, st.act.end - Date.now()) / 36e5)}でもどります</small></div><button class="pk-b ghost" data-act="back">早めにもどる</button>`
-      : `<div class="pk-msg">🅿️ ${st.parked}で停車中<small>観光できます</small></div><button class="pk-b sight${st.stay && st.stay.city === st.parked && Object.keys(st.stay.done).length ? '' : ' pulse'}" data-act="sight">🗺 観光する</button><button class="pk-b" data-act="go">▶ 出発</button>`;
-    if (pk.dataset.h !== html.replace(/あと.*?で/, '')) { pk.innerHTML = html; pk.dataset.h = html.replace(/あと.*?で/, ''); } else if (st.act) pk.querySelector('small').textContent = `あと${durText(Math.max(0, st.act.end - Date.now()) / 36e5)}でもどります`;
+    const back = () => J(`あと${durText(Math.max(0, st.act.end - Date.now()) / 36e5)}でもどります`, `Back in ${durText(Math.max(0, st.act.end - Date.now()) / 36e5)}`);
+    const html = st.act ? `<div class="pk-msg">👣 ${st.act.e} ${actName(st.act)}<small>${back()}</small></div><button class="pk-b ghost" data-act="back">${J('早めにもどる', 'Come back early')}</button>`
+      : `<div class="pk-msg">🅿️ ${J(`${st.parked}で停車中`, `Parked in ${tr(st.parked)}`)}<small>${J('観光できます', 'Sightseeing available')}</small></div><button class="pk-b sight${st.stay && st.stay.city === st.parked && Object.keys(st.stay.done).length ? '' : ' pulse'}" data-act="sight">🗺 ${J('観光する', 'Sightsee')}</button><button class="pk-b" data-act="go">▶ ${J('出発', 'Drive on')}</button>`;
+    const hk = html.replace(/<small>.*?<\/small>/, '');
+    if (pk.dataset.h !== hk) { pk.innerHTML = html; pk.dataset.h = hk; } else if (st.act) pk.querySelector('small').textContent = back();
   }
-  const stopNote = st.parked ? '' : st.stopMode === 'next' ? '<br><small>🅿️ 次の町で止まります</small>' : st.stopMode === 'every' ? '<br><small>🅿️ 町に着くたびに止まります</small>' : `<br><button class="mini" data-act="stopnext">🅿️ 次の町で止まって観光する</button>`;
-  $('#next').innerHTML = (st.parked ? `次は${(() => { let n = ''; walkStops((stop, km) => { if (km > st.km + 1e-6) { n = stop.name; return false; } }, 400); return n; })()}へ` : remain < 1 ? `<b>まもなく${s.b.name}に到着</b>` : `${s.b.name}まで あと <b>${fmt(remain)}km</b>（約${durText(eta)}）`) + stopNote;
-  $('#total').textContent = fmt(traveled()) + 'km';
-  $('#lap').textContent = (st.laps || 0) + 1 + '周目';
-  $('#spd').textContent = '時速' + st.speed + 'km';
+  const stopNote = st.parked ? '' : st.stopMode === 'next' ? `<br><small>🅿️ ${J('次の町で止まります', 'Stopping at the next town')}</small>` : st.stopMode === 'every' ? `<br><small>🅿️ ${J('町に着くたびに止まります', 'Stopping at every town')}</small>` : `<br><button class="mini" data-act="stopnext">🅿️ ${J('次の町で止まって観光する', 'Stop at the next town to sightsee')}</button>`;
+  const nx = () => { let n = ''; walkStops((stop, km) => { if (km > st.km + 1e-6) { n = stop.name; return false; } }, 400); return n; };
+  $('#next').innerHTML = (st.parked ? J(`次は${nx()}へ`, `Next: ${tr(nx())}`) : remain < 1 ? `<b>${J(`まもなく${s.b.name}に到着`, `Arriving in ${tr(s.b.name)} soon`)}</b>` : J(`${s.b.name}まで あと <b>${fmt(remain)}km</b>（約${durText(eta)}）`, `<b>${fmt(remain)} km</b> to ${tr(s.b.name)} (about ${durText(eta)})`)) + stopNote;
+  $('#total').textContent = fmt(traveled()) + J('km', ' km');
+  $('#lap').textContent = J((st.laps || 0) + 1 + '周目', 'Lap ' + ((st.laps || 0) + 1));
+  $('#spd').textContent = J('時速' + st.speed + 'km', st.speed + ' km/h');
+  $('#from').textContent = tr(s.a.name); $('#to').textContent = tr(s.b.name);
   // 次の名所
   let nl = null; walkStops((stop, km) => { if (km > st.km - 1 && stop.lm && !nl) { nl = { stop, km }; return false; } }, 30);
-  $('#nextlm').innerHTML = nl ? `🏛 次の名所 <b>${LMNAME[nl.stop.name] || nl.stop.name}</b> まで ${fmt(Math.max(0, nl.km - st.km))}km` : '';
+  $('#nextlm').innerHTML = nl ? J(`🏛 次の名所 <b>${LMNAME[nl.stop.name] || nl.stop.name}</b> まで ${fmt(Math.max(0, nl.km - st.km))}km`, `🏛 Next sight: <b>${LMNAME[nl.stop.name] || tr(nl.stop.name)}</b> in ${fmt(Math.max(0, nl.km - st.km))} km`) : '';
   // 分かれ道
   const f = nextFork(), fe = $('#fork');
   if (f) {
     const ch = st.choices[f.key];
     fe.hidden = false;
-    fe.innerHTML = `<span>🔀 ${FORK_AT[f.i]}の分かれ道まで ${fmt(f.start - st.km)}km</span><b>${ch ? 'えらんだ道：' + LEG[ch].name : 'どっちに行く？'}</b>`;
+    fe.innerHTML = `<span>🔀 ${J(`${FORK_AT[f.i]}の分かれ道まで ${fmt(f.start - st.km)}km`, `Fork at ${tr(FORK_AT[f.i])} in ${fmt(f.start - st.km)} km`)}</span><b>${ch ? J('えらんだ道：', 'Your route: ') + LEG[ch].name : J('どっちに行く？', 'Which way?')}</b>`;
     fe.classList.toggle('todo', !ch);
   } else fe.hidden = true;
   updateSill(); $('#win').classList.toggle('sea', sea); $('#winwrap').classList.toggle('sea', sea);
@@ -1957,18 +3197,18 @@ function updateSill() {
   if (lodge && (hr >= 19 || hr < 5)) items = LODGE_SILL[lodge].slice();
   const tips = items.map(e => { const d = SILL_DESC[e]; return d ? `<b>${e} ${d[0]}</b><small>${d[1]}</small>` : `<b>${e}</b>`; });
   // 朝・昼・夜ごはんは、近くの町の名物にする
-  const meal = { '🥐': '朝ごはん', '🍙': 'お昼ごはん', '🍜': '夜ごはん' };
+  const meal = { '🥐': J('朝ごはん', 'breakfast'), '🍙': J('お昼ごはん', 'lunch'), '🍜': J('夜ごはん', 'dinner') };
   if (P && P.seg && P.seg.mode !== 's') {
     const s0 = P.seg, stop = st.parked || P.segKm >= s0.len / 2 ? s0.b : s0.a, fd = sightOf(stop.name, stop).food;
     items.forEach((e, i) => {
       if (!meal[e] || !fd || !fd.length) return; const f = fd[(hr + i) % fd.length];
-      items[i] = f[0]; tips[i] = `<b>${f[0]} ${f[1]}</b><small>🍽 ${stop.name}の名物で${meal[e]}</small><small>${f[2]}</small>`;
+      items[i] = f[0]; tips[i] = `<b>${f[0]} ${tr(f[1])}</b><small>🍽 ${J(`${stop.name}の名物で${meal[e]}`, `A ${tr(stop.name)} specialty for ${meal[e]}`)}</small><small>${tr(f[2])}</small>`;
     });
   }
   (st.shelf || []).forEach((k, i) => {
     const g = st.gifts && st.gifts[k]; if (!g) return; items[i + 1] = g.e;
-    const dt = g.at ? new Date(g.at) : null, when = dt ? `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日` : '';
-    tips[i + 1] = `${phBox(giftQ(g.name), giftQ2(g.name), 'tip')}<b>${g.e} ${g.name}</b><small>🎁 ${g.city}で観光したときに買ったおみやげ${when ? `<br>📅 ${when}に手に入れました` : ''}${g.from && g.from.length ? `<br>👣 このとき行った所：${g.from.join('、')}` : ''}</small>${g.desc ? `<small>${g.desc}</small>` : ''}`;
+    const dt = g.at ? new Date(g.at) : null, when = dt ? (EN ? dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日`) : '';
+    tips[i + 1] = `${phBox(giftQ(g.name), giftQ2(g.name), 'tip')}<b>${g.e} ${tr(g.name)}</b><small>🎁 ${J(`${g.city}で観光したときに買ったおみやげ`, `A souvenir bought while sightseeing in ${tr(g.city)}`)}${when ? `<br>📅 ${J(`${when}に手に入れました`, `Got it on ${when}`)}` : ''}${g.from && g.from.length ? `<br>👣 ${J('このとき行った所：', 'Places visited: ')}${g.from.map(tr).join(J('、', ', '))}` : ''}</small>${g.desc ? `<small>${tr(g.desc)}</small>` : ''}`;
   });
   SILL_TIPS = tips;
   const key = items.join('') + tips.join('');
@@ -1979,7 +3219,14 @@ function updateSill() {
 }
 // 窓辺の小物の説明（マウスを合わせる・タップする）
 let SILL_TIPS = [];
-const SILL_DESC = {
+const SILL_DESC = EN ? {
+  '☕': ['Coffee', 'For a morning or afternoon break'], '🍵': ['Hot tea', 'A warm cup on a cold day (5°C or below)'], '🥤': ['Cold drink', 'Gulped down on a hot day (28°C or above)'], '🧃': ['Juice', 'For a hot afternoon'],
+  '🥐': ['Croissant', 'Breakfast on the road'], '🪴': ['House plant', 'A little potted plant traveling with us'], '🗺': ['Road map', 'Checking today\'s route'], '🧭': ['Compass', 'Which way is north?'],
+  '🍙': ['Rice ball', 'Lunch'], '🍪': ['Cookie', 'Afternoon snack'], '📖': ['Travel book', 'A lazy afternoon of reading'], '📷': ['Camera', 'Ready for the sunset'], '🍊': ['Mandarin orange', 'Evening snack'],
+  '🍜': ['Ramen', 'Dinner'], '🕯': ['Candle', 'Gently lighting the van at night'], '💤': ['Sleeping', 'Quiet late at night'], '🧸': ['Teddy bear', 'A travel buddy'],
+  '☂️': ['Umbrella', 'It\'s raining here now'], '🧤': ['Gloves', 'It\'s below 0°C here now'],
+  '🔥': ['Campfire', 'Staying at a campground tonight'], '🏕': ['Tent', 'A night at the campground'], '🌌': ['Starry sky', 'The sky seen from the campground'], '🛏': ['Bed', 'Staying at a hotel tonight'], '🛁': ['Bath', 'Relaxing at the hotel'],
+} : {
   '☕': ['コーヒー', '朝や午後のひと休みに'], '🍵': ['あたたかいお茶', '寒い日（5℃以下）の一杯'], '🥤': ['つめたいジュース', '暑い日（28℃以上）にごくごく'], '🧃': ['ジュース', '暑いお昼に'],
   '🥐': ['クロワッサン', '旅の朝ごはん'], '🪴': ['観葉植物', 'いっしょに旅する小さな鉢植え'], '🗺': ['道路地図', '今日走る道をたしかめる'], '🧭': ['コンパス', 'どっちが北かな？'],
   '🍙': ['おにぎり', 'お昼ごはん'], '🍪': ['クッキー', '午後のおやつ'], '📖': ['旅の本', '午後はのんびり読書'], '📷': ['カメラ', '夕焼けをとる準備'], '🍊': ['みかん', '夕方のおやつ'],
@@ -2002,7 +3249,7 @@ const SILL_DESC = {
   document.addEventListener('click', e => { if (pinned && !e.target.closest('#sill')) hide(); });
 })();
 let POLES = true; try { POLES = localStorage.getItem('camper-poles') !== 'off'; } catch (e) { }
-const FRAMES = [['wood', '木のまど'], ['white', '白いカフェ'], ['retro', 'レトロ'], ['log', 'ログハウス'], ['round', 'まるまど'], ['shoji', '和風（障子）']];
+const FRAMES = EN ? [['wood', 'Wooden'], ['white', 'White café'], ['retro', 'Retro'], ['log', 'Log cabin'], ['round', 'Round'], ['shoji', 'Japanese (shoji)']] : [['wood', '木のまど'], ['white', '白いカフェ'], ['retro', 'レトロ'], ['log', 'ログハウス'], ['round', 'まるまど'], ['shoji', '和風（障子）']];
 function setFrame(f) { const ww = $('#winwrap'); FRAMES.forEach(([k]) => ww.classList.toggle('f-' + k, k === f)); try { localStorage.setItem('camper-frame', f); } catch (e) { } }
 try { setFrame(localStorage.getItem('camper-frame') || 'wood'); } catch (e) { setFrame('wood'); }
 function walkStops(fn, maxLegs) {
@@ -2025,43 +3272,47 @@ function modal(html, cls = '') {
 function closeModal() { $('#modal').hidden = true; }
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal' || e.target.closest('[data-close]')) closeModal(); });
 
-const SPEEDS = [[20, 'のんびり', '自転車くらい'], [60, 'ふつう', '一般道くらい'], [100, 'はやい', '高速道路くらい'], [300, 'びゅーん', '新幹線くらい']];
-function speedButtons() { return `<div class="speeds">${SPEEDS.map(([v, n, d]) => `<button data-speed="${v}" class="${st && st.speed === v ? 'on' : ''}"><b>${n}</b><span>時速${v}km</span><small>${d}</small></button>`).join('')}</div>`; }
+const SPEEDS = EN ? [[20, 'Leisurely', 'Like a bicycle'], [60, 'Normal', 'Like a local road'], [100, 'Fast', 'Like a highway'], [300, 'Zoom!', 'Like a bullet train']] : [[20, 'のんびり', '自転車くらい'], [60, 'ふつう', '一般道くらい'], [100, 'はやい', '高速道路くらい'], [300, 'びゅーん', '新幹線くらい']];
+function speedButtons() { return `<div class="speeds">${SPEEDS.map(([v, n, d]) => `<button data-speed="${v}" class="${st && st.speed === v ? 'on' : ''}"><b>${n}</b><span>${J(`時速${v}km`, `${v} km/h`)}</span><small>${d}</small></button>`).join('')}</div>`; }
+function actName(a) { if (!EN || !a.item) return a.name; const n = tr(a.item[1]); return a.kind === 'spot' ? `Sightseeing: ${n}` : a.kind === 'food' ? `Out eating ${n}` : `Shopping for ${n}`; }
 const traveled = () => st.km - (st.startKm || 0);
 function roughLap() { let km = 0; PLAN.forEach(p => { km += LEG[typeof p === 'string' ? p : p[0]].len; }); return km; }
 function showIntro() {
-  modal(`<h2>🚐 キャンピングカーで世界一周</h2>
-  <p>キャンピングカーで世界をぐるっと一周して、出発した町にもどってきます。</p>
+  modal(`<div class="langsw"><button data-lang="ja" class="${EN ? '' : 'on'}">日本語</button><button data-lang="en" class="${EN ? 'on' : ''}">English</button></div>
+  <h2>🚐 ${J('キャンピングカーで世界一周', 'Around the World by Camper Van')}</h2>
+  ${EN ? `<p>Drive all the way around the world in a camper van and come back to the town where you started.</p>
+  <ul class="dots"><li>The van keeps driving even while the app is closed.</li><li>Next time you open it, you'll see the <b>view out the window</b> from wherever you've reached.</li><li>The scenery matches that place's <b>real local time, weather and temperature</b>.</li><li>You cross the sea by <b>taking the van onto a ferry</b>.</li><li>At <b>forks in the road</b>, you choose which way to go.</li></ul>
+  <h3>Where do you want to start?</h3>` : `<p>キャンピングカーで世界をぐるっと一周して、出発した町にもどってきます。</p>
   <ul class="dots"><li>アプリを閉じているあいだも、車は走りつづけます。</li><li>次に開くと、進んだぶんだけ先の場所の<b>車窓の景色</b>が見られます。</li><li>景色はその場所の<b>いまの時刻・天気・気温</b>に合わせて変わります。</li><li>海は<b>フェリーにキャンピングカーごと乗って</b>わたります。</li><li>とちゅうの<b>分かれ道</b>では、どちらの道を行くか選べます。</li></ul>
-  <h3>どこから出発する？</h3>
-  ${STARTS.map(([g, ns]) => `<div class="sgroup"><small>${g}</small><div class="chips">${ns.map(n => `<button class="chip pick" data-from="${n}">${n}</button>`).join('')}</div></div>`).join('')}
+  <h3>どこから出発する？</h3>`}
+  ${STARTS.map(([g, ns]) => `<div class="sgroup"><small>${J(g, STARTS_G[g])}</small><div class="chips">${ns.map(n => `<button class="chip pick" data-from="${n}">${tr(n)}</button>`).join('')}</div></div>`).join('')}
   <p class="note" id="fromnote"></p>
-  <h3>どのくらいの速さで走る？</h3>${speedButtons()}
+  <h3>${J('どのくらいの速さで走る？', 'How fast do you want to drive?')}</h3>${speedButtons()}
   <p class="note" id="lapnote"></p>
-  <button class="big" id="go">出発する</button>`, 'intro');
+  <button class="big" id="go">${J('出発する', 'Start the trip')}</button>`, 'intro');
   let pick = 60, from = '東京';
   const updFrom = () => {
     document.querySelectorAll('[data-from]').forEach(b => b.classList.toggle('on', b.dataset.from === from));
-    $('#fromnote').innerHTML = `📍 <b>${from}</b>：${FACTS[from] || ''}`.replace('世界一周のスタートでゴール！', '');
+    $('#fromnote').innerHTML = `📍 <b>${tr(from)}</b>${J('：', ': ')}${FACTS[from] || ''}`.replace('世界一周のスタートでゴール！', '').replace(' The start and finish of your trip around the world!', '');
     const f = findStart(from); st.km = f.km; st.choices = f.choices; P = posAt(st.km); S.tiles.clear(); S.lmSeen = {}; S.rp = null; wx = null; geo = null; refreshWx(true); refreshGeo(true); updateHud();
   };
   document.querySelectorAll('[data-from]').forEach(b => b.onclick = () => { from = b.dataset.from; updFrom(); }); updFrom();
-  const upd = () => { document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('on', +b.dataset.speed === pick)); $('#lapnote').textContent = `世界一周 約${fmt(roughLap())}km。この速さだと約${Math.round(roughLap() / pick / 24)}日で一周します。`; };
+  const upd = () => { document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('on', +b.dataset.speed === pick)); $('#lapnote').textContent = J(`世界一周 約${fmt(roughLap())}km。この速さだと約${Math.round(roughLap() / pick / 24)}日で一周します。`, `Around the world is about ${fmt(roughLap())} km. At this speed it takes about ${Math.round(roughLap() / pick / 24)} days.`); };
   document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { pick = +b.dataset.speed; upd(); }); upd();
-  $('#go').onclick = () => { S.lmSeen = {}; st = newState(pick, from); save(); closeModal(); startTrip(); toast(`🚐 ${from}を出発！ 世界一周の旅がはじまりました`); };
+  $('#go').onclick = () => { S.lmSeen = {}; st = newState(pick, from); save(); closeModal(); startTrip(); toast(J(`🚐 ${from}を出発！ 世界一周の旅がはじまりました`, `🚐 Leaving ${tr(from)}! Your trip around the world has begun`)); };
 }
 function showWelcome(hours, km, res, sights) {
-  const towns = res.passed.map(p => `<span class="chip">${p.sea ? '⚓' : '📍'} ${p.name}</span>`).join('');
-  const forks = res.forks.map(f => `<p>🔀 ${f.at}の分かれ道で、運転手が「<b>${LEG[f.id].name}</b>」を選びました。</p>`).join('');
+  const towns = res.passed.map(p => `<span class="chip">${p.sea ? '⚓' : '📍'} ${tr(p.name)}</span>`).join('');
+  const forks = res.forks.map(f => `<p>🔀 ${J(`${f.at}の分かれ道で、運転手が「<b>${LEG[f.id].name}</b>」を選びました。`, `At the fork in ${tr(f.at)}, the driver chose <b>${LEG[f.id].name}</b>.`)}</p>`).join('');
   const sg = Object.entries(sights).map(([id, n]) => `<span class="chip">${DEX[id][0]} ${DEX[id][1]}${n > 1 ? ' ×' + n : ''}</span>`).join('');
-  modal(`<h2>おかえりなさい！</h2>
-   <p class="big-num">前回から <b>${durText(hours)}</b><br>キャンピングカーは <b>${fmt(km)}km</b> 進みました</p>
-   ${towns ? `<h3>通った町（${res.passed.length}）</h3><div class="chips">${res.passed.length > 30 ? res.passed.slice(-30).map(p => `<span class="chip">${p.name}</span>`).join('') : towns}</div>` : ''}
+  modal(`<h2>${J('おかえりなさい！', 'Welcome back!')}</h2>
+   <p class="big-num">${J(`前回から <b>${durText(hours)}</b><br>キャンピングカーは <b>${fmt(km)}km</b> 進みました`, `In the <b>${durText(hours)}</b> since your last visit,<br>the van drove <b>${fmt(km)} km</b>`)}</p>
+   ${towns ? `<h3>${J('通った町', 'Towns passed')} (${res.passed.length})</h3><div class="chips">${res.passed.length > 30 ? res.passed.slice(-30).map(p => `<span class="chip">${tr(p.name)}</span>`).join('') : towns}</div>` : ''}
    ${forks}
-   ${sg ? `<h3>そのあいだに見たもの</h3><div class="chips">${sg}</div>` : ''}
-   ${st.parked ? `<p>🅿️ <b>${st.parked}</b>に着いて、停車しています。（${durText((Date.now() - (st.parkedAt || Date.now())) / 36e5)}前に到着）</p><button class="big" id="w-go">▶ 出発する</button>` : `<p>いまは <b>${placeName()}</b> ${P.seg.mode === 's' ? 'の海の上' : 'のあたり'}です。</p>`}
-   ${Date.now() - (st.backupAt || st.started) > 7 * 864e5 ? '<p class="note">💾 しばらく旅を保存していません。<button class="mini" id="w-bk">引き継ぎコードを作る</button></p>' : ''}
-   <button class="big ${st.parked ? 'ghost' : ''}" data-close>景色を見る</button>`);
+   ${sg ? `<h3>${J('そのあいだに見たもの', 'What you saw along the way')}</h3><div class="chips">${sg}</div>` : ''}
+   ${st.parked ? `<p>🅿️ ${J(`<b>${st.parked}</b>に着いて、停車しています。（${durText((Date.now() - (st.parkedAt || Date.now())) / 36e5)}前に到着）`, `Arrived in <b>${tr(st.parked)}</b> and parked (${durText((Date.now() - (st.parkedAt || Date.now())) / 36e5)} ago).`)}</p><button class="big" id="w-go">▶ ${J('出発する', 'Drive on')}</button>` : `<p>${J(`いまは <b>${placeName()}</b> ${P.seg.mode === 's' ? 'の海の上' : 'のあたり'}です。`, `You're now ${P.seg.mode === 's' ? 'at sea between' : 'around'} <b>${placeName()}</b>.`)}</p>`}
+   ${Date.now() - (st.backupAt || st.started) > 7 * 864e5 ? `<p class="note">💾 ${J('しばらく旅を保存していません。', 'You haven\'t saved your trip for a while.')}<button class="mini" id="w-bk">${J('引き継ぎコードを作る', 'Make a transfer code')}</button></p>` : ''}
+   <button class="big ${st.parked ? 'ghost' : ''}" data-close>${J('景色を見る', 'Enjoy the view')}</button>`);
   const wb = $('#w-bk'); if (wb) wb.onclick = showBackup;
   const g = $('#w-go'); if (g) g.onclick = () => { depart(); closeModal(); };
 }
@@ -2086,37 +3337,38 @@ function awaySights(fromKm, toKm) {
 function seasonHints(id) {
   const m = new Date().getMonth() + 1, out = [];
   const W = m === 12 || m <= 2, Sm = m >= 6 && m <= 8;
-  if (id === 'L1a') out.push(Sm ? '🔥 夏の砂漠はとても暑い' : W ? '🧣 砂漠の冬は朝晩冷えこむ' : '🌤 シルクロードは旅しやすい季節');
-  if (id === 'L1b') out.push(m >= 11 || m <= 3 ? '❄️ マイナス30℃にもなる、こおった世界' : '🌿 草原が緑いっぱいの季節');
-  if (id === 'L2a') out.push(Sm ? '🏖 地中海は海水浴の季節' : '🍋 おだやかな地中海');
-  if (id === 'L2b') out.push(m >= 11 || m <= 4 ? '⛷ アルプスは雪景色' : '🐄 アルプスの緑の牧場');
-  if (id === 'L4a') { if (m >= 4 && m <= 10) out.push('🐋 アゾレスはクジラの季節'); if (m >= 9 && m <= 11) out.push('🍁 アメリカの紅葉'); }
-  if (id === 'L4b') { out.push(m >= 6 && m <= 11 ? '🌀 カリブ海はハリケーンの季節かも' : '☀️ カリブ海のベストシーズン'); if (m === 10) out.push('🎈 アルバカーキで気球祭り'); }
-  if (id === 'L6a') out.push(m === 12 || m <= 4 ? '🐋 ハワイにザトウクジラが来る季節' : '🌺 いつでも暖かい南の島');
-  if (id === 'L2c') out.push(m >= 9 || m <= 3 ? '🌌 夜が長く、オーロラのチャンス大' : '☀️ 夜も明るい白夜の季節');
-  if (id === 'L4c') out.push(m >= 12 || m <= 3 ? '🪞 ウユニは雨季。天空の鏡が見られるかも' : '🦙 アンデスは乾いた晴れの季節');
-  if (id === 'L6c') out.push(m >= 11 || m <= 3 ? '🏖 南半球は夏まっさかり' : '🐋 オーストラリアにクジラが来る季節');
-  if (id === 'L6b') out.push(m >= 9 || m <= 3 ? '🌌 夜が長く、オーロラのチャンス' : '🦦 すずしい夏の北の海');
+  if (id === 'L1a') out.push(Sm ? J('🔥 夏の砂漠はとても暑い', '🔥 The desert is very hot in summer') : W ? J('🧣 砂漠の冬は朝晩冷えこむ', '🧣 Desert winter mornings and nights are cold') : J('🌤 シルクロードは旅しやすい季節', '🌤 A pleasant season for the Silk Road'));
+  if (id === 'L1b') out.push(m >= 11 || m <= 3 ? J('❄️ マイナス30℃にもなる、こおった世界', '❄️ A frozen world, down to −30°C') : J('🌿 草原が緑いっぱいの季節', '🌿 The steppe is lush and green'));
+  if (id === 'L2a') out.push(Sm ? J('🏖 地中海は海水浴の季節', '🏖 Beach season on the Mediterranean') : J('🍋 おだやかな地中海', '🍋 The calm Mediterranean'));
+  if (id === 'L2b') out.push(m >= 11 || m <= 4 ? J('⛷ アルプスは雪景色', '⛷ The Alps are snowy') : J('🐄 アルプスの緑の牧場', '🐄 Green Alpine pastures'));
+  if (id === 'L4a') { if (m >= 4 && m <= 10) out.push(J('🐋 アゾレスはクジラの季節', '🐋 Whale season in the Azores')); if (m >= 9 && m <= 11) out.push(J('🍁 アメリカの紅葉', '🍁 Fall colors in America')); }
+  if (id === 'L4b') { out.push(m >= 6 && m <= 11 ? J('🌀 カリブ海はハリケーンの季節かも', '🌀 Possibly hurricane season in the Caribbean') : J('☀️ カリブ海のベストシーズン', '☀️ Best season for the Caribbean')); if (m === 10) out.push(J('🎈 アルバカーキで気球祭り', '🎈 Balloon fiesta in Albuquerque')); }
+  if (id === 'L6a') out.push(m === 12 || m <= 4 ? J('🐋 ハワイにザトウクジラが来る季節', '🐋 Humpback whales visit Hawaii now') : J('🌺 いつでも暖かい南の島', '🌺 Tropical islands, warm all year'));
+  if (id === 'L2c') out.push(m >= 9 || m <= 3 ? J('🌌 夜が長く、オーロラのチャンス大', '🌌 Long nights, great chance of northern lights') : J('☀️ 夜も明るい白夜の季節', '☀️ Midnight sun season'));
+  if (id === 'L4c') out.push(m >= 12 || m <= 3 ? J('🪞 ウユニは雨季。天空の鏡が見られるかも', '🪞 Rainy season at Uyuni — maybe the sky mirror') : J('🦙 アンデスは乾いた晴れの季節', '🦙 Dry, sunny season in the Andes'));
+  if (id === 'L6c') out.push(m >= 11 || m <= 3 ? J('🏖 南半球は夏まっさかり', '🏖 Midsummer in the Southern Hemisphere') : J('🐋 オーストラリアにクジラが来る季節', '🐋 Whales visit Australia now'));
+  if (id === 'L6b') out.push(m >= 9 || m <= 3 ? J('🌌 夜が長く、オーロラのチャンス', '🌌 Long nights, a chance of northern lights') : J('🦦 すずしい夏の北の海', '🦦 The cool northern sea in summer'));
   return out;
 }
 async function showFork() {
   const f = nextFork(); if (!f) return;
   const html = () => {
     const ch = st.choices[f.key];
-    return `<h2>🔀 ${FORK_AT[f.i]}の分かれ道</h2><p>あと <b>${fmt(f.start - st.km)}km</b>（約${durText((f.start - st.km) / st.speed)}）で分かれ道に着きます。どっちの道を行く？<br><small>決めないまま着いたら、運転手のおまかせになります。着くまでは何度でも変えられます。</small></p>
+    return EN ? `<h2>🔀 The fork at ${tr(FORK_AT[f.i])}</h2><p>You'll reach the fork in <b>${fmt(f.start - st.km)} km</b> (about ${durText((f.start - st.km) / st.speed)}). Which way will you go?<br><small>If you don't choose before arriving, the driver will decide. You can change your mind as often as you like until then.</small></p>` + body() : `<h2>🔀 ${FORK_AT[f.i]}の分かれ道</h2><p>あと <b>${fmt(f.start - st.km)}km</b>（約${durText((f.start - st.km) / st.speed)}）で分かれ道に着きます。どっちの道を行く？<br><small>決めないまま着いたら、運転手のおまかせになります。着くまでは何度でも変えられます。</small></p>` + body();
+    function body() { return `
     <div class="opts">${f.options.map(id => { const Lg = LEG[id]; const w = forkWx[id]; const lk = !owns(id); return `<button class="opt ${ch === id ? 'on' : ''} ${lk ? 'locked' : ''}" ${lk ? `data-buy="${id}"` : `data-leg="${id}"`}>
-      ${lk ? `<div class="tag lock">🔒 追加ルート ¥${PRICE}</div>` : Lg.paid ? '<div class="tag soft">⭐ 追加ルート</div>' : ''}
+      ${lk ? `<div class="tag lock">🔒 ${J('追加ルート', 'Extra route')} ¥${PRICE}</div>` : Lg.paid ? `<div class="tag soft">⭐ ${J('追加ルート', 'Extra route')}</div>` : ''}
       <div class="oi">${Lg.icon}</div><b>${Lg.name}</b><p>${Lg.desc}</p>
-      <div class="meta">約${fmt(Lg.len)}km・約${durText(Lg.len / st.speed)}</div>
-      <div class="meta wx">${w ? `${Lg.keyName}のいま：${(WX[w.code] || ['', ''])[1]} ${Math.round(w.temp)}℃ ${(WX[w.code] || [''])[0]}` : `${Lg.keyName}の天気を調べています…`}</div>
-      ${w && w.best ? '<div class="tag">☀️ 晴れているのはこっち</div>' : ''}
+      <div class="meta">${J(`約${fmt(Lg.len)}km・約${durText(Lg.len / st.speed)}`, `About ${fmt(Lg.len)} km · about ${durText(Lg.len / st.speed)}`)}</div>
+      <div class="meta wx">${w ? `${J(`${Lg.keyName}のいま：`, `${Lg.keyName} now: `)}${(WX[w.code] || ['', ''])[1]} ${Math.round(w.temp)}℃ ${(WX[w.code] || [''])[0]}` : J(`${Lg.keyName}の天気を調べています…`, `Checking the weather in ${Lg.keyName}…`)}</div>
+      ${w && w.best ? `<div class="tag">☀️ ${J('晴れているのはこっち', 'Sunnier this way')}</div>` : ''}
       ${seasonHints(id).map(t => `<div class="tag soft">${t}</div>`).join('')}
-      ${ch === id ? '<div class="tag pick">✓ この道に決定</div>' : ''}
+      ${ch === id ? `<div class="tag pick">✓ ${J('この道に決定', 'Route chosen')}</div>` : ''}
     </button>`; }).join('')}</div>
-    <button class="big ghost" data-close>とじる</button>`;
+    <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`; }
   };
   const bind = () => { document.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => showShop(b.dataset.buy, showFork)); bind2(); };
-  const bind2 = () => document.querySelectorAll('[data-leg]').forEach(b => b.onclick = () => { st.choices[f.key] = b.dataset.leg; save(); $('#sheet').innerHTML = html(); bind(); updateHud(); toast(`🔀 ${FORK_AT[f.i]}から「${LEG[b.dataset.leg].name}」へ行きます`); });
+  const bind2 = () => document.querySelectorAll('[data-leg]').forEach(b => b.onclick = () => { st.choices[f.key] = b.dataset.leg; save(); $('#sheet').innerHTML = html(); bind(); updateHud(); toast(J(`🔀 ${FORK_AT[f.i]}から「${LEG[b.dataset.leg].name}」へ行きます`, `🔀 From ${tr(FORK_AT[f.i])} you'll take "${LEG[b.dataset.leg].name}"`)); });
   modal(html(), 'fork'); bind();
   if (!f.options.every(id => forkWx[id] && Date.now() - forkWx[id].at < 30 * 60e3)) {
     await Promise.all(f.options.map(async id => { try { forkWx[id] = await fetchWx(LEG[id].key); } catch (e) { forkWx[id] = fakeWx(LEG[id].key); } }));
@@ -2183,7 +3435,7 @@ function routeSets() {
   return { done, ahead, alt, all };
 }
 // 地図の拡大段階：[横はば（地図の単位。1度=2）, 名前]
-const MAPZ = [[720, '世界全体'], [240, '大陸'], [90, '地方'], [36, 'ちかく'], [14, 'すぐそば']];
+const MAPZ = EN ? [[720, 'World'], [240, 'Continent'], [90, 'Region'], [36, 'Nearby'], [14, 'Close up']] : [[720, '世界全体'], [240, '大陸'], [90, '地方'], [36, 'ちかく'], [14, 'すぐそば']];
 function showMap(zoom, ctr, w) {
   const { done, ahead, alt, all } = routeSets();
   const me = prj(P.ll);
@@ -2195,13 +3447,13 @@ function showMap(zoom, ctr, w) {
   const vb = `${(c0[0] - zw / 2).toFixed(2)} ${clamp(c0[1] - zh / 2, -zh / 2, 360 - zh / 2).toFixed(2)} ${zw} ${zh}`;
   const lab = zw <= 100, dr = Math.min(zw / 130, 1.6), mr = Math.min(zw / 56, 5), fs = zw / 34;
   const cities = new Map(); for (const id in LEG) for (const s of LEG[id].segs) cities.set(s.b.name, s.b.ll);
-  const dots = [...cities].map(([n, ll]) => { const p = prj(ll); return `<circle cx="${p[0]}" cy="${p[1]}" r="${dr}" class="${st.stamps[n] ? 'v' : 'u'}"/>` + (lab ? `<text x="${p[0] + dr * 1.6}" y="${p[1] - dr * 1.2}" style="font-size:${fs}px">${n}</text>` : ''); }).join('');
-  modal(`<h2>🗺 旅の地図</h2><div class="mapzoom"><button data-z="${zoom - 1}" ${zoom ? '' : 'disabled'} aria-label="縮小">−</button><span>${MAPZ[zoom][1]}</span><button data-z="${zoom + 1}" ${zoom < MAPZ.length - 1 ? '' : 'disabled'} aria-label="拡大">＋</button><button data-home aria-label="現在地へ" class="home">📍</button></div>
+  const dots = [...cities].map(([n, ll]) => { const p = prj(ll); return `<circle cx="${p[0]}" cy="${p[1]}" r="${dr}" class="${st.stamps[n] ? 'v' : 'u'}"/>` + (lab ? `<text x="${p[0] + dr * 1.6}" y="${p[1] - dr * 1.2}" style="font-size:${fs}px">${tr(n)}</text>` : ''); }).join('');
+  modal(`<h2>🗺 ${J('旅の地図', 'Trip map')}</h2><div class="mapzoom"><button data-z="${zoom - 1}" ${zoom ? '' : 'disabled'} aria-label="${J('縮小', 'Zoom out')}">−</button><span>${MAPZ[zoom][1]}</span><button data-z="${zoom + 1}" ${zoom < MAPZ.length - 1 ? '' : 'disabled'} aria-label="${J('拡大', 'Zoom in')}">＋</button><button data-home aria-label="${J('現在地へ', 'Go to current location')}" class="home">📍</button></div>
   <svg class="map" viewBox="${vb}" preserveAspectRatio="xMidYMid meet"><rect x="-400" y="-400" width="1600" height="1200" class="sea"/><path d="${landFor(zw)}" data-lk="${landKey(zw)}" class="land"/>
   <path d="${pathFor(all)}" class="r-all"/><path d="${pathFor(alt)}" class="r-alt"/><path d="${pathFor(ahead)}" class="r-ahead"/><path d="${pathFor(done)}" class="r-done"/>
   ${dots}<circle cx="${me[0]}" cy="${me[1]}" r="${mr}" class="me"/><circle cx="${me[0]}" cy="${me[1]}" r="${mr}" class="me2"/></svg>
-  <div class="legend"><span><i class="l-done"></i>通ってきた道</span><span><i class="l-ahead"></i>これから</span><span><i class="l-alt"></i>えらばなかった道</span></div>
-  <button class="big ghost" data-close>とじる</button>`, 'mapm');
+  <div class="legend"><span><i class="l-done"></i>${J('通ってきた道', 'Route so far')}</span><span><i class="l-ahead"></i>${J('これから', 'Ahead')}</span><span><i class="l-alt"></i>${J('えらばなかった道', 'Routes not taken')}</span></div>
+  <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'mapm');
   // 指でなぞって動かす・2本指でピンチして拡大縮小（ホイールでも）
   const svg = $('#sheet svg.map'), pts = new Map(); let drag = null, pinch = null, pinched = false, moved = !!ctr, wheelT = 0;
   const getVB = () => svg.getAttribute('viewBox').split(' ').map(Number);
@@ -2244,26 +3496,40 @@ function showMap(zoom, ctr, w) {
 }
 /* ----- 記録 ----- */
 function showRecord(tab = 'dex') {
-  const tabs = [['dex', '📖 図鑑'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['spot', '🗺 観光'], ['food', '🍽 グルメ'], ['gift', '🎁 おみやげ'], ['words', '💬 ことば'], ['data', '📊 記録']];
+  const tabs = EN ? [['dex', '📖 Wildlife'], ['lm', '🏛 Sights'], ['stamp', '📍 Towns'], ['spot', '🗺 Visits'], ['food', '🍽 Food'], ['gift', '🎁 Souvenirs'], ['words', '💬 Words'], ['data', '📊 Stats']] : [['dex', '📖 図鑑'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['spot', '🗺 観光'], ['food', '🍽 グルメ'], ['gift', '🎁 おみやげ'], ['words', '💬 ことば'], ['data', '📊 記録']];
   let body = '';
-  if (tab === 'dex') { const ids = Object.keys(DEX); body = `<p class="note">${Object.keys(st.dex).length} / ${ids.length} 種類を見つけました</p><div class="grid">${ids.map(id => { const e = st.dex[id], D = DEX[id]; return e ? `<div class="card"><div class="em">${D[0]}</div><b>${D[1]}</b><small>${D[2]}</small><small class="m">${e.n}回・はじめて：${e.place || ''}</small></div>` : `<div class="card no"><div class="em">？</div><b>？？？</b></div>`; }).join('')}</div>`; }
-  if (tab === 'lm') { body = `<p class="note">窓から見えた名所 ${ALL_LM.filter(l => st.lm[l.key]).length} / ${ALL_LM.length}<br><small>アプリを開いているときに、近くを通ると記録されます</small></p><div class="list">${ALL_LM.map(l => `<div class="${st.lm[l.key] ? '' : 'no'}">${st.lm[l.key] ? '✅' : '⬜'} ${st.lm[l.key] ? l.name : '？？？'}<small>${l.key}</small></div>`).join('')}</div>`; }
-  if (tab === 'stamp') { const names = new Set(); for (const id in LEGS) for (const s of LEGS[id].stops) names.add(s[0]); const arr = [...names]; body = `<p class="note">通った町 ${arr.filter(n => st.stamps[n]).length} / ${arr.length}</p><div class="stamps">${arr.map(n => `<div class="stamp ${st.stamps[n] ? '' : 'no'}" ${st.stamps[n] ? `data-fact="${n}"` : ''}>${st.stamps[n] ? n : '？'}${st.stamps[n] > 1 ? `<small>×${st.stamps[n]}</small>` : ''}</div>`).join('')}</div><p class="note"><small>町をタッチすると豆知識が読めます</small></p>`; }
+  if (tab === 'dex') { const ids = Object.keys(DEX); body = `<p class="note">${J(`${Object.keys(st.dex).length} / ${ids.length} 種類を見つけました`, `Found ${Object.keys(st.dex).length} of ${ids.length}`)}</p><div class="grid">${ids.map(id => { const e = st.dex[id], D = DEX[id]; return e ? `<div class="card"><div class="em">${D[0]}</div><b>${D[1]}</b><small>${D[2]}</small><small class="m">${J(`${e.n}回・はじめて：${e.place || ''}`, `×${e.n} · first seen: ${tr(e.place || '')}`)}</small></div>` : `<div class="card no"><div class="em">？</div><b>？？？</b></div>`; }).join('')}</div>`; }
+  if (tab === 'lm') { body = `<p class="note">${J('窓から見えた名所', 'Sights seen from the window')} ${ALL_LM.filter(l => st.lm[l.key]).length} / ${ALL_LM.length}<br><small>${J('アプリを開いているときに、近くを通ると記録されます', 'Recorded when you pass nearby with the app open')}</small></p><div class="list">${ALL_LM.map(l => `<div class="${st.lm[l.key] ? '' : 'no'}">${st.lm[l.key] ? '✅' : '⬜'} ${st.lm[l.key] ? tr(l.name) : '???'}<small>${tr(l.key)}</small></div>`).join('')}</div>`; }
+  if (tab === 'stamp') { const names = new Set(); for (const id in LEGS) for (const s of LEGS[id].stops) names.add(s[0]); const arr = [...names]; body = `<p class="note">${J('通った町', 'Towns visited')} ${arr.filter(n => st.stamps[n]).length} / ${arr.length}</p><div class="stamps">${arr.map(n => `<div class="stamp ${st.stamps[n] ? '' : 'no'}" ${st.stamps[n] ? `data-fact="${n}"` : ''}>${st.stamps[n] ? tr(n) : '?'}${st.stamps[n] > 1 ? `<small>×${st.stamps[n]}</small>` : ''}</div>`).join('')}</div><p class="note"><small>${J('町をタッチすると豆知識が読めます', 'Tap a town to read a fun fact')}</small></p>`; }
   const empty = t => `<p class="note">${t}</p>`;
-  if (tab === 'spot') { const v = Object.values(st.spots || {}); body = v.length ? `<p class="note">観光した場所 ${v.length}か所</p><div class="grid">${v.map(e => `<div class="card">${phBox((CITY[e.city] || {}).spots ? e.name : e.city, '', 'card')}<div class="em">${e.e}</div><b>${e.name}</b><small>${e.desc}</small><small class="m">${e.city}${e.n > 1 ? '・' + e.n + '回' : ''}</small>${infoLinks(e.name, e.city, !!(CITY[e.city] || {}).spots)}</div>`).join('')}</div>` : empty('まだありません。町で停車したら「🗺 観光する」から出かけてみましょう。'); }
-  if (tab === 'food') { const v = Object.values(st.food || {}); body = v.length ? `<p class="note">食べたもの ${v.length}品</p><div class="grid">${v.map(e => `<div class="card">${phBox(e.name, '', 'card')}<div class="em">${e.e}</div><b>${e.name}</b><small>${e.desc}</small><small class="m">${e.city}</small></div>`).join('')}</div>` : empty('まだありません。観光の「ご当地グルメ」で食べると記録されます。'); }
-  if (tab === 'gift') { const v = Object.entries(st.gifts || {}); body = v.length ? `<p class="note">おみやげ ${v.length}個<br><small>「飾る」を押すと窓辺に置けます（2つまで）</small></p><div class="grid">${v.map(([k, e]) => `<div class="card">${phBox(giftQ(e.name), giftQ2(e.name), 'card')}<div class="em">${e.e}</div><b>${e.name}</b><small class="m">${e.city}</small><button class="mini" data-shelf="${k}" ${(st.shelf || []).includes(k) ? 'disabled' : ''}>${(st.shelf || []).includes(k) ? '✓ 飾っています' : '窓辺に飾る'}</button></div>`).join('')}</div>${(st.shelf || []).length ? '<button class="big ghost" id="unshelf">窓辺のおみやげを片づける</button>' : ''}` : empty('まだありません。観光の「おみやげ」で買うと、ここにたまります。'); }
-  if (tab === 'words') { const v = Object.values(st.words || {}); body = v.length ? `<p class="note">覚えたあいさつ ${v.length}</p>${v.map(e => `<div class="phrase sm"><small>${e.w[4]}（${e.city}）</small>${sayBtn(e.w[0], e.w[1], e.c || 'JP')}<b>${e.w[0]}</b><span>${e.w[1]}</span>${sayBtn(e.w[2], e.w[3], e.c || 'JP')}<b>${e.w[2]}</b><span>${e.w[3]}</span></div>`).join('')}` : empty('まだありません。観光の「地元のことば」で教えてもらえます。'); }
-  if (tab === 'data') { const days = (Date.now() - st.started) / 864e5; body = `<div class="kv"><div><span>走ったきょり</span><b>${fmt(traveled())}km</b></div><div><span>地球何周ぶん？</span><b>${(traveled() / 40075).toFixed(2)}周</b></div><div><span>旅をはじめて</span><b>${Math.floor(days) + 1}日目</b></div><div><span>世界一周</span><b>${st.laps || 0}回 達成</b></div><div><span>出発地</span><b>${st.startName || '東京'}</b></div><div><span>拾ったボトル</span><b>${st.bottles || 0}本</b></div><div><span>いまの速さ</span><b>時速${st.speed}km</b></div><div><span>泊まった回数</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>`; }
-  modal(`<h2>旅の記録</h2><div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>とじる</button>`, 'rec');
+  if (tab === 'spot') { const v = Object.values(st.spots || {}); body = v.length ? `<p class="note">${J(`観光した場所 ${v.length}か所`, `${v.length} places visited`)}</p><div class="grid">${v.map(e => `<div class="card">${phBox((CITY[e.city] || {}).spots ? e.name : e.city, '', 'card')}<div class="em">${e.e}</div><b>${tr(e.name)}</b><small>${tr(e.desc)}</small><small class="m">${tr(e.city)}${e.n > 1 ? J('・' + e.n + '回', ' · ×' + e.n) : ''}</small>${infoLinks(e.name, e.city, !!(CITY[e.city] || {}).spots)}</div>`).join('')}</div>` : empty(J('まだありません。町で停車したら「🗺 観光する」から出かけてみましょう。', 'Nothing yet. When you park in a town, head out with "🗺 Sightsee".')); }
+  if (tab === 'food') { const v = Object.values(st.food || {}); body = v.length ? `<p class="note">${J(`食べたもの ${v.length}品`, `${v.length} dishes tried`)}</p><div class="grid">${v.map(e => `<div class="card">${phBox(e.name, '', 'card')}<div class="em">${e.e}</div><b>${tr(e.name)}</b><small>${tr(e.desc)}</small><small class="m">${tr(e.city)}</small></div>`).join('')}</div>` : empty(J('まだありません。観光の「ご当地グルメ」で食べると記録されます。', 'Nothing yet. Try "Local food" while sightseeing.')); }
+  if (tab === 'gift') { const v = Object.entries(st.gifts || {}); body = v.length ? `<p class="note">${J(`おみやげ ${v.length}個<br><small>「飾る」を押すと窓辺に置けます（2つまで）</small>`, `${v.length} souvenirs<br><small>Press "Display" to put one on the window sill (up to 2)</small>`)}</p><div class="grid">${v.map(([k, e]) => `<div class="card">${phBox(giftQ(e.name), giftQ2(e.name), 'card')}<div class="em">${e.e}</div><b>${tr(e.name)}</b><small class="m">${tr(e.city)}</small><button class="mini" data-shelf="${k}" ${(st.shelf || []).includes(k) ? 'disabled' : ''}>${(st.shelf || []).includes(k) ? J('✓ 飾っています', '✓ On display') : J('窓辺に飾る', 'Display on sill')}</button></div>`).join('')}</div>${(st.shelf || []).length ? `<button class="big ghost" id="unshelf">${J('窓辺のおみやげを片づける', 'Clear the window sill')}</button>` : ''}` : empty(J('まだありません。観光の「おみやげ」で買うと、ここにたまります。', 'Nothing yet. Souvenirs you buy while sightseeing collect here.')); }
+  if (tab === 'words') { const v = Object.values(st.words || {}); body = v.length ? `<p class="note">${J(`覚えたあいさつ ${v.length}`, `${v.length} greetings learned`)}</p>${v.map(e => `<div class="phrase sm"><small>${tr(e.w[4])} (${tr(e.city)})</small>${sayBtn(e.w[0], e.w[1], e.c || 'JP')}<b>${e.w[0]}</b><span>${rd(e.w[1])}</span>${sayBtn(e.w[2], e.w[3], e.c || 'JP')}<b>${e.w[2]}</b><span>${rd(e.w[3])}</span></div>`).join('')}` : empty(J('まだありません。観光の「地元のことば」で教えてもらえます。', 'Nothing yet. Locals will teach you in "Local words" while sightseeing.')); }
+  if (tab === 'data') { const days = (Date.now() - st.started) / 864e5; body = EN ? `<div class="kv"><div><span>Distance driven</span><b>${fmt(traveled())} km</b></div><div><span>Times around Earth</span><b>${(traveled() / 40075).toFixed(2)}</b></div><div><span>Trip day</span><b>Day ${Math.floor(days) + 1}</b></div><div><span>Laps completed</span><b>${st.laps || 0}</b></div><div><span>Starting point</span><b>${tr(st.startName || '東京')}</b></div><div><span>Bottles found</span><b>${st.bottles || 0}</b></div><div><span>Current speed</span><b>${st.speed} km/h</b></div><div><span>Nights stayed</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>` : `<div class="kv"><div><span>走ったきょり</span><b>${fmt(traveled())}km</b></div><div><span>地球何周ぶん？</span><b>${(traveled() / 40075).toFixed(2)}周</b></div><div><span>旅をはじめて</span><b>${Math.floor(days) + 1}日目</b></div><div><span>世界一周</span><b>${st.laps || 0}回 達成</b></div><div><span>出発地</span><b>${st.startName || '東京'}</b></div><div><span>拾ったボトル</span><b>${st.bottles || 0}本</b></div><div><span>いまの速さ</span><b>時速${st.speed}km</b></div><div><span>泊まった回数</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>`; }
+  modal(`<h2>${J('旅の記録', 'Travel log')}</h2><div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'rec');
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showRecord(b.dataset.tab));
   bindShelf(); document.querySelectorAll('[data-shelf]').forEach(b => { const f = b.onclick; b.onclick = () => { f(); showRecord('gift'); }; });
   const un = $('#unshelf'); if (un) un.onclick = () => { st.shelf = []; save(); $('#sill').dataset.k = ''; updateSill(); showRecord('gift'); };
-  document.querySelectorAll('[data-fact]').forEach(b => b.onclick = () => toast(`📍 <b>${b.dataset.fact}</b><small>${FACTS[b.dataset.fact] || ''}</small>`, 6000));
+  document.querySelectorAll('[data-fact]').forEach(b => b.onclick = () => toast(`📍 <b>${tr(b.dataset.fact)}</b><small>${FACTS[b.dataset.fact] || ''}</small>`, 6000));
 }
+function settingsEn(cur) {
+  return `<h2>⚙️ Settings</h2><h3>Language / ことば</h3><div class="frames two"><button data-lang="ja">日本語</button><button data-lang="en" class="on">English</button></div><h3>Window style</h3><div class="frames">${FRAMES.map(([k, n]) => `<button data-frame="${k}" class="${k === cur ? 'on' : ''}"><i class="fp-${k}"></i>${n}</button>`).join('')}</div><p class="note">The little things on the window sill change with the local time of day (morning, noon, evening, night) and the weather.</p>
+  <h3>When arriving in a town</h3><div class="frames">${[['none', '🚐 Don\'t stop'], ['next', '🅿️ Stop once at the next town'], ['every', '🅿️ Stop every time']].map(([k, n]) => `<button data-stop="${k}" class="${(st.stopMode || 'none') === k ? 'on' : ''}">${n}</button>`).join('')}</div><p class="note">The van doesn't move while parked. Press "Drive on" to get going again.</p>
+  <h3>Utility poles & wires</h3><div class="frames"><button data-poles="on" class="${POLES ? 'on' : ''}">⚡️ Show</button><button data-poles="off" class="${POLES ? '' : 'on'}">🚫 Hide</button></div><p class="note">The roadside utility poles you see in Japan and Asia. When hidden, low fences and street lamps appear instead.</p>
+  <h3>Sound</h3><div class="frames"><button data-snd="on" class="${SOUND ? 'on' : ''}">🔊 On</button><button data-snd="off" class="${SOUND ? '' : 'on'}">🔇 Off</button></div>
+  <input type="range" id="s-vol" min="0.1" max="1" step="0.05" value="${SVOL}" aria-label="Volume"><p class="note">Engine, rain, wind, waves, town bustle, birds and insects, and the campfire play to match the place and the weather. Sound may not play in silent mode.</p>
+  <h3>Van speed</h3>${speedButtons()}<p class="note">Changing speed doesn't change the distance you've already driven.</p>
+  <h3>About the weather</h3><p class="note">Weather and temperature come live from Open-Meteo (a free weather service). If it can't connect, "(est.)" is shown and a likely weather for the season and place is used.</p>
+  <h3>Extra routes</h3><p class="note">${PAID().filter(owns).length ? 'Your routes: ' + PAID().filter(owns).map(id => LEG[id].icon + ' ' + LEG[id].name).join(', ') : 'There are 3: Scandinavia & the Northern Lights, Africa & South America, and South Pacific & Australia.'}</p><button class="big" id="b-shop">🛒 See extra routes</button>
+  <h3>Transfer your trip</h3><p class="note">Save your trip as a "transfer code" in case you change phones or your data is lost. ${st.backupAt ? `Last saved: ${durText((Date.now() - st.backupAt) / 36e5)} ago` : 'Not saved yet.'}</p><button class="big" id="b-backup">💾 Make or use a transfer code</button>
+  <h3>Start over</h3><p class="note">To choose a different starting point, reset your trip. Your field guide and records will also be erased.</p><button class="big ghost danger" id="reset">Reset trip</button>
+  <button class="big ghost" data-close>Close</button>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-lang]'); if (b && b.dataset.lang !== LG) setLang(b.dataset.lang); });
 function showSettings() {
   const cur = (() => { try { return localStorage.getItem('camper-frame') || 'wood'; } catch (e) { return 'wood'; } })();
-  modal(`<h2>⚙️ 設定</h2><h3>窓のデザイン</h3><div class="frames">${FRAMES.map(([k, n]) => `<button data-frame="${k}" class="${k === cur ? 'on' : ''}"><i class="fp-${k}"></i>${n}</button>`).join('')}</div><p class="note">窓辺の小物は、その場所の時間帯（朝・昼・夕方・夜）や天気で入れかわります。</p>
+  modal(EN ? settingsEn(cur) : `<h2>⚙️ 設定</h2><h3>ことば / Language</h3><div class="frames two"><button data-lang="ja" class="on">日本語</button><button data-lang="en">English</button></div><h3>窓のデザイン</h3><div class="frames">${FRAMES.map(([k, n]) => `<button data-frame="${k}" class="${k === cur ? 'on' : ''}"><i class="fp-${k}"></i>${n}</button>`).join('')}</div><p class="note">窓辺の小物は、その場所の時間帯（朝・昼・夕方・夜）や天気で入れかわります。</p>
   <h3>町に着いたら</h3><div class="frames">${[['none', '🚐 止まらない'], ['next', '🅿️ 次の町で1回止まる'], ['every', '🅿️ 毎回止まる']].map(([k, n]) => `<button data-stop="${k}" class="${(st.stopMode || 'none') === k ? 'on' : ''}">${n}</button>`).join('')}</div><p class="note">止まっているあいだは進みません。「出発する」を押すと、また走り出します。</p>
   <h3>電柱と電線</h3><div class="frames"><button data-poles="on" class="${POLES ? 'on' : ''}">⚡️ 表示する</button><button data-poles="off" class="${POLES ? '' : 'on'}">🚫 表示しない</button></div><p class="note">日本やアジアの道ばたに出てくる電柱です。表示しないときは、低い柵や街灯になります。</p>
   <h3>音</h3><div class="frames"><button data-snd="on" class="${SOUND ? 'on' : ''}">🔊 鳴らす</button><button data-snd="off" class="${SOUND ? '' : 'on'}">🔇 消す</button></div>
@@ -2281,22 +3547,22 @@ function showSettings() {
   $('#b-backup').onclick = showBackup; $('#b-shop').onclick = () => showShop(null, showSettings);
   document.querySelectorAll('[data-snd]').forEach(b => b.onclick = () => { setSound(b.dataset.snd === 'on'); document.querySelectorAll('[data-snd]').forEach(x => x.classList.toggle('on', x === b)); });
   $('#s-vol').oninput = e => { SVOL = +e.target.value; try { localStorage.setItem('camper-vol', SVOL); } catch (er) { } if (!SOUND) setSound(true); auVolume(); };
-  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = 'もう一度押すとリセットします'; return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } location.reload(); };
+  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = J('もう一度押すとリセットします', 'Press again to reset'); return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } location.reload(); };
 }
 function showBottle() {
   // 次の港（または次の町）についての手紙
   let tgt = null; walkStops((stop, km) => { if (km > st.km) { tgt = stop; return false; } }, 3);
   const n = tgt ? tgt.name : '東京'; st.bottles = (st.bottles || 0) + 1; save();
-  modal(`<div class="letter"><div class="em">🍾✉️</div><h2>ボトルの中の手紙</h2><p>「この先の <b>${n}</b> は、こんなところだよ。<br>${FACTS[n] || ''}」</p><small>拾ったボトル ${st.bottles}本目</small></div><button class="big" data-close>とじる</button>`);
+  modal(`<div class="letter"><div class="em">🍾✉️</div><h2>${J('ボトルの中の手紙', 'A message in a bottle')}</h2><p>${J(`「この先の <b>${n}</b> は、こんなところだよ。<br>${FACTS[n] || ''}」`, `"Up ahead, <b>${tr(n)}</b> is a place like this:<br>${FACTS[n] || ''}"`)}</p><small>${J(`拾ったボトル ${st.bottles}本目`, `Bottle #${st.bottles}`)}</small></div><button class="big" data-close>${J('とじる', 'Close')}</button>`);
 }
 async function postcard() {
   const pc = document.createElement('canvas'); pc.width = cv.width; pc.height = cv.height + 70 * DPR; const x = pc.getContext('2d');
   x.fillStyle = '#fffaf0'; x.fillRect(0, 0, pc.width, pc.height); x.drawImage(cv, 0, 0);
-  x.fillStyle = '#3a2f25'; x.font = `700 ${20 * DPR}px sans-serif`; x.fillText(`${placeName()}より`, 16 * DPR, cv.height + 30 * DPR);
-  x.font = `${13 * DPR}px sans-serif`; const ld = localDate(); x.fillText(`${$('#wx').textContent}　${ld.getUTCMonth() + 1}月${ld.getUTCDate()}日 現地${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}　走行${fmt(traveled())}km`, 16 * DPR, cv.height + 54 * DPR);
+  x.fillStyle = '#3a2f25'; x.font = `700 ${20 * DPR}px sans-serif`; x.fillText(J(`${placeName()}より`, `From ${placeName()}`), 16 * DPR, cv.height + 30 * DPR);
+  x.font = `${13 * DPR}px sans-serif`; const ld = localDate(); x.fillText(J(`${$('#wx').textContent}　${ld.getUTCMonth() + 1}月${ld.getUTCDate()}日 現地${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}　走行${fmt(traveled())}km`, `${$('#wx').textContent}   ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][ld.getUTCMonth()]} ${ld.getUTCDate()}, local ${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}   ${fmt(traveled())} km driven`), 16 * DPR, cv.height + 54 * DPR);
   pc.toBlob(async b => {
     const file = new File([b], 'camper-postcard.png', { type: 'image/png' });
-    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: '旅の絵はがき' }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: J('旅の絵はがき', 'Travel postcard') }); return; } } catch (e) { if (e.name === 'AbortError') return; }
     const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'camper-postcard.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }, 'image/png');
 }
@@ -2414,9 +3680,9 @@ async function makeCode() {
   return 'CAMPER0-' + b64(data);
 }
 async function readCode(code) {
-  code = (code || '').replace(/\s+/g, ''); const m = code.match(/CAMPER([01])-([A-Za-z0-9_-]+)/); if (!m) throw new Error('コードの形がちがいます');
+  code = (code || '').replace(/\s+/g, ''); const m = code.match(/CAMPER([01])-([A-Za-z0-9_-]+)/); if (!m) throw new Error(J('コードの形がちがいます', 'the code format is wrong'));
   let u8 = unb64(m[2]); if (m[1] === '1') u8 = await pipe(u8, DecompressionStream);
-  const o = JSON.parse(new TextDecoder().decode(u8)); if (!o.s || typeof o.s.km !== 'number') throw new Error('旅のデータが見つかりません'); return o;
+  const o = JSON.parse(new TextDecoder().decode(u8)); if (!o.s || typeof o.s.km !== 'number') throw new Error(J('旅のデータが見つかりません', 'no trip data found')); return o;
 }
 function applyBackup(o) {
   try {
@@ -2427,20 +3693,25 @@ function applyBackup(o) {
   st = null; location.reload();
 }
 async function showBackup() {
-  modal(`<h2>💾 旅の引き継ぎ</h2><p class="note">旅の記録は、このスマホのブラウザの中だけに保存されています。ブラウザのデータを消したり機種を変えたりすると消えてしまうので、ときどき「引き継ぎコード」を保存しておきましょう。</p>
+  modal((EN ? `<h2>💾 Transfer your trip</h2><p class="note">Your trip is saved only in this browser on this device. It will be lost if you clear browser data or change devices, so save a "transfer code" from time to time.</p>
+   <h3>Save this trip</h3><textarea id="bk-code" readonly rows="4">Making your code…</textarea>
+   <div class="frames two"><button id="bk-copy">📋 Copy code</button><button id="bk-file">💾 Save or send as a file</button></div>
+   <p class="note">Paste it into a note or send it to yourself to keep it safe. Your field guide, stamps and purchased routes are included.</p>
+   <h3>Continue a trip from a code</h3><textarea id="bk-in" rows="3" placeholder="Paste a code starting with CAMPER1-"></textarea>
+   <div class="frames two"><button id="bk-load">📥 Continue with this code</button><label class="filebtn">📂 From a file<input type="file" id="bk-pick" accept=".txt,text/plain" hidden></label></div>` : `<h2>💾 旅の引き継ぎ</h2><p class="note">旅の記録は、このスマホのブラウザの中だけに保存されています。ブラウザのデータを消したり機種を変えたりすると消えてしまうので、ときどき「引き継ぎコード」を保存しておきましょう。</p>
    <h3>いまの旅を保存する</h3><textarea id="bk-code" readonly rows="4">コードを作っています…</textarea>
    <div class="frames two"><button id="bk-copy">📋 コードをコピー</button><button id="bk-file">💾 ファイルで保存・送る</button></div>
    <p class="note">LINEの自分あてトークやメモ帳に貼っておくと安心です。図鑑・スタンプ・買ったルートもいっしょに入ります。</p>
    <h3>コードから旅を続ける</h3><textarea id="bk-in" rows="3" placeholder="CAMPER1- ではじまるコードを貼りつけ"></textarea>
-   <div class="frames two"><button id="bk-load">📥 このコードで引き継ぐ</button><label class="filebtn">📂 ファイルから<input type="file" id="bk-pick" accept=".txt,text/plain" hidden></label></div>
+   <div class="frames two"><button id="bk-load">📥 このコードで引き継ぐ</button><label class="filebtn">📂 ファイルから<input type="file" id="bk-pick" accept=".txt,text/plain" hidden></label></div>`) + `
    <p class="note" id="bk-msg"></p>
-   <button class="big ghost" data-close>とじる</button>`);
+   <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`);
   const code = await makeCode(); $('#bk-code').value = code;
-  $('#bk-copy').onclick = async () => { try { await navigator.clipboard.writeText(code); } catch (e) { $('#bk-code').select(); document.execCommand('copy'); } $('#bk-copy').textContent = '✓ コピーしました'; };
+  $('#bk-copy').onclick = async () => { try { await navigator.clipboard.writeText(code); } catch (e) { $('#bk-code').select(); document.execCommand('copy'); } $('#bk-copy').textContent = J('✓ コピーしました', '✓ Copied'); };
   $('#bk-file').onclick = async () => {
     const d = new Date(), name = `camper-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.txt`;
     const file = new File([code], name, { type: 'text/plain' });
-    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'キャンピングカーの旅の引き継ぎコード' }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: J('キャンピングカーの旅の引き継ぎコード', 'Camper trip transfer code') }); return; } } catch (e) { if (e.name === 'AbortError') return; }
     const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   };
   let armed = null;
@@ -2448,9 +3719,9 @@ async function showBackup() {
     const msg = $('#bk-msg');
     try {
       const o = await readCode(text);
-      if (armed !== text) { armed = text; msg.innerHTML = `<b>${o.s.startName || '東京'}出発・${fmt(o.s.km - (o.s.startKm || 0))}km走った旅</b>が見つかりました。いまの旅は上書きされます。もう一度「引き継ぐ」を押すと切りかえます。`; $('#bk-load').textContent = '📥 本当に引き継ぐ'; return; }
+      if (armed !== text) { armed = text; msg.innerHTML = J(`<b>${o.s.startName || '東京'}出発・${fmt(o.s.km - (o.s.startKm || 0))}km走った旅</b>が見つかりました。いまの旅は上書きされます。もう一度「引き継ぐ」を押すと切りかえます。`, `Found <b>a trip from ${tr(o.s.startName || '東京')}, ${fmt(o.s.km - (o.s.startKm || 0))} km driven</b>. Your current trip will be replaced. Press again to switch.`); $('#bk-load').textContent = J('📥 本当に引き継ぐ', '📥 Yes, switch to it'); return; }
       applyBackup(o);
-    } catch (e) { msg.textContent = '⚠️ 読みこめませんでした（' + e.message + '）。コードを全部コピーできているか確かめてください。'; }
+    } catch (e) { msg.textContent = J('⚠️ 読みこめませんでした（' + e.message + '）。コードを全部コピーできているか確かめてください。', '⚠️ Could not read it (' + e.message + '). Please check that you copied the whole code.'); }
   };
   $('#bk-load').onclick = () => tryLoad($('#bk-in').value);
   $('#bk-pick').onchange = async e => { const f = e.target.files[0]; if (!f) return; const t = await f.text(); $('#bk-in').value = t; armed = null; tryLoad(t); };
@@ -2459,11 +3730,12 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
 
 /* ===== 町の情報カード（地名をタップ） ===== */
 // 本物の写真（ウィキペディアの自由に使える画像）。一度見つけたものは端末に覚えておく
-let IMGC = (() => { try { return JSON.parse(localStorage.getItem('camper-img') || '{}'); } catch (e) { return {}; } })();
+const IMGK = EN ? 'camper-img-en' : 'camper-img';
+let IMGC = (() => { try { return JSON.parse(localStorage.getItem(IMGK) || '{}'); } catch (e) { return {}; } })();
 const imgQ = [], imgWait = {}; let imgBusy = 0;
-function saveImgC() { try { const k = Object.keys(IMGC); if (k.length > 400) k.slice(0, k.length - 400).forEach(x => delete IMGC[x]); localStorage.setItem('camper-img', JSON.stringify(IMGC)); } catch (e) { } }
+function saveImgC() { try { const k = Object.keys(IMGC); if (k.length > 400) k.slice(0, k.length - 400).forEach(x => delete IMGC[x]); localStorage.setItem(IMGK, JSON.stringify(IMGC)); } catch (e) { } }
 async function wikiImg(q) {
-  const base = 'https://ja.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=640&pilicense=free';
+  const base = `https://${LG}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=640&pilicense=free`;
   const pick = j => { const ps = j && j.query && j.query.pages; if (!ps) return null; const v = Object.values(ps).sort((a, b) => (a.index || 0) - (b.index || 0)).find(x => x.thumbnail); return v ? { src: v.thumbnail.source, t: v.title } : null; };
   try {
     let r = pick(await (await fetch(base + '&titles=' + enc(q))).json());
@@ -2483,17 +3755,17 @@ function pumpImg() {
   }
 }
 // おみやげの写真：まず名前そのまま、なければ「○○の置物」などの○○で探す
-const giftQ = n => n.replace(/[（(].*$/, '');
-const giftQ2 = n => { const b = n.replace(/^(.+?)の(置物|キーホルダー|ぬいぐるみ|人形|小さなかざり|におい袋|せっけん|カップ|セーター)$/, '$1').replace(/^金の/, ''); return b !== n ? b : ''; };
+const giftQ = n => EN ? tr(n).replace(/\s*\(.*$/, '') : n.replace(/[（(].*$/, '');
+const giftQ2 = n => { if (EN) { const e = tr(n), b = e.replace(/\s+(figurine|keychain|plush toy|doll|ornament|sachet|soap|cup|sweater)$/i, '').replace(/^(Little|Golden)\s+/, ''); return b !== e ? b : ''; } const b = n.replace(/^(.+?)の(置物|キーホルダー|ぬいぐるみ|人形|小さなかざり|におい袋|せっけん|カップ|セーター)$/, '$1').replace(/^金の/, ''); return b !== n ? b : ''; };
 // <div class="ph" data-wq="さがす言葉" data-wq2="見つからないとき"> を写真に入れかえる
-const phBox = (q, q2, cls = '') => `<div class="ph ${cls}" data-wq="${q.replace(/"/g, '')}"${q2 ? ` data-wq2="${q2.replace(/"/g, '')}"` : ''}></div>`;
+const phBox = (q, q2, cls = '') => { q = tr(q); q2 = q2 && tr(q2); return `<div class="ph ${cls}" data-wq="${q.replace(/"/g, '')}"${q2 ? ` data-wq2="${q2.replace(/"/g, '')}"` : ''}></div>`; };
 function fillPhotos(root = document) {
   root.querySelectorAll('.ph[data-wq]:not([data-done])').forEach(async el => {
     el.dataset.done = 1;
     let r = await getImg(el.dataset.wq);
     if (!r && el.dataset.wq2) r = await getImg(el.dataset.wq2);
     if (!r) { el.classList.add('none'); return; }
-    el.innerHTML = `<img src="${r.src}" alt="${r.t}" referrerpolicy="no-referrer"><a class="cr" href="https://ja.wikipedia.org/wiki/${enc(r.t)}" target="_blank" rel="noopener">📷 ${r.t}（ウィキペディア）</a>`;
+    el.innerHTML = `<img src="${r.src}" alt="${r.t}" referrerpolicy="no-referrer"><a class="cr" href="https://${LG}.wikipedia.org/wiki/${enc(r.t)}" target="_blank" rel="noopener">📷 ${r.t}${J('（ウィキペディア）', ' (Wikipedia)')}</a>`;
     const im = el.querySelector('img'); im.onload = () => el.classList.add('ok'); im.onerror = () => el.classList.add('none');
   });
 }
@@ -2501,8 +3773,9 @@ function fillPhotos(root = document) {
 const enc = encodeURIComponent;
 function infoLinks(name, city, specific) {
   // 名所の名前がはっきりしているときはその名所、そうでないときは町の説明を出す
+  name = tr(name); city = tr(city);
   const q = specific ? name : city, mq = name === city ? city : name + ' ' + city;
-  return `<span class="ilinks"><a href="https://ja.wikipedia.org/w/index.php?search=${enc(q)}" target="_blank" rel="noopener">📖 ${specific || name === city ? 'くわしい説明' : city + 'について'}</a><a href="https://www.google.com/maps/search/?api=1&query=${enc(mq)}" target="_blank" rel="noopener">🗺 地図で見る</a></span>`;
+  return `<span class="ilinks"><a href="https://${LG}.wikipedia.org/w/index.php?search=${enc(q)}" target="_blank" rel="noopener">📖 ${specific || name === city ? J('くわしい説明', 'Learn more') : J(city + 'について', 'About ' + city)}</a><a href="https://www.google.com/maps/search/?api=1&query=${enc(mq)}" target="_blank" rel="noopener">🗺 ${J('地図で見る', 'View on map')}</a></span>`;
 }
 function showPlace(which) {
   if (!P) return;
@@ -2511,27 +3784,27 @@ function showPlace(which) {
   which = which || (st.parked ? 'now' : P.segKm < 8 ? 'prev' : 'next');
   const [, stop] = opts.find(o => o[0] === which) || opts[opts.length - 1];
   const n = stop.name, X = CITY[n] || {}, S0 = sightOf(n, stop), w = S0.words;
-  const dist = which === 'next' ? `${sea ? '🚢' : '🚐'} あと <b>${fmt(s.len - P.segKm)}km</b>（約${durText((s.len - P.segKm) / st.speed)}）で着きます`
-    : which === 'prev' ? `${sea ? '🚢' : '🚐'} <b>${fmt(P.segKm)}km</b>前に出発しました` : `🅿️ いまここに停車中です`;
+  const dist = which === 'next' ? `${sea ? '🚢' : '🚐'} ${J(`あと <b>${fmt(s.len - P.segKm)}km</b>（約${durText((s.len - P.segKm) / st.speed)}）で着きます`, `Arriving in <b>${fmt(s.len - P.segKm)} km</b> (about ${durText((s.len - P.segKm) / st.speed)})`)}`
+    : which === 'prev' ? `${sea ? '🚢' : '🚐'} ${J(`<b>${fmt(P.segKm)}km</b>前に出発しました`, `Left <b>${fmt(P.segKm)} km</b> ago`)}` : `🅿️ ${J('いまここに停車中です', 'Parked here now')}`;
   const visits = st.stamps[n] || 0;
   const lmn = stop.lm && LMNAME[n];
-  modal(`${opts.length > 1 ? `<div class="tabs">${opts.map(([k, o]) => `<button data-pl="${k}" class="${k === which ? 'on' : ''}">${k === 'prev' ? '◀ 出てきた町' : '次の町 ▶'}：${o.name}</button>`).join('')}</div>` : ''}
-   ${phBox(n, '', 'wide')}<div class="place-h"><small>${S0.C.name}${sea && which !== 'prev' ? '・⛴ 港町' : ''}</small><h2>${n}</h2><p>${dist}</p></div>
+  modal(`${opts.length > 1 ? `<div class="tabs">${opts.map(([k, o]) => `<button data-pl="${k}" class="${k === which ? 'on' : ''}">${k === 'prev' ? J('◀ 出てきた町', '◀ Last town') : J('次の町 ▶', 'Next town ▶')}${J('：', ': ')}${tr(o.name)}</button>`).join('')}</div>` : ''}
+   ${phBox(n, '', 'wide')}<div class="place-h"><small>${S0.C.name}${sea && which !== 'prev' ? J('・⛴ 港町', ' · ⛴ Port town') : ''}</small><h2>${tr(n)}</h2><p>${dist}</p></div>
    ${FACTS[n] ? `<div class="fact">💡 ${FACTS[n]}</div>` : ''}
    <div class="kv2">
-     ${lmn ? `<div><span>🏛 窓から見える名所</span><b>${lmn}${st.lm[n] ? ' ✅' : ''}</b></div>` : ''}
-     ${X.spots ? `<div><span>📍 観光スポット</span><b>${X.spots.map(p => `<span class="spl">${phBox(p[1], '', 'thumb')}${p[0]} ${p[1]}<small>${p[3]}</small>${infoLinks(p[1], n, true)}</span>`).join('')}</b></div>` : ''}
-     <div><span>🍽 名物</span><b>${S0.food.map(f => `<span class="spl">${phBox(f[1], '', 'thumb')}${f[0]} ${f[1]}<small>${f[2]}</small></span>`).join('')}</b></div>
-     <div><span>🎁 おみやげ</span><b>${S0.gift.map(f => `<span class="spl">${phBox(giftQ(f[1]), giftQ2(f[1]), 'thumb')}${f[0]} ${f[1]}<small>${f[2]}</small></span>`).join('')}</b></div>
-     <div><span>📮 スタンプ</span><b>${visits ? `${visits}回 通りました` : 'まだ通っていません'}</b></div>
+     ${lmn ? `<div><span>🏛 ${J('窓から見える名所', 'Seen from the window')}</span><b>${lmn}${st.lm[n] ? ' ✅' : ''}</b></div>` : ''}
+     ${X.spots ? `<div><span>📍 ${J('観光スポット', 'Sights')}</span><b>${X.spots.map(p => `<span class="spl">${phBox(p[1], '', 'thumb')}${p[0]} ${tr(p[1])}<small>${tr(p[3])}</small>${infoLinks(p[1], n, true)}</span>`).join('')}</b></div>` : ''}
+     <div><span>🍽 ${J('名物', 'Local food')}</span><b>${S0.food.map(f => `<span class="spl">${phBox(f[1], '', 'thumb')}${f[0]} ${tr(f[1])}<small>${tr(f[2])}</small></span>`).join('')}</b></div>
+     <div><span>🎁 ${J('おみやげ', 'Souvenirs')}</span><b>${S0.gift.map(f => `<span class="spl">${phBox(giftQ(f[1]), giftQ2(f[1]), 'thumb')}${f[0]} ${tr(f[1])}<small>${tr(f[2])}</small></span>`).join('')}</b></div>
+     <div><span>📮 ${J('スタンプ', 'Stamps')}</span><b>${visits ? J(`${visits}回 通りました`, `Passed ${visits} time${visits > 1 ? 's' : ''}`) : J('まだ通っていません', 'Not visited yet')}</b></div>
    </div>
-   <p class="note">${n}について：${infoLinks(n, n, false)}</p>
-   <h3>💬 ${w[4]}のあいさつ</h3>
-   <div class="phrase">${sayBtn(w[0], w[1], S0.c)}<small>こんにちは</small><b>${w[0]}</b><span>${w[1]}</span></div>
-   <div class="phrase">${sayBtn(w[2], w[3], S0.c)}<small>ありがとう</small><b>${w[2]}</b><span>${w[3]}</span></div>
-   ${geo && geo.text && !st.parked ? `<p class="note">📍 いま走っているあたり：${geo.text}</p>` : ''}
-   ${st.parked ? '<button class="big" data-act="sight">🗺 観光する</button>' : ''}
-   <button class="big ghost" data-close>とじる</button>`, 'placem');
+   <p class="note">${J(`${n}について：`, `About ${tr(n)}: `)}${infoLinks(n, n, false)}</p>
+   <h3>💬 ${J(`${w[4]}のあいさつ`, `Greetings in ${w[4]}`)}</h3>
+   <div class="phrase">${sayBtn(w[0], w[1], S0.c)}<small>${J('こんにちは', 'Hello')}</small><b>${w[0]}</b><span>${w[1]}</span></div>
+   <div class="phrase">${sayBtn(w[2], w[3], S0.c)}<small>${J('ありがとう', 'Thank you')}</small><b>${w[2]}</b><span>${w[3]}</span></div>
+   ${geo && geo.text && !st.parked ? `<p class="note">📍 ${J('いま走っているあたり：', 'Driving near: ')}${geo.text}</p>` : ''}
+   ${st.parked ? `<button class="big" data-act="sight">🗺 ${J('観光する', 'Sightsee')}</button>` : ''}
+   <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'placem');
   document.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => showPlace(b.dataset.pl));
 }
 
@@ -2557,7 +3830,7 @@ function startAct(kind, i) {
   const verb = kind === 'spot' ? 'を観光中' : kind === 'food' ? 'を食べに行っています' : 'を買いに行っています';
   st.act = { kind, i, city: st.parked, e: it[0], name: it[1] + verb, item: it, start: Date.now(), end: Date.now() + hours * 36e5 / FAST };
   save(); closeModal(); updateHud();
-  toast(`👣 ${it[0]} ${it[1]}へ出かけました<small>${durText(hours)}ほどでもどります。アプリを閉じても大丈夫</small>`, 5000);
+  toast(J(`👣 ${it[0]} ${it[1]}へ出かけました<small>${durText(hours)}ほどでもどります。アプリを閉じても大丈夫</small>`, `👣 ${it[0]} Off to ${tr(it[1])}<small>Back in about ${durText(hours)}. It's fine to close the app</small>`), 5000);
 }
 function finishAct(quiet) {
   const a = st.act; if (!a) return; st.act = null;
@@ -2567,23 +3840,23 @@ function finishAct(quiet) {
   if (a.kind === 'spot') {
     st.spots = st.spots || {}; const e = st.spots[key] || (st.spots[key] = { e: it[0], name: it[1], city: a.city, desc: it[3], n: 0 }); e.n++;
     const sp0 = !!(CITY[a.city] || {}).spots;
-    html = `<div class="sight-card">${phBox(sp0 ? it[1] : a.city, '', 'wide')}<div class="big-em">${it[0]}</div><h2>${it[1]}</h2><p>${it[3]}</p>${infoLinks(it[1], a.city, !!(CITY[a.city] || {}).spots)}<div class="tag pick">🗺 観光スタンプ GET</div></div>`;
+    html = `<div class="sight-card">${phBox(sp0 ? it[1] : a.city, '', 'wide')}<div class="big-em">${it[0]}</div><h2>${tr(it[1])}</h2><p>${tr(it[3])}</p>${infoLinks(it[1], a.city, !!(CITY[a.city] || {}).spots)}<div class="tag pick">🗺 ${J('観光スタンプ GET', 'Sightseeing stamp collected!')}</div></div>`;
   } else if (a.kind === 'food') {
     st.food = st.food || {}; const e = st.food[key] || (st.food[key] = { e: it[0], name: it[1], city: a.city, desc: it[2], n: 0 }); e.n++;
-    html = `<div class="sight-card">${phBox(it[1], '', 'wide')}<div class="big-em">${it[0]}</div><h2>${it[1]}を食べました！</h2><p>${it[2]}</p><div class="tag pick">🍽 グルメ図鑑にのりました</div></div>`;
+    html = `<div class="sight-card">${phBox(it[1], '', 'wide')}<div class="big-em">${it[0]}</div><h2>${J(`${it[1]}を食べました！`, `You ate ${tr(it[1])}!`)}</h2><p>${tr(it[2])}</p><div class="tag pick">🍽 ${J('グルメ図鑑にのりました', 'Added to your food log')}</div></div>`;
   } else {
     st.gifts = st.gifts || {}; st.gifts[key] = { e: it[0], name: it[1], city: a.city, desc: it[2], at: Date.now(), from: (st.spots && Object.values(st.spots).filter(x => x.city === a.city).map(x => x.name)) || [] };
-    html = `<div class="sight-card">${phBox(giftQ(it[1]), giftQ2(it[1]), 'wide')}<div class="big-em">${it[0]}</div><h2>おみやげに「${it[1]}」を買いました</h2><p>${it[2]}</p><button class="big" data-shelf="${key}">窓辺に飾る</button></div>`;
+    html = `<div class="sight-card">${phBox(giftQ(it[1]), giftQ2(it[1]), 'wide')}<div class="big-em">${it[0]}</div><h2>${J(`おみやげに「${it[1]}」を買いました`, `You bought a souvenir: ${tr(it[1])}`)}</h2><p>${tr(it[2])}</p><button class="big" data-shelf="${key}">${J('窓辺に飾る', 'Display on the window sill')}</button></div>`;
   }
   save(); updateHud();
-  if (quiet) { toast(`${it[0]} ${it[1]}からもどりました`); return; }
-  modal(`<p class="note">${a.city}で</p>${html}<button class="big ghost" data-close>とじる</button>`);
+  if (quiet) { toast(J(`${it[0]} ${it[1]}からもどりました`, `${it[0]} Back from ${tr(it[1])}`)); return; }
+  modal(`<p class="note">${J(`${a.city}で`, `In ${tr(a.city)}`)}</p>${html}<button class="big ghost" data-close>${J('とじる', 'Close')}</button>`);
   bindShelf();
 }
 function bindShelf() {
   document.querySelectorAll('[data-shelf]').forEach(b => b.onclick = () => {
     const k = b.dataset.shelf; st.shelf = (st.shelf || []).filter(x => x !== k); st.shelf.unshift(k); st.shelf = st.shelf.slice(0, 2);
-    save(); $('#sill').dataset.k = ''; updateSill(); b.textContent = '✓ 窓辺に飾りました'; b.disabled = true;
+    save(); $('#sill').dataset.k = ''; updateSill(); b.textContent = J('✓ 窓辺に飾りました', '✓ On the window sill'); b.disabled = true;
   });
 }
 // あいさつの読み上げ（スマホの読み上げ機能。その国の声がなければカタカナを日本語の声で）
@@ -2593,12 +3866,13 @@ function voiceFor(lang) {
   return vs.find(v => n(v.lang) === L2) || vs.find(v => n(v.lang).split('-')[0] === L2.split('-')[0]);
 }
 function say(text, reading, c) {
-  if (!window.speechSynthesis) { toast('この端末では読み上げが使えません'); return; }
+  if (!window.speechSynthesis) { toast(J('この端末では読み上げが使えません', 'Speech is not available on this device')); return; }
   speechSynthesis.cancel();
   const parts = text.split(' / '), rparts = reading.split(' / '), langs = c === 'CA' ? ['en-US', 'fr-FR'] : [LANG[c] || 'ja-JP'];
   parts.forEach((t, i) => {
     const lang = langs[i] || langs[0], v = voiceFor(lang), u = new SpeechSynthesisUtterance();
-    if (v) { u.voice = v; u.lang = v.lang; u.text = t; } else { const j = voiceFor('ja-JP'); if (j) u.voice = j; u.lang = 'ja-JP'; u.text = rparts[i] || reading; }
+    // その国の声がないときは、カタカナの読み（英語ではローマ字）をふだんのことばの声で読む
+    if (v) { u.voice = v; u.lang = v.lang; u.text = t; } else { const hl = EN ? 'en-US' : 'ja-JP', j = voiceFor(hl); if (j) u.voice = j; u.lang = hl; u.text = rd(rparts[i] || reading); }
     u.rate = .85; speechSynthesis.speak(u);
   });
 }
@@ -2609,12 +3883,12 @@ function showWords() {
   const S0 = sightOf(st.parked), w = S0.words;
   st.words = st.words || {}; const first = !st.words[S0.wkey];
   st.words[S0.wkey] = { w, city: st.parked, country: S0.C.name, c: S0.c }; save();
-  modal(`<h2>💬 ${w[4]}のあいさつ</h2><p class="note">${st.parked}の人に教えてもらいました</p>
-   <div class="phrase">${sayBtn(w[0], w[1], S0.c)}<small>こんにちは</small><b>${w[0]}</b><span>${w[1]}</span></div>
-   <div class="phrase">${sayBtn(w[2], w[3], S0.c)}<small>ありがとう</small><b>${w[2]}</b><span>${w[3]}</span></div>
-   <p class="note">🔊 を押すと発音が聞けます（マナーモードだと鳴らないことがあります）</p>
-   ${first ? '<div class="tag pick">💬 ことば帳にのりました</div>' : ''}
-   <button class="big" data-act="sight">観光にもどる</button>`);
+  modal(`<h2>💬 ${J(`${w[4]}のあいさつ`, `Greetings in ${w[4]}`)}</h2><p class="note">${J(`${st.parked}の人に教えてもらいました`, `Taught by people in ${tr(st.parked)}`)}</p>
+   <div class="phrase">${sayBtn(w[0], w[1], S0.c)}<small>${J('こんにちは', 'Hello')}</small><b>${w[0]}</b><span>${w[1]}</span></div>
+   <div class="phrase">${sayBtn(w[2], w[3], S0.c)}<small>${J('ありがとう', 'Thank you')}</small><b>${w[2]}</b><span>${w[3]}</span></div>
+   <p class="note">${J('🔊 を押すと発音が聞けます（マナーモードだと鳴らないことがあります）', 'Press 🔊 to hear it (may not play in silent mode)')}</p>
+   ${first ? `<div class="tag pick">💬 ${J('ことば帳にのりました', 'Added to your phrasebook')}</div>` : ''}
+   <button class="big" data-act="sight">${J('観光にもどる', 'Back to sightseeing')}</button>`);
 }
 function showSight() {
   if (!st.parked) return;
@@ -2622,20 +3896,20 @@ function showSight() {
   const specific = !!(CITY[st.parked] || {}).spots;
   // 名前のはっきりした名所とグルメだけ写真を出す（「市場を歩く」などは上の町の写真で）
   const pq = (kind, it) => kind === 'food' || (kind === 'spot' && specific) ? phBox(it[1], '', 'card') : kind === 'gift' ? phBox(giftQ(it[1]), giftQ2(it[1]), 'card') : '';
-  const card = (kind, i, it, hours) => `<div class="spw"><button class="sp ${stay.done[kind + i] ? 'done' : ''}" data-start="${kind}:${i}" ${busy ? 'disabled' : ''}>${pq(kind, it)}<span class="em">${it[0]}</span><b>${it[1]}</b><small>${kind === 'spot' ? it[3] : it[2]}</small><i>⏱ ${durText(hours)}${stay.done[kind + i] ? '・✓ 行った' : ''}</i></button>${kind === 'spot' ? infoLinks(it[1], st.parked, specific) : ''}</div>`;
-  modal(`<h2>🗺 ${st.parked}を観光</h2>${phBox(st.parked, '', 'wide')}<p class="note">${S0.C.name}・${FACTS[st.parked] || ''}</p>
-   ${busy ? `<div class="busy">👣 いまは「${st.act.name}」です。もどってから次に出かけられます。</div>` : '<p class="note">出かけているあいだは車は止まったままです。アプリを閉じても、時間がたつともどってきます。</p>'}
-   <h3>📍 名所めぐり</h3><div class="sps">${S0.spots.map((it, i) => card('spot', i, it, it[2])).join('')}</div>
-   <h3>🍽 ご当地グルメ</h3><div class="sps">${S0.food.map((it, i) => card('food', i, it, 1)).join('')}</div>
-   <h3>🎁 おみやげ</h3><div class="sps">${S0.gift.map((it, i) => card('gift', i, it, .5)).join('')}</div>
-   <h3>💬 地元のことば</h3><button class="sp wide" data-act="words"><span class="em">💬</span><b>${S0.words[4]}であいさつを教えてもらう</b><small>「こんにちは」と「ありがとう」</small></button>
-   <h3>🌙 今夜の泊まり方</h3><div class="lodges">${Object.entries(LODGING).map(([k, v]) => `<button data-lodge="${k}" class="${stay.lodge === k ? 'on' : ''}"><span>${v[0]}</span><b>${v[1]}</b><small>${v[2]}</small></button>`).join('')}</div>
-   <button class="big ghost" data-close>とじる</button>`, 'sightm');
+  const card = (kind, i, it, hours) => `<div class="spw"><button class="sp ${stay.done[kind + i] ? 'done' : ''}" data-start="${kind}:${i}" ${busy ? 'disabled' : ''}>${pq(kind, it)}<span class="em">${it[0]}</span><b>${tr(it[1])}</b><small>${tr(kind === 'spot' ? it[3] : it[2])}</small><i>⏱ ${durText(hours)}${stay.done[kind + i] ? J('・✓ 行った', ' · ✓ Done') : ''}</i></button>${kind === 'spot' ? infoLinks(it[1], st.parked, specific) : ''}</div>`;
+  modal(`<h2>🗺 ${J(`${st.parked}を観光`, `Sightseeing in ${tr(st.parked)}`)}</h2>${phBox(st.parked, '', 'wide')}<p class="note">${S0.C.name}${J('・', ' · ')}${FACTS[st.parked] || ''}</p>
+   ${busy ? `<div class="busy">👣 ${J(`いまは「${st.act.name}」です。もどってから次に出かけられます。`, `Now: ${actName(st.act)}. You can head out again when you're back.`)}</div>` : `<p class="note">${J('出かけているあいだは車は止まったままです。アプリを閉じても、時間がたつともどってきます。', 'The van stays parked while you\'re out. Even if you close the app, you\'ll be back when the time is up.')}</p>`}
+   <h3>📍 ${J('名所めぐり', 'Sights')}</h3><div class="sps">${S0.spots.map((it, i) => card('spot', i, it, it[2])).join('')}</div>
+   <h3>🍽 ${J('ご当地グルメ', 'Local food')}</h3><div class="sps">${S0.food.map((it, i) => card('food', i, it, 1)).join('')}</div>
+   <h3>🎁 ${J('おみやげ', 'Souvenirs')}</h3><div class="sps">${S0.gift.map((it, i) => card('gift', i, it, .5)).join('')}</div>
+   <h3>💬 ${J('地元のことば', 'Local words')}</h3><button class="sp wide" data-act="words"><span class="em">💬</span><b>${J(`${S0.words[4]}であいさつを教えてもらう`, `Learn greetings in ${S0.words[4]}`)}</b><small>${J('「こんにちは」と「ありがとう」', '"Hello" and "Thank you"')}</small></button>
+   <h3>🌙 ${J('今夜の泊まり方', 'Where to stay tonight')}</h3><div class="lodges">${Object.entries(LODGING).map(([k, v]) => `<button data-lodge="${k}" class="${stay.lodge === k ? 'on' : ''}"><span>${v[0]}</span><b>${v[1]}</b><small>${v[2]}</small></button>`).join('')}</div>
+   <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'sightm');
   document.querySelectorAll('[data-start]').forEach(b => b.onclick = () => { const [k, i] = b.dataset.start.split(':'); startAct(k, +i); });
   document.querySelectorAll('[data-lodge]').forEach(b => b.onclick = () => {
     const k = b.dataset.lodge; if (stay.lodge !== k) { st.lodges = st.lodges || {}; st.lodges[k] = (st.lodges[k] || 0) + 1; }
     stay.lodge = k; save(); document.querySelectorAll('[data-lodge]').forEach(x => x.classList.toggle('on', x === b)); $('#sill').dataset.k = ''; updateSill();
-    toast(`${LODGING[k][0]} ${{ camp: '今夜はキャンプ場に泊まります', hotel: '今夜はホテルに泊まります', car: '今夜は車中泊にします' }[k] || '今夜は' + LODGING[k][1] + 'に泊まります'}`);
+    toast(`${LODGING[k][0]} ${(EN ? { camp: 'Staying at a campground tonight', hotel: 'Staying at a hotel tonight', car: 'Sleeping in the van tonight' } : { camp: '今夜はキャンプ場に泊まります', hotel: '今夜はホテルに泊まります', car: '今夜は車中泊にします' })[k] || ''}`);
   });
 }
 function checkAct() { if (st && st.act && Date.now() >= st.act.end) finishAct(false); }
@@ -2643,7 +3917,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b || !st) return;
   const a = b.dataset.act;
   if (a === 'sight') showSight(); else if (a === 'go') { depart(); closeModal(); } else if (a === 'back') finishAct(false); else if (a === 'words') showWords();
-  else if (a === 'stopnext') { tick(); st.stopMode = 'next'; save(); updateHud(); toast('🅿️ 次の町で止まります'); }
+  else if (a === 'stopnext') { tick(); st.stopMode = 'next'; save(); updateHud(); toast(J('🅿️ 次の町で止まります', '🅿️ Stopping at the next town')); }
 });
 // たき火（キャンプ場に泊まる夜）
 function drawCamp() {
@@ -2664,21 +3938,21 @@ function tick() {
 }
 // 停車中は、着いた町の手前（来た道の終わり）を現在地にする
 const curPos = () => posAt(st.parked ? Math.max(0, st.km - 0.05) : st.km);
-function depart() { if (!st.parked) return; if (st.act) finishAct(true); const n = st.parked; st.parked = null; st.stay = null; st.t = Date.now(); save(); toast(`🚐 ${n}を出発！`); updateHud(); }
+function depart() { if (!st.parked) return; if (st.act) finishAct(true); const n = st.parked; st.parked = null; st.stay = null; st.t = Date.now(); save(); toast(J(`🚐 ${n}を出発！`, `🚐 Leaving ${tr(n)}!`)); updateHud(); }
 // 町で停車したときの案内。観光への入口をはっきり出す
 function arrived() {
   const n = st.parked; if (!n || st.preview || document.body.classList.contains('gaze')) return;
-  if (!$('#modal').hidden) { toast(`🅿️ <b>${n}</b>で停車しました<small>「🗺 観光する」から町を観光できます</small>`, 7000); return; }
+  if (!$('#modal').hidden) { toast(J(`🅿️ <b>${n}</b>で停車しました<small>「🗺 観光する」から町を観光できます</small>`, `🅿️ Parked in <b>${tr(n)}</b><small>Press "🗺 Sightsee" to explore the town</small>`), 7000); return; }
   const S0 = sightOf(n);
-  modal(`${phBox(n, '', 'wide')}<div class="arrive"><div class="big-em">🅿️</div><small>${S0.C.name}</small><h2>${n}に到着！</h2>${FACTS[n] ? `<p>${FACTS[n]}</p>` : ''}</div>
-   <p class="note">しばらくここに止まっています。名所めぐり・ご当地グルメ・おみやげ・地元のことばを楽しめます。</p>
-   <button class="big" data-act="sight">🗺 ${n}を観光する</button>
-   <button class="big ghost" data-act="go">▶ 観光しないで出発する</button>
-   <button class="big ghost" data-close>あとで（停車したまま）</button>`, 'arrivem');
+  modal(`${phBox(n, '', 'wide')}<div class="arrive"><div class="big-em">🅿️</div><small>${S0.C.name}</small><h2>${J(`${n}に到着！`, `You've arrived in ${tr(n)}!`)}</h2>${FACTS[n] ? `<p>${FACTS[n]}</p>` : ''}</div>
+   <p class="note">${J('しばらくここに止まっています。名所めぐり・ご当地グルメ・おみやげ・地元のことばを楽しめます。', 'The van is parked here for now. Enjoy the sights, local food, souvenirs and local words.')}</p>
+   <button class="big" data-act="sight">🗺 ${J(`${n}を観光する`, `Explore ${tr(n)}`)}</button>
+   <button class="big ghost" data-act="go">▶ ${J('観光しないで出発する', 'Drive on without sightseeing')}</button>
+   <button class="big ghost" data-close>${J('あとで（停車したまま）', 'Later (stay parked)')}</button>`, 'arrivem');
 }
 function arriveToasts(res) {
-  for (const p of res.passed) toast(`${p.sea ? '⚓' : '📍'} <b>${p.name}</b>に到着<small>${FACTS[p.name] || ''}</small>`, 7000);
-  for (const f of res.forks) toast(`🔀 ${f.at}から「${LEG[f.id].name}」へ`);
+  for (const p of res.passed) toast(`${p.sea ? '⚓' : '📍'} ${J(`<b>${p.name}</b>に到着`, `Arrived in <b>${tr(p.name)}</b>`)}<small>${FACTS[p.name] || ''}</small>`, 7000);
+  for (const f of res.forks) toast(J(`🔀 ${f.at}から「${LEG[f.id].name}」へ`, `🔀 From ${tr(f.at)} onto "${LEG[f.id].name}"`));
 }
 function back() {
   const before = st.km, hrs = Math.max(0, Date.now() - st.t) / 36e5;
@@ -2717,7 +3991,7 @@ function frame(ts) {
   c.restore();
   drawWeather(dt, W8, ctx.sea); drawCamp();
   if (S.t - (S.auT || 0) > .5) { S.auT = S.t; auUpdate(W8, ctx); }
-  if (!st.preview) for (const n in S.lmSeen) if (S.lmSeen[n] > 90 && !st.lm[n]) { st.lm[n] = Date.now(); save(); toast(`🏛 <b>${LMNAME[n] || n}</b>が見えた！<small>名所の記録にのりました</small>`, 5000); }
+  if (!st.preview) for (const n in S.lmSeen) if (S.lmSeen[n] > 90 && !st.lm[n]) { st.lm[n] = Date.now(); save(); toast(J(`🏛 <b>${LMNAME[n] || n}</b>が見えた！<small>名所の記録にのりました</small>`, `🏛 You can see <b>${LMNAME[n] || tr(n)}</b>!<small>Added to your sights log</small>`), 5000); }
   if (ts - lastHud > 1000) { lastHud = ts; checkAct(); updateHud(); refreshWx(); refreshGeo(); }
   if (ts - lastSave > 10000) { lastSave = ts; save(); }
   // 1コマを描くのにかかった時間を見て、重ければ細かさを下げる
@@ -2750,7 +4024,7 @@ function miniMap() {
     const cities = new Map(); for (const id in LEG) for (const sg of LEG[id].segs) cities.set(sg.b.name, sg.b.ll);
     box.innerHTML = `<svg class="map mm" preserveAspectRatio="xMidYMid slice"><rect x="-400" y="-400" width="1600" height="1200" class="sea"/><path d="${landFor(20)}" data-lk="10" class="land"/>
       <path d="${pathFor(R.all)}" class="r-all"/><path d="${pathFor(R.alt)}" class="r-alt"/><path d="${pathFor(R.ahead)}" class="r-ahead"/><path d="${pathFor(R.done)}" class="r-done"/>
-      ${[...cities].map(([n, ll]) => { const p = prj(ll); return `<circle cx="${p[0]}" cy="${p[1]}" r=".55" class="${st.stamps[n] ? 'v' : 'u'}"/><text x="${p[0] + .9}" y="${p[1] + .5}">${n}</text>`; }).join('')}
+      ${[...cities].map(([n, ll]) => { const p = prj(ll); return `<circle cx="${p[0]}" cy="${p[1]}" r=".55" class="${st.stamps[n] ? 'v' : 'u'}"/><text x="${p[0] + .9}" y="${p[1] + .5}">${tr(n)}</text>`; }).join('')}
       <circle id="mm-me" r="1.3" class="me"/></svg>`;
   }
   const me = prj(P.ll), svg = box.querySelector('svg'), z = 10;
@@ -2763,24 +4037,24 @@ function fsInfo() {
   const s = P.seg, remain = s.len - P.segKm, wxt = $('#wx').textContent.trim().replace(/\s+/g, ' ');
   const head = `<b>${$('#place').textContent}</b>`, tw = `<span>🕐 ${$('#clock').textContent}　${wxt}</span>`;
   if (FSI === 'mini' || FSI === 'map') { f.innerHTML = head + tw; return; }
-  const go = st.parked ? (st.act ? `👣 ${st.act.e} ${st.act.name}` : `🅿️ ${st.parked}で停車中`) : `${s.mode === 's' ? '🚢' : '🚐'} ${s.b.name}まで ${fmt(remain)}km（約${durText(remain / st.speed)}）`;
+  const go = st.parked ? (st.act ? `👣 ${st.act.e} ${actName(st.act)}` : `🅿️ ${J(`${st.parked}で停車中`, `Parked in ${tr(st.parked)}`)}`) : `${s.mode === 's' ? '🚢' : '🚐'} ${J(`${s.b.name}まで ${fmt(remain)}km（約${durText(remain / st.speed)}）`, `${fmt(remain)} km to ${tr(s.b.name)} (about ${durText(remain / st.speed)})`)}`;
   f.innerHTML = `${head}<span class="ad">${$('#addr').textContent}</span>${tw}<span>${go}</span>
     ${st.parked ? '' : `<i class="pb"><i style="width:${(P.segKm / s.len * 100).toFixed(1)}%"></i></i>`}
-    <span class="sm">走ったきょり ${fmt(traveled())}km・時速${st.speed}km${(st.laps || 0) ? `・${st.laps + 1}周目` : ''}</span>`;
+    <span class="sm">${J(`走ったきょり ${fmt(traveled())}km・時速${st.speed}km${(st.laps || 0) ? `・${st.laps + 1}周目` : ''}`, `${fmt(traveled())} km driven · ${st.speed} km/h${(st.laps || 0) ? ` · lap ${st.laps + 1}` : ''}`)}</span>`;
 }
 function cycleInfo() {
   FSI = { full: 'map', map: 'mini', mini: 'off', off: 'full' }[FSI]; try { localStorage.setItem('camper-fsinfo', FSI); } catch (e) { }
-  fsInfo(); toast({ full: 'ℹ️ 情報と地図：くわしく', map: 'ℹ️ 地図と現在地だけ', mini: 'ℹ️ 現在地だけ', off: 'ℹ️ 表示しない（景色だけ）' }[FSI], 1600);
+  fsInfo(); toast((EN ? { full: 'ℹ️ Info & map: full', map: 'ℹ️ Map & location only', mini: 'ℹ️ Location only', off: 'ℹ️ Hide all (scenery only)' } : { full: 'ℹ️ 情報と地図：くわしく', map: 'ℹ️ 地図と現在地だけ', mini: 'ℹ️ 現在地だけ', off: 'ℹ️ 表示しない（景色だけ）' })[FSI], 1600);
 }
 const FINE = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches; // マウスのある端末（パソコン）
 function fsHint() {
   const h = $('#fshint'); if (!h) return;
-  h.innerHTML = FINE ? '⌨️ <b>Esc</b> キーで もとの画面に もどれます' : '画面をタップすると ボタンが出ます';
+  h.innerHTML = FINE ? J('⌨️ <b>Esc</b> キーで もとの画面に もどれます', '⌨️ Press <b>Esc</b> to go back') : J('画面をタップすると ボタンが出ます', 'Tap the screen to show the buttons');
   h.hidden = false; clearTimeout(h._t); h._t = setTimeout(() => { h.hidden = true; }, 4500);
 }
 function poke() { document.body.classList.remove('calm'); clearTimeout(calmT); if (document.body.classList.contains('full')) calmT = setTimeout(() => document.body.classList.add('calm'), 3500); }
 async function setFull(on, gaze) {
-  document.body.classList.toggle('full', on); document.body.classList.toggle('gaze', !!(on && gaze)); if (on && gaze) gazeTick(); $('#b-full').textContent = on ? '✕' : '⛶ 全画面';
+  document.body.classList.toggle('full', on); document.body.classList.toggle('gaze', !!(on && gaze)); if (on && gaze) gazeTick(); $('#b-full').textContent = on ? '✕' : J('⛶ 全画面', '⛶ Full screen');
   const el = document.documentElement;
   try { if (on && el.requestFullscreen && !document.fullscreenElement) await el.requestFullscreen({ navigationUI: 'hide' }); else if (!on && document.fullscreenElement) await document.exitFullscreen(); } catch (e) { }
   try { if (on && navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); else if (!on && wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) { }
@@ -2803,7 +4077,7 @@ function gazeTick() {
   document.body.classList.toggle('gz-dim', GZ.dim && (hr >= 23 || hr < 6));
   c.hidden = !GZ.clock;
   if (GZ.clock && P) {
-    c.innerHTML = `<b>${hr}:${String(now.getMinutes()).padStart(2, '0')}</b><span>${now.getMonth() + 1}月${now.getDate()}日（${'日月火水木金土'[now.getDay()]}）</span><span class="gz-pl">🚐 ${$('#place').textContent}　${$('#clock').textContent}　${$('#wx').textContent.trim().replace(/\s+/g, ' ')}</span>`;
+    c.innerHTML = `<b>${hr}:${String(now.getMinutes()).padStart(2, '0')}</b><span>${EN ? now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : `${now.getMonth() + 1}月${now.getDate()}日（${'日月火水木金土'[now.getDay()]}）`}</span><span class="gz-pl">🚐 ${$('#place').textContent}　${$('#clock').textContent}　${$('#wx').textContent.trim().replace(/\s+/g, ' ')}</span>`;
     // 画面の焼きつきを防ぐため、数分ごとに少しずつ位置を変える
     if (Date.now() > gzMoveAt) { gzMoveAt = Date.now() + 3 * 60e3; c.style.left = (4 + Math.random() * 10).toFixed(1) + '%'; c.style.bottom = (5 + Math.random() * 10).toFixed(1) + '%'; }
   }
@@ -2811,7 +4085,8 @@ function gazeTick() {
 setInterval(gazeTick, 10e3);
 function gazeBar() {
   const b = $('#gzbar');
-  b.innerHTML = `<button data-gz="back">◀ もどる${FINE ? '（Esc）' : ''}</button><button data-gz="clock">${GZ.clock ? '🕰 時計：あり' : '🕰 時計：なし'}</button><button data-gz="dim">${GZ.dim ? '🌙 夜は暗く：する' : '🌙 夜は暗く：しない'}</button><button data-gz="snd">${SOUND ? '🔊 音：あり' : '🔇 音：なし'}</button>`;
+  b.innerHTML = EN ? `<button data-gz="back">◀ Back${FINE ? ' (Esc)' : ''}</button><button data-gz="clock">${GZ.clock ? '🕰 Clock: on' : '🕰 Clock: off'}</button><button data-gz="dim">${GZ.dim ? '🌙 Dim at night: on' : '🌙 Dim at night: off'}</button><button data-gz="snd">${SOUND ? '🔊 Sound: on' : '🔇 Sound: off'}</button>`
+    : `<button data-gz="back">◀ もどる${FINE ? '（Esc）' : ''}</button><button data-gz="clock">${GZ.clock ? '🕰 時計：あり' : '🕰 時計：なし'}</button><button data-gz="dim">${GZ.dim ? '🌙 夜は暗く：する' : '🌙 夜は暗く：しない'}</button><button data-gz="snd">${SOUND ? '🔊 音：あり' : '🔇 音：なし'}</button>`;
   b.hidden = false; clearTimeout(gzBarT); gzBarT = setTimeout(() => { b.hidden = true; }, 5000);
 }
 $('#gzcover').onclick = e => { e.stopPropagation(); const b = $('#gzbar'); if (b.hidden) gazeBar(); else { b.hidden = true; } };
@@ -2836,7 +4111,7 @@ document.addEventListener('fullscreenchange', () => { if (!document.fullscreenEl
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('full')) setFull(false); });
 document.addEventListener('pointerdown', poke, { passive: true });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && document.body.classList.contains('full') && navigator.wakeLock) navigator.wakeLock.request('screen').then(w => wakeLock = w).catch(() => { }); });
-$('#b-snd').onclick = e => { e.stopPropagation(); setSound(!SOUND); toast(SOUND ? '🔊 音を鳴らします' : '🔇 音を消しました', 1800); }; $('#b-snd').textContent = SOUND ? '🔊' : '🔇';
+$('#b-snd').onclick = e => { e.stopPropagation(); setSound(!SOUND); toast(SOUND ? J('🔊 音を鳴らします', '🔊 Sound on') : J('🔇 音を消しました', '🔇 Sound off'), 1800); }; $('#b-snd').textContent = SOUND ? '🔊' : '🔇';
 
 function startTrip() {
   try { const c0 = JSON.parse(localStorage.getItem('camper-wx') || 'null'); if (c0 && Date.now() - c0.at < 30 * 60e3) wx = c0; } catch (e) { }
