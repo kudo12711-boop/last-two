@@ -343,11 +343,12 @@ const sfx = {
 };
 
 /* ---------- こえ（AIで作った声 → なければ 端末の読み上げ） ---------- */
-const AI_VOICES = [{ id: 'jf_alpha', n: 1 }, { id: 'jf_gongitsune', n: 2 }, { id: 'jf_nezumi', n: 3 }, { id: 'jf_tebukuro', n: 4 }];
+// AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<場面><番号>.mp3）
+const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const aiBuf = {};
 function aiLoad(id) {
   const a = audio(); if (!a) return;
-  for (const [cat, v] of Object.entries(LINES)) for (let i = 0; i < v.ja.length; i++) {
+  for (const [cat, v] of Object.entries(LINES)) for (let i = 0; i < (v[lang] || v.ja).length; i++) {
     const k = `${id}/${cat}${i}`;
     if (aiBuf[k]) continue;
     aiBuf[k] = 'loading';
@@ -383,7 +384,9 @@ function tts(text) {
     speechSynthesis.speak(u);
   } catch (e) {}
 }
-let voiceMode = store.get('fuku-voice', 'ai:jf_alpha'); // 'ai:<id>' / 'dev' / 'off'
+let voiceMode = store.get('fuku-voice', 'ai:1'); // 'ai:1'〜'ai:4' / 'dev' / 'off'。むかしの 'ai:jf_alpha' なども よめる
+{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+const aiId = () => (AI_VOICES[lang] || AI_VOICES.ja)[(+voiceMode.slice(3) || 1) - 1] || AI_VOICES.ja[0];
 let aiSrc = null; const lastTake = {};
 function speak(cat) {
   if (!soundOn || voiceMode === 'off') return;
@@ -391,8 +394,8 @@ function speak(cat) {
   let idx = Math.floor(Math.random() * list.length);
   if (list.length > 1 && idx === lastTake[cat]) idx = (idx + 1) % list.length;
   lastTake[cat] = idx;
-  if (lang === 'ja' && voiceMode.startsWith('ai:')) {
-    const b = aiBuf[`${voiceMode.slice(3)}/${cat}${idx}`];
+  if (voiceMode.startsWith('ai:')) {
+    const b = aiBuf[`${aiId()}/${cat}${idx}`];
     const a = audio();
     if (a && b && typeof b !== 'string') {
       try { if (aiSrc) aiSrc.stop(); } catch (e) {}
@@ -1254,7 +1257,7 @@ function renderHelp() {
     <h2>${t('help')}</h2>
     <h3>${t('hAbout')}</h3><p class="note" style="opacity:1;font-size:14px">${t('hAboutT')}</p>
     <h3>${t('hVoice')}</h3>
-    <div class="opt" id="vOpt">${lang === 'ja' ? AI_VOICES.map(v => vb('ai:' + v.id, 'AI ' + v.n)).join('') : ''}${vb('dev', t('hDev'))}${vb('off', t('hOff'))}</div>
+    <div class="opt" id="vOpt">${[1, 2, 3, 4].map(n => vb('ai:' + n, 'AI ' + n)).join('')}${vb('dev', t('hDev'))}${vb('off', t('hOff'))}</div>
     <h3>${t('hSnap')}</h3>
     <div class="opt" id="pOpt">${['strong', 'weak', 'off'].map(k => `<button data-p="${k}" class="${snapMode === k ? 'sel' : ''}">${t('snap' + k[0].toUpperCase() + k.slice(1))}</button>`).join('')}</div>
     <h3>${t('hSound')}</h3>
@@ -1265,7 +1268,7 @@ function renderHelp() {
     <h3>${t('hPhoto')}</h3><p class="note">${t('hPhotoT')}</p>
     <div class="opt"><button id="clrBtn">${t('hClear')}</button></div>
     <button class="big" id="helpClose">${t('hClose')}</button>`;
-  $('#vOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; voiceMode = b.dataset.v; store.set('fuku-voice', voiceMode); if (voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3)); renderHelp(); setTimeout(() => speak('good'), 200); };
+  $('#vOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; voiceMode = b.dataset.v; store.set('fuku-voice', voiceMode); if (voiceMode.startsWith('ai:')) aiLoad(aiId()); renderHelp(); setTimeout(() => speak('good'), 200); };
   $('#pOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; snapMode = b.dataset.p; store.set('fuku-snap', snapMode); renderHelp(); };
   $('#sOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; soundOn = b.dataset.s === '1'; store.set('fuku-sound', soundOn); $('#sndBtn').textContent = soundOn ? '🔊' : '🔇'; renderHelp(); };
   $('#lOpt').onclick = e => { const b = e.target.closest('button'); if (!b) return; setLang(b.dataset.l); renderHelp(); };
@@ -1273,7 +1276,7 @@ function renderHelp() {
   $('#helpClose').onclick = () => $('#help').classList.remove('on');
   $('#kkSlot').appendChild(Kakin.parentButton());
 }
-function setLang(l) { lang = l; store.set('fuku-lang', l); renderHome(); }
+function setLang(l) { lang = l; store.set('fuku-lang', l); renderHome(); if (audio() && voiceMode.startsWith('ai:')) aiLoad(aiId()); }
 $('#helpBtn').onclick = () => { renderHelp(); $('#help').classList.add('on'); };
 $('#langBtn').onclick = () => setLang(lang === 'ja' ? 'en' : 'ja');
 $('#gamesBtn').onclick = () => { location.href = '../games/' + (lang === 'en' ? '?lang=en' : ''); };
@@ -1282,7 +1285,7 @@ window.addEventListener('resize', () => { if ($('#edit').classList.contains('on'
 
 /* はじめの タップで おとを ひらく（iPhone） */
 document.addEventListener('pointerdown', function unlock() {
-  const a = audio(); if (a && voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3));
+  const a = audio(); if (a && voiceMode.startsWith('ai:')) aiLoad(aiId());
   document.removeEventListener('pointerdown', unlock);
 }, { once: false });
 

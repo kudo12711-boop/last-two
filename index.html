@@ -255,12 +255,13 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 <div class="wrap">
   <header>
     <div class="inapp" id="inapp" hidden><p><b>アプリの中で開いています。</b>ここではカメラが使えないことがあります。ChromeやSafariで開き直してください。</p><div><a id="extOpen" href="#">ブラウザで開く</a><button id="extCopy">URLをコピー</button></div><p class="lnote" id="extNote">うまく開かないときは「URLをコピー」を押して、ChromeやSafariのアドレス欄に貼りつけてください。</p></div>
-    <h1>ラスト・ツー<small>試作 v1.3・1対1、ババの読み合い（1ゲーム約1分）</small></h1>
+    <h1>ラスト・ツー<small>試作 v1.4・1対1、ババの読み合い（1ゲーム約1分）</small></h1>
     <div class="controls">
       <div class="modes"><button id="modeCpu" aria-pressed="true">CPUと</button><button id="modeOn" aria-pressed="false">友だちと</button></div>
       <label for="level" class="lv" id="levelLab">相手</label>
       <select id="level"><option value="0">ポン太（よわい）</option><option value="1" selected>ミケ（ふつう）</option><option value="2">クロ（つよい）</option></select>
       <button id="sound" aria-pressed="true">音 オン</button>
+      <button id="langBtn" lang="en">English</button>
       <button id="shopBtn">きせかえ <span class="coins" id="coinTop">0</span></button>
       <button class="primary" id="start">スタート</button>
     </div>
@@ -347,7 +348,62 @@ button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px soli
 <script>
 (() => {
 const $ = id => document.getElementById(id);
-const NAMES = ["ポン太", "ミケ", "クロ"], LVTXT = ["よわい", "ふつう", "つよい"];
+// ことば（日本語 / English）: ?lang= → 前回えらんだもの（lasttwo-lang）→ 入口ページ（games-lang）→ ブラウザ
+const LANG = (() => { try { const q = new URLSearchParams(location.search).get("lang"); if (q === "ja" || q === "en") return q;
+  const s = localStorage.getItem("lasttwo-lang"); if (s === "ja" || s === "en") return s;
+  const g = localStorage.getItem("games-lang"); if (g === "ja" || g === "en") return g; } catch (e) {}
+  return /^ja/i.test((navigator.languages && navigator.languages[0]) || navigator.language || "ja") ? "ja" : "en"; })();
+const E = LANG === "en";
+// English: swap the fixed page text once at start (Japanese stays in the HTML)
+document.documentElement.lang = LANG;
+$("langBtn").textContent = E ? "日本語" : "English"; $("langBtn").lang = E ? "ja" : "en";
+$("langBtn").addEventListener("click", () => { try { localStorage.setItem("lasttwo-lang", E ? "ja" : "en"); } catch (e) {}
+  const u = new URL(location.href); u.searchParams.delete("lang"); location.href = u.href; });
+if (E){
+  document.title = "Last Two";
+  const H = (id, h) => { const el = $(id); if (el) el.innerHTML = h; };
+  const A = (id, a) => { const el = $(id); if (el) el.setAttribute("aria-label", a); };
+  $("inapp").querySelector("p").innerHTML = "<b>You're inside an app.</b> The camera may not work here. Please reopen in Chrome or Safari.";
+  H("extOpen", "Open in browser"); H("extCopy", "Copy link");
+  H("extNote", "If it doesn't open, press \"Copy link\" and paste it into the Chrome or Safari address bar.");
+  document.querySelector("h1").innerHTML = "Last Two<small>Prototype v1.4 · 1-on-1 Joker mind games (about 1 min per game)</small>";
+  H("modeCpu", "vs CPU"); H("modeOn", "vs Friend"); H("levelLab", "Rival");
+  $("level").innerHTML = '<option value="0">Pip (easy)</option><option value="1" selected>Mittens (normal)</option><option value="2">Shadow (hard)</option>';
+  H("sound", "Sound on"); $("shopBtn").firstChild.textContent = "Style "; H("start", "Start");
+  $("nick").parentNode.firstChild.textContent = "Your name "; $("nick").value = "You";
+  H("mkRoom", "Make a room"); $("mkRoom").nextElementSibling.textContent = "or";
+  $("roomIn").placeholder = "Room code"; A("roomIn", "Room code"); H("joinRoom", "Join");
+  $("roomCode").parentNode.firstChild.textContent = "Room code ";
+  $("roomCode").parentNode.nextElementSibling.textContent = "Send this link to your friend. Opening it takes them to this room.";
+  H("shareBtn", "Send to a friend"); $("lineBtn").hidden = true; H("copyUrl", "Copy link"); H("qrBtn", "QR code");
+  H("lobbyMsg", "Make a room and send the link to a friend, or enter the room code your friend gave you.");
+  A("table", "Table"); A("cpuHand", "Rival's hand"); A("youHand", "Your hand"); A("faceBtns", "Face buttons");
+  $("cpuName").innerHTML = "Mittens<span>normal</span>"; H("bubble", "Nice to meet you");
+  const pile = document.querySelector(".pile"); pile.querySelector("span").textContent = "Pairs out"; pile.querySelector("em").innerHTML = '<b id="pairs">0</b> / 7 pairs';
+  H("msg", "Press Start to begin."); H("readyBtn", "Ready!"); H("mix", "Shuffle"); H("go", "Ready, pick!");
+  $("mood").previousSibling.textContent = "You";
+  A("skin", "Character"); H("camBtn", "Show my face with the camera"); A("camMode", "Display");
+  $("camMode").innerHTML = '<option value="char">Show as character</option><option value="video">Show camera video</option>';
+  $("ampBox").firstChild.textContent = "Exaggerate ";
+  H("camNote", "Your character copies your real expressions.");
+  H("camHelp", "For safety, the camera can't be used inside Claude's screen. To use it, open the published page of this game (works on phones too) or open the file (last-two.html) in Chrome on a computer.");
+  const sc = document.querySelectorAll(".score span");
+  sc[0].firstChild.textContent = "You "; sc[1].firstChild.textContent = "Rival "; sc[2].firstChild.textContent = "Streak ";
+  document.querySelector(".howto summary").textContent = "How to play";
+  document.querySelector(".howto ol").innerHTML = [
+    "You play only the \"last two players\" of Old Maid. Cards 1 to 7 are dealt one each, and one of you also gets the <b>Joker</b>.",
+    "Take turns drawing one card from the other's hand. Any card except the Joker always makes a pair, which is thrown out. Whoever runs out of cards first wins.",
+    "<b>Drawing</b>: tap one of the rival's cards once to point at it. Their <b>face</b> changes, so read it, then tap again to draw. Faces don't always tell the truth.",
+    "<b>Being drawn from</b>: tap two of your cards to <b>swap</b> them, or tap one card twice to <b>stick it out</b>. \"Shuffle\" mixes your hand. If you draw the Joker, your hand is shuffled automatically.",
+    "Stronger rivals lie with their faces and learn your habits (how you stick cards out and where you put the Joker).",
+    "<b>Watch closely</b>: when the rival holds the Joker and it's your turn, the finger points at their cards one by one. Watch their face change each time to find the Joker. Fewer cards means more time per card (about 2.6 s each with 2 cards). Tap a card to stop there.",
+    "<b>Stare-down</b>: the rival's turn is split into \"arrange time\" and \"stare-down time\". During the stare-down you can't move cards, and the rival's finger wanders over them. With the camera on, the rival reads your face. Acting nervous on the wrong card is a good trick.",
+    "<b>Gulp!</b>: when the rival's finger lands on your Joker, you hear a heartbeat and the phone buzzes (buzzing is Android only; \"Sound off\" stops it).",
+    "<b>Camera</b> (Chrome on a computer): press \"Show my face with the camera\" and your character copies your expressions. The rival reads them too, so keep a poker face."
+  ].map(t => `<li>${t}</li>`).join("");
+  document.querySelector(".later").textContent = "To play a friend, press \"vs Friend\", make a room and send the link (camera and friend play work on phones and in Chrome on a computer).";
+}
+const NAMES = E ? ["Pip", "Mittens", "Shadow"] : ["ポン太", "ミケ", "クロ"], LVTXT = E ? ["easy", "normal", "hard"] : ["よわい", "ふつう", "つよい"];
 const PICK_MS = 12000, ARRANGE_MS = [4500, 4000, 3500], STARE_MS = [6500, 6000, 5500];
 let S = null, gen = 0, soundOn = true, actx = null, guardDone = null, guardTimer = 0;
 let learn = { sb: 0, st: 0, bk: [0, 0, 0], fs: 0, fn: 0, ct: 0, cn: 0 };
@@ -423,7 +479,7 @@ function faceSVG(st, lv){
   const mark = lv === 2 ? `<path d="M25 13q7 4 14 0" class="ln" stroke-width="2"/>` : lv === 1 ? `<path d="M22 12q4-3 8 0" class="ln" stroke-width="2"/>` : "";
   return `<svg viewBox="0 0 64 64" aria-hidden="true">${ears}<circle cx="32" cy="35" r="24" class="head" fill="${skin}"/>${mark}${B}${E}${M}${drop}</svg>`;
 }
-const LINES = { calm: "どうぞ", grin: "…それでいいの？", sweat: "えっ、そこ…？", happy: "ふふっ", shock: "うわっ！", think: "うーん…" };
+const LINES = E ? { calm: "Go ahead", grin: "…you sure?", sweat: "Wait, that one…?", happy: "Heh heh", shock: "Whoa!", think: "Hmm…" } : { calm: "どうぞ", grin: "…それでいいの？", sweat: "えっ、そこ…？", happy: "ふふっ", shock: "うわっ！", think: "うーん…" };
 function say(st, text){
   S.face = st;
   const f = $("face"); f.innerHTML = faceSVG(st, S.lv);
@@ -456,15 +512,15 @@ function cardHTML(c, i, side, enabled){
   if (S.fx.newId === c.id) cls.push("new");
   if (S.fx.mates && S.fx.mates.includes(c.id)) cls.push("mate");
   if (S.fx.takenId === c.id) cls.push("taken");
-  const lab = show ? (c.n ? String(c.n) : "ババ") : `左から${i + 1}枚目`;
-  const inner = !show ? "" : c.n ? `<span class="cn">${c.n}</span>` : `<span class="bb">ババ</span>`;
+  const lab = show ? (c.n ? String(c.n) : (E ? "Joker" : "ババ")) : (E ? `card ${i + 1} from the left` : `左から${i + 1}枚目`);
+  const inner = !show ? "" : c.n ? `<span class="cn">${c.n}</span>` : `<span class="bb">${E ? "JOKER" : "ババ"}</span>`;
   return `<button class="${cls.join(" ")}" data-i="${i}" data-n="${c.n || ""}" ${enabled ? "" : "disabled"} aria-label="${lab}">${inner}</button>`;
 }
 // when the other side's finger lands on your ババ: a heartbeat in your hand (vibration where the phone supports it)
 let lastTouch = "";
 function babaTouch(){
   if (!soundOn) return;
-  SFX.beat(); popAt("ドキッ", "baba");
+  SFX.beat(); popAt(E ? "Gulp!" : "ドキッ", "baba");
   try { navigator.vibrate && navigator.vibrate([35, 60, 35]); } catch (e) {}
 }
 function render(){
@@ -472,7 +528,7 @@ function render(){
   if (key && key !== lastTouch) babaTouch();
   lastTouch = key;
   const mypick = S.phase === "pick", t = $("table");
-  if (mypick && !t.classList.contains("mypick")) popAt("あなたの番！");
+  if (mypick && !t.classList.contains("mypick")) popAt(E ? "Your turn!" : "あなたの番！");
   t.classList.toggle("mypick", mypick);
   const youOn = ["pick", "guard", "cpuwait", "oguard", "stare"].includes(S.phase);
   $("youHand").innerHTML = S.you.map((c, i) => cardHTML(c, i, "you", youOn)).join("");
@@ -480,9 +536,9 @@ function render(){
   $("cpuHand").innerHTML = S.cpu.map((c, i) => cardHTML(c, i, "cpu", S.phase === "pick")).join("");
   $("pairs").textContent = S.pairs;
   $("tools").hidden = !["guard", "oguard", "stare"].includes(S.phase); $("go").hidden = S.phase === "oguard"; $("mix").hidden = S.phase === "stare";
-  $("go").textContent = S.phase === "guard" ? "並べかえ完了" : "これでどうぞ";
+  $("go").textContent = S.phase === "guard" ? (E ? "Done arranging" : "並べかえ完了") : (E ? "Ready, pick!" : "これでどうぞ");
   $("faceBtns").hidden = true;
-  $("cpuName").innerHTML = ON.active ? `${esc(ON.oppName || "ともだち")}<span>${ON.open ? "ともだち" : "まだいません"}</span>` : `${name()}<span>${LVTXT[S.lv]}</span>`;
+  $("cpuName").innerHTML = ON.active ? `${esc(ON.oppName || (E ? "Friend" : "ともだち"))}<span>${ON.open ? (E ? "friend" : "ともだち") : (E ? "not here yet" : "まだいません")}</span>` : `${name()}<span>${LVTXT[S.lv]}</span>`;
 }
 function renderPair(n){
   $("lastPair").innerHTML = [0, 1].map(() => `<span class="card up in" data-n="${n}"><span class="cn">${n}</span></span>`).join("");
@@ -549,7 +605,7 @@ async function yourTurn(g){
   S.reacts = {}; S.aimCpu = -1; S.cpuStick = null;
   if (holdsBaba(S.cpu)){
     if (S.lv > 0 || Math.random() < .5){
-      S.phase = "anim"; msg(`${name()}が手札をまぜています…`); render();
+      S.phase = "anim"; msg((E?`${name()} is shuffling…`:`${name()}が手札をまぜています…`)); render();
       shuffle(S.cpu); render(); const h = $("cpuHand");
       h.classList.remove("mixing"); void h.offsetWidth; h.classList.add("mixing"); SFX.mix();
       await wait(700); if (g !== gen) return;
@@ -559,11 +615,11 @@ async function yourTurn(g){
       S.cpuStick = (Math.random() < .5 || !others.length) ? b.id : others[rnd(others.length)].id;
     }
   }
-  S.phase = "pick"; say("calm", holdsBaba(S.cpu) ? "どれにする？" : "好きなのどうぞ");
+  S.phase = "pick"; say("calm", holdsBaba(S.cpu) ? (E ? "Which one?" : "どれにする？") : (E ? "Take any" : "好きなのどうぞ"));
   const after = () => {
     if (g !== gen || S.phase !== "pick") return;
-    S.aimCpu = -1; say("calm", "さあ、どれ？");
-    msg(`<b>あなたの番</b>　${name()}の手札から1枚引こう。`, "1回タップで指さす → 顔色を読んで、もう一度タップで引く");
+    S.aimCpu = -1; say("calm", E ? "Go on, pick one" : "さあ、どれ？");
+    msg(E ? `<b>Your turn</b>　Draw a card from ${name()}.` : `<b>あなたの番</b>　${name()}の手札から1枚引こう。`, E ? "Tap once to point → read the face → tap again to draw" : "1回タップで指さす → 顔色を読んで、もう一度タップで引く");
     setTimer(PICK_MS); render();
   };
   if (holdsBaba(S.cpu) && S.cpu.length >= 2){
@@ -571,7 +627,7 @@ async function yourTurn(g){
     startScan(i => { if (g !== gen || S.phase !== "pick") return; S.aimCpu = i; SFX.aim(); say(reactTo(S.cpu[i])); scanMsg(); render(); }, after);
     return;
   }
-  msg(`<b>あなたの番</b>　${name()}の手札から1枚引こう。`, "ババはあなたの手にあります。どれを引いてもそろいます");
+  msg(E ? `<b>Your turn</b>　Draw a card from ${name()}.` : `<b>あなたの番</b>　${name()}の手札から1枚引こう。`, E ? "You hold the Joker, so any card makes a pair" : "ババはあなたの手にあります。どれを引いてもそろいます");
   setTimer(PICK_MS); render();
 }
 // --- じっくり見る: before you pick, your finger visits every card in turn so you can study the face.
@@ -590,8 +646,8 @@ function startScan(step, done){
 }
 function stopScan(){ if (SCAN){ clearTimeout(SCAN.t); SCAN = null; } }
 function scanMsg(){
-  const who = ON.active ? esc(ON.oppName || "ともだち") + "さん" : name();
-  msg(`<b>じっくり見る</b>　${SCAN.i + 1}枚目／${SCAN.n}枚　${who}の顔をよく見て！`, "指が1枚ずつ動きます（カードをタップすると、そこで止まります）");
+  const who = ON.active ? esc(ON.oppName || (E ? "your friend" : "ともだち")) + (E ? "" : "さん") : name();
+  msg(E ? `<b>Watch closely</b>　card ${SCAN.i + 1} of ${SCAN.n}. Watch ${who}'s face!` : `<b>じっくり見る</b>　${SCAN.i + 1}枚目／${SCAN.n}枚　${who}の顔をよく見て！`, E ? "The finger moves card by card (tap a card to stop there)" : "指が1枚ずつ動きます（カードをタップすると、そこで止まります）");
 }
 $("cpuHand").addEventListener("click", e => {
   const b = e.target.closest(".card"); if (!b || b.disabled || S.phase !== "pick") return;
@@ -609,23 +665,23 @@ async function youDraw(i){
   S.aimCpu = -1; S.fx = { takenId: c.id }; render(); await wait(280); if (g !== gen) return;
   S.cpu.splice(i, 1); S.cpuStick = null; S.sel = -1;
   if (c.n === 0){
-    snapEvent("ババを引いた瞬間");
+    snapEvent((E ? "The moment you drew the Joker" : "ババを引いた瞬間"));
     S.you.push(c); S.youDrew++; S.fx = { newId: c.id };
     avatarEvent({ jaw: .7, openL: 1.5, openR: 1.5, inner: .8 }, 1500);
-    say("happy", "ふふっ、引いたね"); SFX.baba(); shake(); popAt("ババ！", "baba");
-    msg(`<b>ババを引いてしまった…</b>　自動で手札をまぜます。`, "");
+    say("happy", E ? "Heh, you took it" : "ふふっ、引いたね"); SFX.baba(); shake(); popAt(E ? "JOKER!" : "ババ！", "baba");
+    msg(E ? `<b>You drew the Joker…</b>　Your hand will be shuffled.` : `<b>ババを引いてしまった…</b>　自動で手札をまぜます。`, "");
     render(); await wait(800); if (g !== gen) return;
     // the drawn ババ gets shuffled in automatically, so its spot is not given away
     shuffle(S.you); S.youStick = null; S.sel = -1; S.know = false; S.fx = {}; SFX.mix();
     render(); mixAnim();
-    msg(`<b>ババを引いてしまった…</b>　手札をまぜました。`, "引かれる前に、さらに並べかえてもOK");
+    msg(E ? `<b>You drew the Joker…</b>　Your hand was shuffled.` : `<b>ババを引いてしまった…</b>　手札をまぜました。`, E ? "You can rearrange more before they draw" : "引かれる前に、さらに並べかえてもOK");
     await wait(700); if (g !== gen) return;
   } else {
     const m = S.you.find(x => x.n === c.n);
     S.you.push(c); S.fx = { newId: c.id, mates: [c.id, m.id] }; render();
-    say(holdsBaba(S.cpu) ? "sweat" : "calm", holdsBaba(S.cpu) ? "くっ…" : "そろったね");
+    say(holdsBaba(S.cpu) ? "sweat" : "calm", holdsBaba(S.cpu) ? (E ? "Ugh…" : "くっ…") : (E ? "A pair" : "そろったね"));
     await wait(520); if (g !== gen) return;
-    S.you = S.you.filter(x => x.n !== c.n); S.pairs++; renderPair(c.n); SFX.pair(); popAt("ペア！"); avatarEvent({ smile: .4 }, 700);
+    S.you = S.you.filter(x => x.n !== c.n); S.pairs++; renderPair(c.n); SFX.pair(); popAt(E ? "PAIR!" : "ペア！"); avatarEvent({ smile: .4 }, 700);
     S.fx = {}; render(); await wait(350); if (g !== gen) return;
   }
   S.fx = {};
@@ -697,23 +753,23 @@ async function cpuTurn(g){
   if (guarding){
     // two beats: first your hands hide the ババ, then your face defends it while the finger roams
     S.phase = "guard"; S.faceObs = {}; S.wq = null; S.claims = {}; S.hw = null; S.faceUsed = false; S.aimYou = -1;
-    setTimer(ARRANGE_MS[S.lv]); say("think", "並べかえ中？");
-    msg(`<b>${name()}が引く番</b>　まずは<b>並べかえタイム</b>。ババを隠そう。`, "2枚タップで入れかえ ・ 同じカードを2回タップでつき出す");
+    setTimer(ARRANGE_MS[S.lv]); say("think", E ? "Rearranging?" : "並べかえ中？");
+    msg(E ? `<b>${name()} draws</b>　First, <b>arrange time</b>. Hide the Joker.` : `<b>${name()}が引く番</b>　まずは<b>並べかえタイム</b>。ババを隠そう。`, E ? "Tap 2 cards to swap · tap one card twice to stick it out" : "2枚タップで入れかえ ・ 同じカードを2回タップでつき出す");
     render();
     await new Promise(r => { guardDone = r; guardTimer = setTimeout(r, ARRANGE_MS[S.lv]); });
     clearTimeout(guardTimer); guardDone = null;
     if (g !== gen) return;
     S.phase = "stare"; S.sel = -1; S.aimYou = wanderIdx(); if (!CAM.on) noteHover();
     setTimer(STARE_MS[S.lv]); say("think");
-    msg(`<b>にらみ合いタイム</b>　${name()}の指がうろうろします。顔で勝負！${CAM.on && S.lv > 0 ? "<br>あなたの本当の表情も見られています。" : ""}`, CAM.on ? "顔で、指をババから遠ざけよう" : "カメラを使うと、顔でも勝負できます");
+    msg(E ? `<b>Stare-down</b>　${name()}'s finger wanders. Win with your face!${CAM.on && S.lv > 0 ? "<br>Your real face is being read too." : ""}` : `<b>にらみ合いタイム</b>　${name()}の指がうろうろします。顔で勝負！${CAM.on && S.lv > 0 ? "<br>あなたの本当の表情も見られています。" : ""}`, CAM.on ? (E ? "Use your face to steer the finger away from the Joker" : "顔で、指をババから遠ざけよう") : (E ? "Turn on the camera to battle with your face too" : "カメラを使うと、顔でも勝負できます"));
     render(); SFX.aim();
     const wander = setInterval(() => { if (g === gen && S.phase === "stare" && performance.now() > S.pauseUntil){ flushHover(); S.aimYou = wanderIdx(); if (!CAM.on) noteHover(); render(); SFX.aim(); } }, CAM.on ? 800 : 1000);
     await new Promise(r => { guardDone = r; guardTimer = setTimeout(r, STARE_MS[S.lv]); });
     clearInterval(wander); clearTimeout(guardTimer); guardDone = null;
     if (g !== gen) return;
   } else {
-    S.phase = "cpuwait"; say("think", "どれにしようかな");
-    msg(`<b>${name()}が引く番</b>`, "ババは相手の手にあります"); render();
+    S.phase = "cpuwait"; say("think", E ? "Which one, which one…" : "どれにしようかな");
+    msg(E ? `<b>${name()} draws</b>` : `<b>${name()}が引く番</b>`, E ? "The Joker is in their hand" : "ババは相手の手にあります"); render();
     await wait(800); if (g !== gen) return;
   }
   S.phase = "anim"; S.sel = -1; stopTimer();
@@ -732,20 +788,20 @@ async function cpuTurn(g){
       S.aimYou = k; render(); await wait(550); if (g !== gen) return;
     }
   }
-  S.aimYou = j; say("think", guarding ? "…これ！" : "これ"); render();
+  S.aimYou = j; say("think", guarding ? (E ? "…this one!" : "…これ！") : (E ? "This one" : "これ")); render();
   await wait(guarding ? 700 : 300); if (g !== gen) return;
   const c = S.you[j];
   S.fx = { takenId: c.id }; render(); await wait(300); if (g !== gen) return;
   S.you.splice(j, 1); S.youStick = null; S.aimYou = -1; S.know = false;
   if (c.n === 0){
-    snapEvent("ババを引かせた瞬間");
+    snapEvent((E ? "The moment they drew your Joker" : "ババを引かせた瞬間"));
     S.cpu.push(c); S.cpuDrew++; S.fx = { newId: c.id };
-    say("shock", "うわっ…ババ！"); SFX.give(); popAt("ババを引かせた！", "baba"); avatarEvent({ smile: .8, squint: .6, openL: .9, openR: .9 }, 1500);
-    msg(`<b>ババを引かせた！</b>`, ""); render(); await wait(1000); if (g !== gen) return;
+    say("shock", E ? "Argh… the Joker!" : "うわっ…ババ！"); SFX.give(); popAt(E ? "They took the Joker!" : "ババを引かせた！", "baba"); avatarEvent({ smile: .8, squint: .6, openL: .9, openR: .9 }, 1500);
+    msg(E ? `<b>They took the Joker!</b>` : `<b>ババを引かせた！</b>`, ""); render(); await wait(1000); if (g !== gen) return;
   } else {
     const m = S.cpu.find(x => x.n === c.n);
     S.cpu.push(c); S.fx = { newId: c.id, mates: [c.id, m.id] }; render();
-    say("happy", "そろった♪"); await wait(450); if (g !== gen) return;
+    say("happy", E ? "A pair ♪" : "そろった♪"); await wait(450); if (g !== gen) return;
     S.cpu = S.cpu.filter(x => x.n !== c.n); S.pairs++; renderPair(c.n); SFX.pair();
     S.fx = {}; render(); await wait(350); if (g !== gen) return;
   }
@@ -768,28 +824,28 @@ function finish(win){
   $("sYou").textContent = score.you; $("sCpu").textContent = score.cpu; $("streak").textContent = score.streak;
   const earned = earn(win);
   render();
-  if (win){ say("shock", "負けた〜！"); SFX.win(); avatarEvent({ smile: .95, openL: .05, openR: .05 }, 3000); msg(`<b>あなたの勝ち！</b>　ババは${name()}の手に残りました。`); }
-  else { say("happy", "ぼくの勝ち！"); SFX.lose(); avatarEvent({ inner: .9, frown: .8 }, 3000); msg(`<b>負け…</b>　ババがあなたの手に残りました。`); }
-  $("start").textContent = "もう一回";
+  if (win){ say("shock", E ? "I lost!" : "負けた〜！"); SFX.win(); avatarEvent({ smile: .95, openL: .05, openR: .05 }, 3000); msg(E ? `<b>You win!</b>　The Joker stayed with ${name()}.` : `<b>あなたの勝ち！</b>　ババは${name()}の手に残りました。`); }
+  else { say("happy", E ? "I win!" : "ぼくの勝ち！"); SFX.lose(); avatarEvent({ inner: .9, frown: .8 }, 3000); msg(E ? `<b>You lose…</b>　The Joker stayed in your hand.` : `<b>負け…</b>　ババがあなたの手に残りました。`); }
+  $("start").textContent = E ? "Play again" : "もう一回";
   setTimeout(() => {
     if (g !== gen) return;
     $("overlayHost").innerHTML = `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="rt"><div class="result">
-      <h2 id="rt">${win ? "勝ち！" : "負け…"}</h2>
-      <p>${win ? `${name()}にババを押しつけました。` : `ババを押しつけられました。`}</p>
+      <h2 id="rt">${win ? (E ? "You win!" : "勝ち！") : (E ? "You lose…" : "負け…")}</h2>
+      <p>${win ? (E ? `You stuck ${name()} with the Joker.` : `${name()}にババを押しつけました。`) : (E ? `You got stuck with the Joker.` : `ババを押しつけられました。`)}</p>
       <table>
-        <tr><td>かかった時間</td><td>${secs}秒</td></tr>
-        <tr><td>ババを引いた回数</td><td>${S.youDrew}</td></tr>
-        <tr><td>ババを引かせた回数</td><td>${S.cpuDrew}</td></tr>
-        <tr><td>${name()}との通算</td><td>${r.w}勝 ${r.l}敗</td></tr>
-        <tr><td>最高連勝</td><td>${r.best}</td></tr>
-        <tr><td>${name()}の顔色の正体</td><td>${STYLE_TXT[S.style]}</td></tr>
+        <tr><td>${E ? "Time" : "かかった時間"}</td><td>${secs}${E ? " s" : "秒"}</td></tr>
+        <tr><td>${E ? "Times you drew the Joker" : "ババを引いた回数"}</td><td>${S.youDrew}</td></tr>
+        <tr><td>${E ? "Times they drew your Joker" : "ババを引かせた回数"}</td><td>${S.cpuDrew}</td></tr>
+        <tr><td>${E ? `Record vs ${name()}` : `${name()}との通算`}</td><td>${E ? `${r.w} W ${r.l} L` : `${r.w}勝 ${r.l}敗`}</td></tr>
+        <tr><td>${E ? "Best win streak" : "最高連勝"}</td><td>${r.best}</td></tr>
+        <tr><td>${E ? `${name()}'s true style` : `${name()}の顔色の正体`}</td><td>${STYLE_TXT[S.style]}</td></tr>
       </table>
       ${earnHTML(earned)}
-      <h3>あなたの顔</h3>
+      <h3>${E ? "Your face" : "あなたの顔"}</h3>
       ${faceReport()}
       ${adHTML()}
-      <div class="rbtns"><button class="primary" id="again">もう一回</button><button id="callFriend">友だちと勝負する</button><button id="close">閉じる</button></div>
-      <p class="rnote">${S.lv < 2 && win ? "次は相手を強くしてみよう。" : S.lv > 0 ? "強い相手ほど、あなたのクセを覚えていきます。" : "顔色をよく見よう。"}</p>
+      <div class="rbtns"><button class="primary" id="again">${E ? "Play again" : "もう一回"}</button><button id="callFriend">${E ? "Play a friend" : "友だちと勝負する"}</button><button id="close">${E ? "Close" : "閉じる"}</button></div>
+      <p class="rnote">${S.lv < 2 && win ? (E ? "Next, try a stronger rival." : "次は相手を強くしてみよう。") : S.lv > 0 ? (E ? "Stronger rivals learn your habits." : "強い相手ほど、あなたのクセを覚えていきます。") : (E ? "Watch their face closely." : "顔色をよく見よう。")}</p>
     </div></div>`;
     $("again").addEventListener("click", startGame);
     $("callFriend").addEventListener("click", () => { $("overlayHost").innerHTML = ""; setMode(true); mkRoom(); });
@@ -804,24 +860,24 @@ function startGame(){
   if (guardDone){ clearTimeout(guardTimer); guardDone = null; }
   $("overlayHost").innerHTML = ""; $("lastPair").innerHTML = "";
   S = newState(); S.t0 = performance.now();
-  $("start").textContent = "やり直す";
+  $("start").textContent = E ? "Restart" : "やり直す";
   const youFirst = !holdsBaba(S.you);
-  say("calm", "勝負！");
-  msg(youFirst ? `ババは<b>${name()}</b>が持っています。あなたが先に引きます。` : `ババは<b>あなた</b>が持っています。${name()}が先に引きます。`);
+  say("calm", E ? "Let's go!" : "勝負！");
+  msg(E ? (youFirst ? `<b>${name()}</b> holds the Joker. You draw first.` : `<b>You</b> hold the Joker. ${name()} draws first.`) : (youFirst ? `ババは<b>${name()}</b>が持っています。あなたが先に引きます。` : `ババは<b>あなた</b>が持っています。${name()}が先に引きます。`));
   render();
   setTimeout(() => { if (g === gen) youFirst ? yourTurn(g) : cpuTurn(g); }, 1200);
 }
 function idle(){
   gen++; stopScan();
   if (guardDone){ clearTimeout(guardTimer); guardDone = null; }
-  S = newState(); say("calm", "よろしくね");
-  msg("スタートを押すとゲームが始まります。", "下に並んでいるのは配られる手札の例です");
-  $("start").textContent = "スタート"; $("lastPair").innerHTML = ""; stopTimer(); render();
+  S = newState(); say("calm", E ? "Nice to meet you" : "よろしくね");
+  msg(E ? "Press Start to begin." : "スタートを押すとゲームが始まります。", E ? "The cards below are a sample hand" : "下に並んでいるのは配られる手札の例です");
+  $("start").textContent = E ? "Start" : "スタート"; $("lastPair").innerHTML = ""; stopTimer(); render();
 }
 $("start").addEventListener("click", startGame);
 $("level").addEventListener("change", () => { learn = { sb: 0, st: 0, bk: [0, 0, 0], fs: 0, fn: 0, ct: 0, cn: 0 }; score.you = score.cpu = score.streak = 0;
   $("sYou").textContent = 0; $("sCpu").textContent = 0; $("streak").textContent = 0; idle(); });
-$("sound").addEventListener("click", e => { soundOn = !soundOn; e.target.textContent = soundOn ? "音 オン" : "音 オフ"; e.target.setAttribute("aria-pressed", soundOn); });
+$("sound").addEventListener("click", e => { soundOn = !soundOn; e.target.textContent = soundOn ? (E ? "Sound on" : "音 オン") : (E ? "Sound off" : "音 オフ"); e.target.setAttribute("aria-pressed", soundOn); });
 
 // --- your face: camera → character ---
 const CAM = { on: false, lm: null, stream: null, v: null, base: null, lastT: -1, seen: 0 };
@@ -848,18 +904,18 @@ function exaggerate(v){
 }
 // --- cosmetics: everything here only changes looks, never the odds ---
 const ITEMS = {
-  skin: [{ id: "hito", name: "ひと", price: 0 }, { id: "neko", name: "ねこ", price: 0 }, { id: "kuma", name: "くま", price: 300 }, { id: "robo", name: "ロボ", price: 500 },
-    { id: "usagi", name: "うさぎ", price: 800 }, { id: "obake", name: "おばけ", pass: true }],
-  back: [{ id: "classic", name: "クラシック", price: 0 }, { id: "dots", name: "ドット", price: 200 }, { id: "ichimatsu", name: "市松", price: 300 }, { id: "neon", name: "ネオン", price: 400 },
-    { id: "stars", name: "星空", pass: true }, { id: "gold", name: "金のババ", pass: true }, { id: "nakayoshi", name: "なかよし", invite: 3 }],
-  stamp: [{ id: "basic", name: "きほん", price: 0, lines: ["それ、ババだよ", "それはババじゃないよ", "それ、ババ？", "どうかな〜", "はやく引いて！", "うーん…"] },
-    { id: "polite", name: "ていねい", price: 200, lines: ["そちら、ババでございます", "ババではございません", "そちら、ババですか？", "さあ、どうでしょう", "お早めにどうぞ", "お手やわらかに"] },
-    { id: "kansai", name: "関西弁", price: 300, lines: ["それババやで", "ババちゃうで", "それババちゃうん？", "知らんけど", "はよ引いてや", "なんでやねん"] },
-    { id: "animal", name: "どうぶつ", price: 300, lines: ["にゃー（ババだにゃ）", "わん（ちがうわん）", "ぴよ？（ババ？）", "がおー", "ぶーぶー（はやく）", "こけっ"] }],
-  fx: [{ id: "star", name: "キラキラ", price: 0 }, { id: "heart", name: "ハート", price: 300 }, { id: "note", name: "音符", price: 300 }, { id: "flower", name: "花", pass: true }]
+  skin: [{ id: "hito", name: E ? "Human" : "ひと", price: 0 }, { id: "neko", name: E ? "Cat" : "ねこ", price: 0 }, { id: "kuma", name: E ? "Bear" : "くま", price: 300 }, { id: "robo", name: E ? "Robot" : "ロボ", price: 500 },
+    { id: "usagi", name: E ? "Bunny" : "うさぎ", price: 800 }, { id: "obake", name: E ? "Ghost" : "おばけ", pass: true }],
+  back: [{ id: "classic", name: E ? "Classic" : "クラシック", price: 0 }, { id: "dots", name: E ? "Dots" : "ドット", price: 200 }, { id: "ichimatsu", name: E ? "Checkers" : "市松", price: 300 }, { id: "neon", name: E ? "Neon" : "ネオン", price: 400 },
+    { id: "stars", name: E ? "Starry sky" : "星空", pass: true }, { id: "gold", name: E ? "Golden Joker" : "金のババ", pass: true }, { id: "nakayoshi", name: E ? "Best friends" : "なかよし", invite: 3 }],
+  stamp: [{ id: "basic", name: E ? "Basic" : "きほん", price: 0, lines: ["それ、ババだよ", "それはババじゃないよ", "それ、ババ？", "どうかな〜", "はやく引いて！", "うーん…"] },
+    { id: "polite", name: E ? "Polite" : "ていねい", price: 200, lines: ["そちら、ババでございます", "ババではございません", "そちら、ババですか？", "さあ、どうでしょう", "お早めにどうぞ", "お手やわらかに"] },
+    { id: "kansai", name: E ? "Kansai" : "関西弁", price: 300, lines: ["それババやで", "ババちゃうで", "それババちゃうん？", "知らんけど", "はよ引いてや", "なんでやねん"] },
+    { id: "animal", name: E ? "Animal" : "どうぶつ", price: 300, lines: ["にゃー（ババだにゃ）", "わん（ちがうわん）", "ぴよ？（ババ？）", "がおー", "ぶーぶー（はやく）", "こけっ"] }],
+  fx: [{ id: "star", name: E ? "Sparkle" : "キラキラ", price: 0 }, { id: "heart", name: E ? "Hearts" : "ハート", price: 300 }, { id: "note", name: E ? "Notes" : "音符", price: 300 }, { id: "flower", name: E ? "Flowers" : "花", pass: true }]
 };
-const KIND_TXT = { skin: "キャラ", back: "カード柄", stamp: "スタンプ", fx: "マンガ効果" };
-const SEASON = { name: "シーズン1　はじまりの卓", ends: "2026年12月31日", rows: [
+const KIND_TXT = E ? { skin: "Character", back: "Card back", stamp: "Stamps", fx: "Comic effect" } : { skin: "キャラ", back: "カード柄", stamp: "スタンプ", fx: "マンガ効果" };
+const SEASON = { name: E ? "Season 1: The First Table" : "シーズン1　はじまりの卓", ends: E ? "Dec 31, 2026" : "2026年12月31日", rows: [
   [2, { coins: 50 }, { item: ["back", "stars"] }], [4, { coins: 50 }, { item: ["fx", "heart"] }], [6, { item: ["back", "dots"] }, { coins: 100 }],
   [8, { coins: 100 }, { coins: 200 }], [10, { coins: 150 }, { item: ["skin", "obake"] }], [12, { coins: 100 }, { item: ["fx", "note"] }],
   [14, { coins: 100 }, { item: ["back", "neon"] }], [16, { coins: 150 }, { coins: 300 }], [18, { coins: 150 }, { item: ["fx", "flower"] }],
@@ -956,6 +1012,8 @@ function moodOf(v){
   if (Math.abs(v.gx) > .55) return "目が泳いでる";
   return "ポーカーフェイス";
 }
+const MOOD_EN = { "びっくり": "Surprised", "ウインク": "Wink", "にっこり": "Big smile", "にやり": "Smirk", "ぷくー": "Puffed cheeks", "チュー": "Kissy lips", "ぷんぷん": "Grumpy", "目をつむった": "Eyes shut", "ドキドキ": "Nervous", "目が泳いでる": "Shifty eyes", "ポーカーフェイス": "Poker face" };
+const moodTxt = m => E ? (MOOD_EN[m] || m) : m;
 function camNote(t){ $("camNote").textContent = t; }
 function readFace(r, vid){
   const b = {}; r.faceBlendshapes[0].categories.forEach(c => b[c.categoryName] = c.score);
@@ -980,7 +1038,7 @@ function readFace(r, vid){
     yaw: -(nose.x - mid.x) / ed, pitch: (nose.y - mid.y) / ed, hx: -(mid.x / W - .5) * 2, hy: (mid.y / H - .5) * 2,
     puff: b.cheekPuff || 0, squint: avg("eyeSquintLeft", "eyeSquintRight") };
 }
-const COMMENT = { "にっこり": "いま笑った？", "にやり": "口元がゆるんだね", "ドキドキ": "あれ、困ってる？", "目が泳いでる": "目が泳いでるよ〜", "びっくり": "びくっとしたね", "目をつむった": "見ないふり？", "ウインク": "ウインクでごまかす気？", "ぷくー": "ほっぺふくらんでるよ", "チュー": "…なにその口", "ぷんぷん": "怒ってる？" };
+const COMMENT = E ? { "にっこり": "Did you just laugh?", "にやり": "Your lips twitched", "ドキドキ": "Uh oh, worried?", "目が泳いでる": "Your eyes are wandering~", "びっくり": "You flinched!", "目をつむった": "Not looking?", "ウインク": "Trying to wink it away?", "ぷくー": "Your cheeks are puffed", "チュー": "…what's with that mouth?", "ぷんぷん": "Are you mad?" } : { "にっこり": "いま笑った？", "にやり": "口元がゆるんだね", "ドキドキ": "あれ、困ってる？", "目が泳いでる": "目が泳いでるよ〜", "びっくり": "びくっとしたね", "目をつむった": "見ないふり？", "ウインク": "ウインクでごまかす気？", "ぷくー": "ほっぺふくらんでるよ", "チュー": "…なにその口", "ぷんぷん": "怒ってる？" };
 function sampleFace(v){
   const f = [v.smile, v.jaw, v.inner, (v.openL + v.openR) / 2, v.gx * .5, v.down, v.frown];
   if (!CAM.base) CAM.base = f.slice();
@@ -1006,23 +1064,23 @@ function snapEvent(label){
   if (!CAM.on || !CAM.v) return;
   const s0 = S; setTimeout(() => { if (S === s0 && CAM.v) s0.events.push({ label, v: { ...CAM.v } }); }, 450);
 }
-const STYLE_TXT = { honest: "正直者", reverse: "ウソつき", random: "でたらめ" };
+const STYLE_TXT = E ? { honest: "Honest", reverse: "Liar", random: "Random" } : { honest: "正直者", reverse: "ウソつき", random: "でたらめ" };
 function faceReport(){
   if (!S.snaps.length && !S.events.length)
-    return `<p class="rnote">${CAM.on ? "今回は、相手の指があなたのババに近づく場面がありませんでした。" : "カメラをつけると、ここに相手から見えたあなたの表情の振り返りが出ます。"}</p>`;
+    return `<p class="rnote">${CAM.on ? (E ? "This time, the rival's finger never came near your Joker." : "今回は、相手の指があなたのババに近づく場面がありませんでした。") : (E ? "Turn on the camera to see a replay of the faces your rival saw." : "カメラをつけると、ここに相手から見えたあなたの表情の振り返りが出ます。")}</p>`;
   const b = S.snaps.filter(x => x.isB), o = S.snaps.filter(x => !x.isB);
   const top = arr => arr.slice().sort((x, y) => y.dev - x.dev)[0];
   const items = [];
-  if (b.length) items.push({ label: "指がババの上", v: top(b).v, bb: true });
-  if (o.length) items.push({ label: "ほかのカードの上", v: top(o).v });
+  if (b.length) items.push({ label: (E ? "Finger on the Joker" : "指がババの上"), v: top(b).v, bb: true });
+  if (o.length) items.push({ label: (E ? "Finger on other cards" : "ほかのカードの上"), v: top(o).v });
   S.events.slice(0, 2).forEach(e => items.push(e));
   let verdict = "";
   if (b.length && o.length){
     const avg = arr => arr.reduce((t, x) => t + x.dev, 0) / arr.length, r = avg(b) / (avg(o) + .01);
-    const t = r >= 1.5 ? "ババのとき、顔に出ていました！" : r >= 1.15 ? "ババのとき、少し顔に出ていました" : r >= .85 ? "ポーカーフェイスでした" : "ババのときほど落ち着いていました（それもヒントになります）";
-    verdict = `<p><b>顔に出やすさ</b>　${t}<br><span class="rnote">ババのときの表情の動きは、ほかのときの${r.toFixed(1)}倍</span></p>`;
+    const t = E ? (r >= 1.5 ? "Your face gave the Joker away!" : r >= 1.15 ? "Your face gave a little away on the Joker" : r >= .85 ? "Perfect poker face" : "You were calmer on the Joker (that's a clue too)") : r >= 1.5 ? "ババのとき、顔に出ていました！" : r >= 1.15 ? "ババのとき、少し顔に出ていました" : r >= .85 ? "ポーカーフェイスでした" : "ババのときほど落ち着いていました（それもヒントになります）";
+    verdict = E ? `<p><b>How readable</b>　${t}<br><span class="rnote">Your face moved ${r.toFixed(1)}× as much on the Joker as on other cards</span></p>` : `<p><b>顔に出やすさ</b>　${t}<br><span class="rnote">ババのときの表情の動きは、ほかのときの${r.toFixed(1)}倍</span></p>`;
   }
-  return `<div class="faces av">${items.map(it => `<figure class="${it.bb ? "bb" : ""}"><svg viewBox="0 0 64 64" aria-hidden="true">${avatarInner(exaggerate(it.v))}</svg><figcaption>${it.label}<br>${moodOf(it.v)}</figcaption></figure>`).join("")}</div>${verdict}`;
+  return `<div class="faces av">${items.map(it => `<figure class="${it.bb ? "bb" : ""}"><svg viewBox="0 0 64 64" aria-hidden="true">${avatarInner(exaggerate(it.v))}</svg><figcaption>${it.label}<br>${moodTxt(moodOf(it.v))}</figcaption></figure>`).join("")}</div>${verdict}`;
 }
 function mySay(t){
   const el = $("myBubble"); el.textContent = t; el.hidden = false;
@@ -1039,9 +1097,9 @@ function camLoop(){
       const t = readFace(r, vid);
       CAM.v = CAM.v ? Object.fromEntries(Object.keys(t).map(k => [k, CAM.v[k] + (t[k] - CAM.v[k]) * .45])) : t;
       CAM.neutral = CAM.neutral ? Object.fromEntries(Object.keys(t).map(k => [k, CAM.neutral[k] + (t[k] - CAM.neutral[k]) * .004])) : { ...t };
-      CAM.seen = now; drawAvatar(now < OVR.until ? { ...REST, ...OVR.v } : exaggerate(CAM.v)); $("mood").textContent = moodOf(CAM.v); sampleFace(CAM.v);
+      CAM.seen = now; drawAvatar(now < OVR.until ? { ...REST, ...OVR.v } : exaggerate(CAM.v)); $("mood").textContent = moodTxt(moodOf(CAM.v)); sampleFace(CAM.v);
       onFace();
-    } else if (now - CAM.seen > 800) $("mood").textContent = "顔が見えません";
+    } else if (now - CAM.seen > 800) $("mood").textContent = E ? "Can't see your face" : "顔が見えません";
   }
   requestAnimationFrame(camLoop);
 }
@@ -1053,33 +1111,33 @@ async function makeLandmarker(){
   catch (e) { return await FaceLandmarker.createFromOptions(files, opts("CPU")); }
 }
 async function startCam(){
-  const btn = $("camBtn"); btn.disabled = true; camNote("カメラを準備しています…");
+  const btn = $("camBtn"); btn.disabled = true; camNote((E ? "Getting the camera ready…" : "カメラを準備しています…"));
   try {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("none");
     CAM.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
   } catch (e) {
     btn.disabled = false;
-    camNote(INAPP ? "アプリの中ではカメラが使えません。上の「ブラウザで開く」から開き直してください。" : e && e.name === "NotAllowedError" ? "カメラが許可されませんでした。ブラウザのアドレス欄の左のマークから、カメラを「許可」にしてください。" : "この画面ではカメラが使えません。");
+    camNote(E ? (INAPP ? "The camera doesn't work inside this app. Reopen with \"Open in browser\" above." : e && e.name === "NotAllowedError" ? "Camera access was blocked. Tap the icon left of the address bar and allow the camera." : "The camera isn't available here.") : INAPP ? "アプリの中ではカメラが使えません。上の「ブラウザで開く」から開き直してください。" : e && e.name === "NotAllowedError" ? "カメラが許可されませんでした。ブラウザのアドレス欄の左のマークから、カメラを「許可」にしてください。" : "この画面ではカメラが使えません。");
     if (INAPP){ $("inapp").hidden = false; $("inapp").scrollIntoView({ behavior: "smooth" }); }
     $("camHelp").hidden = false; return;
   }
   const vid = $("cam"); vid.srcObject = CAM.stream; vid.hidden = false; await vid.play().catch(() => {});
   try {
-    if (!CAM.lm){ camNote("表情を読み取る仕組みを読み込み中…（はじめは数秒かかります）"); CAM.lm = await makeLandmarker(); }
+    if (!CAM.lm){ camNote((E ? "Loading face reading… (takes a few seconds the first time)" : "表情を読み取る仕組みを読み込み中…（はじめは数秒かかります）")); CAM.lm = await makeLandmarker(); }
   } catch (e) {
-    stopCam(); camNote("表情を読み取る仕組みを読み込めませんでした。ネットにつながっているか確かめてください。"); $("camHelp").hidden = false; return;
+    stopCam(); camNote((E ? "Couldn't load face reading. Check your internet connection." : "表情を読み取る仕組みを読み込めませんでした。ネットにつながっているか確かめてください。")); $("camHelp").hidden = false; return;
   }
   CAM.on = true; CAM.v = null; CAM.base = null; CAM.neutral = null; $("ampBox").hidden = false; CAM.seen = performance.now();
-  btn.disabled = false; btn.textContent = "カメラを止める"; $("camMode").hidden = false; $("camHelp").hidden = true;
-  camNote("映像はこの端末の中だけで使い、どこにも送りません。相手がつよいほど、あなたの表情も読んできます。");
+  btn.disabled = false; btn.textContent = E ? "Stop camera" : "カメラを止める"; $("camMode").hidden = false; $("camHelp").hidden = true;
+  camNote((E ? "Video stays on this device and is never sent anywhere. Stronger rivals read your face too." : "映像はこの端末の中だけで使い、どこにも送りません。相手がつよいほど、あなたの表情も読んできます。"));
   applyCamMode(); camLoop();
 }
 function stopCam(){
   CAM.on = false;
   if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
   CAM.stream = null; $("cam").srcObject = null; $("cam").hidden = true; $("avatar").style.display = "";
-  $("camBtn").textContent = "カメラで表情を映す"; $("camBtn").disabled = false; $("camMode").hidden = true; $("ampBox").hidden = true; $("mood").textContent = "";
-  drawAvatar(REST); camNote("あなたの表情を読み取って、キャラクターが同じ顔をします。");
+  $("camBtn").textContent = E ? "Show my face with the camera" : "カメラで表情を映す"; $("camBtn").disabled = false; $("camMode").hidden = true; $("ampBox").hidden = true; $("mood").textContent = "";
+  drawAvatar(REST); camNote((E ? "Your character copies your real expressions." : "あなたの表情を読み取って、キャラクターが同じ顔をします。"));
   ON.called = false; onVideo();
 }
 function applyCamMode(){
@@ -1100,7 +1158,7 @@ const ON = { active: false, peer: null, conn: null, open: false, host: false, co
   oppVideo: false, oppStream: null, H: null, seq: 0, lastSeq: -1, lastFaceSent: 0, called: false, blinkAt: 0 };
 const PEER_JS = "https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js";
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-const nick = () => ($("nick").value.trim() || "あなた").slice(0, 8);
+const nick = () => ($("nick").value.trim() || (E ? "You" : "あなた")).slice(0, 8);
 function lobbyMsg(t){ $("lobbyMsg").textContent = t; }
 function loadPeer(){
   if (window.Peer) return Promise.resolve();
@@ -1115,7 +1173,7 @@ function setMode(online){
     $("overlayHost").innerHTML = ""; $("lastPair").innerHTML = "";
     ON.active = true; S = newState(); S.you = []; S.cpu = []; S.phase = "idle";
     $("face").classList.add("av"); $("start").hidden = true;
-    msg("友だちとつながると、ゲームが始まります。", "");
+    msg((E ? "The game starts once you connect with a friend." : "友だちとつながると、ゲームが始まります。"), "");
     $("bubble").textContent = "…"; render();
   } else {
     onLeave(); ON.active = false; $("face").classList.remove("av"); $("start").hidden = false; idle();
@@ -1135,30 +1193,30 @@ document.addEventListener("visibilitychange", () => {
 });
 async function mkRoom(){
   onLeave();
-  try { await loadPeer(); } catch (e) { lobbyMsg("つなぐ仕組みを読み込めませんでした。ネットにつながっているか確かめてください。Claudeの画面の中では使えないので、https://kudo12711-boop.github.io/last-two/ で開いてください。"); return; }
-  if (!window.RTCPeerConnection){ lobbyMsg("このブラウザではオンライン対戦ができません。"); return; }
+  try { await loadPeer(); } catch (e) { lobbyMsg((E ? "Couldn't load the connection tool. Check your internet, and open https://kudo12711-boop.github.io/last-two/ directly." : "つなぐ仕組みを読み込めませんでした。ネットにつながっているか確かめてください。Claudeの画面の中では使えないので、https://kudo12711-boop.github.io/last-two/ で開いてください。")); return; }
+  if (!window.RTCPeerConnection){ lobbyMsg((E ? "Online play doesn't work in this browser." : "このブラウザではオンライン対戦ができません。")); return; }
   const code = Array.from({ length: 5 }, () => "abcdefghjkmnpqrstuvwxyz23456789"[rnd(31)]).join("");
-  ON.host = true; ON.code = code; lobbyMsg("部屋を準備しています…");
+  ON.host = true; ON.code = code; lobbyMsg((E ? "Setting up the room…" : "部屋を準備しています…"));
   const peer = ON.peer = new Peer("lasttwo-" + code);
   peer.on("open", () => {
     const url = PAGE + "?room=" + code + "&openExternalBrowser=1";
     $("roomCode").textContent = code; $("inviteUrl").textContent = url; $("invite").hidden = false;
-    lobbyMsg(ON.inviteFor ? `${ON.inviteFor}さんにURLを送って、入ってくるのを待ちましょう。` : "友だちが入ってくるのを待っています…");
+    lobbyMsg(E ? (ON.inviteFor ? `Send the link to ${ON.inviteFor} and wait for them to join.` : "Waiting for your friend to join…") : ON.inviteFor ? `${ON.inviteFor}さんにURLを送って、入ってくるのを待ちましょう。` : "友だちが入ってくるのを待っています…");
     setShare(url, code);
   });
   peer.on("connection", c => { if (ON.conn && ON.open){ c.on("open", () => { c.send({ t: "full" }); setTimeout(() => c.close(), 500); }); return; } bindConn(c); });
   peer.on("call", onCall);
   peer.on("error", e => {
     if (e.type === "unavailable-id") return mkRoom();
-    lobbyMsg(e.type === "browser-incompatible" ? "このブラウザではオンライン対戦ができません。" : "つながりませんでした。Claudeの画面の中では友だち対戦が使えないので、https://kudo12711-boop.github.io/last-two/ で開いてください。それでもだめなら、少し待ってもう一度押してください。");
+    lobbyMsg(e.type === "browser-incompatible" ? (E ? "Online play doesn't work in this browser." : "このブラウザではオンライン対戦ができません。") : (E ? "Couldn't connect. Open https://kudo12711-boop.github.io/last-two/ directly; if it still fails, wait a moment and try again." : "つながりませんでした。Claudeの画面の中では友だち対戦が使えないので、https://kudo12711-boop.github.io/last-two/ で開いてください。それでもだめなら、少し待ってもう一度押してください。"));
   });
 }
 async function joinRoom(code){
   code = (code || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  if (code.length !== 5){ lobbyMsg("部屋コードは5文字です。"); return; }
+  if (code.length !== 5){ lobbyMsg((E ? "Room codes are 5 characters." : "部屋コードは5文字です。")); return; }
   onLeave();
-  try { await loadPeer(); } catch (e) { lobbyMsg("つなぐ仕組みを読み込めませんでした。ネットにつながっているか確かめてください。Claudeの画面の中では使えないので、https://kudo12711-boop.github.io/last-two/ で開いてください。"); return; }
-  ON.host = false; ON.code = code; lobbyMsg("部屋に入っています…");
+  try { await loadPeer(); } catch (e) { lobbyMsg((E ? "Couldn't load the connection tool. Check your internet, and open https://kudo12711-boop.github.io/last-two/ directly." : "つなぐ仕組みを読み込めませんでした。ネットにつながっているか確かめてください。Claudeの画面の中では使えないので、https://kudo12711-boop.github.io/last-two/ で開いてください。")); return; }
+  ON.host = false; ON.code = code; lobbyMsg((E ? "Joining the room…" : "部屋に入っています…"));
   const peer = ON.peer = new Peer();
   let tries = 0;
   const knock = () => { if (ON.peer === peer && !ON.open) bindConn(peer.connect("lasttwo-" + code, { reliable: true })); };
@@ -1166,13 +1224,13 @@ async function joinRoom(code){
   peer.on("call", onCall);
   peer.on("error", e => {
     // the host may still be in LINE with the game in the background; keep knocking for about a minute
-    if (e.type === "peer-unavailable" && ++tries < 20){ lobbyMsg(`部屋をさがしています…（${tries}）　部屋を作った人に、ゲームの画面を開いたままにしてもらってください。`); setTimeout(knock, 3000); return; }
-    lobbyMsg(e.type === "peer-unavailable" ? "部屋が見つかりませんでした。部屋を作った人にゲームの画面に戻ってもらうか、部屋を作り直してもらってください。" : "つながりませんでした。少し待ってから、もう一度ためしてください。");
+    if (e.type === "peer-unavailable" && ++tries < 20){ lobbyMsg(E ? `Looking for the room… (${tries})  Ask the host to keep the game open.` : `部屋をさがしています…（${tries}）　部屋を作った人に、ゲームの画面を開いたままにしてもらってください。`); setTimeout(knock, 3000); return; }
+    lobbyMsg(E ? (e.type === "peer-unavailable" ? "Room not found. Ask the host to return to the game or make a new room." : "Couldn't connect. Wait a moment and try again.") : e.type === "peer-unavailable" ? "部屋が見つかりませんでした。部屋を作った人にゲームの画面に戻ってもらうか、部屋を作り直してもらってください。" : "つながりませんでした。少し待ってから、もう一度ためしてください。");
   });
 }
 function bindConn(c){
   ON.conn = c;
-  const timer = setTimeout(() => { if (!ON.open && ON.conn === c) lobbyMsg("つながるのに時間がかかっています。お互いの通信環境によってはつながらないことがあります（Wi-Fiを切りかえると直ることがあります）。"); }, 12000);
+  const timer = setTimeout(() => { if (!ON.open && ON.conn === c) lobbyMsg((E ? "Connecting is taking a while. Some networks can't connect (switching Wi-Fi on or off sometimes helps)." : "つながるのに時間がかかっています。お互いの通信環境によってはつながらないことがあります（Wi-Fiを切りかえると直ることがあります）。")); }, 12000);
   c.on("open", () => {
     clearTimeout(timer); ON.open = true; ON.called = false;
     sendHello();
@@ -1183,8 +1241,8 @@ function bindConn(c){
   c.on("data", onData);
   c.on("close", () => {
     ON.open = false; S.phase = "idle"; $("readyBox").hidden = true; ON.oppFace = null; ON.oppVideo = false; drawOpp();
-    msg("相手との接続が切れました。", "もう一度遊ぶときは、部屋を作り直してください。"); render();
-    lobbyMsg("相手との接続が切れました。");
+    msg(E ? "Lost the connection to your friend." : "相手との接続が切れました。", E ? "To play again, make a new room." : "もう一度遊ぶときは、部屋を作り直してください。"); render();
+    lobbyMsg(E ? "Lost the connection to your friend." : "相手との接続が切れました。");
   });
 }
 function onSend(m){
@@ -1193,8 +1251,8 @@ function onSend(m){
 }
 function onData(m){
   if (!m || typeof m !== "object") return;
-  if (m.t === "hello"){ ON.oppName = String(m.name || "ともだち").slice(0, 8); ON.oppSkin = SKINS[m.skin] ? m.skin : "hito"; ON.oppBack = ITEMS.back.some(x => x.id === m.back) ? m.back : "classic"; ON.oppFx = ITEMS.fx.some(x => x.id === m.fx) ? m.fx : "star"; lobbyMsg(`${ON.oppName}さんとつながりました！`); meetFriend(m.pid); $("bubble").textContent = "よろしく！"; if (ON.lastView) applyView(ON.lastView); else render(); return; }
-  if (m.t === "full"){ lobbyMsg("その部屋はもう2人で遊んでいます。"); return; }
+  if (m.t === "hello"){ ON.oppName = String(m.name || (E ? "Friend" : "ともだち")).slice(0, 8); ON.oppSkin = SKINS[m.skin] ? m.skin : "hito"; ON.oppBack = ITEMS.back.some(x => x.id === m.back) ? m.back : "classic"; ON.oppFx = ITEMS.fx.some(x => x.id === m.fx) ? m.fx : "star"; lobbyMsg(`${ON.oppName}さんとつながりました！`); meetFriend(m.pid); $("bubble").textContent = "よろしく！"; if (ON.lastView) applyView(ON.lastView); else render(); return; }
+  if (m.t === "full"){ lobbyMsg((E ? "That room already has 2 players." : "その部屋はもう2人で遊んでいます。")); return; }
   if (m.t === "face"){ ON.oppFace = m.v; ON.oppFaceAt = performance.now() + (m.hold ? m.hold - 1200 : 0); if (m.hold) ON.oppOvrUntil = performance.now() + m.hold; if (SKINS[m.skin]) ON.oppSkin = m.skin; ON.oppVideo = !!m.video; if (m.mood) $("bubble").dataset.mood = m.mood; drawOpp(); return; }
   if (m.t === "mode"){ ON.oppVideo = !!m.video; drawOpp(); return; }
   if (m.t === "say"){ const t = String(m.text || "").slice(0, 20); $("bubble").textContent = t; const f = $("face"); f.classList.remove("bump"); void f.offsetWidth; f.classList.add("bump"); SFX.tap(); return; }
@@ -1204,10 +1262,10 @@ function onData(m){
 }
 // host keeps the real game; each side only ever sees its own cards
 function showReady(){
-  const r = ON.ready, who = esc(ON.oppName || "ともだち");
+  const r = ON.ready, who = (E ? esc(ON.oppName || "Your friend") : esc(ON.oppName || "ともだち") + "さん");
   $("readyBox").hidden = false; $("readyBtn").disabled = r.me;
-  $("readyBtn").textContent = r.me ? "相手を待っています…" : "準備OK！";
-  msg(`<b>2人そろいました！</b>　${r.opp ? `${who}さんは準備OKです。` : ""}`, r.me ? `${who}さんが「準備OK」を押すと始まります` : "カメラなどの用意ができたら「準備OK！」を押してください。2人とも押すと始まります");
+  $("readyBtn").textContent = r.me ? (E ? "Waiting for friend…" : "相手を待っています…") : (E ? "Ready!" : "準備OK！");
+  msg(E ? `<b>You're both here!</b>　${r.opp ? `${who} is ready.` : ""}` : `<b>2人そろいました！</b>　${r.opp ? `${who}は準備OKです。` : ""}`, r.me ? (E ? `Starts when ${who} presses Ready` : `${who}が「準備OK」を押すと始まります`) : (E ? "When your camera etc. is set, press \"Ready!\". The game starts when you both do." : "カメラなどの用意ができたら「準備OK！」を押してください。2人とも押すと始まります"));
   if (!r.me && !r.opp) setTimeout(() => $("readyBtn").scrollIntoView({ behavior: "smooth", block: "center" }), 300);
   if (r.me && r.opp && ON.host){ $("readyBox").hidden = true; hostDeal(); }
 }
@@ -1267,42 +1325,42 @@ function applyView(v){
   S.fx = {};
   if (v.evt && v.evt.seq !== ON.lastSeq){
     ON.lastSeq = v.evt.seq;
-    if (v.evt.kind === "pair"){ renderPair(v.evt.n); SFX.pair(); if (v.evt.mine){ popAt("ペア！"); avatarEvent({ smile: .4 }, 700); } }
-    else if (v.evt.mine){ SFX.baba(); shake(); popAt("ババ！", "baba"); avatarEvent({ jaw: .7, openL: 1.5, openR: 1.5, inner: .8 }, 1500); setTimeout(() => { SFX.mix(); mixAnim(); }, 50); }
-    else { SFX.give(); popAt("ババを引かせた！", "baba"); avatarEvent({ smile: .8, squint: .6, openL: .9, openR: .9 }, 1500); }
+    if (v.evt.kind === "pair"){ renderPair(v.evt.n); SFX.pair(); if (v.evt.mine){ popAt(E ? "PAIR!" : "ペア！"); avatarEvent({ smile: .4 }, 700); } }
+    else if (v.evt.mine){ SFX.baba(); shake(); popAt(E ? "JOKER!" : "ババ！", "baba"); avatarEvent({ jaw: .7, openL: 1.5, openR: 1.5, inner: .8 }, 1500); setTimeout(() => { SFX.mix(); mixAnim(); }, 50); }
+    else { SFX.give(); popAt(E ? "They took the Joker!" : "ババを引かせた！", "baba"); avatarEvent({ smile: .8, squint: .6, openL: .9, openR: .9 }, 1500); }
   } else if (!v.evt) { $("lastPair").innerHTML = ""; ON.lastSeq = -1; }
-  const who = esc(ON.oppName || "ともだち");
+  const who = (E ? esc(ON.oppName || "Your friend") : esc(ON.oppName || "ともだち") + "さん");
   if (S.phase === "over"){
     if (was !== "over"){
       if (v.win){ SFX.win(); avatarEvent({ smile: .95, openL: .05, openR: .05 }, 3000); } else { SFX.lose(); avatarEvent({ inner: .9, frown: .8 }, 3000); }
       const earned = earn(v.win); recordFriend(v.win);
       setTimeout(() => showOnlineResult(v, earned), 900);
     }
-    msg(v.win ? `<b>あなたの勝ち！</b>　ババは${who}さんの手に残りました。` : `<b>負け…</b>　ババがあなたの手に残りました。`, "");
+    msg(E ? (v.win ? `<b>You win!</b>　The Joker stayed with ${who}.` : `<b>You lose…</b>　The Joker stayed in your hand.`) : v.win ? `<b>あなたの勝ち！</b>　ババは${who}の手に残りました。` : `<b>負け…</b>　ババがあなたの手に残りました。`, "");
   } else if (S.phase === "pick" && was !== "pick" && !holdsBaba(S.you) && S.cpu.length >= 2){
     startScan(i => { if (S.phase !== "pick") return; onSend({ t: "aim", i }); SFX.aim(); scanMsg(); },
-      () => { if (S.phase === "pick") onSend({ t: "aim", i: -1 }), msg(`<b>あなたの番</b>　${who}さんの手札から1枚引こう。`, "1回タップで指さす → 顔を見て、もう一度タップで引く"); });
+      () => { if (S.phase === "pick") onSend({ t: "aim", i: -1 }), msg(E ? `<b>Your turn</b>　Draw a card from ${who}.` : `<b>あなたの番</b>　${who}の手札から1枚引こう。`, E ? "Tap once to point → watch the face → tap again to draw" : "1回タップで指さす → 顔を見て、もう一度タップで引く"); });
   } else if (S.phase === "pick" && SCAN){
     scanMsg();
   } else if (S.phase === "pick"){
-    msg(`<b>あなたの番</b>　${who}さんの手札から1枚引こう。`, holdsBaba(S.you) ? "ババはあなたの手にあります。どれを引いてもそろいます" : "1回タップで指さす → 顔を見て、もう一度タップで引く");
+    msg(E ? `<b>Your turn</b>　Draw a card from ${who}.` : `<b>あなたの番</b>　${who}の手札から1枚引こう。`, holdsBaba(S.you) ? (E ? "You hold the Joker, so any card makes a pair" : "ババはあなたの手にあります。どれを引いてもそろいます") : (E ? "Tap once to point → watch the face → tap again to draw" : "1回タップで指さす → 顔を見て、もう一度タップで引く"));
   } else {
-    msg(`<b>${who}さんが引く番</b>　${holdsBaba(S.you) ? "ババを隠そう。" : ""}`, holdsBaba(S.you) ? "2枚タップで入れかえ ・ 同じカードを2回タップでつき出す ・ 指の先が相手のねらい" : "ババは相手の手にあります");
+    msg(E ? `<b>${who} draws</b>　${holdsBaba(S.you) ? "Hide the Joker." : ""}` : `<b>${who}が引く番</b>　${holdsBaba(S.you) ? "ババを隠そう。" : ""}`, holdsBaba(S.you) ? (E ? "Tap 2 cards to swap · tap one twice to stick it out · the fingertip shows their aim" : "2枚タップで入れかえ ・ 同じカードを2回タップでつき出す ・ 指の先が相手のねらい") : (E ? "The Joker is in their hand" : "ババは相手の手にあります"));
   }
   render();
 }
 function onArrange(){ onSend({ t: "arrange", order: S.you.map(c => c.id), stick: S.youStick }); }
 function showOnlineResult(v, earned){
   if (!ON.active || S.phase !== "over") return;
-  const who = esc(ON.oppName || "ともだち");
+  const who = (E ? esc(ON.oppName || "Your friend") : esc(ON.oppName || "ともだち") + "さん");
   $("overlayHost").innerHTML = `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="rt"><div class="result">
-    <h2 id="rt">${v.win ? "勝ち！" : "負け…"}</h2>
-    <p>${v.win ? `${who}さんにババを押しつけました。` : `${who}さんにババを押しつけられました。`}</p>
-    <table><tr><td>かかった時間</td><td>${v.secs}秒</td></tr>${friendRow()}</table>
+    <h2 id="rt">${v.win ? (E ? "You win!" : "勝ち！") : (E ? "You lose…" : "負け…")}</h2>
+    <p>${E ? (v.win ? `You stuck ${who} with the Joker.` : `${who} stuck you with the Joker.`) : v.win ? `${who}にババを押しつけました。` : `${who}にババを押しつけられました。`}</p>
+    <table><tr><td>${E ? "Time" : "かかった時間"}</td><td>${v.secs}${E ? " s" : "秒"}</td></tr>${friendRow()}</table>
     ${earnHTML(earned)}
     ${adHTML()}
-    <div class="rbtns"><button class="primary" id="again">もう一回</button><button id="close">閉じる</button></div>
-    <p class="rnote">どちらかが「もう一回」を押すと、次のゲームが配られます。</p>
+    <div class="rbtns"><button class="primary" id="again">${E ? "Play again" : "もう一回"}</button><button id="close">${E ? "Close" : "閉じる"}</button></div>
+    <p class="rnote">${E ? "When either of you presses \"Play again\", new cards are dealt." : "どちらかが「もう一回」を押すと、次のゲームが配られます。"}</p>
   </div></div>`;
   $("again").addEventListener("click", () => { $("overlayHost").innerHTML = ""; onSend({ t: "again" }); });
   $("close").addEventListener("click", () => { $("overlayHost").innerHTML = ""; });
@@ -1348,14 +1406,14 @@ const itemOf = (kind, id) => ITEMS[kind].find(x => x.id === id);
 const owns = (kind, id) => INV.owned[kind].includes(id);
 const level = () => Math.min(20, Math.floor(INV.xp / 100) + 1);
 function grant(kind, id){ if (!owns(kind, id)) INV.owned[kind].push(id); }
-function rewardTxt(r){ if (r.coins) return `${r.coins}コイン`; const it = itemOf(r.item[0], r.item[1]); return `${KIND_TXT[r.item[0]]}「${it.name}」`; }
+function rewardTxt(r){ if (r.coins) return E ? `${r.coins} coins` : `${r.coins}コイン`; const it = itemOf(r.item[0], r.item[1]); return E ? `${KIND_TXT[r.item[0]]} "${it.name}"` : `${KIND_TXT[r.item[0]]}「${it.name}」`; }
 function earn(win){
   const before = level(), c = win ? 30 : 10, x = win ? 100 : 50;
   INV.coins += c; INV.xp += x; saveInv(); updateCoins();
   return { c, x, up: level() > before ? level() : 0 };
 }
-function earnHTML(e){ return `<p class="earn">+${e.c}コイン　+${e.x}XP${e.up ? `　シーズンパス レベル${e.up}になりました！` : ""}</p>`; }
-function adHTML(){ return INV.pass ? "" : `<div class="adbox">広告スペース（試作）<br>シーズンパスを持っていると広告は出ません</div>`; }
+function earnHTML(e){ return E ? `<p class="earn">+${e.c} coins　+${e.x} XP${e.up ? `　Season pass level ${e.up}!` : ""}</p>` : `<p class="earn">+${e.c}コイン　+${e.x}XP${e.up ? `　シーズンパス レベル${e.up}になりました！` : ""}</p>`; }
+function adHTML(){ return INV.pass ? "" : (E ? `<div class="adbox">Ad space (prototype)<br>No ads with the season pass</div>` : `<div class="adbox">広告スペース（試作）<br>シーズンパスを持っていると広告は出ません</div>`); }
 function updateCoins(){ $("coinTop").textContent = INV.coins; }
 function fillSkinSelect(){
   $("skin").innerHTML = ITEMS.skin.filter(x => owns("skin", x.id)).map(x => `<option value="${x.id}">${x.name}</option>`).join("");
@@ -1383,14 +1441,14 @@ function renderShop(){
   if (shopTab === "pass"){
     const L = level(), inLv = INV.xp % 100;
     box.innerHTML = `<div class="pass">
-      <div><b>${SEASON.name}</b><br><small class="rnote">${SEASON.ends}まで　・　試合をするとXPがたまります（勝ち100・負け50）</small></div>
-      <div>レベル <b class="coins">${L}</b> / 20${L < 20 ? `　つぎまで ${100 - inLv}XP` : ""}<div class="bar"><i style="width:${L < 20 ? inLv : 100}%"></i></div></div>
-      ${INV.pass ? `<p class="earn">シーズンパスを持っています。プレミアムの報酬と、広告なしが使えます。</p>` : `<div class="lrow"><button class="primary" id="buyPass">シーズンパスを買う　480円（仮）</button></div><p class="fake">プレミアムの報酬がもらえて、試合のあとの広告が出なくなります。試作なので、実際のお金はかかりません。</p>`}
-      <div class="prow"><span></span><small>ふつう（だれでも）</small><small>プレミアム（パス）</small></div>
+      <div><b>${SEASON.name}</b><br><small class="rnote">${E ? `Until ${SEASON.ends} · Earn XP by playing (win 100, lose 50)` : `${SEASON.ends}まで　・　試合をするとXPがたまります（勝ち100・負け50）`}</small></div>
+      <div>${E ? "Level" : "レベル"} <b class="coins">${L}</b> / 20${L < 20 ? (E ? `　${100 - inLv} XP to next` : `　つぎまで ${100 - inLv}XP`) : ""}<div class="bar"><i style="width:${L < 20 ? inLv : 100}%"></i></div></div>
+      ${E ? (INV.pass ? `<p class="earn">You have the season pass: premium rewards and no ads.</p>` : `<div class="lrow"><button class="primary" id="buyPass">Buy season pass　(price set by the app store)</button></div><p class="fake">Get premium rewards and no ads after matches. This is a prototype, so no real money is charged.</p>`) : INV.pass ? `<p class="earn">シーズンパスを持っています。プレミアムの報酬と、広告なしが使えます。</p>` : `<div class="lrow"><button class="primary" id="buyPass">シーズンパスを買う　480円（仮）</button></div><p class="fake">プレミアムの報酬がもらえて、試合のあとの広告が出なくなります。試作なので、実際のお金はかかりません。</p>`}
+      <div class="prow"><span></span><small>${E ? "Free (everyone)" : "ふつう（だれでも）"}</small><small>${E ? "Premium (pass)" : "プレミアム（パス）"}</small></div>
       ${SEASON.rows.map(([lv, fr, pr]) => {
         const cell = (r, track) => {
           const got = INV.claimed[track].includes(lv), can = L >= lv && (track === "free" || INV.pass);
-          return `<div class="${track === "prem" ? "prem" : ""}">${rewardTxt(r)}${got ? `<small>もらいました</small>` : can ? `<button data-claim="${track}:${lv}">もらう</button>` : `<small>${L < lv ? `レベル${lv}で` : "パスで"}</small>`}</div>`;
+          return `<div class="${track === "prem" ? "prem" : ""}">${rewardTxt(r)}${got ? `<small>${E ? "Claimed" : "もらいました"}</small>` : can ? `<button data-claim="${track}:${lv}">${E ? "Claim" : "もらう"}</button>` : `<small>${L < lv ? (E ? `At level ${lv}` : `レベル${lv}で`) : (E ? "With pass" : "パスで")}</small>`}</div>`;
         };
         return `<div class="prow"><b>Lv${lv}</b>${cell(fr, "free")}${cell(pr, "prem")}</div>`;
       }).join("")}
@@ -1399,17 +1457,17 @@ function renderShop(){
   }
   box.innerHTML = `<div class="items">${ITEMS[shopTab].map(it => {
     const own = owns(shopTab, it.id), on = INV.equip[shopTab] === it.id;
-    const btn = on ? `<button disabled>つけています</button>` : own ? `<button data-equip="${it.id}">つける</button>`
-      : it.invite ? `<span class="tag">友だち${it.invite}人と遊ぶともらえる</span>` : it.pass ? `<span class="tag">シーズンパスの報酬</span>` : `<button data-buy="${it.id}" ${INV.coins < it.price ? "disabled" : ""}>${it.price}コインで買う</button>`;
+    const btn = on ? `<button disabled>${E ? "Equipped" : "つけています"}</button>` : own ? `<button data-equip="${it.id}">${E ? "Equip" : "つける"}</button>`
+      : it.invite ? `<span class="tag">${E ? `Play with ${it.invite} friends to get it` : `友だち${it.invite}人と遊ぶともらえる`}</span>` : it.pass ? `<span class="tag">${E ? "Season pass reward" : "シーズンパスの報酬"}</span>` : `<button data-buy="${it.id}" ${INV.coins < it.price ? "disabled" : ""}>${E ? `Buy for ${it.price} coins` : `${it.price}コインで買う`}</button>`;
     return `<div class="item ${on ? "on" : ""}"><div class="pv">${preview(shopTab, it)}</div><b>${it.name}</b>${btn}</div>`;
   }).join("")}</div>
-  <div class="lrow"><button id="buyCoins">1000コインを買う　120円（仮）</button></div><p class="fake">試作なので、実際のお金はかかりません。勝ち負けに関わるものは売っていません。</p>`;
+  ${E ? `<div class="lrow"><button id="buyCoins">Buy 1000 coins　(price set by the app store)</button></div><p class="fake">This is a prototype, so no real money is charged. Nothing for sale affects winning.</p>` : `<div class="lrow"><button id="buyCoins">1000コインを買う　120円（仮）</button></div><p class="fake">試作なので、実際のお金はかかりません。勝ち負けに関わるものは売っていません。</p>`}`;
 }
 function openShop(tab){
   if (tab) shopTab = tab;
   $("overlayHost").innerHTML = `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="shopT"><div class="shop">
-    <header><h2 id="shopT">きせかえ</h2><span><span class="coins" id="shopCoins"></span> コイン</span><button id="shopClose">閉じる</button></header>
-    <div class="tabs" role="tablist">${["skin", "back", "fx"].map(k => `<button role="tab" data-tab="${k}">${KIND_TXT[k]}</button>`).join("")}<button role="tab" data-tab="pass">シーズンパス</button></div>
+    <header><h2 id="shopT">${E ? "Style shop" : "きせかえ"}</h2><span><span class="coins" id="shopCoins"></span> ${E ? "coins" : "コイン"}</span><button id="shopClose">${E ? "Close" : "閉じる"}</button></header>
+    <div class="tabs" role="tablist">${["skin", "back", "fx"].map(k => `<button role="tab" data-tab="${k}">${KIND_TXT[k]}</button>`).join("")}<button role="tab" data-tab="pass">${E ? "Season pass" : "シーズンパス"}</button></div>
     <div id="shopBody"></div></div></div>`;
   renderShop();
   $("shopClose").focus();
@@ -1440,7 +1498,7 @@ try { PID = localStorage.getItem("lasttwo-pid") || ""; if (!PID){ PID = Math.ran
 const QR_JS = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
 function loadFriends(){ try { return JSON.parse(localStorage.getItem("lasttwo-friends")) || {}; } catch (e) { return {}; } }
 function saveFriends(f){ try { localStorage.setItem("lasttwo-friends", JSON.stringify(f)); } catch (e) {} }
-function shareText(url, code){ return `${nick()}から「ラスト・ツー」の挑戦状！ババを押しつけ合おう。部屋コード ${code}\n${url}`; }
+function shareText(url, code){ if (E) return `${nick()} challenges you to Last Two! Stick each other with the Joker. Room code ${code}\n${url}`; return `${nick()}から「ラスト・ツー」の挑戦状！ババを押しつけ合おう。部屋コード ${code}\n${url}`; }
 function setShare(url, code){
   ON.shareUrl = url; ON.shareTxt = shareText(url, code);
   $("lineBtn").href = "https://line.me/R/share?text=" + encodeURIComponent(ON.shareTxt);
@@ -1456,9 +1514,9 @@ function meetFriend(pid){
     INV.coins += 100;
     const n = Object.keys(f).length, it = ITEMS.back.find(x => x.invite);
     let extra = "";
-    if (it && n >= it.invite && !owns("back", it.id)){ grant("back", it.id); extra = `　友だち${it.invite}人達成！カード柄「${it.name}」をもらいました`; }
+    if (it && n >= it.invite && !owns("back", it.id)){ grant("back", it.id); extra = E ? `　${it.invite} friends! You got the card back "${it.name}"` : `　友だち${it.invite}人達成！カード柄「${it.name}」をもらいました`; }
     saveInv(); updateCoins();
-    lobbyMsg(`${ON.oppName}さんとつながりました！　はじめての相手ボーナス +100コイン${extra}`);
+    lobbyMsg(E ? `Connected with ${ON.oppName}! New friend bonus +100 coins${extra}` : `${ON.oppName}さんとつながりました！　はじめての相手ボーナス +100コイン${extra}`);
   }
   renderFriends();
 }
@@ -1469,36 +1527,36 @@ function recordFriend(win){
 }
 function friendRow(){
   const r = ON.oppPid && loadFriends()[ON.oppPid];
-  return r ? `<tr><td>${esc(r.name)}さんとの通算</td><td>${r.w}勝 ${r.l}敗</td></tr>` : "";
+  return r ? (E ? `<tr><td>Record vs ${esc(r.name)}</td><td>${r.w} W ${r.l} L</td></tr>` : `<tr><td>${esc(r.name)}さんとの通算</td><td>${r.w}勝 ${r.l}敗</td></tr>`) : "";
 }
 function renderFriends(){
   const list = Object.entries(loadFriends()).sort((a, b) => b[1].last - a[1].last).slice(0, 8);
   $("friends").hidden = !list.length;
-  $("friends").innerHTML = `<h3>これまで遊んだ友だち（${list.length}人）</h3>` + list.map(([id, r]) =>
-    `<div class="fr"><b>${esc(r.name)}</b><span>${r.w}勝 ${r.l}敗・${new Date(r.last).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" })}</span><button data-again="${esc(id)}">また遊ぶ</button></div>`).join("");
+  $("friends").innerHTML = (E ? `<h3>Friends you've played (${list.length})</h3>` : `<h3>これまで遊んだ友だち（${list.length}人）</h3>`) + list.map(([id, r]) =>
+    `<div class="fr"><b>${esc(r.name)}</b><span>${E ? `${r.w} W ${r.l} L` : `${r.w}勝 ${r.l}敗`}・${new Date(r.last).toLocaleDateString(E ? "en-US" : "ja-JP", { month: E ? "short" : "numeric", day: "numeric" })}</span><button data-again="${esc(id)}">${E ? "Play again" : "また遊ぶ"}</button></div>`).join("");
 }
 $("friends").addEventListener("click", e => {
   const b = e.target.closest("[data-again]"); if (!b) return;
   const r = loadFriends()[b.dataset.again]; ON.inviteFor = r ? r.name : ""; mkRoom();
 });
-$("shareBtn").addEventListener("click", () => { if (navigator.share && ON.shareUrl) navigator.share({ title: "ラスト・ツー", text: ON.shareTxt }).catch(() => {}); });
+$("shareBtn").addEventListener("click", () => { if (navigator.share && ON.shareUrl) navigator.share({ title: E ? "Last Two" : "ラスト・ツー", text: ON.shareTxt }).catch(() => {}); });
 $("qrBtn").addEventListener("click", async () => {
   const box = $("qr");
   if (!box.hidden){ box.hidden = true; return; }
   try {
     if (!window.QRCode) await new Promise((ok, ng) => { const sc = document.createElement("script"); sc.src = QR_JS; sc.onload = ok; sc.onerror = ng; document.head.appendChild(sc); });
     box.innerHTML = ""; new QRCode(box, { text: ON.shareUrl, width: 180, height: 180 }); box.hidden = false;
-  } catch (e) { lobbyMsg("QRコードを作れませんでした。URLをコピーして送ってください。"); }
+  } catch (e) { lobbyMsg((E ? "Couldn't make the QR code. Copy the link and send it instead." : "QRコードを作れませんでした。URLをコピーして送ってください。")); }
 });
 renderFriends();
 
 // --- face buttons: put on a face with one tap, so you can bluff even while your hands are busy ---
 const FACES = {
-  niyari: { label: "にやり", v: { smile: .5, squint: .7, openL: .85, openR: .85 }, dev: .7, line: "その笑い、なに？" },
-  doki: { label: "ドキッ", v: { inner: .85, frown: .5, openL: 1.3, openR: 1.3 }, dev: 1, line: "あれ、あせってる？" },
-  sumashi: { label: "すまし", v: { gx: .9 }, dev: 0, line: "…読めないなあ" },
-  bikkuri: { label: "びっくり", v: { jaw: .7, openL: 1.5, openR: 1.5, inner: .7 }, dev: 1.2, line: "びっくりしすぎでしょ" },
-  wink: { label: "ウインク", v: { openL: .05, smile: .45 }, dev: .6, line: "ウインクされても…" }
+  niyari: { label: E ? "Smirk" : "にやり", v: { smile: .5, squint: .7, openL: .85, openR: .85 }, dev: .7, line: E ? "What\'s that grin?" : "その笑い、なに？" },
+  doki: { label: E ? "Gulp" : "ドキッ", v: { inner: .85, frown: .5, openL: 1.3, openR: 1.3 }, dev: 1, line: E ? "Getting nervous?" : "あれ、あせってる？" },
+  sumashi: { label: E ? "Cool" : "すまし", v: { gx: .9 }, dev: 0, line: E ? "…can\'t read you" : "…読めないなあ" },
+  bikkuri: { label: E ? "Shock" : "びっくり", v: { jaw: .7, openL: 1.5, openR: 1.5, inner: .7 }, dev: 1.2, line: E ? "That\'s a big reaction" : "びっくりしすぎでしょ" },
+  wink: { label: E ? "Wink" : "ウインク", v: { openL: .05, smile: .45 }, dev: .6, line: E ? "A wink won\'t work…" : "ウインクされても…" }
 };
 let OVR = { v: null, until: 0 };
 function noteHover(){
@@ -1530,7 +1588,7 @@ $("joinRoom").addEventListener("click", () => joinRoom($("roomIn").value));
 $("roomIn").addEventListener("keydown", e => { if (e.key === "Enter") joinRoom($("roomIn").value); });
 $("copyUrl").addEventListener("click", () => {
   const t = $("inviteUrl").textContent;
-  navigator.clipboard?.writeText(t).then(() => { $("copyUrl").textContent = "コピーしました"; }, () => { getSelection().selectAllChildren($("inviteUrl")); });
+  navigator.clipboard?.writeText(t).then(() => { $("copyUrl").textContent = E ? "Copied" : "コピーしました"; }, () => { getSelection().selectAllChildren($("inviteUrl")); });
 });
 try { const n = localStorage.getItem("lasttwo-nick"); if (n) $("nick").value = n; } catch (e) {}
 $("nick").addEventListener("change", () => { try { localStorage.setItem("lasttwo-nick", nick()); } catch (e) {} sendHello(); });
@@ -1542,7 +1600,7 @@ if (INAPP){
   $("extOpen").href = /Android/i.test(navigator.userAgent)
     ? "intent://" + url.replace(/^https:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent(url) + ";end"
     : url + (room ? "&" : "?") + "openExternalBrowser=1";
-  $("extCopy").addEventListener("click", () => navigator.clipboard?.writeText(url).then(() => { $("extCopy").textContent = "コピーしました"; }, () => { $("extNote").textContent = url; }));
+  $("extCopy").addEventListener("click", () => navigator.clipboard?.writeText(url).then(() => { $("extCopy").textContent = E ? "Copied" : "コピーしました"; }, () => { $("extNote").textContent = url; }));
 }
 idle();
 requestAnimationFrame(frame);

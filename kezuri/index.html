@@ -334,7 +334,8 @@ function scratchSound(level) {
 }
 
 /* ---------- こえ ---------- */
-const AI_VOICES = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro']; // 日本語だけ
+// AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<key>.mp3）
+const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const aiBuf = {}; let aiSrc = null;
 function aiLoad(id, keys) {
   const a = audio(); if (!a) return;
@@ -370,9 +371,11 @@ function tts(text, onend) {
     speechSynthesis.speak(u);
   } catch (e) {}
 }
-// 'ai:jf_alpha' / 'dev'（端末の読み上げ）/ 'off'
-let voiceMode = store.get('kezuri-voice', 'ai:jf_alpha');
-const useAI = () => L === 'ja' && voiceMode.startsWith('ai:');
+// 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
+let voiceMode = store.get('kezuri-voice', 'ai:1');
+{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+const aiId = () => (AI_VOICES[L] || AI_VOICES.ja)[(+voiceMode.slice(3) || 1) - 1] || AI_VOICES.ja[0];
+const useAI = () => voiceMode.startsWith('ai:');
 function playBuf(b, off = 0, dur) {
   const a = audio(); if (!a) return;
   try { if (aiSrc) aiSrc.stop(); } catch (e) {}
@@ -393,7 +396,7 @@ function say(key, onend) {
     } else text = ITEM_BY[id] ? nameOf(ITEM_BY[id]) : '';
   } else text = T().say[key] || '';
   if (useAI() && !ph) {
-    const id = voiceMode.slice(3), a = audio();
+    const id = aiId(), a = audio();
     if (a) {
       aiLoad(id, [key]);
       const b = aiBuf[`${id}/${key}`];
@@ -404,7 +407,7 @@ function say(key, onend) {
 }
 function sayCat(cat, onend) { say(cat + Math.floor(Math.random() * Object.keys(T().say).filter(k => k.replace(/\d+$/, '') === cat).length), onend); }
 function sayChain(keys) { if (keys.length) say(keys[0], () => setTimeout(() => sayChain(keys.slice(1)), 120)); }
-function prepVoice(keys) { if (useAI()) aiLoad(voiceMode.slice(3), keys); }
+function prepVoice(keys) { if (useAI()) aiLoad(aiId(), keys); }
 const PHRASES = Object.keys(TEXT.ja.say);
 
 /* ---------- おうちの しゃしん（この端末の IndexedDB にだけ保存） ---------- */
@@ -588,9 +591,9 @@ function renderSettings() {
   if (!$('#kkSlot').firstChild) $('#kkSlot').appendChild(Kakin.parentButton()); else $('#kkSlot').firstChild._kkUpdate();
   $('#tReset').textContent = t.reset; $('#tResetNote').textContent = t.resetNote; $('#resetB').textContent = t.resetB; $('#setClose').textContent = t.close;
   const opt = (el, list, cur, fn) => { el.innerHTML = ''; for (const [v, label] of list) { const b = document.createElement('button'); b.textContent = label; if (v === cur) b.className = 'sel'; b.onclick = () => { fn(v); renderSettings(); }; el.appendChild(b); } };
-  const vl = L === 'ja' ? AI_VOICES.map((id, i) => ['ai:' + id, t.ai(i + 1)]) : [];
+  const vl = [1, 2, 3, 4].map(n => ['ai:' + n, t.ai(n)]);
   vl.push(['dev', t.dev], ['off', t.off]);
-  const curV = (L !== 'ja' && voiceMode.startsWith('ai:')) ? 'dev' : voiceMode;
+  const curV = voiceMode;
   opt($('#voiceOpt'), vl, curV, v => { voiceMode = v; store.set('kezuri-voice', v); audio(); prepVoice(['ok0']); setTimeout(() => say('ok0'), 300); });
   opt($('#soundOpt'), [[true, t.on], [false, t.off]], soundOn, v => { soundOn = v; store.set('kezuri-sound', v); if (!v && scr) scr.g.gain.value = 0; });
   opt($('#langOpt'), [['ja', '日本語'], ['en', 'English']], L, v => setLang(v));

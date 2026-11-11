@@ -13,8 +13,8 @@
 | チェイン・ノード | ババ抜きの連鎖をリアルタイム対戦に | v0.4（止まっている） | [Claude のページ](https://claude.ai/artifact/HeH8SpDMBTuyXFDSZkmhTH) | [chain-node.md](chain-node.md) |
 | 雪だるまパニック | 色ヒントつきの家族向けババ抜き | v0.1（止まっている） | [Claude のページ](https://claude.ai/artifact/K84cVFtwEVPtvigpT9Yjsx) | [yukidaruma.md](yukidaruma.md) |
 | ゆきどけ | 「あと一枚」の運だめし | v0.1（止まっている） | [Claude のページ](https://claude.ai/artifact/34nWk73xRYmMimZZe7sWKW) | [yukidoke.md](yukidoke.md) |
-| ぬけぬけリング | 1人用の連鎖パズル | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
-| ラスト・ツー | 最後の2人の表情の読み合い | v1.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
+| ぬけぬけリング | 1人用の連鎖パズル | v0.7 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
+| ラスト・ツー | 最後の2人の表情の読み合い | v1.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
 | まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類） | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
 | 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | 英語対応（11/11）まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
@@ -26,6 +26,8 @@
 | けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 
 全ゲーム共通の課金のしくみ: [kakin.md](kakin.md)
+
+海外展開（英語など）の準備: [i18n.md](i18n.md)
 
 「Claude のページ」は、くどうさんが claude.ai にログインしたときだけ開けます。「公開ページ」は誰でもログインなしで開けます。
 
@@ -49,6 +51,7 @@
 16. **2026-11-09** てんつなぎ: 名前から「すうじで」を外し（ABCでも遊べるため）、v0.2 で絵を31まいに（かどの多い むずかしい絵も）、点は最大60こに（くどうさん「題材が少ないのでもっと増やして」「複雑な図形も」）。
 17. **2026-11-09** ふくわらい v0.3: 絵の顔を4つから13に増やした（くどうさん「福笑いの顔の種類をもっとたくさん増やしてください」）。あわせて、2本の指で同時にさわるとパーツが消えてクリアできなくなるバグを直した（くどうさんの報告）。
 18. **2026-11-03（公開は 2026-11-11）** くどうさん「ここで開発しているゲームは全て課金する予定です。まだ課金するシステムが組み込まれていないゲームについて組み込むようにしてください」。共通の課金のしくみ（`common/kakin.js`、おためし版）を作り、子ども向け7本と都道府県パズル、入口ページに組み込んだ（[kakin.md](kakin.md)）。
+19. **2026-11-11** 海外展開の準備（くどうさん「全てのアプリについて海外展開を確かめてください」→「進めてください」）。課金のしくみを公開し、まちがいさがし・めいろ・てんつなぎを英語に、子ども向けの7つのゲームに英語の AI の声を入れた。くわしくは [i18n.md](i18n.md)。
 
 ## お金の方針（2026-10-23 決定）
 

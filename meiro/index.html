@@ -90,22 +90,22 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 <body>
 
 <section id="title" class="screen on">
-  <h1><span>ゆ</span><span>び</span><span>で</span><br><span>め</span><span>い</span><span>ろ</span></h1>
-  <p class="sub">ゆびで みちを なぞって ゴールまで つれていってね</p>
+  <h1 id="h1"></h1>
+  <p class="sub" data-t="sub"></p>
 
   <div class="lvl" id="lvl"></div>
-  <button class="big" id="btnRandom"><span class="ico">🎲</span><span>おまかせ<small>だれが でるかな？ まいかい かわるよ</small></span></button>
+  <button class="big" id="btnRandom"><span class="ico">🎲</span><span><span data-t="random"></span><small data-t="randomSub"></small></span></button>
   <div id="heroes"></div>
 
-  <div id="book"><b>あつめた シール</b> <span id="bookCount"></span><div id="bookList"></div></div>
-  <div class="foot"><button id="btnHelp">おうちのかたへ・せってい</button><button id="btnSnd">🔊 おと あり</button></div>
+  <div id="book"><b data-t="book"></b> <span id="bookCount"></span><div id="bookList"></div></div>
+  <div class="foot"><button id="btnHelp" data-t="help"></button><button id="btnSnd"></button><button id="btnLang"></button></div>
 </section>
 
 <section id="game" class="screen">
   <div class="bar">
-    <button class="round" id="btnHome" aria-label="もどる">🏠</button>
+    <button class="round" id="btnHome" data-ta="home">🏠</button>
     <div id="items"></div>
-    <button class="round" id="btnHint" aria-label="ヒント">💡</button>
+    <button class="round" id="btnHint" data-ta="hint">💡</button>
   </div>
   <div id="board"><canvas id="cv"></canvas></div>
 </section>
@@ -113,31 +113,29 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 <div id="say"></div>
 <canvas id="confetti"></canvas>
 <div id="clear"><div class="panel">
-  <h2>ゴール！</h2>
+  <h2 data-t="goal"></h2>
   <div id="reward">🐻</div>
-  <p>シールを もらったよ！</p>
-  <button class="big" id="btnNext"><span class="ico">▶️</span>つぎの めいろ</button>
-  <button class="big" id="btnBack"><span class="ico">🏠</span>はじめに もどる</button>
+  <p data-t="gotSticker"></p>
+  <button class="big" id="btnNext"><span class="ico">▶️</span><span data-t="next"></span></button>
+  <button class="big" id="btnBack"><span class="ico">🏠</span><span data-t="back"></span></button>
 </div></div>
 <div id="help"><div class="panel">
-  <h2 style="font-size:22px">おうちのかたへ</h2>
-  ・キャラクターに指をあてて、道をなぞるとキャラクターがついてきます。かべは通りぬけられないので、まちがえても「ぽよん」と止まるだけです。<br>
-  ・指をはなしても大丈夫。キャラクターか、通ってきた線のどこからでも続きをなぞれます。もどりたいときは線を逆になぞります。<br>
-  ・とちゅうの くだものや ほしを集めながらゴールを目指します。<br>
-  ・こまったら 💡 で、ゴールまでの道がしばらく光ります。<br>
-  ・むずかしさは タイトル画面の「★」で選べます（2さい向け〜5さい以上向け）。毎回ちがう迷路が自動でできます。
-  <h3>🧭 みちしるべ</h3>
-  <div class="note">はじめての子には「いつも」がおすすめです。ゴールまでの道に うすい点が出ます。</div>
+  <h2 style="font-size:22px" data-t="parents"></h2>
+  <div data-th="howto"></div>
+  <h3 data-t="guideH"></h3>
+  <div class="note" data-t="guideNote"></div>
   <div class="opt" id="optGuide">
-    <button data-v="always">いつも だす</button><button data-v="hint">💡のときだけ</button>
+    <button data-v="always" data-t="always"></button><button data-v="hint" data-t="onHint"></button>
   </div>
-  <h3>🗣️ こえ</h3>
-  <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest">▶ ためす</button></div>
-  <div class="note">「AIのこえ」は、あらかじめ AI で作っておいた声です（Kokoro-82M／Apache-2.0）。</div>
-  <h3>🔓 ぜんぶ版</h3>
-  <div class="note">むりょうでは 🐶 わんちゃん と 🐰 うさぎさん で あそべます。ぜんぶ版（買い切り）か ファミリーパスで、🐧🐝🚀🚗 の めいろも あそべます。広告は出しません。</div>
+  <h3 data-t="voiceH"></h3>
+  <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest" data-t="test"></button></div>
+  <div class="note" data-t="voiceNote"></div>
+  <h3>🌐 ことば / Language</h3>
+  <div class="opt" id="optLang"><button data-v="ja">日本語</button><button data-v="en">English</button></div>
+  <h3 data-t="fullH"></h3>
+  <div class="note" data-t="fullNote"></div>
   <div id="kkSlot"></div>
-  <button class="big" id="btnHelpClose" style="justify-content:center;margin-top:14px">とじる</button>
+  <button class="big" id="btnHelpClose" style="justify-content:center;margin-top:14px" data-t="close"></button>
 </div></div>
 
 <script src="../common/kakin.js"></script>
@@ -152,6 +150,66 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
 const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+
+/* ---------- ことば（言語を足すときは TEXT に1つ足す。声のセリフは TEXT.<言語>.say） ---------- */
+const TEXT = {
+  ja: {
+    title: 'ゆびで めいろ', h1: ['ゆびで', 'めいろ'], sub: 'ゆびで みちを なぞって ゴールまで つれていってね',
+    random: 'おまかせ', randomSub: 'だれが でるかな？ まいかい かわるよ', book: 'あつめた シール', bookN: n => `（${n}まい）`, bookEmpty: 'ゴールすると シールが もらえるよ',
+    help: 'おうちのかたへ・せってい', sndOn: '🔊 おと あり', sndOff: '🔇 おと なし', lang: 'English', home: 'もどる', hint: 'ヒント',
+    goal: 'ゴール！', gotSticker: 'シールを もらったよ！', next: 'つぎの めいろ', back: 'はじめに もどる',
+    parents: 'おうちのかたへ',
+    howto: '・キャラクターに指をあてて、道をなぞるとキャラクターがついてきます。かべは通りぬけられないので、まちがえても「ぽよん」と止まるだけです。<br>・指をはなしても大丈夫。キャラクターか、通ってきた線のどこからでも続きをなぞれます。もどりたいときは線を逆になぞります。<br>・とちゅうの くだものや ほしを集めながらゴールを目指します。<br>・こまったら 💡 で、ゴールまでの道がしばらく光ります。<br>・むずかしさは タイトル画面の「★」で選べます（2さい向け〜5さい以上向け）。毎回ちがう迷路が自動でできます。',
+    guideH: '🧭 みちしるべ', guideNote: 'はじめての子には「いつも」がおすすめです。ゴールまでの道に うすい点が出ます。', always: 'いつも だす', onHint: '💡のときだけ',
+    voiceH: '🗣️ こえ', test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です（Kokoro-82M／Apache-2.0）。',
+    aiVoice: n => `AIのこえ ${n}`, devVoice: 'スマホの よみあげ', noVoice: 'こえ なし',
+    fullH: '🔓 ぜんぶ版', fullNote: 'むりょうでは 🐶 わんちゃん と 🐰 うさぎさん で あそべます。ぜんぶ版（買い切り）か ファミリーパスで、🐧🐝🚀🚗 の めいろも あそべます。広告は出しません。',
+    close: 'とじる', ages: ['2さい〜', '3さい〜', '4さい〜', '5さい〜'],
+    heroes: { dog: 'わんちゃん', rabbit: 'うさぎさん', penguin: 'ペンギン', bee: 'はちさん', rocket: 'ロケット', car: 'くるま' },
+    say: {
+      start: ['ゴールまで、なぞってね。', 'どっちに いくのかな？'], here: ['ここから、なぞってね。'], bump: ['そっちは、かべだよ。', 'こっちかな？'],
+      item: ['ゲット！', 'いいね！', 'きらきら！'], cheer: ['もうすこし！', 'がんばれ！'], hint: ['ひかってる みちを、すすんでね。'],
+      goal: ['ゴール！やったね！', 'ついたね！すごーい！', 'じょうずに、できました！']
+    }
+  },
+  en: {
+    title: 'Finger Maze', h1: ['Finger', 'Maze'], sub: 'Trace the path with your finger and lead your friend to the goal!',
+    random: 'Surprise me', randomSub: 'Who will it be? A new friend every time', book: 'My stickers', bookN: n => `(${n})`, bookEmpty: 'Reach the goal to get a sticker!',
+    help: 'For grown-ups / Settings', sndOn: '🔊 Sound on', sndOff: '🔇 Sound off', lang: '日本語', home: 'Home', hint: 'Hint',
+    goal: 'Goal!', gotSticker: 'You got a sticker!', next: 'Next maze', back: 'Back to start',
+    parents: 'For grown-ups',
+    howto: '• Put a finger on the character and trace the path; the character follows. Walls can’t be crossed, so a wrong move just makes a soft “boing”.<br>• It’s fine to lift the finger. Continue from the character or anywhere on the line already drawn. To go back, trace the line backwards.<br>• Collect the fruit and stars on the way to the goal.<br>• Stuck? Tap 💡 and the path to the goal lights up for a while.<br>• Choose the difficulty with the “★” buttons on the title screen (age 2 to 5+). A new maze is made every time.',
+    guideH: '🧭 Path guide', guideNote: '“Always” is best for first-timers: faint dots show the way to the goal.', always: 'Always', onHint: 'Only with 💡',
+    voiceH: '🗣️ Voice', test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI (Kokoro-82M / Apache-2.0).',
+    aiVoice: n => `AI voice ${n}`, devVoice: 'Device voice', noVoice: 'No voice',
+    fullH: '🔓 Full version', fullNote: 'Free: the 🐶 Dog and 🐰 Bunny mazes. With the full version (one-time purchase) or the Family Pass, the 🐧🐝🚀🚗 mazes open too. No ads.',
+    close: 'Close', ages: ['Age 2+', 'Age 3+', 'Age 4+', 'Age 5+'],
+    heroes: { dog: 'Dog', rabbit: 'Bunny', penguin: 'Penguin', bee: 'Bee', rocket: 'Rocket', car: 'Car' },
+    say: {
+      start: ['Trace the way to the goal!', 'Which way should we go?'], here: ['Start tracing from here!'], bump: ['Oops, that’s a wall!', 'Maybe this way?'],
+      item: ['Got it!', 'Nice!', 'Sparkly!'], cheer: ['Almost there!', 'You can do it!'], hint: ['Follow the shining path!'],
+      goal: ['Goal! Hooray!', 'You made it! Amazing!', 'Great job!']
+    }
+  }
+};
+function pickLang() {
+  const q = new URLSearchParams(location.search).get('lang'); if (q && TEXT[q]) return q;
+  const s = store.get('meiro-lang', null); if (s && TEXT[s]) return s;
+  try { const gl = localStorage.getItem('games-lang'); if (gl && TEXT[gl]) return gl; } catch (e) {} // 入口ページで えらんだ ことば
+  const nav = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').slice(0, 2);
+  return TEXT[nav] ? nav : 'en';
+}
+let L = pickLang();
+const T = () => TEXT[L];
+function applyText() {
+  const t = T();
+  document.documentElement.lang = L; document.title = t.title;
+  $('#h1').innerHTML = t.h1.map(w => [...w].map(c => `<span>${c}</span>`).join('')).join('<br>');
+  document.querySelectorAll('[data-t]').forEach(e => { e.textContent = t[e.dataset.t]; });
+  document.querySelectorAll('[data-th]').forEach(e => { e.innerHTML = t[e.dataset.th]; });
+  document.querySelectorAll('[data-ta]').forEach(e => e.setAttribute('aria-label', t[e.dataset.ta]));
+}
+function setLang(l) { L = l; store.set('meiro-lang', l); applyText(); renderTitle(); if ($('#help').classList.contains('on')) renderHelp(); prepVoice(); }
 
 /* ---------- おと と こえ ---------- */
 let soundOn = store.get('meiro-sound', true);
@@ -180,25 +238,14 @@ const sfx = {
   tap() { tone(880, 0, .06, 'sine', .08); }
 };
 /* こえ：AIで作っておいた声（voice/フォルダ）→ なければ 端末の読み上げ */
-const AI_VOICES = [
-  { id: 'jf_alpha', name: 'AIのこえ 1' }, { id: 'jf_gongitsune', name: 'AIのこえ 2' },
-  { id: 'jf_nezumi', name: 'AIのこえ 3' }, { id: 'jf_tebukuro', name: 'AIのこえ 4' }
-];
-const TTS_TEXT = {
-  start: ['ゴールまで、なぞってね。', 'どっちに いくのかな？'],
-  here: ['ここから、なぞってね。'],
-  bump: ['そっちは、かべだよ。', 'こっちかな？'],
-  item: ['ゲット！', 'いいね！', 'きらきら！'],
-  cheer: ['もうすこし！', 'がんばれ！'],
-  hint: ['ひかってる みちを、すすんでね。'],
-  goal: ['ゴール！やったね！', 'ついたね！すごーい！', 'じょうずに、できました！']
-};
-const AI_COUNT = Object.fromEntries(Object.entries(TTS_TEXT).map(([k, v]) => [k, v.length]));
+// AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<場面><番号>.mp3）
+const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const aiCount = cat => T().say[cat].length;
 const aiBuf = {}; // 'jf_alpha/goal0' -> AudioBuffer
 let aiSrc = null;
 function aiLoad(id) {
   const a = audio(); if (!a) return;
-  for (const [cat, n] of Object.entries(AI_COUNT)) for (let i = 0; i < n; i++) {
+  for (const cat of Object.keys(T().say)) for (let i = 0; i < aiCount(cat); i++) {
     const k = `${id}/${cat}${i}`;
     if (aiBuf[k]) continue;
     aiBuf[k] = 'loading';
@@ -209,21 +256,21 @@ function aiLoad(id) {
 }
 function aiReady(id, cat) {
   const r = [];
-  for (let i = 0; i < AI_COUNT[cat]; i++) { const b = aiBuf[`${id}/${cat}${i}`]; if (b && typeof b !== 'string') r.push(`${id}/${cat}${i}`); }
+  for (let i = 0; i < aiCount(cat); i++) { const b = aiBuf[`${id}/${cat}${i}`]; if (b && typeof b !== 'string') r.push(`${id}/${cat}${i}`); }
   return r;
 }
-let voiceList = [], jaVoice = null;
+let voiceList = [], devVoice = null;
 function voiceScore(v) {
   const n = v.name; let s = 0;
   if (/拡張|Enhanced|Premium|プレミアム/i.test(n)) s += 50;
   if (/Natural|Neural|Online/i.test(n)) s += 45;
   if (/Google/i.test(n)) s += 30;
-  if (/Kyoko|O-ren|Nanami|Hattori|Ayumi|Haruka/i.test(n)) s += 10;
-  if (/Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley/i.test(n)) s -= 40;
+  if (/Kyoko|O-ren|Nanami|Hattori|Ayumi|Haruka|Samantha|Karen|Jenny|Aria/i.test(n)) s += 10;
+  if (/Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Bad|Bells|Bubbles|Jester|Whisper|Zarvox|Albert|Trinoids|Organ|Cellos|Boing|Wobble|Superstar/i.test(n)) s -= 60;
   return s;
 }
 function loadVoice() {
-  try { voiceList = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a)); jaVoice = voiceList[0] || null; } catch (e) {}
+  try { voiceList = speechSynthesis.getVoices(); } catch (e) {}
 }
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
 function tts(text) {
@@ -231,7 +278,8 @@ function tts(text) {
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP'; u.pitch = 1.15; u.rate = .95; if (jaVoice) u.voice = jaVoice;
+    const vs = voiceList.filter(v => v.lang.replace('_', '-').toLowerCase().startsWith(L)).sort((a, b) => voiceScore(b) - voiceScore(a));
+    u.lang = L === 'ja' ? 'ja-JP' : 'en-US'; u.pitch = 1.15; u.rate = L === 'ja' ? .95 : .9; if (vs[0]) u.voice = vs[0];
     speechSynthesis.speak(u);
   } catch (e) {}
 }
@@ -240,8 +288,10 @@ function pickTake(cat, list) { // おなじ声が つづかないように
   const c = list.length > 1 ? list.filter(k => k !== lastTake[cat]) : list;
   return (lastTake[cat] = pick(c));
 }
-// 'ai:jf_alpha' / 'dev'（端末の読み上げ）/ 'off'
-let voiceMode = store.get('meiro-voice', 'ai:jf_alpha');
+// 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
+let voiceMode = store.get('meiro-voice', 'ai:1');
+{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+const aiId = () => AI_VOICES[L][(+voiceMode.slice(3) || 1) - 1] || AI_VOICES[L][0];
 let lastSpeak = 0;
 function speak(cat, force) {
   if (!soundOn || voiceMode === 'off') return;
@@ -249,7 +299,7 @@ function speak(cat, force) {
   if (!force && now - lastSpeak < 1600) return; // しゃべりすぎない
   lastSpeak = now;
   if (voiceMode.startsWith('ai:')) {
-    const id = voiceMode.slice(3), a = audio(); if (!a) return;
+    const id = aiId(), a = audio(); if (!a) return;
     aiLoad(id);
     const ready = aiReady(id, cat);
     if (ready.length) {
@@ -259,9 +309,9 @@ function speak(cat, force) {
     }
     // まだ読みこめていない・ファイルがないときは 端末の声で
   }
-  tts(pickTake(cat, TTS_TEXT[cat]));
+  tts(pickTake(L + cat, T().say[cat]));
 }
-function prepVoice() { if (voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3)); }
+function prepVoice() { if (voiceMode.startsWith('ai:')) aiLoad(aiId()); }
 
 /* ---------- キャラクターと むずかしさ ---------- */
 const THEMES = [
@@ -380,7 +430,7 @@ function startGame(th) {
     layout();
     renderItems();
     nudgeUntil = performance.now() + 2500;
-    if (omakase) showSay(`${theme.hero} ${theme.name}！`); // おまかせで だれが でたか 大きく見せる
+    if (omakase) showSay(`${theme.hero} ${T().heroes[theme.id]}${L === 'ja' ? '！' : '!'}`); // おまかせで だれが でたか 大きく見せる
     setTimeout(() => speak('start', true), 300);
   });
 }
@@ -473,7 +523,7 @@ function collect(c) {
 function goal() {
   state = 'clear'; drag = null;
   sfx.clear(); setTimeout(() => speak('goal', true), 250);
-  showSay('ゴール！');
+  showSay(T().goal);
   confetti();
   const book = store.get('meiro-book', []);
   const r = pick(REWARDS); book.push(r); store.set('meiro-book', book);
@@ -600,7 +650,7 @@ const REWARDS = ['🐻', '🐼', '🐨', '🦁', '🐯', '🐸', '🐵', '🐷',
 const FREE_HEROES = 2; // むりょうは 🐶 と 🐰
 const heroOpen = i => i < FREE_HEROES || Kakin.full();
 Kakin.setup({
-  game: 'meiro', lang: () => 'ja', onChange: () => renderTitle(),
+  game: 'meiro', lang: () => L, onChange: () => renderTitle(),
   name: { ja: 'ゆびで めいろ', en: 'Finger Maze' },
   free: { ja: ['🐶 わんちゃん と 🐰 うさぎさん の めいろ', 'むずかしさ ★〜★★★★ ぜんぶ', 'シールあつめ'], en: ['Dog and Bunny mazes', 'All difficulty levels', 'Sticker collection'] },
   full: { ja: ['🐧 ペンギン・🐝 はちさん・🚀 ロケット・🚗 くるま の めいろ'], en: ['Penguin, Bee, Rocket and Car mazes'] },
@@ -609,12 +659,12 @@ $('#kkSlot').appendChild(Kakin.parentButton());
 
 /* ---------- がめん ---------- */
 function renderTitle() {
-  $('#lvl').innerHTML = LEVELS.map((L, i) => `<button data-l="${i}" class="${i === level ? 'sel' : ''}">${L.label}<small>${L.age}</small></button>`).join('');
-  $('#heroes').innerHTML = THEMES.map((t, i) => `<button data-t="${i}" class="${heroOpen(i) ? '' : 'kk-lock'}"><span class="ico">${t.hero}</span>${t.name}</button>`).join('');
+  $('#lvl').innerHTML = LEVELS.map((lv, i) => `<button data-l="${i}" class="${i === level ? 'sel' : ''}">${lv.label}<small>${T().ages[i]}</small></button>`).join('');
+  $('#heroes').innerHTML = THEMES.map((t, i) => `<button data-t="${i}" class="${heroOpen(i) ? '' : 'kk-lock'}"><span class="ico">${t.hero}</span>${T().heroes[t.id]}</button>`).join('');
   const book = store.get('meiro-book', []);
-  $('#bookCount').textContent = book.length ? `（${book.length}まい）` : '';
-  $('#bookList').innerHTML = book.length ? book.slice(-40).map(e => `<span>${e}</span>`).join('') : '<span class="empty">ゴールすると シールが もらえるよ</span>';
-  $('#btnSnd').textContent = soundOn ? '🔊 おと あり' : '🔇 おと なし';
+  $('#bookCount').textContent = book.length ? T().bookN(book.length) : '';
+  $('#bookList').innerHTML = book.length ? book.slice(-40).map(e => `<span>${e}</span>`).join('') : `<span class="empty">${T().bookEmpty}</span>`;
+  $('#btnSnd').textContent = soundOn ? T().sndOn : T().sndOff; $('#btnLang').textContent = T().lang;
 }
 function goTitle() {
   state = 'idle'; drag = null; maze = null; clearTimeout(clearTimer);
@@ -632,8 +682,9 @@ $('#btnNext').onclick = () => { sfx.tap(); startGame(omakase ? randomTheme() : t
 $('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('meiro-sound', soundOn); if (soundOn) { audio(); sfx.tap(); } renderTitle(); };
 function renderHelp() {
   document.querySelectorAll('#optGuide button').forEach(b => b.classList.toggle('sel', b.dataset.v === guide));
-  $('#voiceSel').innerHTML = AI_VOICES.map(v => `<option value="ai:${v.id}">${v.name}</option>`).join('') +
-    '<option value="dev">スマホの よみあげ</option><option value="off">こえ なし</option>';
+  $('#voiceSel').innerHTML = [1, 2, 3, 4].map(n => `<option value="ai:${n}">${T().aiVoice(n)}</option>`).join('') +
+    `<option value="dev">${T().devVoice}</option><option value="off">${T().noVoice}</option>`;
+  document.querySelectorAll('#optLang button').forEach(b => b.classList.toggle('sel', b.dataset.v === L));
   $('#voiceSel').value = voiceMode;
 }
 $('#btnHelp').onclick = () => { renderHelp(); $('#help').classList.add('on'); };
@@ -641,6 +692,9 @@ $('#btnHelpClose').onclick = () => $('#help').classList.remove('on');
 $('#optGuide').onclick = e => { const b = e.target.closest('button'); if (!b) return; guide = b.dataset.v; store.set('meiro-guide', guide); renderHelp(); };
 $('#voiceSel').onchange = e => { voiceMode = e.target.value; store.set('meiro-voice', voiceMode); prepVoice(); };
 $('#voiceTest').onclick = () => { audio(); prepVoice(); setTimeout(() => speak('goal', true), voiceMode.startsWith('ai:') ? 400 : 0); };
+$('#btnLang').onclick = () => { sfx.tap(); setLang(L === 'ja' ? 'en' : 'ja'); };
+$('#optLang').onclick = e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.v); };
+applyText();
 renderTitle();
 </script>
 </body>

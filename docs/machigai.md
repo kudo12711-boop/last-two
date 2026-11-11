@@ -8,7 +8,7 @@
 
 ## 遊ぶ場所
 
-- https://kudo12711-boop.github.io/last-two/machigai/ （ログインなし。ホーム画面に追加するとアプリのように使えます）
+- https://kudo12711-boop.github.io/last-two/machigai/ （ログインなし。ホーム画面に追加するとアプリのように使えます。英語: `?lang=en`）
 - ファイル: `/mnt/project-files/machigai/index.html`、声は `/mnt/project-files/machigai/voice/`
 
 ## 生まれたきっかけ
@@ -23,6 +23,7 @@
 - 当たり: 赤い丸とキラキラと声。はずれ: ❓とやさしい音。全部見つけると紙ふぶきと動物のシール（「あつめた シール」にたまる）。
 - 💡 でだいたいの場所がふんわり光る。
 - 「おうちのかたへ・こえの録音」: 場面（あたり・はずれ・ヒント・ぜんぶ）ごとに8こまで録音でき、ランダムに流れる。録音が1つでもあれば機械の声は使わない。録音がないときは AI の声（4種類から選べる、「▶ ためす」で聞き比べ）。
+- 日本語 / English 切りかえ（タイトルの下のボタンか、おうちのかたへ）。英語のときは 英語の AI の声。
 
 ## これまでの流れ
 
@@ -37,6 +38,7 @@
 | 11/03 | v0.5 | 「ここで開発しているゲームは全て課金する予定です。まだ課金するシステムが組み込まれていないゲームについて組み込むようにしてください」 | 共通の「おためし課金」（`common/kakin.js`）を組み込んだ。🔒の物をさわると「おうちの ひとに きいてみてね」→ おとなの確認（かけ算）→ お店。お金は動かない。公開してよいかをくどうさんに確認 |
 | 11/9 | v0.5 | 「タップを連続的に行うと画面が拡大して、元の縮小に戻せない」 | iPhone・iPad の Safari で、連続タップ（ダブルタップ）やピンチで画面が拡大しないようにした。もし拡大されても自動で元の大きさにもどす |
 | 11/9 | v0.6 | 「色違いや大小とかあるなしだけではなく、別のパターンの間違いを」「題材自体ももっと増やして」 | 間違いの種類を4つから11こに（向き・さかさま・位置ずれ・表情・数・一部の色・ふえる など）。題材を まち・おやつ・もり・ふゆ・まぜこぜ の5つ追加して8つに、絵の部品も19こ→37こ。写真モードにも左右反転・小さくなるを追加 |
+| 11/11 | — | 「全てのアプリについて海外展開を確かめてください」→ 一覧を報告 →「進めてください」 | 英語に対応（画面、録音の場面、ほめる声、英語の AI の声4種類） |
 
 ## お金のしくみ（v0.5 から、おためし）
 
@@ -63,3 +65,4 @@
 - 拡大の防止（v0.5）: viewport の `user-scalable=no` は iOS Safari が無視するため、ゲーム画面に `touch-action:none`、400ms 以内の2回目の `touchend` と2本指の `touchstart` を `preventDefault`（「おうちのかたへ」の中は除く）、`gesturestart` 系と `dblclick` も止める。拡大されたら `visualViewport.scale` を見て viewport の meta を書きかえて戻す。Playwright の Chromium では拡大自体が起きないので、iPhone・iPad の実機でしか確かめられない。
 - 注意: misaki の JAG2P は文字列を返す（タプルではないので `[0]` しない）。
 - 課金: `<script src="../common/kakin.js">` を ゲームの script の前に読み、`Kakin.setup({game: 'machigai', ...})`。🔒は `.kk-lock` クラス、さわったら `Kakin.ask()`、ぜんぶ版かどうかは `Kakin.full()`。むりょうの範囲は `FREE_THEMES`（`field`）と `FREE_PHOTOS`（1日2まい、localStorage `machigai-photo-day` に `{d: 日付, n: 回数}`）。
+- 英語（2026-11-11）: 言語は `?lang=ja|en` → 前回えらんだもの（localStorage `machigai-lang`）→ 入口ページで えらんだもの（`games-lang`）→ ブラウザの言語（日本語以外は英語）。文字は `TEXT`（ja / en）。声の設定は `ai:1`〜`ai:4`（AIのこえ 何番）で、日本語は jf_alpha / jf_gongitsune / jf_nezumi / jf_tebukuro、英語は af_heart / af_bella / bf_emma / am_michael の フォルダから読む（むかしの `ai:jf_alpha` も読める）。英語の声は `/mnt/project-files/i18n/tools/en_voice.py`（Kokoro-82M v1.0 onnx、espeak の英語読み）で作った。

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1a1838">
-<meta name="description" content="輪になった5つの手札でペアをそろえ、連鎖で全部消す1人用パズル。">
+<meta name="description" content="輪になった5つの手札でペアをそろえ、連鎖で全部消す1人用パズル。 / A solo chain puzzle: pass cards around a ring of five hands, make pairs, and clear them all in chains.">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
 <title>ぬけぬけリング</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -177,10 +177,11 @@ h1 small{display:block;font-family:var(--body);font-size:.75rem;color:var(--mute
 <body>
 <div class="wrap">
   <header>
-    <h1>ぬけぬけリング<small>1人用・連鎖パズル 試作 v0.6</small></h1>
+    <h1 id="h1">ぬけぬけリング<small>1人用・連鎖パズル 試作 v0.7</small></h1>
     <div class="hbtns">
       <button id="sound" aria-pressed="true">音 オン</button>
       <button id="bgm" aria-pressed="false">BGM オフ</button>
+      <button id="lang">English</button>
       <button id="menu" class="primary">ステージ</button>
     </div>
   </header>
@@ -188,7 +189,7 @@ h1 small{display:block;font-family:var(--body);font-size:.75rem;color:var(--mute
   <div class="hud">
     <div class="st" id="stName">1-1</div>
     <div class="goals" id="goals"></div>
-    <div class="moves" id="movesBox"><b id="moves">0</b><small>のこり手数</small></div>
+    <div class="moves" id="movesBox"><b id="moves">0</b><small id="movesL">のこり手数</small></div>
   </div>
   <div class="rule" id="rule" hidden></div>
 
@@ -202,11 +203,11 @@ h1 small{display:block;font-family:var(--body);font-size:.75rem;color:var(--mute
     <button id="reset">はじめから</button>
   </div>
   <div class="wallet" id="wallet"></div>
-  <div class="score"><span>スコア <b id="score">0</b></span><span class="meter" id="meter" aria-hidden="true"></span><span>最大れんさ <b id="maxc">0</b></span></div>
+  <div class="score"><span><span id="scoreL">スコア</span> <b id="score">0</b></span><span class="meter" id="meter" aria-hidden="true"></span><span><span id="maxcL">最大れんさ</span> <b id="maxc">0</b></span></div>
 
   <details class="howto" id="howto" open>
-    <summary>遊び方</summary>
-    <ol>
+    <summary id="howtoS">遊び方</summary>
+    <ol id="howtoL">
       <li>5つの手札が輪になっています。カードをタップすると、<b>矢印の先の手札</b>（一番下は一番上へ）に渡ります。</li>
       <li>渡した先に同じ数字があれば、2枚そろって<b>消えます</b>。</li>
       <li>消えた手札は、<b>先頭</b>（左はしの札）を自動で次の手札へ渡します。そこでもそろえば、また消えて…と<b>れんさ</b>が続きます。そろわなければ、その札は次の手札の右はしに入って止まります。</li>
@@ -221,6 +222,53 @@ h1 small{display:block;font-family:var(--body);font-size:.75rem;color:var(--mute
 <div class="overlay" id="ov" hidden><div class="panel" id="panel"></div></div>
 
 <script>
+// ---------- ことば（日本語 / English）。言語を足すときは EN と同じ形で1つ足す ----------
+const LANG=(()=>{try{const q=new URLSearchParams(location.search).get("lang");if(q==="ja"||q==="en")return q;
+  const s=JSON.parse(localStorage.getItem("nkr3_lang")||"null");if(s==="ja"||s==="en")return s;
+  const gl=localStorage.getItem("games-lang");if(gl==="ja"||gl==="en")return gl;}catch(e){}
+  return /^ja/i.test((navigator.languages&&navigator.languages[0])||navigator.language||"ja")?"ja":"en";})();
+const E=LANG==="en";
+const EN={
+  "あか":"Red","きいろ":"Yellow","みどり":"Green","あお":"Blue","むらさき":"Purple","ババ":"Joker","こおり":"ice","もどり":"back","いかり":"anchor",
+  "きほん":"Basics","カギ":"Lock","カギとこおり":"Lock & Ice","もどりといかり":"Back & Anchor","大きな輪":"Big Ring","たつじん":"Master",
+  "今日":"Today","特別":"Special","れんしゅう":"Practice",
+};
+const J=t=>E&&EN[t]!=null?EN[t]:t;
+const WORLDS_EN=[
+  {name:"Basics"},
+  {name:"Joker",rule:"The <b>Joker</b> never pairs. You can clear with it left over, but at the front of a hand it stops the chain.",
+   intro:{title:"Here comes the Joker",text:"The Joker is a card that <b>never pairs</b>. It's fine if it's left at the end. But when the Joker reaches the front of a hand, the chain stops there. Where to push it is the tricky part."}},
+  {name:"Lock",rule:"You can't pick cards from a <b>locked hand</b>. To move its cards, clear a pair there and let the chain send the front card out.",
+   intro:{title:"Locked hands",text:"A <b>locked hand</b> (dotted border) can't be tapped to send cards, but it can receive them. The only way to move its cards is to clear a pair there and <b>let the chain send the front card out</b>."}},
+  {name:"Ice",rule:"<b>Ice cards</b> can't be tapped or paired. When a pair clears in the same hand, they melt into normal cards.",
+   intro:{title:"Ice cards",text:"Striped <b>ice cards</b> can't be tapped and don't pair even with the same number. When a pair clears in the same hand, they <b>melt</b> into normal cards. Think about the order to melt them."}},
+  {name:"Back",rule:"Tapping a <b>back card</b> sends it to the <b>previous</b> hand (against the arrow). In a chain it moves like a normal card.",
+   intro:{title:"Back cards",text:"A <b>back card</b> has a purple border. Tap it and it goes <b>against</b> the arrow, to the previous hand. If it pairs there, the chain goes the usual way. Attacking from behind opens up new plans."}},
+  {name:"Anchor",rule:"An <b>anchor card</b> at the front is never sent out. When a pair clears in a hand with an anchor in front, the chain stops there.",
+   intro:{title:"Anchor cards",text:"An <b>anchor card</b> (thick border) is heavy. You can tap it and it can pair. But at the front of a hand it <b>isn't sent on by the chain</b>, so the chain stops there. Move the anchor out of the way, or use it on purpose to stop a chain."}},
+  {name:"Lock & Ice",rule:"<b>Locked hands</b> and <b>ice cards</b> together.",
+   intro:{title:"Combo: Lock & Ice",text:"From here on, gimmicks are <b>combined</b>. Ice in a locked hand can only melt by clearing a pair in that locked hand."}},
+  {name:"Back & Anchor",rule:"<b>Back cards</b> and <b>anchor cards</b> together. The <b>Joker</b> joins partway through.",
+   intro:{title:"Combo: Back & Anchor",text:"Send cards backwards with back cards and stop chains with anchors. A world about planning direction and stopping points."}},
+  {name:"Big Ring",rule:"Stages with lots of cards. Every gimmick appears.",
+   intro:{title:"Big Ring",text:"More cards now. Look at the whole ring first and find <b>where to start for the longest chain</b>."}},
+  {name:"Master",rule:"Every gimmick, with no spare moves.",
+   intro:{title:"Master",text:"The last world, with every gimmick. Later stages have <b>no spare moves</b>. Try to clear them without hints."}},
+];
+const TUT_EN={
+  1:{steps:["Tap the <b>red 5</b>. It pairs with the yellow 5 and clears. The next front card is the <b>Joker</b>. It's sent to green but doesn't pair, so <b>the chain stops</b> there.",
+    "The Joker went to the right end of green. Now send the <b>yellow 1</b> to green. Even if the Joker is left at the end, you clear when all numbers are gone."],
+    done:"The Joker never pairs. At the front of a hand, it stops the chain."},
+  2:{steps:["The dotted <b>yellow</b> hand is locked. You can't tap its cards. Send the <b>red 3</b> to yellow and clear a pair inside the locked hand. The front 4 is sent out."],
+    done:"Cards in a locked hand move when you clear a pair there and the chain sends them out."},
+  3:{steps:["The striped <b>3</b> is an ice card. It can't be tapped or paired. Send the <b>red 2</b> to yellow. When a pair clears in the same hand, the ice <b>melts</b>."],
+    done:"Ice cards melt into normal cards when a pair clears in the same hand."},
+  4:{steps:["The purple-bordered <b>yellow 2</b> is a back card. Tap it and it goes <b>against</b> the arrow, to red. When it pairs there, the chain goes the usual way."],
+    done:"Back cards go backwards when tapped. The chain always goes the same way."},
+  5:{steps:["Send the <b>red 4</b> to yellow. It pairs and clears, but the next front card is the thick-bordered <b>anchor card</b>. Anchors aren't sent on, so the chain stops there.",
+    "You can still tap anchor cards. Send the <b>yellow anchor 5</b> to green."],
+    done:"An anchor at the front stops the chain. You can still move it by tapping."},
+};
 // Stage data: [hands, lockedHands, moveLimit, chainGoal].
 // Card: 0 = ババ, otherwise number + 100*flags (1 こおり, 2 いかり, 4 もどり).
 const DATA={"stages":[[[[4],[1],[1,2],[3,2],[3,4]],[],2,4],[[[4],[1],[3],[1,3,2],[4,2]],[],5,3],[[[3,1],[4,2],[2],[3],[1,4]],[],5,3],[[[1,4],[6,2,4],[1,3,6],[5,2],[5,3]],[],7,4],[[[3],[5,3,2],[4,1],[5,2],[1,4]],[],8,2],[[[2],[4,5,2],[3,1],[4,5],[3,1]],[],8,2],[[[2,5],[4,1],[4,1],[5,2,3,6],[6,3]],[],9,2],[[[1,3],[5],[2],[5,4,3],[2,1,4]],[],7,2],[[[3,4],[5,6],[6,5,1,2],[4,2,1],[3]],[],7,2],[[[2,6,5],[6,1,3],[1,5],[4,2],[3,4]],[],5,3],[[[4],[1,4],[3,0],[3,2],[1,2]],[],6,3],[[[5,4],[4,3,1],[5,3],[2],[2,1,0]],[],5,2],[[[2,1],[4,3],[1],[0,3,5],[5,2,4]],[],5,2],[[[3,2],[5,4],[1,0],[4,5],[3,2,1]],[],8,3],[[[3],[3,4,6,1],[1,2,6],[0,5],[4,2,5]],[],7,2],[[[5],[1,2,6,3,4],[4,2],[5],[0,3,1,6]],[],9,2],[[[1,0,4],[5],[6,3,2],[4,2,3],[6,1,5]],[],6,3],[[[7,4,6,2],[5,1,7],[1,2],[3,6,0],[4,5,3]],[],7,3],[[[2,5,7],[7,0,6,3],[3,6],[2,1,4],[4,5,1]],[],7,2],[[[1,5,7,2],[7,3,6],[5,0],[6,1,4],[4,2,3]],[],7,3],[[[4,1],[3],[2,4],[3],[2,1]],[0],6,3],[[[5,2,4],[5],[4],[3,1,2],[1,3]],[0],7,2],[[[3],[1,6,2,4],[5,3],[0,5,6,2,1],[4]],[2],12,2],[[[4,3],[3,5],[2,1],[5],[1,2,4]],[4],8,2],[[[4,3],[4,2],[5,1],[3,1,2],[5]],[3],5,2],[[[3,4,6],[6],[1,5],[2,4,1],[3,5,2]],[2],7,5],[[[6,2,0,1],[3,4,2],[5,1],[5],[4,3,6]],[4],8,2],[[[1,4],[4,5,3,6],[3,5,2],[1,7,6],[2,0,7]],[1],9,4],[[[1,5,4,6,0],[1,2],[7,5,3,4,6],[7],[3,2]],[0],11,3],[[[1,5],[4,3,6],[2,7],[7,6,5,2],[4,1,0,3]],[2],12,2],[[[2,4],[3,1],[1,102],[4],[3]],[],8,2],[[[1],[1,4],[2,4,105],[3],[2,103,5]],[],6,3],[[[5,1],[4],[104,1,3],[5,2],[2,103]],[],8,2],[[[4,1],[6,102,3],[4,5],[3,1],[106,5,2]],[],9,2],[[[2],[3,105,1],[3,4],[6,1,5,4],[6,102]],[],5,5],[[[6,2,1],[105,1,3],[4,6],[3,102],[4,105]],[],9,2],[[[5,1],[3],[2],[4],[2,104,1,3,5]],[],8,2],[[[103,4,6],[3,7,1],[2,107,4],[6,5],[0,2,105,1]],[],8,4],[[[2,4,5,0,7],[105,103],[6],[1,2,106],[3,1,7,4]],[],8,3],[[[3],[104,6,2,1,105],[7,5,6],[1,7],[103,0,2,4]],[],6,2],[[[4,3],[402],[1],[1,3],[4,2]],[],7,2],[[[3],[3,4],[2,5,4],[2,5,1],[401]],[],4,3],[[[2,1],[2,6],[4,3,5],[1,6,4],[3,405]],[],6,3],[[[6],[2,4,1],[4,2,3,406,5],[0,3],[401,5]],[],8,3],[[[2],[1,3],[4,5,2],[3],[4,5,401]],[],9,2],[[[402],[2,5,4,3],[3,1,5],[1],[4]],[],6,2],[[[3,2,6],[1,4,405],[4,6,402,5],[1],[3]],[],6,3],[[[4,6,3],[0,5,2],[3,5,1,7],[407,406,4],[1,2]],[],9,2],[[[7,6,2,4],[5,3,0,6],[401,407,4],[2,5],[3,1]],[],7,2],[[[4,0,402,3,1],[7,5,3,2],[6,404,5],[7],[1,6]],[],5,2],[[[1],[2,4],[1,3],[2],[203,4]],[],7,2],[[[1,4],[3,1,202],[2,5],[4],[5,3]],[],7,2],[[[205,6],[2,5],[3,2,1,6,4],[3],[1,4]],[],7,4],[[[4,3],[202,6,5],[4,5],[206,1,2],[3,1]],[],8,3],[[[2,5],[3,205,4],[4],[2,1],[3,1]],[],5,3],[[[201,6,0,3,5],[5,3],[1],[2,6,204],[2,4]],[],10,2],[[[3,2,5],[204,3],[2,4],[1,5],[1]],[],6,3],[[[7,4,3,1],[0,7,1,6,4],[2,206],[203,5],[5,2]],[],7,2],[[[4,5,7],[4,2],[1,3,6],[5,0,206,7],[3,202,1]],[],8,2],[[[7,4,6],[5,203,1],[5],[1,2,0,206],[7,3,2,4]],[],6,5],[[[1,4],[102,4],[5],[1,3,5],[3,2]],[4],8,2],[[[1,5],[4,105,2,3],[3],[1],[2,4]],[1],6,3],[[[102,1],[3,4,6],[106,2,5],[3,5],[1,4]],[2],11,2],[[[3,2],[5,101,6,4],[6],[3,4,2],[1,5]],[1],11,2],[[[7],[7,5],[1,3,5,0],[101,2,104,6],[6,3,4,2]],[3],14,2],[[[1,4],[5,1,2],[2,103,6],[3,5],[6,4]],[1],8,3],[[[2,0,3],[6],[103,101,4],[2,5],[1,5,6,4]],[3],12,3],[[[7,5],[6,101,3,2,7,5],[4,6],[3,0,2],[104,1]],[0],13,3],[[[5,2,4],[0,101,6,105,2],[3,7],[3,6,7],[1,4]],[1],6,2],[[[101,3],[3,0,5,1,7],[4,7,5],[6,2],[6,4,102]],[2],5,4],[[[405],[4,3],[1,2],[4,1,2,205],[3]],[],8,2],[[[4,3],[1,405],[2,4],[2,3],[1,205]],[],6,3],[[[2,6,401,5,0],[3,4],[4,5],[6],[201,3,2]],[],7,2],[[[3,7,5,2],[206,5,7,4,0],[2],[1,3],[6,4,401]],[],9,2],[[[2,5],[6,4,407,3],[5,4],[7,1,0],[6,3,1,202]],[],9,2],[[[6,402],[3,1],[204,1],[5,3,6],[5,4,2]],[],7,2],[[[4],[205,3,1,6],[5,1,2],[4,2,403],[6]],[],7,2],[[[0],[4,3,1,2,5],[4,6,5],[3,401],[2,206]],[],6,3],[[[6,0,2,204],[4,3,5],[3,7,2],[1],[1,6,407,5]],[],5,3],[[[5,3,0],[1,7,2],[4,206,2,5],[3,7,1],[406,4]],[],8,3],[[[5],[6,4,7],[0,7,5,3,6],[1,2],[3,1,4,2]],[],9,2],[[[2,1,4],[2,6,5,7],[3],[3,1,5,8,0,6],[8,7,4]],[],7,2],[[[5,4,6,2],[4,8,203,7],[7],[1],[105,8,1,2,6,3,0]],[],7,3],[[[2,7,3],[1,8,6],[401,6,5],[5,8,4],[203,0,2,7,4]],[],8,4],[[[5,6,7],[6,4,2,3],[4,5,101],[1,3,2],[7,0]],[],7,4],[[[8,6,1,3],[1],[4,2,6,7,3,5],[8,0,7],[2,5,204]],[],9,2],[[[6,8,3,5],[0,3,5],[7,2,401,8],[4,206],[4,7,101,2]],[],10,2],[[[1,5,104,9],[7,2],[6,5,202,8,1],[3,7,0,8],[4,3,9,406]],[],7,3],[[[5,7,409,6,0],[7,3,4],[8,2,9],[6,1,203],[2,1,8,4,5]],[4],10,2],[[[5,202,7,406],[103,9,8,4],[4,5,6,1],[7,9,2,8],[3,0,1]],[4],20,2],[[[0,405,6],[2,4],[4,3,201],[6,5],[1,3,102]],[],9,2],[[[1,8,5,203],[6,0,107,2,1,3],[4,5],[6,407,4],[8,2]],[],9,2],[[[105,3,0,6],[404],[7,1,3,206,2],[4,2,7,1],[5]],[0],12,2],[[[6,403],[1,7,105],[4,202],[2,0,5],[7,4,1,3,6]],[],9,3],[[[108,1,6,7],[4,2,1,3],[0,204,8],[2,6,403,5],[7,5]],[1],8,2],[[[4,7,405],[6,3,1],[102,4,3,0],[5,7],[2,206,1]],[3],10,2],[[[5,107],[4,206,1,8],[7,2,5],[3,8,0],[2,403,4,1,6]],[1],12,2],[[[5,0,6,7],[7,204,401,3,8],[2,4],[1,3],[2,6,5,108]],[],7,3],[[[0,4,8,7],[2,103,9],[9,8,3,202],[5,407,1,6],[1,5,4,6]],[],10,2],[[[5,109,406,2,207,1],[5,3],[4,6],[9,8,4,7],[3,8,1,0,2]],[1],10,2]],"tsume":[[[[4],[2,1],[1],[2,3],[4,3]],[],2,4],[[[1],[3],[3,2,4],[2],[4,1]],[],2,4],[[[3,1,4],[1],[4,2],[2],[3]],[],2,4],[[[3,2],[3],[1,2],[4,1],[4]],[],2,4],[[[4,3],[3],[1,2],[2],[1,4]],[],2,4],[[[4,3],[4,2],[2,5],[5,1,3],[1]],[],2,5],[[[3],[1,4],[4,5],[5,2],[2,3,1]],[],2,5],[[[5,3,1],[4,3],[2,4],[2],[5,1]],[],2,4],[[[4,3,2],[4],[5,2],[1,5],[1,3]],[],2,5],[[[1,3],[1,2],[5,2],[4,5,3],[4]],[],2,5],[[[1,2,5],[4,1,3],[4],[3,6],[2,5,6]],[],2,6],[[[5,4],[5,2,3],[1,3],[2,6,1],[4,6]],[],2,6],[[[6,2,4],[6],[2,3],[5,1,3],[5,4,1]],[],2,6],[[[4],[3,2],[5,2,1],[6,5,1],[4,3,6]],[],2,6],[[[1,3],[1,5],[2],[6,2,5,4],[3,6,4]],[],2,4],[[[5,1],[5,3,4],[2,3],[4,6,0,2],[1,6]],[],2,6],[[[1,6,4,3],[1,2,6],[2,5],[3,5],[4,0]],[],2,4],[[[2,0,5,4],[6,5,2],[1,6],[3,4,1],[3]],[],2,6],[[[3,5,4],[2,3],[6,2],[0,1],[5,4,6,1]],[],2,4],[[[1,5],[5,4],[4,2,6],[2,1,3,6],[3,0]],[],2,5],[[[2,1,5,4],[4],[106,1],[3],[2,6,3,5]],[],3,3],[[[4,1,3,5],[1,6],[405,6,2],[2,3],[4,0]],[],3,4],[[[1,3,4,6],[6,5,1],[2,205],[2],[4,3]],[],3,3],[[[0,5,1,6],[5,2,3,106],[4,3],[4],[1,2]],[],3,5],[[[2,6,404],[4,1],[1,5],[6,3,5],[3,2]],[],3,6],[[[1,2,5],[1,203,6,2],[4,6],[3],[5,0,4]],[],3,4],[[[1],[3,2,104],[5,3],[6,5,4],[1,6,2]],[],3,5],[[[2,5],[0],[3,2,1,6],[1,5,4,3,406],[4]],[],3,4],[[[2],[2,6,3],[205,4,6],[1,4,5],[3,1]],[],3,3],[[[2,0],[5,4],[3,5,1],[4,101,6,3],[2,6]],[],3,5],[[[2,3,5,7],[3,402,6],[4,0,5],[6,1,4],[7,1]],[],3,3],[[[5,6,3,2],[7,3,0],[6,1,7],[4],[105,2,4,1]],[],3,4],[[[0,5,4,1],[4],[3,1],[7,3,6,2],[7,5,6,402]],[],3,5],[[[5,2,3,0],[2,1,7],[1,6],[6,4],[5,7,104,3]],[],3,7],[[[1,0],[1,3,7,5],[3,2,7,4],[2,406],[5,6,4]],[],3,4],[[[1,7,3,4],[6,1],[105,206,2,4,0],[7,5,2],[3]],[],3,4],[[[2,406,1,4,7],[3,4,0],[1,5,3],[205,6],[7,2]],[],3,6],[[[3,5,106],[2,6,3,1],[2,7],[5,1,4,7],[0,204]],[],3,3],[[[1,3,202],[1,7,403,6],[7,4],[2,4,6,5],[5,0]],[3],3,3],[[[2,3,205,7],[3,1,0,7],[4],[6,1],[4,102,6,5]],[4],3,4],[[[6,2,1],[5],[6,4,2,5],[3,4],[3,1]],[],4,4],[[[0],[5,1,4],[3,2,1],[2,6,4,3],[5,6]],[],4,3],[[[6,2],[5,1,2,4],[3,1],[6,4,3],[5]],[],4,3],[[[4,3,6,1,5],[2,3,4],[2],[6,101],[0,5]],[],4,4],[[[1,2],[6,102],[6,5],[4,5,3],[4,1,3]],[],4,4],[[[6,5,3],[7,0],[5,1,7],[2,4,6,1],[2,103,4]],[],4,4],[[[4,402,107,3,6],[7],[2,6],[1,5],[3,1,5,4]],[],4,4],[[[106,3],[4,401,7,6],[5,1,2,7],[0],[2,4,5,3]],[],4,4],[[[2],[6,7,3,5,2],[4,7,5],[3,101],[404,6,1]],[],4,4],[[[3,7,1],[102,6,7],[5,0,3,6],[2,1,405,4],[4]],[],4,4]]};
@@ -266,7 +314,8 @@ const TUT={
     [1,0,"いかり札は、タップすれば動かせます。<b>きいろのいかり5</b>をみどりへ渡そう。"]],
     done:"いかり札は先頭にあると、れんさを止めます。タップすれば普通に動かせます。"},
 };
-const N=5, SEATS=["あか","きいろ","みどり","あお","むらさき"];
+const N=5, SEATS=["あか","きいろ","みどり","あお","むらさき"].map(J);
+if(E){WORLDS.forEach((w,i)=>Object.assign(w,WORLDS_EN[i]));for(const [k,v] of Object.entries(TUT_EN)){TUT[k].done=v.done;v.steps.forEach((t,i)=>TUT[k].steps[i][2]=t);}}
 const NUMC=["","#d94a5c","#c77a00","#2f9e6e","#2f74c0","#8a4fd1","#c2457e","#1f8a99","#6b7a1a","#b0552a","#4b56c9"];
 const ICE=1,ANCHOR=2,BACK=4;
 const num=c=>c%100, has=(c,f)=>(Math.floor(c/100)&f)!==0;
@@ -384,14 +433,14 @@ let G=null, busy=false, hintMove=null;
 const kind=id=>id[0];
 const nOf=id=>+id.slice(1);
 const worldOf=id=>kind(id)==="s"?Math.floor(nOf(id)/PER):-1;
-function label(id){return id==="daily"?"今日":id==="vip"?"特別":kind(id)==="u"?"れんしゅう":kind(id)==="t"?`つめ${nOf(id)+1}`:`${worldOf(id)+1}-${nOf(id)%PER+1}`;}
+function label(id){return id==="daily"?J("今日"):id==="vip"?J("特別"):kind(id)==="u"?J("れんしゅう"):kind(id)==="t"?(E?`P${nOf(id)+1}`:`つめ${nOf(id)+1}`):`${worldOf(id)+1}-${nOf(id)%PER+1}`;}
 function stageData(id){if(kind(id)==="u"){const T=TUT[nOf(id)];return T?[T.board[0],T.board[1],T.steps.length,1]:null;}return id==="daily"?(window._daily=window._daily||dailyLevel()):id==="vip"?(window._vip=window._vip||specialLevel()):kind(id)==="t"?TSUME[nOf(id)]:STAGES[nOf(id)];}
 function nextId(id){if(id==="daily"||id==="vip"||kind(id)==="u")return null;const n=nOf(id)+1,list=kind(id)==="t"?TSUME:STAGES;return n<list.length?kind(id)+n:null;}
 function prevId(id){return kind(id)==="s"||kind(id)==="t"?(nOf(id)?kind(id)+(nOf(id)-1):null):null;}
 const isOpen=id=>{const p=prevId(id);return !p||stars[p]||stars[id];};
 function setRule(){
   const id=G.idx,w=worldOf(id);
-  const txt=id==="daily"?"今日のステージ。毎日ちがう配置で、仕掛けがひとつ入ります。":id==="vip"?"<b>今日の特別ステージ</b>（月額パス）: 毎日ひとつの、3手ぴったりのつめぬけです。":kind(id)==="t"?"<b>つめぬけ</b>: 手数ぴったりで全部消す。正解の1手目はひとつだけです。":kind(id)==="u"?WORLDS[nOf(id)].rule:w>0?WORLDS[w].rule:"";
+  const txt=id==="daily"?(E?"Today's stage. A new layout every day, with one gimmick.":"今日のステージ。毎日ちがう配置で、仕掛けがひとつ入ります。"):id==="vip"?(E?"<b>Today's special stage</b> (monthly pass): one puzzle a day, cleared in exactly 3 moves.":"<b>今日の特別ステージ</b>（月額パス）: 毎日ひとつの、3手ぴったりのつめぬけです。"):kind(id)==="t"?(E?"<b>Puzzle</b>: clear everything in exactly the given moves. Only one first move works.":"<b>つめぬけ</b>: 手数ぴったりで全部消す。正解の1手目はひとつだけです。"):kind(id)==="u"?WORLDS[nOf(id)].rule:w>0?WORLDS[w].rule:"";
   $("rule").hidden=!txt;$("rule").innerHTML=txt;
 }
 function load(id){
@@ -400,7 +449,9 @@ function load(id){
   G={idx:id,s:L[0].map(a=>a.slice()),lock:L[1],lim:L[2],mc:L[3],moves:0,score:0,maxc:0,hist:[],hints:0,freeUndo:FREE_UNDO,chains:[],tut:kind(id)==="u"?nOf(id):null,step:0};
   hintMove=null;if(G.tut==null)store.set("last",id);else hintMove=TUT[G.tut].steps[0];setRule();render();meter(0);
   const bd=$("board");bd.querySelectorAll(".card").forEach((c,k)=>c.style.setProperty("--d",k*35+"ms"));bd.classList.add("deal");setTimeout(()=>bd.classList.remove("deal"),900);
-  say(id==="s0"?"まずは<b>きいろの「1」</b>をタップしてみよう。矢印の先のみどりでそろって消え、そこかられんさが続きます。":
+  say(E?(id==="s0"?"First, tap the <b>yellow 1</b>. It pairs at green, where the arrow points, and the chain continues from there.":
+    kind(id)==="t"||id==="vip"?`Clear everything in <b>exactly ${G.lim} moves</b>.`:`Clear everything within ${G.lim} moves. Goal: a <b>${G.mc}-chain</b> in one go.`):
+    id==="s0"?"まずは<b>きいろの「1」</b>をタップしてみよう。矢印の先のみどりでそろって消え、そこかられんさが続きます。":
     kind(id)==="t"||id==="vip"?`<b>${G.lim}手ぴったり</b>で全部消そう。`:`${G.lim}手のうちに全部消そう。目標は一度に <b>${G.mc}れんさ</b>。`);
   if(G.tut!=null){tutStart();return;}
   const w=worldOf(id);
@@ -410,27 +461,27 @@ function load(id){
 function say(h){$("msg").innerHTML=h;}
 function cardClass(c){return c===0?" baba":has(c,ICE)?" ice":has(c,BACK)?" back":has(c,ANCHOR)?" anchor":"";}
 function cardHTML(c){
-  if(c===0)return "ババ";
-  const t=has(c,ICE)?"こおり":has(c,BACK)?"もどり":has(c,ANCHOR)?"いかり":"";
+  if(c===0)return J("ババ");
+  const t=J(has(c,ICE)?"こおり":has(c,BACK)?"もどり":has(c,ANCHOR)?"いかり":"");
   return num(c)+(t?`<span class="tag">${t}</span>`:"");
 }
-function cardName(c){return c===0?"ババ":(has(c,ICE)?"こおった":has(c,BACK)?"もどり札の":has(c,ANCHOR)?"いかり札の":"")+num(c);}
+function cardName(c){if(E)return c===0?"Joker":(has(c,ICE)?"frozen ":has(c,BACK)?"back ":has(c,ANCHOR)?"anchor ":"")+num(c);return c===0?"ババ":(has(c,ICE)?"こおった":has(c,BACK)?"もどり札の":has(c,ANCHOR)?"いかり札の":"")+num(c);}
 function render(){
   const b=$("board");b.innerHTML="";
   G.s.forEach((hand,h)=>{
     const locked=G.lock.includes(h);
     const row=document.createElement("div");row.className="row"+(hand.length?"":" done")+(locked?" locked":"");row.dataset.h=h;
     row.style.setProperty("--c",`var(--s${h})`);
-    row.innerHTML=`<div class="seat"><i></i>${SEATS[h]}${locked?"<b>カギ</b>":""}</div>`;
+    row.innerHTML=`<div class="seat"><i></i>${SEATS[h]}${locked?`<b>${J("カギ")}</b>`:""}</div>`;
     const cs=document.createElement("div");cs.className="cards";
-    if(!hand.length)cs.innerHTML='<span class="none">からっぽ</span>';
+    if(!hand.length)cs.innerHTML=`<span class="none">${E?"empty":"からっぽ"}</span>`;
     hand.forEach((c,i)=>{
       const to=target(c,h),dest=G.s[to].filter(x=>!has(x,ICE)).map(num);
       const btn=document.createElement("button");btn.className="card"+cardClass(c);btn.dataset.h=h;btn.dataset.i=i;
       btn.style.setProperty("--n",NUMC[num(c)]||"#fff");
       const tappable=canTap(G.s,G.lock,h,i)&&(G.tut==null||(hintMove&&hintMove[0]===h&&hintMove[1]===i));
-      btn.innerHTML=cardHTML(c)+(i===0?'<span class="head">先頭</span>':"")+(tappable&&num(c)&&dest.includes(num(c))?'<span class="dot"></span>':"");
-      btn.setAttribute("aria-label",!tappable?`${SEATS[h]}${locked?"（カギ）":""}の${cardName(c)}（動かせません）`:`${SEATS[h]}の${cardName(c)}を${SEATS[to]}へ渡す`);
+      btn.innerHTML=cardHTML(c)+(i===0?`<span class="head">${E?"front":"先頭"}</span>`:"")+(tappable&&num(c)&&dest.includes(num(c))?'<span class="dot"></span>':"");
+      btn.setAttribute("aria-label",E?(!tappable?`${cardName(c)} in ${SEATS[h]}${locked?" (locked)":""} (can't move)`:`Send ${cardName(c)} from ${SEATS[h]} to ${SEATS[to]}`):!tappable?`${SEATS[h]}${locked?"（カギ）":""}の${cardName(c)}（動かせません）`:`${SEATS[h]}の${cardName(c)}を${SEATS[to]}へ渡す`);
       if(hintMove&&hintMove[0]===h&&hintMove[1]===i)btn.classList.add("hint");
       btn.disabled=busy||over()||!tappable;
       btn.onclick=()=>move(h,i);
@@ -441,7 +492,7 @@ function render(){
   const rest=G.lim-G.moves;$("moves").textContent=rest;$("movesBox").classList.toggle("low",rest<=1&&!cleared(G.s));
   $("stName").textContent=label(G.idx);
   $("score").textContent=G.score;$("maxc").textContent=G.maxc;
-  $("goals").innerHTML=G.tut!=null?"<span>光っている札をタップしよう</span>":`<span class="${cleared(G.s)?"ok":""}">★ 全部消す</span><span class="${G.maxc>=G.mc?"ok":""}">★ ${G.mc}れんさ</span><span class="${G.hints?"":cleared(G.s)?"ok":""}">★ ヒントなし${G.hints?"（使用）":""}</span>`;
+  $("goals").innerHTML=G.tut!=null?`<span>${E?"Tap the glowing card":"光っている札をタップしよう"}</span>`:`<span class="${cleared(G.s)?"ok":""}">★ ${E?"Clear all":"全部消す"}</span><span class="${G.maxc>=G.mc?"ok":""}">★ ${E?G.mc+"-chain":G.mc+"れんさ"}</span><span class="${G.hints?"":cleared(G.s)?"ok":""}">★ ${E?"No hints":"ヒントなし"}${G.hints?(E?" (used)":"（使用）"):""}</span>`;
   $("undo").disabled=busy||!G.hist.length||G.tut!=null;$("hint").disabled=busy||over()||G.tut!=null;$("reset").disabled=busy;
   renderWallet();
 }
@@ -493,15 +544,15 @@ async function move(h,i){
       sfx.bell(chain);buzz(chain>=3?[20,30,20]:15);meter(chain);
       burstAt(mate,8+chain*6,1+chain*.15);
       const rowEl=document.querySelector(`.row[data-h="${to}"]`);if(rowEl){rowEl.classList.remove("pulse");void rowEl.offsetWidth;rowEl.classList.add("pulse");}
-      if(chain>=3){banner(`${chain}れんさ！`,chain>=5?"すごい！":chain>=4?"いいね！":"",1.8+Math.min(chain,8)*.25);shake(2+chain);}
-      else pop(chain>1?`${chain}れんさ！`:"ぬけ！",mate,chain>1?1.4:1.1);
+      if(chain>=3){banner(E?`${chain} CHAIN!`:`${chain}れんさ！`,chain>=5?(E?"Amazing!":"すごい！"):chain>=4?(E?"Nice!":"いいね！"):"",1.8+Math.min(chain,8)*.25);shake(2+chain);}
+      else pop(chain>1?(E?`${chain} chain!`:`${chain}れんさ！`):(E?"Pair!":"ぬけ！"),mate,chain>1?1.4:1.1);
       await wait(300);f.remove();G.s[to].splice(j,1);
       const ice=G.s[to].map((c,k)=>has(c,ICE)?k:-1).filter(k=>k>=0);
       G.s[to]=G.s[to].map(c=>has(c,ICE)?c-100*ICE:c);render();
       if(ice.length){melted+=ice.length;ice.forEach(k=>{const e=cardEl(to,k);if(e)e.classList.add("melt");});
-        sfx.thaw();burstAt(cardEl(to,ice[0]),10,.6);pop("とけた！",cardEl(to,ice[0]),.9);await wait(380);}
+        sfx.thaw();burstAt(cardEl(to,ice[0]),10,.6);pop(E?"Melted!":"とけた！",cardEl(to,ice[0]),.9);await wait(380);}
       if(!G.s[to].length)break;
-      if(has(G.s[to][0],ANCHOR)){anchored=true;sfx.anchor();shake(3);pop("いかり！",cardEl(to,0),.9);await wait(300);break;}
+      if(has(G.s[to][0],ANCHOR)){anchored=true;sfx.anchor();shake(3);pop(E?"Anchor!":"いかり！",cardEl(to,0),.9);await wait(300);break;}
       await wait(140);
       from=to;idx=0;card=G.s[from][0];
       const head=cardEl(from,0);if(head)head.classList.add("hint");
@@ -515,12 +566,15 @@ async function move(h,i){
   G.score+=pts(chain);G.maxc=Math.max(G.maxc,chain);G.chains.push(chain);
   if(G.tut!=null){G.step++;const st=TUT[G.tut].steps[G.step];if(st)hintMove=st;}
   busy=false;render();
-  const extra=(melted?" こおり札がとけました。":"")+(anchored?" いかり札が先頭なので、れんさが止まりました。":"");
-  if(chain>=2)say(`<b>${chain}れんさ</b>！ +${pts(chain)}点。${extra}`);
+  const extra=E?(melted?" The ice card melted.":"")+(anchored?" An anchor is at the front, so the chain stopped.":""):(melted?" こおり札がとけました。":"")+(anchored?" いかり札が先頭なので、れんさが止まりました。":"");
+  if(E){if(chain>=2)say(`<b>${chain}-chain</b>! +${pts(chain)} pts.${extra}`);
+  else if(chain===1)say(`A pair! +10 pts.${anchored?"":" The front card of that hand moved on."}${extra}`);
+  else say(`No pair. The card went to the right end of ${SEATS[firstTo]}.`);}
+  else if(chain>=2)say(`<b>${chain}れんさ</b>！ +${pts(chain)}点。${extra}`);
   else if(chain===1)say(`そろった！ +10点。${anchored?"":"消えた手札の先頭が次へ渡ったよ。"}${extra}`);
   else say(`そろわなかった。カードは${SEATS[firstTo]}の右はしに入りました。`);
   if(cleared(G.s)){const lag=chain>=3?850:150; // let the chain banner finish first
-    setTimeout(()=>{sfx.clear();buzz([30,40,30,40,60]);banner("ぜんぶぬけ！","ALL CLEAR",2.6);
+    setTimeout(()=>{sfx.clear();buzz([30,40,30,40,60]);banner(E?"ALL CLEAR!":"ぜんぶぬけ！",E?"":"ALL CLEAR",2.6);
       const r=$("board").getBoundingClientRect();for(let k=0;k<5;k++)setTimeout(()=>burst(r.left+Math.random()*r.width,r.top+Math.random()*r.height*.8,40,1.6),k*120);},lag);
     setTimeout(G.tut!=null?tutDone:win,lag+1150);}
   else if(G.moves>=G.lim)setTimeout(lose,400);
@@ -532,12 +586,16 @@ function win(){
   if(k==="daily"&&W.lastDaily!==today()){W.streak=W.lastDaily===today(-1)?W.streak+1:1;W.lastDaily=today();saveW();}
   W.clears++;saveW();
   const showResult=()=>result(n,got);
-  if(!W.pass&&W.clears%3===0)showAd("クリアおめでとう！",showResult);else showResult();
+  if(!W.pass&&W.clears%3===0)showAd(E?"Congratulations!":"クリアおめでとう！",showResult);else showResult();
 }
 function result(n,got){
   const nx=nextId(G.idx);
-  const tips=[];if(!got[1])tips.push(`一度に${G.mc}れんさを起こすと★がもう1つ。`);if(!got[2])tips.push("ヒントを使わずにクリアすると★がもう1つ。");
-  panel(`<h2>クリア！</h2><div class="stars">${"★".repeat(n)}<i>${"★".repeat(3-n)}</i></div>
+  const tips=[];if(!got[1])tips.push(E?`Make a ${G.mc}-chain in one go for another ★. `:`一度に${G.mc}れんさを起こすと★がもう1つ。`);if(!got[2])tips.push(E?"Clear without hints for another ★.":"ヒントを使わずにクリアすると★がもう1つ。");
+  panel(E?`<h2>Clear!</h2><div class="stars">${"★".repeat(n)}<i>${"★".repeat(3-n)}</i></div>
+    <p>${G.moves} moves · best ${G.maxc}-chain · score ${G.score}</p>
+    <p class="note">${tips.length?tips.join(""):"Perfect!"}</p>${G.idx==="daily"?`<p>Daily streak: <b>${W.streak} days</b></p>`:""}
+    <div class="share"><pre id="shareTxt">${esc(shareText(n))}</pre><button id="pShare">Copy result (paste it anywhere)</button></div>
+    <div class="pbtns"><button id="pRetry">Again</button>${nx?'<button class="primary" id="pNext">Next stage</button>':'<button class="primary" id="pMenu">Stages</button>'}</div>`:`<h2>クリア！</h2><div class="stars">${"★".repeat(n)}<i>${"★".repeat(3-n)}</i></div>
     <p>${G.moves}手・最大${G.maxc}れんさ・スコア ${G.score}</p>
     <p class="note">${tips.length?tips.join(""):"パーフェクト！"}</p>${G.idx==="daily"?`<p>今日のステージ 連続 <b>${W.streak}日</b></p>`:""}
     <div class="share"><pre id="shareTxt">${esc(shareText(n))}</pre><button id="pShare">結果をコピー（LINEやXに貼れます）</button></div>
@@ -549,7 +607,9 @@ function result(n,got){
 }
 function lose(){
   sfx.lose();
-  panel(`<h2>手数切れ</h2><p>数字の札が ${left(G.s)} 枚残りました。</p>
+  panel(E?`<h2>Out of moves</h2><p>${left(G.s)} number cards are left.</p>
+    <p class="note">Tip: instead of clearing pairs right away, first line up front cards that will pair with the next hand.</p>
+    <div class="pbtns"><button id="pUndo">Undo</button><button class="primary" id="pRetry">Restart</button></div>`:`<h2>手数切れ</h2><p>数字の札が ${left(G.s)} 枚残りました。</p>
     <p class="note">消せる札をすぐ消すより、先頭の札が次の手札とそろう並びを先に作っておくのがコツです。</p>
     <div class="pbtns"><button id="pUndo">1手もどす</button><button class="primary" id="pRetry">はじめから</button></div>`);
   $("pUndo").onclick=()=>{closePanel();undo();};
@@ -562,27 +622,27 @@ function undo(){
     else if(W.undo>0){W.undo--;saveW();}
     else{showShop("undo");return;}
   }const h=G.hist.pop();Object.assign(G,{s:h.s,moves:h.moves,score:h.score,maxc:h.maxc,chains:h.chains||[]});
-  hintMove=null;render();say("1手もどしました。");
+  hintMove=null;render();say(E?"Undid one move.":"1手もどしました。");
 }
 function hint(){
   if(busy||over())return;
   if(!W.pass&&W.hint<=0){showShop("hint");return;}
-  const rest=G.lim-G.moves;say("考え中…");
+  const rest=G.lim-G.moves;say(E?"Thinking…":"考え中…");
   setTimeout(()=>{
     let best=rest<=4?exact(G.s,G.lock,rest,4e5):null;const rng=mkRng(Date.now()&0xffff);
     for(let r=0;r<3&&!best;r++)best=solve(G.s,G.lock,rest,700,rng);
     if(best){hintMove=best.path[0];G.hints++;if(!W.pass){W.hint--;saveW();}render();
-      const [h,i]=hintMove,c=G.s[h][i];say(`${SEATS[h]}の<b>${cardName(c)}</b>を渡してみよう（あと${best.path.length}手でクリアできる道があります）。`);}
-    else say("この形からは、のこり手数でクリアする道が見つかりませんでした。<b>1手もどす</b>か<b>はじめから</b>を試してね。");
+      const [h,i]=hintMove,c=G.s[h][i];say(E?`Try sending the <b>${cardName(c)}</b> from ${SEATS[h]} (you can clear in ${best.path.length} more moves).`:`${SEATS[h]}の<b>${cardName(c)}</b>を渡してみよう（あと${best.path.length}手でクリアできる道があります）。`);}
+    else say(E?"No way to clear in the remaining moves from here. Try <b>Undo</b> or <b>Restart</b>.":"この形からは、のこり手数でクリアする道が見つかりませんでした。<b>1手もどす</b>か<b>はじめから</b>を試してね。");
   },30);
 }
 function panel(html){$("panel").innerHTML=html;$("ov").hidden=false;const b=$("panel").querySelector("button.primary")||$("panel").querySelector("button");b&&b.focus();}
 function closePanel(){$("ov").hidden=true;}
 function showIntro(w){
-  const I=w==="t"?{title:"つめぬけ",text:"<b>つめぬけ</b>は、2手か3手<b>ぴったり</b>で全部の札を消す問題です。正解の1手目は<b>ひとつだけ</b>。じっくり考えて、一気に全部消してください。"}:WORLDS[w].intro;
+  const I=w==="t"?(E?{title:"Puzzles",text:"<b>Puzzles</b> ask you to clear every card in <b>exactly</b> 2 or 3 moves. There is <b>only one</b> right first move. Think it through, then clear everything in one go."}:{title:"つめぬけ",text:"<b>つめぬけ</b>は、2手か3手<b>ぴったり</b>で全部の札を消す問題です。正解の1手目は<b>ひとつだけ</b>。じっくり考えて、一気に全部消してください。"}):WORLDS[w].intro;
   seenIntro[w]=1;store.set("intro",seenIntro);
   const demo=I.demo?`<div class="demo">${I.demo.map(c=>`<span class="card${cardClass(c)}" style="--n:${NUMC[num(c)]||"#fff"}">${cardHTML(c)}</span>`).join("")}</div>`:"";
-  panel(`<h2>${I.title}</h2>${demo}<p>${I.text}</p><div class="pbtns"><button class="primary" id="pOk">やってみる</button></div>`);
+  panel(`<h2>${I.title}</h2>${demo}<p>${I.text}</p><div class="pbtns"><button class="primary" id="pOk">${E?"Let's try":"やってみる"}</button></div>`);
   $("pOk").onclick=closePanel;
 }
 function stageBtn(id){const st=stars[id]||0,open=isOpen(id);
@@ -590,37 +650,50 @@ function stageBtn(id){const st=stars[id]||0,open=isOpen(id);
 function showMenu(tab){
   tab=tab||(G&&kind(G.idx)==="t"?"t":"s");
   const sum=ids=>ids.reduce((a,id)=>a+(stars[id]||0),0);
-  let html=`<h2>ステージ</h2><div class="tabs" role="tablist"><button role="tab" id="tabS" aria-selected="${tab==="s"}">ワールド</button><button role="tab" id="tabT" aria-selected="${tab==="t"}">つめぬけ</button></div>`;
+  let html=`<h2>${E?"Stages":"ステージ"}</h2><div class="tabs" role="tablist"><button role="tab" id="tabS" aria-selected="${tab==="s"}">${E?"Worlds":"ワールド"}</button><button role="tab" id="tabT" aria-selected="${tab==="t"}">${E?"Puzzles":"つめぬけ"}</button></div>`;
   const doneToday=W.lastDaily===today();
-  html+=`<button class="primary daily" id="pDaily">今日のステージ ${doneToday?"クリア済み":""}${W.streak&&W.lastDaily>=today(-1)?`・連続${W.streak}日`:""}</button>`;
-  html+=`<button class="special" id="pVip">今日の特別ステージ${W.pass?"":"（月額パス）"}${W.lastVip===today()?"・クリア済み":""}</button>`;
+  html+=E?`<button class="primary daily" id="pDaily">Today's stage ${doneToday?"(cleared)":""}${W.streak&&W.lastDaily>=today(-1)?` · ${W.streak}-day streak`:""}</button>`:`<button class="primary daily" id="pDaily">今日のステージ ${doneToday?"クリア済み":""}${W.streak&&W.lastDaily>=today(-1)?`・連続${W.streak}日`:""}</button>`;
+  html+=E?`<button class="special" id="pVip">Today's special stage${W.pass?"":" (monthly pass)"}${W.lastVip===today()?" · cleared":""}</button>`:`<button class="special" id="pVip">今日の特別ステージ${W.pass?"":"（月額パス）"}${W.lastVip===today()?"・クリア済み":""}</button>`;
   if(tab==="s"){
     const curW=G&&kind(G.idx)==="s"?worldOf(G.idx):0;
     WORLDS.forEach((W,w)=>{
       const ids=Array.from({length:PER},(_,k)=>"s"+(w*PER+k));
-      html+=`<div class="world${w===curW?"":" closed"}"><h3><button aria-expanded="${w===curW}">ワールド${w+1} ${W.name}<span>★${sum(ids)}/${PER*3}</span></button></h3><div class="list">${ids.map(stageBtn).join("")}</div>${TUT[w]?`<button class="tutbtn" data-tut="${w}">仕掛けのれんしゅう</button>`:""}</div>`;
+      html+=`<div class="world${w===curW?"":" closed"}"><h3><button aria-expanded="${w===curW}">${E?"World ":"ワールド"}${w+1} ${W.name}<span>★${sum(ids)}/${PER*3}</span></button></h3><div class="list">${ids.map(stageBtn).join("")}</div>${TUT[w]?`<button class="tutbtn" data-tut="${w}">${E?"Practice the gimmick":"仕掛けのれんしゅう"}</button>`:""}</div>`;
     });
-    html+=`<p class="note">集めた★ ${sum(STAGES.map((_,k)=>"s"+k))} / ${STAGES.length*3}。ひとつ前をクリアすると次が開きます。ワールド名をタップすると開きます。</p>`;
+    html+=E?`<p class="note">★ collected: ${sum(STAGES.map((_,k)=>"s"+k))} / ${STAGES.length*3}. Clear a stage to open the next one. Tap a world name to open it.</p>`:`<p class="note">集めた★ ${sum(STAGES.map((_,k)=>"s"+k))} / ${STAGES.length*3}。ひとつ前をクリアすると次が開きます。ワールド名をタップすると開きます。</p>`;
   }else{
     const ids=TSUME.map((_,k)=>"t"+k);
-    html+=`<div class="world"><h3>つめぬけ<span>★${sum(ids)}/${ids.length*3}</span></h3><div class="list">${ids.map(stageBtn).join("")}</div></div><p class="note">手数ぴったりで全部消す問題です。正解の1手目はひとつだけ。</p>`;
+    html+=`<div class="world"><h3>${E?"Puzzles":"つめぬけ"}<span>★${sum(ids)}/${ids.length*3}</span></h3><div class="list">${ids.map(stageBtn).join("")}</div></div><p class="note">${E?"Clear everything in exactly the given moves. Only one first move works.":"手数ぴったりで全部消す問題です。正解の1手目はひとつだけ。"}</p>`;
   }
-  html+=`<div class="pbtns"><button id="pClose">閉じる</button></div>`;
+  html+=`<div class="pbtns"><button id="pClose">${E?"Close":"閉じる"}</button></div>`;
   panel(html);
   $("panel").querySelectorAll(".tutbtn").forEach(b=>b.onclick=()=>{closePanel();load("u"+b.dataset.tut);});
   $("panel").querySelectorAll(".list button[data-k]").forEach(b=>b.onclick=()=>{closePanel();load(b.dataset.k);});
   $("panel").querySelectorAll(".world h3 button").forEach(b=>b.onclick=()=>{const w=b.closest(".world");w.classList.toggle("closed");b.setAttribute("aria-expanded",!w.classList.contains("closed"));});
   $("tabS").onclick=()=>showMenu("s");$("tabT").onclick=()=>showMenu("t");
-  $("pDaily").onclick=()=>{$("pDaily").textContent="作っています…";setTimeout(()=>{closePanel();load("daily");},30);};
-  $("pVip").onclick=()=>{if(!W.pass){showPass();return;}$("pVip").textContent="作っています…";setTimeout(()=>{closePanel();load("vip");},30);};
+  $("pDaily").onclick=()=>{$("pDaily").textContent=E?"Making…":"作っています…";setTimeout(()=>{closePanel();load("daily");},30);};
+  $("pVip").onclick=()=>{if(!W.pass){showPass();return;}$("pVip").textContent=E?"Making…":"作っています…";setTimeout(()=>{closePanel();load("vip");},30);};
   $("pClose").onclick=closePanel;
 }
 $("undo").onclick=undo;$("hint").onclick=hint;$("reset").onclick=()=>{if(!busy){load(G.idx);}};
 $("menu").onclick=()=>showMenu();
+// 画面の文字（英語のとき）とことばの切りかえ（切りかえたら読みなおす。とちゅうの盤面は保存されている）
+if(E){document.documentElement.lang="en";document.title="Nukenuke Ring";
+  $("h1").innerHTML="Nukenuke Ring<small>Solo chain puzzle · trial v0.7</small>";$("menu").textContent="Stages";
+  $("movesL").textContent="moves left";$("scoreL").textContent="Score";$("maxcL").textContent="Best chain";
+  $("undo").textContent="Undo";$("hint").textContent="Hint";$("reset").textContent="Restart";$("howtoS").textContent="How to play";
+  $("howtoL").innerHTML=`<li>Five hands sit in a ring. Tap a card to pass it to <b>the hand the arrow points to</b> (the bottom one passes to the top).</li>
+      <li>If that hand has the same number, the two cards pair up and <b>disappear</b>.</li>
+      <li>The hand that lost a pair then passes its <b>front card</b> (leftmost) to the next hand. If it pairs there too, it disappears again, and so on: a <b>chain</b>. If not, the card goes to the right end of that hand and the chain stops.</li>
+      <li>Clear every number card within the move limit to win.</li>
+      <li>A green dot marks a card that will pair if passed. Instead of clearing right away, line up the front cards first for a big chain.</li>
+      <li>Later worlds add the <b>Joker</b>, <b>locked hands</b>, <b>ice cards</b>, <b>back cards</b> and <b>anchor cards</b>.</li>`;}
+$("lang").textContent=E?"日本語":"English";
+$("lang").onclick=()=>{store.set("lang",E?"ja":"en");const u=new URL(location.href);u.searchParams.delete("lang");location.href=u.toString();};
 $("ov").onclick=e=>{if(e.target===$("ov")&&$("pClose"))closePanel();};
-const sb=$("sound");const syncSound=()=>{sb.textContent=soundOn?"音 オン":"音 オフ";sb.setAttribute("aria-pressed",soundOn);};
+const sb=$("sound");const syncSound=()=>{sb.textContent=E?(soundOn?"Sound on":"Sound off"):soundOn?"音 オン":"音 オフ";sb.setAttribute("aria-pressed",soundOn);};
 sb.onclick=()=>{soundOn=!soundOn;store.set("sound",soundOn);syncSound();sfx.ui();};syncSound();
-const bb=$("bgm");const syncBgm=()=>{bb.textContent=bgmOn?"BGM オン":"BGM オフ";bb.setAttribute("aria-pressed",bgmOn);};
+const bb=$("bgm");const syncBgm=()=>{bb.textContent=E?(bgmOn?"Music on":"Music off"):bgmOn?"BGM オン":"BGM オフ";bb.setAttribute("aria-pressed",bgmOn);};
 bb.onclick=()=>{bgmOn=!bgmOn;store.set("bgm",bgmOn);syncBgm();if(bgmOn){ctx();startBgm();}else stopBgm();};syncBgm();
 // browsers start audio only after a tap, so a saved "BGM on" begins on the first tap
 document.addEventListener("pointerdown",()=>{if(bgmOn&&!bgmTimer)startBgm();},{once:true});
@@ -648,7 +721,7 @@ function fxLoop(){fxc.clearRect(0,0,innerWidth,innerHeight);
 function banner(text,sub,size){const b=document.createElement("div");b.className="banner";b.style.fontSize=size+"rem";b.innerHTML=text+(sub?`<small>${sub}</small>`:"");
   document.body.appendChild(b);setTimeout(()=>b.remove(),1150);}
 function shake(amp){const b=$("board");if(reduced())return;b.style.setProperty("--amp",amp+"px");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake");}
-function meter(chain){const m=$("meter");if(!m)return;const n=Math.max(5,chain);m.innerHTML="れんさ "+Array.from({length:n},(_,k)=>`<i class="${k<chain?"on":""}"></i>`).join("");}
+function meter(chain){const m=$("meter");if(!m)return;const n=Math.max(5,chain);m.innerHTML=(E?"chain ":"れんさ ")+Array.from({length:n},(_,k)=>`<i class="${k<chain?"on":""}"></i>`).join("");}
 
 // ---------- hints, undo tickets, ads and the monthly pass (all mock: no real payment or ads) ----------
 const FREE_UNDO=2;
@@ -658,19 +731,29 @@ function saveW(){store.set("wallet",W);}
 if(W.lastGift!==today()){if(W.lastGift&&W.hint<5)W.hint++;W.lastGift=today();saveW();}
 function renderWallet(){
   const el=$("wallet");if(!el||!G)return;
-  el.innerHTML=W.pass?`<span class="pass">月額パス有効（試作）・ヒントと1手もどすは使い放題</span><button id="wShop">パス</button>`:
+  el.innerHTML=E?(W.pass?`<span class="pass">Monthly pass on (trial) · unlimited hints and undos</span><button id="wShop">Pass</button>`:
+    `<span>Hints <b>${W.hint}</b> · Undo: free <b>${G.freeUndo}</b> + tickets <b>${W.undo}</b></span><button id="wShop">Get more</button>`):W.pass?`<span class="pass">月額パス有効（試作）・ヒントと1手もどすは使い放題</span><button id="wShop">パス</button>`:
     `<span>ヒント <b>${W.hint}</b>・1手もどす 無料 <b>${G.freeUndo}</b>＋券 <b>${W.undo}</b></span><button id="wShop">ふやす</button>`;
   $("wShop").onclick=()=>W.pass?showPass():showShop();
 }
 function showAd(title,done){
   let t=3;
-  panel(`<h2>${title}</h2><div class="adbox"><div>ここに広告が入ります（試作）<br><b id="adT">${t}</b></div></div><p class="note">月額パスなら広告は出ません。</p><div class="pbtns"><button id="adClose" disabled>閉じる</button></div>`);
+  panel(`<h2>${title}</h2><div class="adbox"><div>${E?"An ad goes here (trial)":"ここに広告が入ります（試作）"}<br><b id="adT">${t}</b></div></div><p class="note">${E?"No ads with the monthly pass.":"月額パスなら広告は出ません。"}</p><div class="pbtns"><button id="adClose" disabled>${E?"Close":"閉じる"}</button></div>`);
   const iv=setInterval(()=>{t--;const e=$("adT");if(e)e.textContent=t;if(t<=0){clearInterval(iv);const b=$("adClose");if(b){b.disabled=false;b.classList.add("primary");b.focus();b.onclick=()=>{closePanel();done&&done();};}}},1000);
 }
 function grant(what,n,msg){W[what]+=n;saveW();renderWallet();say(msg);}
 function showShop(need){
-  const head=need==="hint"?"ヒントがなくなりました。":need==="undo"?"このステージの無料の「1手もどす」を使い切りました。":"";
-  panel(`<h2>ヒントと1手もどす</h2>${head?`<p>${head}</p>`:""}
+  const head=need==="hint"?(E?"You're out of hints.":"ヒントがなくなりました。"):need==="undo"?(E?"You've used this stage's free undos.":"このステージの無料の「1手もどす」を使い切りました。"):"";
+  panel(E?`<h2>Hints and undo</h2>${head?`<p>${head}</p>`:""}
+    <p class="note">You get 1 new hint a day (up to 5). Each stage has ${FREE_UNDO} free undos; after that, undo uses a ticket. "Restart" is always free.</p>
+      <h3>Watch an ad</h3>
+      <div class="item"><p><b>1 hint</b><br>Watch an ad</p><button id="sAdH">Watch ad</button></div>
+      <div class="item"><p><b>3 undo tickets</b><br>Watch an ad</p><button id="sAdU">Watch ad</button></div>
+      <h3>Buy (trial: no real payment)</h3>
+      <div class="item"><p><b>10 hints</b><br>Price set by the app store</p><button id="sBuyH">Buy</button></div>
+      <div class="item"><p><b>20 undo tickets</b><br>Price set by the app store</p><button id="sBuyU">Buy</button></div>
+      <div class="item"><p><b>Monthly pass</b><br>No ads · unlimited · special stage</p><button class="primary" id="sPass">Details</button></div>
+    <div class="pbtns"><button id="pClose">Close</button></div>`:`<h2>ヒントと1手もどす</h2>${head?`<p>${head}</p>`:""}
     <p class="note">ヒントは毎日1つ増えます（5つまで）。「1手もどす」は各ステージ${FREE_UNDO}回まで無料で、それより多く使うときは券を使います。「はじめから」はいつでも無料です。</p>
     <div class="shop">
       <h3>広告を見てもらう</h3>
@@ -682,18 +765,21 @@ function showShop(need){
       <div class="item"><p><b>月額パス</b><br>広告なし・使い放題・特別ステージ</p><button class="primary" id="sPass">くわしく</button></div>
     </div>
     <div class="pbtns"><button id="pClose">閉じる</button></div>`);
-  $("sAdH").onclick=()=>showAd("広告（試作）",()=>grant("hint",1,"ヒントが1つ増えました。"));
-  $("sAdU").onclick=()=>showAd("広告（試作）",()=>grant("undo",3,"1手もどす券が3枚増えました。"));
-  $("sBuyH").onclick=()=>{closePanel();grant("hint",10,"ヒントが10個増えました（試作なので支払いはありません）。");};
-  $("sBuyU").onclick=()=>{closePanel();grant("undo",20,"1手もどす券が20枚増えました（試作なので支払いはありません）。");};
+  $("sAdH").onclick=()=>showAd(E?"Ad (trial)":"広告（試作）",()=>grant("hint",1,E?"You got 1 hint.":"ヒントが1つ増えました。"));
+  $("sAdU").onclick=()=>showAd(E?"Ad (trial)":"広告（試作）",()=>grant("undo",3,E?"You got 3 undo tickets.":"1手もどす券が3枚増えました。"));
+  $("sBuyH").onclick=()=>{closePanel();grant("hint",10,E?"You got 10 hints (trial, no payment).":"ヒントが10個増えました（試作なので支払いはありません）。");};
+  $("sBuyU").onclick=()=>{closePanel();grant("undo",20,E?"You got 20 undo tickets (trial, no payment).":"1手もどす券が20枚増えました（試作なので支払いはありません）。");};
   $("sPass").onclick=showPass;$("pClose").onclick=closePanel;
 }
 function showPass(){
-  panel(`<h2>月額パス</h2><p>月480円（価格は仮）</p>
+  panel(E?`<h2>Monthly pass</h2><p>Monthly price set by the app store</p>
+    <ul class="perks"><li>No ads</li><li>Unlimited hints and undos</li><li>One <b>special stage</b> every day (a 3-move puzzle)</li></ul>
+    <p class="note">This is a trial: the button doesn't charge anything, and you can turn it off anytime.</p>
+    <div class="pbtns"><button id="pClose">Close</button><button class="primary" id="pToggle">${W.pass?"Stop the pass":"Try it on"}</button></div>`:`<h2>月額パス</h2><p>月480円（価格は仮）</p>
     <ul class="perks"><li>広告が出ません</li><li>ヒントと「1手もどす」が使い放題</li><li>毎日ひとつ、<b>今日の特別ステージ</b>（3手ぴったりのつめぬけ）が遊べます</li></ul>
     <p class="note">試作なので、ボタンを押しても支払いは発生しません。いつでも元に戻せます。</p>
     <div class="pbtns"><button id="pClose">閉じる</button><button class="primary" id="pToggle">${W.pass?"パスを止める":"試しに有効にする"}</button></div>`);
-  $("pToggle").onclick=()=>{W.pass=!W.pass;saveW();closePanel();render();say(W.pass?"月額パスを有効にしました（試作）。ステージ一覧から特別ステージが遊べます。":"月額パスを止めました。");};
+  $("pToggle").onclick=()=>{W.pass=!W.pass;saveW();closePanel();render();say(E?(W.pass?"Monthly pass on (trial). Play the special stage from the stage list.":"Monthly pass stopped."):W.pass?"月額パスを有効にしました（試作）。ステージ一覧から特別ステージが遊べます。":"月額パスを止めました。");};
   $("pClose").onclick=closePanel;
 }
 function specialLevel(){
@@ -720,29 +806,30 @@ function specialLevel(){
 const esc=t=>t.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 function shareText(n){
   const d=new Date(),md=`${d.getMonth()+1}/${d.getDate()}`,id=G.idx;
-  const name=id==="daily"?`今日のステージ ${md}`:id==="vip"?`今日の特別ステージ ${md}`:kind(id)==="t"?`つめぬけ ${nOf(id)+1}`:`ステージ ${label(id)}`;
+  const name=E?(id==="daily"?`Daily ${md}`:id==="vip"?`Special ${md}`:kind(id)==="t"?`Puzzle ${nOf(id)+1}`:`Stage ${label(id)}`):id==="daily"?`今日のステージ ${md}`:id==="vip"?`今日の特別ステージ ${md}`:kind(id)==="t"?`つめぬけ ${nOf(id)+1}`:`ステージ ${label(id)}`;
   const bar=G.chains.map(c=>c===0?"⬜":c===1?"🟨":c===2?"🟧":"🟥").join("");
+  if(E)return `Nukenuke Ring ${name}\n${"★".repeat(n)}${"☆".repeat(3-n)} ${G.moves} moves · best ${G.maxc}-chain\n${bar}${id==="daily"&&W.streak>1?`\n${W.streak}-day streak`:""}\n#NukenukeRing`;
   return `ぬけぬけリング ${name}\n${"★".repeat(n)}${"☆".repeat(3-n)} ${G.moves}手・最大${G.maxc}れんさ\n${bar}${id==="daily"&&W.streak>1?`\n連続${W.streak}日`:""}\n#ぬけぬけリング`;
 }
 function copyShare(text){
   const b=$("pShare");
   const fallback=()=>{const box=document.querySelector(".share");if(!box||box.querySelector("textarea"))return;
     const ta=document.createElement("textarea");ta.value=text;ta.readOnly=true;box.appendChild(ta);ta.focus();ta.select();
-    b.textContent="自動でコピーできませんでした。下の文を長押ししてコピーしてください";};
-  try{navigator.clipboard.writeText(text).then(()=>{b.textContent="コピーしました。LINEやXに貼りつけてね";sfx.ui();},fallback);}catch(e){fallback();}
+    b.textContent=E?"Couldn't copy automatically. Press and hold the text below to copy it.":"自動でコピーできませんでした。下の文を長押ししてコピーしてください";};
+  try{navigator.clipboard.writeText(text).then(()=>{b.textContent=E?"Copied! Paste it anywhere.":"コピーしました。LINEやXに貼りつけてね";sfx.ui();},fallback);}catch(e){fallback();}
 }
 // ---------- practice boards ----------
 function tutStart(){
   const w=G.tut,I=WORLDS[w].intro;
   const demo=I.demo?`<div class="demo">${I.demo.map(c=>`<span class="card${cardClass(c)}" style="--n:${NUMC[num(c)]||"#fff"}">${cardHTML(c)}</span>`).join("")}</div>`:"";
   tutSay(TUT[w].steps[0][2]);
-  panel(`<h2>${I.title}</h2>${demo}<p>短い練習で、さわって覚えましょう。光っている札をタップしてください。</p><div class="pbtns"><button class="primary" id="pOk">はじめる</button></div>`);
+  panel(`<h2>${I.title}</h2>${demo}<p>${E?"A short hands-on practice. Tap the glowing card.":"短い練習で、さわって覚えましょう。光っている札をタップしてください。"}</p><div class="pbtns"><button class="primary" id="pOk">${E?"Start":"はじめる"}</button></div>`);
   $("pOk").onclick=closePanel;
 }
 function tutSay(t){say(t);$("rule").hidden=false;$("rule").innerHTML=t;}
 function tutDone(){
   const w=G.tut;seenIntro[w]=1;store.set("intro",seenIntro);
-  panel(`<h2>できた！</h2><p>${TUT[w].done}</p><div class="pbtns"><button id="pAgain">もう一度練習</button><button class="primary" id="pGo">ステージへ</button></div>`);
+  panel(`<h2>${E?"Got it!":"できた！"}</h2><p>${TUT[w].done}</p><div class="pbtns"><button id="pAgain">${E?"Practice again":"もう一度練習"}</button><button class="primary" id="pGo">${E?"To the stages":"ステージへ"}</button></div>`);
   $("pAgain").onclick=()=>{closePanel();load("u"+w);};
   $("pGo").onclick=()=>{closePanel();load("s"+w*PER);};
 }
@@ -750,7 +837,7 @@ function start(data){
   let id=store.get("last","s0");
   if(typeof id!=="string"||!stageData(id))id="s0";
   if(store.get("seenHowto",false))$("howto").open=false;store.set("seenHowto",true);
-  if(data&&data.G&&typeof data.G.idx==="string"&&data.G.chains){G=data.G;setRule();render();say("続きからどうぞ。");}else load(id);
+  if(data&&data.G&&typeof data.G.idx==="string"&&data.G.chains){G=data.G;setRule();render();say(E?"Welcome back. Carry on!":"続きからどうぞ。");}else load(id);
 }
 window.claude?.hot?.snapshot?.(()=>({G:busy?null:G}));
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});

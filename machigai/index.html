@@ -111,45 +111,48 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 .vrow{display:flex;gap:6px;margin-top:10px}
 .vrow select{flex:1;min-width:0;font:inherit;font-size:14px;padding:8px;border-radius:12px;border:2px solid var(--line);background:#fff;color:var(--ink)}
 input[type=file]{display:none}
+.opt{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.opt button{padding:8px 12px;border-radius:12px;background:var(--soft);font-weight:700;font-size:14px}
+.opt button.sel{background:var(--accent);color:#fff}
 </style>
 </head>
 <body>
 
 <section id="title" class="screen on">
-  <h1><span>ま</span><span>ち</span><span>が</span><span>い</span><br><span>さ</span><span>が</span><span>し</span></h1>
-  <p class="sub">2つの えの ちがうところを タッチしてね</p>
+  <h1 id="h1"></h1>
+  <p class="sub" data-t="sub"></p>
 
-  <div class="lvl">いくつ さがす？
-    <button data-n="3" class="sel">3つ</button>
-    <button data-n="5">5つ</button>
-    <button data-n="7">7つ</button>
+  <div class="lvl"><span data-t="howMany"></span>
+    <button data-n="3" class="sel" data-t="n3"></button>
+    <button data-n="5" data-t="n5"></button>
+    <button data-n="7" data-t="n7"></button>
   </div>
 
   <div class="themes">
-    <button class="big" data-theme="field"><span class="ico">🌷</span>のはら</button>
-    <button class="big" data-theme="sea"><span class="ico">🐟</span>うみ</button>
-    <button class="big" data-theme="night"><span class="ico">🚀</span>よぞら</button>
-    <button class="big" data-theme="town"><span class="ico">🚗</span>まち</button>
-    <button class="big" data-theme="sweets"><span class="ico">🍰</span>おやつ</button>
-    <button class="big" data-theme="forest"><span class="ico">🐻</span>もり</button>
-    <button class="big" data-theme="snow"><span class="ico">⛄</span>ふゆ</button>
-    <button class="big" data-theme="mix"><span class="ico">🎲</span>まぜこぜ</button>
+    <button class="big" data-theme="field"><span class="ico">🌷</span><span data-t="th_field"></span></button>
+    <button class="big" data-theme="sea"><span class="ico">🐟</span><span data-t="th_sea"></span></button>
+    <button class="big" data-theme="night"><span class="ico">🚀</span><span data-t="th_night"></span></button>
+    <button class="big" data-theme="town"><span class="ico">🚗</span><span data-t="th_town"></span></button>
+    <button class="big" data-theme="sweets"><span class="ico">🍰</span><span data-t="th_sweets"></span></button>
+    <button class="big" data-theme="forest"><span class="ico">🐻</span><span data-t="th_forest"></span></button>
+    <button class="big" data-theme="snow"><span class="ico">⛄</span><span data-t="th_snow"></span></button>
+    <button class="big" data-theme="mix"><span class="ico">🎲</span><span data-t="th_mix"></span></button>
   </div>
 
-  <button class="big" id="btnPhoto"><span class="ico">🖼️</span><span>しゃしんで あそぶ<small>スマホの なかの しゃしんから つくるよ</small></span></button>
-  <button class="big" id="btnCam"><span class="ico">📷</span><span>いま とって あそぶ<small>カメラで とった しゃしんで つくるよ</small></span></button>
+  <button class="big" id="btnPhoto"><span class="ico">🖼️</span><span><span data-t="photo"></span><small data-t="photoSub"></small></span></button>
+  <button class="big" id="btnCam"><span class="ico">📷</span><span><span data-t="cam"></span><small data-t="camSub"></small></span></button>
   <input type="file" id="filePhoto" accept="image/*">
   <input type="file" id="fileCam" accept="image/*" capture="environment">
 
-  <div id="book"><b>あつめた シール</b> <span id="bookCount"></span><div id="bookList"></div></div>
-  <div class="foot"><button id="btnHelp">おうちのかたへ・こえの録音</button><button id="btnSnd">🔊 おと あり</button></div>
+  <div id="book"><b data-t="book"></b> <span id="bookCount"></span><div id="bookList"></div></div>
+  <div class="foot"><button id="btnHelp" data-t="help"></button><button id="btnSnd"></button><button id="btnLang"></button></div>
 </section>
 
 <section id="game" class="screen">
   <div class="bar">
-    <button class="round" id="btnHome" aria-label="もどる">🏠</button>
+    <button class="round" id="btnHome" data-ta="home">🏠</button>
     <div id="stars"></div>
-    <button class="round" id="btnHint" aria-label="ヒント">💡</button>
+    <button class="round" id="btnHint" data-ta="hint">💡</button>
   </div>
   <div id="board">
     <div class="pic" id="picA"><canvas id="cvA"></canvas></div>
@@ -160,28 +163,27 @@ input[type=file]{display:none}
 <div id="say"></div>
 <canvas id="confetti"></canvas>
 <div id="clear"><div class="panel">
-  <h2>ぜんぶ みつけた！</h2>
+  <h2 data-t="allFound"></h2>
   <div id="reward">🐻</div>
-  <p>シールを もらったよ！</p>
-  <button class="big" id="btnNext"><span class="ico">▶️</span>つぎの もんだい</button>
-  <button class="big" id="btnBack"><span class="ico">🏠</span>はじめに もどる</button>
+  <p data-t="gotSticker"></p>
+  <button class="big" id="btnNext"><span class="ico">▶️</span><span data-t="next"></span></button>
+  <button class="big" id="btnBack"><span class="ico">🏠</span><span data-t="back"></span></button>
 </div></div>
-<div id="busy"><div class="ico">🌀</div>つくってるよ…</div>
+<div id="busy"><div class="ico">🌀</div><span data-t="busy"></span></div>
 <div id="help"><div class="panel">
-  <h2 style="font-size:22px">おうちのかたへ</h2>
-  ・上と下（よこ向きなら左と右）の絵で、ちがうところをタッチします。どちらの絵をタッチしてもOKです。<br>
-  ・「しゃしんで あそぶ」を選ぶと、スマホの写真から自動で「色がかわる・物が消える・さかさまになる・大きくなる・シールがふえる」などの違いを作ります。写真はこの端末の中だけで使い、どこにも送りません。<br>
-  ・見つからないときは 💡 で場所がふんわり光ります。<br>
-  ・同じ写真でも「つぎの もんだい」で違う間違いになります。
-  <h3>🎙️ ほめる こえ</h3>
-  <div class="note">おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。同じ場面に いくつも録音すると、毎回ランダムに えらばれます。録音はこの端末の中だけに保存されます。ひとつでも録音すると、機械の声は使わなくなります（録音していない「ぜんぶ」「ヒント」は「あたり」の録音でほめます）。録音がないときは、下で選んだ声が話します。</div>
+  <h2 style="font-size:22px" data-t="parents"></h2>
+  <div data-th="howto"></div>
+  <h3 data-t="recH"></h3>
+  <div class="note" data-t="recNote"></div>
   <div id="recList"></div>
-  <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest">▶ ためす</button></div>
-  <div class="note">「AIのこえ」は、あらかじめ AI で作っておいた自然な声です（Kokoro-82M／Apache-2.0）。</div>
-  <h3>🔓 ぜんぶ版</h3>
-  <div class="note">むりょうでは「のはら」と、しゃしんで あそぶ（1日2まいまで）、こえの録音が使えます。ぜんぶ版（買い切り）か ファミリーパスで、「うみ」「よぞら」と、しゃしんを何まいでも使えるようになります。広告は出しません。</div>
+  <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest" data-t="test"></button></div>
+  <div class="note" data-t="voiceNote"></div>
+  <h3>🌐 ことば / Language</h3>
+  <div class="opt" id="optLang"><button data-v="ja">日本語</button><button data-v="en">English</button></div>
+  <h3 data-t="fullH"></h3>
+  <div class="note" data-t="fullNote"></div>
   <div id="kkSlot"></div>
-  <button class="big" id="btnHelpClose" style="justify-content:center;margin-top:14px">とじる</button>
+  <button class="big" id="btnHelpClose" style="justify-content:center;margin-top:14px" data-t="close"></button>
 </div></div>
 
 <script src="../common/kakin.js"></script>
@@ -195,6 +197,79 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
+
+/* ---------- ことば（言語を足すときは TEXT に1つ足す。声のセリフは say、録音の場面は rec） ---------- */
+const TEXT = {
+  ja: {
+    title: 'まちがいさがし', h1: ['まちがい', 'さがし'], sub: '2つの えの ちがうところを タッチしてね',
+    howMany: 'いくつ さがす？', n3: '3つ', n5: '5つ', n7: '7つ',
+    th_field: 'のはら', th_sea: 'うみ', th_night: 'よぞら', th_town: 'まち', th_sweets: 'おやつ', th_forest: 'もり', th_snow: 'ふゆ', th_mix: 'まぜこぜ',
+    photo: 'しゃしんで あそぶ', photoSub: 'スマホの なかの しゃしんから つくるよ', cam: 'いま とって あそぶ', camSub: 'カメラで とった しゃしんで つくるよ',
+    book: 'あつめた シール', bookN: n => `（${n}まい）`, bookEmpty: 'ぜんぶ みつけると シールが もらえるよ',
+    help: 'おうちのかたへ・こえの録音', sndOn: '🔊 おと あり', sndOff: '🔇 おと なし', lang: 'English', home: 'もどる', hint: 'ヒント',
+    allFound: 'ぜんぶ みつけた！', gotSticker: 'シールを もらったよ！', next: 'つぎの もんだい', back: 'はじめに もどる', busy: 'つくってるよ…',
+    parents: 'おうちのかたへ',
+    howto: '・上と下（よこ向きなら左と右）の絵で、ちがうところをタッチします。どちらの絵をタッチしてもOKです。<br>・「しゃしんで あそぶ」を選ぶと、スマホの写真から自動で「色がかわる・物が消える・さかさまになる・大きくなる・シールがふえる」などの違いを作ります。写真はこの端末の中だけで使い、どこにも送りません。<br>・見つからないときは 💡 で場所がふんわり光ります。<br>・同じ写真でも「つぎの もんだい」で違う間違いになります。',
+    recH: '🎙️ ほめる こえ', recNote: 'おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。同じ場面に いくつも録音すると、毎回ランダムに えらばれます。録音はこの端末の中だけに保存されます。ひとつでも録音すると、機械の声は使わなくなります（録音していない「ぜんぶ」「ヒント」は「あたり」の録音でほめます）。録音がないときは、下で選んだ声が話します。',
+    test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた自然な声です（Kokoro-82M／Apache-2.0）。',
+    aiVoice: n => `AIのこえ ${n}`, devVoice: name => `スマホの読み上げ（${name}）`, noVoice: 'こえ なし（音だけ）', devTest: 'みーつけた！ すごいね！',
+    fullH: '🔓 ぜんぶ版', fullNote: 'むりょうでは「のはら」と、しゃしんで あそぶ（1日2まいまで）、こえの録音が使えます。ぜんぶ版（買い切り）か ファミリーパスで、ほかの 7つの えと、しゃしんを何まいでも使えるようになります。広告は出しません。',
+    close: 'とじる', takesN: n => `${n}こ`, ex: 'れい：', q: t => `「${t}」`, stop: '■ とめる', recMore: '＋ ろくおん', rec: '● ろくおん', del: 'けす',
+    maxTakes: n => `ひとつの場面に ${n}こまで 録音できます。いらない録音を 🗑 でけしてね。`, noRec: 'このブラウザでは録音できません。SafariかChromeで開いてください。', noMic: 'マイクが使えませんでした。マイクの使用を「許可」してください。',
+    badPhoto: 'しゃしんを ひらけませんでした。べつの しゃしんで ためしてね。',
+    okWords: ['あった！', 'みつけた！', 'すごい！', 'やったね！', 'あたり！'],
+    recCats: { ok: ['あたり', ['あった！', 'みーつけた！', 'すごいね！', 'やったね！']], miss: ['はずれ', ['あれれ？', 'そこじゃないかも', 'おしい！']], hint: ['ヒント', ['このへん みてごらん', 'よーく みてね']], clear: ['ぜんぶ みつけた', ['ぜんぶ みつけたね！ すごーい！', 'やったー！ てんさい！']] },
+    say: {
+      ok: ['あった！', 'みーつけた！', 'すごいね！', 'やったね！', 'あたり！', 'じょうず！'], miss: ['あれれ？', 'そこじゃないかも。', 'おしい！', 'うーん、ちがうかな？'],
+      hint: ['このへん、みてごらん。', 'よーく、みてね。'], clear: ['ぜんぶ、みつけたね！すごーい！', 'やったあ！ぜんぶ、みつけた！', 'てんさい！よくできました！'],
+      start: ['ちがうところ、さがしてね。', 'どこが、ちがうかな？']
+    }
+  },
+  en: {
+    title: 'Spot the Difference', h1: ['Spot the', 'Difference'], sub: 'Tap the things that are different in the two pictures!',
+    howMany: 'How many?', n3: '3', n5: '5', n7: '7',
+    th_field: 'Meadow', th_sea: 'Sea', th_night: 'Night sky', th_town: 'Town', th_sweets: 'Sweets', th_forest: 'Forest', th_snow: 'Winter', th_mix: 'Mix',
+    photo: 'Play with a photo', photoSub: 'Made from a photo on this phone', cam: 'Take a photo now', camSub: 'Made from a photo you take',
+    book: 'My stickers', bookN: n => `(${n})`, bookEmpty: 'Find them all to get a sticker!',
+    help: 'For grown-ups', sndOn: '🔊 Sound on', sndOff: '🔇 Sound off', lang: '日本語', home: 'Home', hint: 'Hint',
+    allFound: 'You found them all!', gotSticker: 'You got a sticker!', next: 'Next puzzle', back: 'Back to start', busy: 'Making it…',
+    parents: 'For grown-ups',
+    howto: '• Tap the differences between the top and bottom pictures (left and right in landscape). Tapping either picture is fine.<br>• “Play with a photo” turns a photo on this device into a puzzle, automatically adding differences such as a changed color, a missing object, something upside down, something bigger or an extra sticker. Photos stay on this device and are never sent anywhere.<br>• If your child is stuck, 💡 gently lights up the spot.<br>• “Next puzzle” makes new differences, even with the same photo.',
+    recH: '🎙️ Praise voice', recNote: 'Record your own voice and the game will praise your child with it (our top tip). Record several takes per scene and one is picked at random each time. Recordings are saved only on this device. Once anything is recorded, the machine voice is no longer used (“All found” and “Hint” fall back to your “Correct” recordings). Without recordings, the voice chosen below speaks.',
+    test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI (Kokoro-82M / Apache-2.0).',
+    aiVoice: n => `AI voice ${n}`, devVoice: name => `Device voice (${name})`, noVoice: 'No voice (sounds only)', devTest: 'Found it! Great job!',
+    fullH: '🔓 Full version', fullNote: 'Free: “Meadow”, photo mode (2 photos a day) and voice recording. The full version (one-time purchase) or the Family Pass opens the other 7 picture sets and unlimited photos. No ads.',
+    close: 'Close', takesN: n => `${n}`, ex: 'e.g. ', q: t => `“${t}”`, stop: '■ Stop', recMore: '+ Record', rec: '● Record', del: 'Delete',
+    maxTakes: n => `Up to ${n} recordings per scene. Delete ones you don’t need with 🗑.`, noRec: 'This browser can’t record. Please open the game in Safari or Chrome.', noMic: 'The microphone could not be used. Please allow microphone access.',
+    badPhoto: 'That photo could not be opened. Please try another one.',
+    okWords: ['Found it!', 'Yes!', 'Great!', 'You did it!', 'Correct!'],
+    recCats: { ok: ['Correct', ['Found it!', 'Great job!', 'Yes!']], miss: ['Wrong spot', ['Oops!', 'Not there!', 'So close!']], hint: ['Hint', ['Look around here!', 'Look carefully!']], clear: ['All found', ['You found them all!', 'Hooray! You’re a genius!']] },
+    say: {
+      ok: ['Found it!', 'There it is!', 'Great job!', 'You did it!', 'Correct!', 'Well done!'], miss: ['Oops!', 'Maybe not there.', 'So close!', 'Hmm, not that one.'],
+      hint: ['Look around here!', 'Look carefully!'], clear: ['You found them all! Amazing!', 'Hooray! You found everything!', 'You’re a genius! Great job!'],
+      start: ['Find the differences!', 'What’s different?']
+    }
+  }
+};
+function pickLang() {
+  const q = new URLSearchParams(location.search).get('lang'); if (q && TEXT[q]) return q;
+  const s = store.get('machigai-lang', null); if (s && TEXT[s]) return s;
+  try { const gl = localStorage.getItem('games-lang'); if (gl && TEXT[gl]) return gl; } catch (e) {} // 入口ページで えらんだ ことば
+  const nav = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').slice(0, 2);
+  return TEXT[nav] ? nav : 'en';
+}
+let LANG = pickLang();
+const T = () => TEXT[LANG];
+function applyText() {
+  const t = T();
+  document.documentElement.lang = LANG; document.title = t.title;
+  $('#h1').innerHTML = t.h1.map(w => [...w].map(c => c === ' ' ? ' ' : `<span>${c}</span>`).join('')).join('<br>');
+  document.querySelectorAll('[data-t]').forEach(e => { e.textContent = t[e.dataset.t]; });
+  document.querySelectorAll('[data-th]').forEach(e => { e.innerHTML = t[e.dataset.th]; });
+  document.querySelectorAll('[data-ta]').forEach(e => e.setAttribute('aria-label', t[e.dataset.ta]));
+  document.querySelectorAll('#optLang button').forEach(b => b.classList.toggle('sel', b.dataset.v === LANG));
+}
+function setLang(l) { LANG = l; store.set('machigai-lang', l); applyText(); updSndBtn(); renderBook(); loadVoice(); renderRecs(); if (voiceMode.startsWith('ai:')) aiLoad(aiId()); }
 
 /* ---------- おと と こえ ---------- */
 let soundOn = store.get('machigai-sound', true);
@@ -220,16 +295,14 @@ const sfx = {
   tap() { tone(880, 0, .06, 'sine', .08); }
 };
 /* こえ：①おうちの人の録音 → ②AIで作っておいた声（voice/フォルダ）→ ③端末の読み上げ の順に使う */
-const AI_VOICES = [
-  { id: 'jf_alpha', name: 'AIのこえ 1' }, { id: 'jf_gongitsune', name: 'AIのこえ 2' },
-  { id: 'jf_nezumi', name: 'AIのこえ 3' }, { id: 'jf_tebukuro', name: 'AIのこえ 4' }
-];
-const AI_COUNT = { ok: 6, miss: 4, hint: 2, clear: 3, start: 2 };
+// AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<場面><番号>.mp3）
+const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const aiCount = cat => T().say[cat].length;
 const aiBuf = {}; // 'jf_alpha/ok0' -> AudioBuffer
 let aiSrc = null;
 function aiLoad(id) {
   const a = audio(); if (!a) return;
-  for (const [cat, n] of Object.entries(AI_COUNT)) for (let i = 0; i < n; i++) {
+  for (const cat of Object.keys(T().say)) for (let i = 0; i < aiCount(cat); i++) {
     const k = `${id}/${cat}${i}`;
     if (aiBuf[k]) continue;
     aiBuf[k] = 'loading';
@@ -241,30 +314,19 @@ function aiPlay(id, cat) {
   const a = audio(); if (!a) return;
   aiLoad(id);
   const ready = [];
-  for (let i = 0; i < AI_COUNT[cat]; i++) { const b = aiBuf[`${id}/${cat}${i}`]; if (b && b !== 'loading') ready.push(`${id}/${cat}${i}`); }
+  for (let i = 0; i < aiCount(cat); i++) { const b = aiBuf[`${id}/${cat}${i}`]; if (b && b !== 'loading') ready.push(`${id}/${cat}${i}`); }
   if (!ready.length) return;
   try { if (aiSrc) aiSrc.stop(); } catch (e) {}
   const src = a.createBufferSource(); src.buffer = aiBuf[pickTake('ai-' + cat, ready)];
   src.connect(a.destination); src.start(); aiSrc = src;
 }
-const VOICE_CATS = [
-  { cat: 'ok', label: 'あたり', ex: ['あった！', 'みーつけた！', 'すごいね！', 'やったね！'] },
-  { cat: 'miss', label: 'はずれ', ex: ['あれれ？', 'そこじゃないかも', 'おしい！'] },
-  { cat: 'hint', label: 'ヒント', ex: ['このへん みてごらん', 'よーく みてね'] },
-  { cat: 'clear', label: 'ぜんぶ みつけた', ex: ['ぜんぶ みつけたね！ すごーい！', 'やったー！ てんさい！'] }
-];
+const VOICE_CATS = ['ok', 'miss', 'hint', 'clear'];
 const MAX_TAKES = 8;
 // 録音のキーは「ok:1700000000000」の形（前のバージョンの「ok1」も そのまま使える）
 const catOf = k => String(k).split(':')[0].replace(/\d+$/, '');
 const takesOf = cat => Object.keys(recs).filter(k => catOf(k) === cat).sort((x, y) => (x.split(':')[1] || 0) - (y.split(':')[1] || 0));
-const TTS_TEXT = {
-  ok: ['あった！', 'みーつけた！', 'すごいね！', 'やったね！', 'あたり！'],
-  miss: ['あれれ？', 'そこじゃないかも', 'うーん、ちがうかな'],
-  hint: ['このへん、みてごらん'],
-  clear: ['ぜんぶ、みつけたね！すごーい！']
-};
 const recs = {}; // slot id -> Blob
-let voiceList = [], jaVoice = null;
+let voiceList = [], devVoice = null;
 // 自然に聞こえやすい声を上にする（iPhoneの「拡張」、Googleの声、Windowsの「Natural」など）
 function voiceScore(v) {
   const n = v.name;
@@ -272,16 +334,16 @@ function voiceScore(v) {
   if (/拡張|Enhanced|Premium|プレミアム/i.test(n)) s += 50;
   if (/Natural|Neural|Online/i.test(n)) s += 45;
   if (/Google/i.test(n)) s += 30;
-  if (/Kyoko|O-ren|Nanami|Hattori|Ayumi|Haruka/i.test(n)) s += 10;
+  if (/Kyoko|O-ren|Nanami|Hattori|Ayumi|Haruka|Samantha|Karen|Jenny|Aria/i.test(n)) s += 10;
   if (/Otoya|Ichiro|Keita/i.test(n)) s += 5;
   if (/Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley/i.test(n)) s -= 40; // おもしろ声
   return s;
 }
 function loadVoice() {
   try {
-    voiceList = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
+    voiceList = speechSynthesis.getVoices().filter(v => v.lang.replace('_', '-').toLowerCase().startsWith(LANG)).sort((a, b) => voiceScore(b) - voiceScore(a));
     const saved = store.get('machigai-voice', '');
-    jaVoice = voiceList.find(v => v.name === saved) || voiceList[0] || null;
+    devVoice = voiceList.find(v => v.name === saved) || voiceList[0] || null;
     renderVoiceSel();
   } catch (e) {}
 }
@@ -291,7 +353,7 @@ function tts(text) {
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP'; u.pitch = 1.15; u.rate = .95; u.volume = 1; if (jaVoice) u.voice = jaVoice;
+    u.lang = LANG === 'ja' ? 'ja-JP' : 'en-US'; u.pitch = 1.15; u.rate = LANG === 'ja' ? .95 : .9; u.volume = 1; if (devVoice) u.voice = devVoice;
     speechSynthesis.speak(u);
   } catch (e) {}
 }
@@ -304,9 +366,11 @@ function pickTake(cat, list) { // おなじ声が つづかないように
   const c = list.length > 1 ? list.filter(k => k !== lastTake[cat]) : list;
   return (lastTake[cat] = pick(c));
 }
-// 'ai:jf_alpha' / 'dev'（端末の読み上げ）/ 'off'
-let voiceMode = store.get('machigai-voice3', 'ai:jf_alpha');
+// 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
+let voiceMode = store.get('machigai-voice3', 'ai:1');
 if (store.get('machigai-voicemode', '') === 'off' && store.get('machigai-voice3', null) == null) voiceMode = 'off';
+{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+const aiId = () => AI_VOICES[LANG][(+voiceMode.slice(3) || 1) - 1] || AI_VOICES[LANG][0];
 function speak(cat) {
   if (!soundOn) return;
   const mine = takesOf(cat);
@@ -317,8 +381,8 @@ function speak(cat) {
     if ((cat === 'clear' || cat === 'hint') && alt.length) playBlob(recs[pickTake('ok', alt)]);
     return;
   }
-  if (voiceMode.startsWith('ai:')) aiPlay(voiceMode.slice(3), cat);
-  else if (voiceMode === 'dev' && TTS_TEXT[cat]) tts(pick(TTS_TEXT[cat]));
+  if (voiceMode.startsWith('ai:')) aiPlay(aiId(), cat);
+  else if (voiceMode === 'dev' && T().say[cat]) tts(pick(T().say[cat]));
 }
 
 /* 録音は この端末の中(IndexedDB)にだけ保存 */
@@ -334,11 +398,11 @@ vdb.all().then(o => { Object.assign(recs, o); renderRecs(); }).catch(() => {});
 let recording = null;
 async function toggleRec(cat) {
   if (recording) { const same = recording.cat === cat; recording.stop(); if (same) return; }
-  if (takesOf(cat).length >= MAX_TAKES) { alert(`ひとつの場面に ${MAX_TAKES}こまで 録音できます。いらない録音を 🗑 でけしてね。`); return; }
-  if (!navigator.mediaDevices || !window.MediaRecorder) { alert('このブラウザでは録音できません。SafariかChromeで開いてください。'); return; }
+  if (takesOf(cat).length >= MAX_TAKES) { alert(T().maxTakes(MAX_TAKES)); return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) { alert(T().noRec); return; }
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
-  catch (e) { alert('マイクが使えませんでした。マイクの使用を「許可」してください。'); return; }
+  catch (e) { alert(T().noMic); return; }
   const mr = new MediaRecorder(stream), chunks = [];
   mr.ondataavailable = e => e.data.size && chunks.push(e.data);
   mr.onstop = async () => {
@@ -353,12 +417,14 @@ async function toggleRec(cat) {
 }
 function renderRecs() {
   const box = $('#recList'); if (!box) return;
-  box.innerHTML = VOICE_CATS.map(c => {
+  const t = T();
+  box.innerHTML = VOICE_CATS.map(cat => {
+    const c = { cat, label: t.recCats[cat][0], ex: t.recCats[cat][1] };
     const isRec = recording && recording.cat === c.cat, takes = takesOf(c.cat);
-    return `<div class="catBox"><div class="catHead"><b>${c.label}</b><span>${takes.length}こ</span></div>
-      <div class="catEx">れい：${c.ex.map(t => `「${t}」`).join('')}</div>
-      <div class="takes">${takes.map((k, i) => `<span class="take"><button class="rb" data-play="${k}">▶ ${i + 1}</button><button class="rb del" data-del="${k}" aria-label="けす">🗑</button></span>`).join('')}
-      <button class="rb rec ${isRec ? 'on' : ''}" data-rec="${c.cat}">${isRec ? '■ とめる' : takes.length ? '＋ ろくおん' : '● ろくおん'}</button></div></div>`;
+    return `<div class="catBox"><div class="catHead"><b>${c.label}</b><span>${t.takesN(takes.length)}</span></div>
+      <div class="catEx">${t.ex}${c.ex.map(t.q).join(' ')}</div>
+      <div class="takes">${takes.map((k, i) => `<span class="take"><button class="rb" data-play="${k}">▶ ${i + 1}</button><button class="rb del" data-del="${k}" aria-label="${t.del}">🗑</button></span>`).join('')}
+      <button class="rb rec ${isRec ? 'on' : ''}" data-rec="${c.cat}">${isRec ? t.stop : takes.length ? t.recMore : t.rec}</button></div></div>`;
   }).join('');
 }
 document.addEventListener('click', async e => {
@@ -369,25 +435,27 @@ document.addEventListener('click', async e => {
 });
 function renderVoiceSel() {
   const sel = $('#voiceSel'); if (!sel) return;
-  sel.innerHTML = AI_VOICES.map(v => `<option value="ai:${v.id}">${v.name}</option>`).join('') +
-    (voiceList.length ? `<option value="dev">スマホの読み上げ（${jaVoice ? jaVoice.name : ''}）</option>` : '') +
-    `<option value="off">こえ なし（音だけ）</option>`;
+  sel.innerHTML = [1, 2, 3, 4].map(n => `<option value="ai:${n}">${T().aiVoice(n)}</option>`).join('') +
+    (voiceList.length ? `<option value="dev">${T().devVoice(devVoice ? devVoice.name : '')}</option>` : '') +
+    `<option value="off">${T().noVoice}</option>`;
   sel.value = voiceMode;
-  if (sel.value !== voiceMode) sel.value = 'ai:jf_alpha';
+  if (sel.value !== voiceMode) sel.value = 'ai:1';
 }
 function initVoiceUI() {
   renderVoiceSel(); renderRecs();
   $('#voiceSel').onchange = e => {
     voiceMode = e.target.value; store.set('machigai-voice3', voiceMode);
-    if (voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3));
+    if (voiceMode.startsWith('ai:')) aiLoad(aiId());
   };
   $('#voiceTest').onclick = async () => {
     audio();
-    if (voiceMode.startsWith('ai:')) { const id = voiceMode.slice(3); aiLoad(id); for (let i = 0; i < 20 && !(aiBuf[`${id}/ok1`] instanceof AudioBuffer); i++) await new Promise(r => setTimeout(r, 100)); aiPlay(id, 'ok'); }
-    else if (voiceMode === 'dev') tts('みーつけた！ すごいね！');
+    if (voiceMode.startsWith('ai:')) { const id = aiId(); aiLoad(id); for (let i = 0; i < 20 && !(aiBuf[`${id}/ok1`] instanceof AudioBuffer); i++) await new Promise(r => setTimeout(r, 100)); aiPlay(id, 'ok'); }
+    else if (voiceMode === 'dev') tts(T().devTest);
   };
 }
-function updSndBtn() { $('#btnSnd').textContent = soundOn ? '🔊 おと あり' : '🔇 おと なし'; }
+function updSndBtn() { $('#btnSnd').textContent = soundOn ? T().sndOn : T().sndOff; $('#btnLang').textContent = T().lang; }
+$('#btnLang').onclick = () => { sfx.tap(); setLang(LANG === 'ja' ? 'en' : 'ja'); };
+$('#optLang').onclick = e => { const b = e.target.closest('button'); if (b) { setLang(b.dataset.v); renderVoiceSel(); } };
 $('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('machigai-sound', soundOn); updSndBtn(); if (soundOn) sfx.tap(); };
 updSndBtn();
 
@@ -862,7 +930,7 @@ function makePhotoPuzzle(base, n) {
 }
 
 /* ---------- ゲーム ---------- */
-document.addEventListener('pointerdown', () => { if (voiceMode.startsWith('ai:')) aiLoad(voiceMode.slice(3)); }, { once: true, capture: true });
+document.addEventListener('pointerdown', () => { if (voiceMode.startsWith('ai:')) aiLoad(aiId()); }, { once: true, capture: true });
 let N = 3, cur = null, src = null; // src = {theme} or {base}
 const cvA = $('#cvA'), cvB = $('#cvB'), picA = $('#picA'), picB = $('#picB');
 let lastFind = 0;
@@ -878,10 +946,10 @@ const photoUsed = () => { const u = store.get('machigai-photo-day', null); retur
 const photoOk = () => Kakin.full() || photoUsed() < FREE_PHOTOS;
 function renderLocks() { document.querySelectorAll('[data-theme]').forEach(b => b.classList.toggle('kk-lock', !themeOpen(b.dataset.theme))); }
 Kakin.setup({
-  game: 'machigai', lang: () => 'ja', onChange: renderLocks,
+  game: 'machigai', lang: () => LANG, onChange: renderLocks,
   name: { ja: 'まちがいさがし', en: 'Spot the Difference' },
   free: { ja: ['🌷 のはら（3・5・7つ）', 'しゃしんで あそぶ（1日2まいまで）', 'おうちの人の こえの録音'], en: ['Meadow (3, 5, 7)', 'Photo mode (2 photos a day)', 'Record your own voice'] },
-  full: { ja: ['🐟 うみ・🚀 よぞら', 'しゃしんを 何まいでも'], en: ['Sea and Night sky', 'Unlimited photos'] },
+  full: { ja: ['🐟 うみ・🚀 よぞら・🚗 まち・🍰 おやつ・🐻 もり・⛄ ふゆ・🎲 まぜこぜ', 'しゃしんを 何まいでも'], en: ['Sea, Night sky, Town, Sweets, Forest, Winter and Mix', 'Unlimited photos'] },
 });
 $('#kkSlot').appendChild(Kakin.parentButton());
 renderLocks();
@@ -893,7 +961,7 @@ for (const id of ['#filePhoto', '#fileCam']) $(id).onchange = async e => {
   if (!f) return;
   $('#busy').classList.add('on');
   try { const img = await loadImage(f); src = { base: photoBase(img) }; if (!Kakin.full()) store.set('machigai-photo-day', { d: today(), n: photoUsed() + 1 }); await newRound(); }
-  catch (err) { alert('しゃしんを ひらけませんでした。べつの しゃしんで ためしてね。'); }
+  catch (err) { alert(T().badPhoto); }
   $('#busy').classList.remove('on');
 };
 
@@ -970,7 +1038,6 @@ function resetZoom() {
 if (window.visualViewport) visualViewport.addEventListener('resize', () => setTimeout(resetZoom, 300));
 document.addEventListener('contextmenu', e => e.preventDefault());
 
-const OK_WORDS = ['あった！', 'みつけた！', 'すごい！', 'やったね！', 'あたり！'];
 function found(i) {
   cur.found[i] = true; lastFind = Date.now();
   const d = cur.diffs[i];
@@ -990,7 +1057,7 @@ function found(i) {
   $('#stars').children[got - 1].classList.add('got');
   sfx.ok(); if (navigator.vibrate) navigator.vibrate(30);
   if (got === cur.diffs.length) { setTimeout(win, 700); speak('clear'); }
-  else { sayText(pick(OK_WORDS)); speak('ok'); }
+  else { sayText(pick(T().okWords)); speak('ok'); }
 }
 function miss(pic, px, py) {
   const m = document.createElement('div'); m.className = 'miss'; m.textContent = pick(['❓', '🙈', '💭']);
@@ -1050,9 +1117,10 @@ $('#btnHelpClose').onclick = () => { if (recording) recording.stop(); $('#help')
 
 function renderBook() {
   const book = store.get('machigai-book', []);
-  $('#bookCount').textContent = book.length ? `（${book.length}まい）` : '';
-  $('#bookList').innerHTML = book.length ? book.slice(-40).map(e => `<span>${e}</span>`).join('') : '<span class="empty">ぜんぶ みつけると シールが もらえるよ</span>';
+  $('#bookCount').textContent = book.length ? T().bookN(book.length) : '';
+  $('#bookList').innerHTML = book.length ? book.slice(-40).map(e => `<span>${e}</span>`).join('') : `<span class="empty">${T().bookEmpty}</span>`;
 }
+applyText();
 renderBook();
 </script>
 </body>
