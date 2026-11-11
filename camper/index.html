@@ -4109,14 +4109,16 @@ $('#b-info').onclick = e => { e.stopPropagation(); cycleInfo(); poke(); };
 $('#b-full').onclick = e => { e.stopPropagation(); setFull(!document.body.classList.contains('full')); };
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('full')) setFull(false); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('full')) setFull(false); });
-// 全画面の景色をダブルクリック（スマホは2回つづけてタップ）で、もとの画面にもどる。ボタン・地図・カードの上は対象外
-const fsScene = e => document.body.classList.contains('full') && !e.target.closest('button,a,input,textarea,label,#modal,#sheet,#fsmap,#fsinfo,#fspark,#gzbar,.modal');
+// 車窓の景色をダブルクリック（スマホは2回つづけてタップ）で、全画面に入る／もとの画面にもどる。ボタン・地図・カードの上は対象外
+const fsScene = e => !e.target.closest('button,a,input,textarea,label,#modal,#sheet,#fsmap,#fsinfo,#fspark,#gzbar,.modal') && (document.body.classList.contains('full') || !!e.target.closest('#win'));
+let fsTogT = 0;
+const fsToggle = () => { lastTap = 0; if (Date.now() - fsTogT < 400) return; fsTogT = Date.now(); if (document.body.classList.contains('full')) { $('#gzbar').hidden = true; gzMoveT = Date.now() + 1500; setFull(false); } else setFull(true); };
 let lastTap = 0, lastTapX = 0, lastTapY = 0;
-document.addEventListener('dblclick', e => { if (!fsScene(e)) return; e.preventDefault(); lastTap = 0; $('#gzbar').hidden = true; gzMoveT = Date.now() + 1500; setFull(false); });
+document.addEventListener('dblclick', e => { if (!fsScene(e)) return; e.preventDefault(); fsToggle(); });
 document.addEventListener('pointerup', e => {
   if (e.pointerType === 'mouse' || !fsScene(e)) return;
   const now = Date.now();
-  if (now - lastTap < 350 && Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 40) { lastTap = 0; $('#gzbar').hidden = true; setFull(false); return; }
+  if (now - lastTap < 350 && Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 40) { fsToggle(); return; }
   lastTap = now; lastTapX = e.clientX; lastTapY = e.clientY;
 }, { passive: true });
 document.addEventListener('pointerdown', poke, { passive: true });
