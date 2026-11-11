@@ -110,6 +110,21 @@ header .r{text-align:right;white-space:nowrap}
 .f-retro #b-gaze{right:20px;top:20px}.f-round #b-gaze{right:24%;top:9%}
 body.full #b-gaze{display:none}
 #gzcover,#gzclock,#gzbar{display:none}
+#fshint{position:absolute;left:50%;top:18px;transform:translateX(-50%);z-index:10;background:rgba(0,0,0,.6);color:#fff;border-radius:99px;padding:8px 16px;font-size:14px;white-space:nowrap;pointer-events:none}
+#b-fsight{display:none}
+body.full.parked:not(.gaze) #b-fsight{display:block;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;border:0;border-radius:99px;padding:10px 20px;font-weight:700;font-size:15px;background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+.pk-b.pulse{animation:pkpulse 1.6s ease-in-out infinite}
+@keyframes pkpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}50%{box-shadow:0 0 0 7px rgba(255,255,255,0)}}
+.pk-msg small{display:block;font-size:11px;opacity:.85;font-weight:500}
+.arrive{text-align:center;margin:4px 0 6px}.arrive .big-em{font-size:46px}.arrive small{color:var(--ink2);font-size:13px}.arrive h2{margin:2px 0 6px}.arrive p{font-size:14px;line-height:1.7;background:#fff7e0;border-radius:14px;padding:10px 12px;text-align:left}
+.ilinks{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.ilinks a{font-size:12px;font-weight:700;color:#2f6f9f;background:#eef6fc;border-radius:99px;padding:4px 10px;text-decoration:none;white-space:nowrap}
+.ilinks a:hover{background:#dcecf8}
+.spw{display:flex;flex-direction:column;gap:2px}.spw .sp{flex:1}.spw .ilinks{padding:0 4px}
+.spl{display:block;margin-bottom:8px}.spl small{display:block}
+.card .ilinks{justify-content:center}
+#sill span{cursor:pointer}#sill.tipon{z-index:20}
+#silltip{position:absolute;bottom:44px;width:230px;z-index:8;background:rgba(255,252,244,.97);color:#3a2c22;border-radius:12px;padding:9px 12px;box-shadow:0 4px 14px rgba(0,0,0,.28);font-size:13px;line-height:1.55;pointer-events:none}
+#silltip b{display:block;font-size:14px}#silltip small{display:block;color:#6b5a4c;font-size:12px;margin-top:2px}
 body.gaze #gzcover{display:block;position:absolute;inset:0;z-index:7;background:transparent;transition:background 2s}
 body.gaze.gz-dim #gzcover{background:rgba(0,0,0,.45)}
 body.gaze #b-snd,body.gaze #b-full,body.gaze #b-info,body.gaze #fsinfo,body.gaze #fsmap,body.gaze #toasts{display:none!important}
@@ -279,7 +294,7 @@ svg.map{touch-action:none;cursor:grab;width:100%;aspect-ratio:1.5/1;border-radiu
     <div class="r"><div id="clock"></div><div id="wx"></div></div>
   </header>
   <div id="winwrap">
-    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button><button id="b-full" aria-label="全画面">⛶ 全画面</button><button id="b-gaze" aria-label="ながめるモード">🖼 ながめる</button><div id="gzcover"></div><div id="gzclock" hidden></div><div id="gzbar" hidden></div><button id="b-info" aria-label="情報の表示">ℹ️</button><div id="fsinfo"></div><div id="fsmap" hidden role="button" aria-label="地図をひらく"></div></div>
+    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button><button id="b-full" aria-label="全画面">⛶ 全画面</button><button id="b-gaze" aria-label="ながめるモード">🖼 ながめる</button><div id="gzcover"></div><div id="gzclock" hidden></div><div id="gzbar" hidden></div><div id="fshint" hidden></div><button id="b-fsight" data-act="sight">🗺 観光する</button><button id="b-info" aria-label="情報の表示">ℹ️</button><div id="fsinfo"></div><div id="fsmap" hidden role="button" aria-label="地図をひらく"></div></div>
     <div id="sill"></div>
   </div>
   <section id="panel">
@@ -1092,9 +1107,13 @@ const DEX = {
 /* ===== 画面 ===== */
 const cv = $('#cv'), c = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
+// 大きな画面（パソコンの全画面など）で重くなりすぎないよう、絵の細かさに上限をつける
+let PXMAX = 2.2e6, HALF = false, drawAvg = 8, perfAt = 0, fcount = 0;
 function resize() {
   const r = cv.getBoundingClientRect(); DPR = Math.min(2, window.devicePixelRatio || 1);
-  W = Math.max(1, r.width); H = Math.max(1, r.height); cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  W = Math.max(1, r.width); H = Math.max(1, r.height);
+  if (W * H * DPR * DPR > PXMAX) DPR = Math.sqrt(PXMAX / (W * H));
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
 }
 let P = null; // 現在地
 const S = { t: 0, off: { cloud: 0, far: 0, hill: 0, mid: 0, near: 0, sea: 0 }, rp: null, tiles: new Map(), farTiles: new Map(), events: [], nextEv: 8, drops: [], parts: [], flash: 0, lmSeen: {} };
@@ -1883,10 +1902,10 @@ function updateHud() {
   $('#bar i').style.width = (P.segKm / s.len * 100).toFixed(2) + '%';
   $('#bar b').textContent = sea ? '🚢' : '🚐';
   $('#bar b').style.left = (P.segKm / s.len * 100).toFixed(2) + '%';
-  const pk = $('#park'); pk.hidden = !st.parked;
+  const pk = $('#park'); pk.hidden = !st.parked; document.body.classList.toggle('parked', !!st.parked && !st.act);
   if (st.parked) {
     const html = st.act ? `<div class="pk-msg">👣 ${st.act.e} ${st.act.name}<small>あと${durText(Math.max(0, st.act.end - Date.now()) / 36e5)}でもどります</small></div><button class="pk-b ghost" data-act="back">早めにもどる</button>`
-      : `<div class="pk-msg">🅿️ ${st.parked}で停車中</div><button class="pk-b sight" data-act="sight">🗺 観光する</button><button class="pk-b" data-act="go">▶ 出発</button>`;
+      : `<div class="pk-msg">🅿️ ${st.parked}で停車中<small>観光できます</small></div><button class="pk-b sight${st.stay && st.stay.city === st.parked && Object.keys(st.stay.done).length ? '' : ' pulse'}" data-act="sight">🗺 観光する</button><button class="pk-b" data-act="go">▶ 出発</button>`;
     if (pk.dataset.h !== html.replace(/あと.*?で/, '')) { pk.innerHTML = html; pk.dataset.h = html.replace(/あと.*?で/, ''); } else if (st.act) pk.querySelector('small').textContent = `あと${durText(Math.max(0, st.act.end - Date.now()) / 36e5)}でもどります`;
   }
   const stopNote = st.parked ? '' : st.stopMode === 'next' ? '<br><small>🅿️ 次の町で止まります</small>' : st.stopMode === 'every' ? '<br><small>🅿️ 町に着くたびに止まります</small>' : `<br><button class="mini" data-act="stopnext">🅿️ 次の町で止まって観光する</button>`;
@@ -1923,13 +1942,43 @@ function updateSill() {
   if (t <= 0) items[1] = '🧤';
   const lodge = st.parked && st.stay && st.stay.lodge;
   if (lodge && (hr >= 19 || hr < 5)) items = LODGE_SILL[lodge].slice();
-  (st.shelf || []).forEach((k, i) => { const g = st.gifts && st.gifts[k]; if (g) items[i + 1] = g.e; });
-  const key = items.join('');
+  const tips = items.map(e => { const d = SILL_DESC[e]; return d ? `<b>${e} ${d[0]}</b><small>${d[1]}</small>` : `<b>${e}</b>`; });
+  (st.shelf || []).forEach((k, i) => {
+    const g = st.gifts && st.gifts[k]; if (!g) return; items[i + 1] = g.e;
+    const dt = g.at ? new Date(g.at) : null, when = dt ? `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日` : '';
+    tips[i + 1] = `<b>${g.e} ${g.name}</b><small>🎁 ${g.city}で観光したときに買ったおみやげ${when ? `<br>📅 ${when}に手に入れました` : ''}${g.from && g.from.length ? `<br>👣 このとき行った所：${g.from.join('、')}` : ''}</small>${g.desc ? `<small>${g.desc}</small>` : ''}`;
+  });
+  SILL_TIPS = tips;
+  const key = items.join('') + tips.join('');
   $('#winwrap').classList.toggle('night', hr >= 19 || hr < 5);
   if ($('#sill').dataset.k === key) return;
   $('#sill').dataset.k = key;
-  $('#sill').innerHTML = items.map((e, i) => `<span style="${['left:7%', 'left:22%', 'right:7%'][i]}">${e}</span>`).join('');
+  $('#sill').innerHTML = items.map((e, i) => `<span data-i="${i}" style="${['left:7%', 'left:22%', 'right:7%'][i]}">${e}</span>`).join('') + '<div id="silltip" hidden></div>';
 }
+// 窓辺の小物の説明（マウスを合わせる・タップする）
+let SILL_TIPS = [];
+const SILL_DESC = {
+  '☕': ['コーヒー', '朝や午後のひと休みに'], '🍵': ['あたたかいお茶', '寒い日（5℃以下）の一杯'], '🥤': ['つめたいジュース', '暑い日（28℃以上）にごくごく'], '🧃': ['ジュース', '暑いお昼に'],
+  '🥐': ['クロワッサン', '旅の朝ごはん'], '🪴': ['観葉植物', 'いっしょに旅する小さな鉢植え'], '🗺': ['道路地図', '今日走る道をたしかめる'], '🧭': ['コンパス', 'どっちが北かな？'],
+  '🍙': ['おにぎり', 'お昼ごはん'], '🍪': ['クッキー', '午後のおやつ'], '📖': ['旅の本', '午後はのんびり読書'], '📷': ['カメラ', '夕焼けをとる準備'], '🍊': ['みかん', '夕方のおやつ'],
+  '🍜': ['ラーメン', '夜ごはん'], '🕯': ['ろうそく', '夜の車内をやさしく照らす'], '💤': ['おやすみ中', '夜おそくは静かに'], '🧸': ['くまのぬいぐるみ', '旅のおとも'],
+  '☂️': ['かさ', 'いまの場所は雨'], '🧤': ['手ぶくろ', 'いまの場所は0℃以下'],
+  '🔥': ['たき火', '今夜はキャンプ場に泊まり'], '🏕': ['テント', 'キャンプ場の夜'], '🌌': ['星空', 'キャンプ場から見上げる空'], '🛏': ['ベッド', '今夜はホテルに泊まり'], '🛁': ['お風呂', 'ホテルでゆっくり'],
+};
+(() => {
+  const sill = $('#sill'); let pinned = false;
+  const show = sp => {
+    const t = $('#silltip'); if (!t || !sp) return; const i = +sp.dataset.i;
+    t.innerHTML = SILL_TIPS[i] || ''; t.hidden = false; sill.classList.add('tipon');
+    const r = sp.getBoundingClientRect(), R = sill.getBoundingClientRect();
+    t.style.left = Math.max(0, Math.min(R.width - 230, r.left - R.left + r.width / 2 - 115)) + 'px';
+  };
+  const hide = () => { const t = $('#silltip'); if (t) t.hidden = true; pinned = false; sill.classList.remove('tipon'); };
+  sill.addEventListener('pointerover', e => { const sp = e.target.closest('span[data-i]'); if (sp && e.pointerType === 'mouse') show(sp); });
+  sill.addEventListener('pointerout', e => { if (e.pointerType === 'mouse' && !pinned && e.target.closest('span[data-i]')) hide(); });
+  sill.addEventListener('click', e => { const sp = e.target.closest('span[data-i]'); if (!sp) return; e.stopPropagation(); const t = $('#silltip'); if (pinned && t && !t.hidden && t.dataset.i === sp.dataset.i) { hide(); return; } show(sp); pinned = true; t.dataset.i = sp.dataset.i; });
+  document.addEventListener('click', e => { if (pinned && !e.target.closest('#sill')) hide(); });
+})();
 let POLES = true; try { POLES = localStorage.getItem('camper-poles') !== 'off'; } catch (e) { }
 const FRAMES = [['wood', '木のまど'], ['white', '白いカフェ'], ['retro', 'レトロ'], ['log', 'ログハウス'], ['round', 'まるまど'], ['shoji', '和風（障子）']];
 function setFrame(f) { const ww = $('#winwrap'); FRAMES.forEach(([k]) => ww.classList.toggle('f-' + k, k === f)); try { localStorage.setItem('camper-frame', f); } catch (e) { } }
@@ -2166,7 +2215,7 @@ function showRecord(tab = 'dex') {
   if (tab === 'lm') { body = `<p class="note">窓から見えた名所 ${ALL_LM.filter(l => st.lm[l.key]).length} / ${ALL_LM.length}<br><small>アプリを開いているときに、近くを通ると記録されます</small></p><div class="list">${ALL_LM.map(l => `<div class="${st.lm[l.key] ? '' : 'no'}">${st.lm[l.key] ? '✅' : '⬜'} ${st.lm[l.key] ? l.name : '？？？'}<small>${l.key}</small></div>`).join('')}</div>`; }
   if (tab === 'stamp') { const names = new Set(); for (const id in LEGS) for (const s of LEGS[id].stops) names.add(s[0]); const arr = [...names]; body = `<p class="note">通った町 ${arr.filter(n => st.stamps[n]).length} / ${arr.length}</p><div class="stamps">${arr.map(n => `<div class="stamp ${st.stamps[n] ? '' : 'no'}" ${st.stamps[n] ? `data-fact="${n}"` : ''}>${st.stamps[n] ? n : '？'}${st.stamps[n] > 1 ? `<small>×${st.stamps[n]}</small>` : ''}</div>`).join('')}</div><p class="note"><small>町をタッチすると豆知識が読めます</small></p>`; }
   const empty = t => `<p class="note">${t}</p>`;
-  if (tab === 'spot') { const v = Object.values(st.spots || {}); body = v.length ? `<p class="note">観光した場所 ${v.length}か所</p><div class="grid">${v.map(e => `<div class="card"><div class="em">${e.e}</div><b>${e.name}</b><small>${e.desc}</small><small class="m">${e.city}${e.n > 1 ? '・' + e.n + '回' : ''}</small></div>`).join('')}</div>` : empty('まだありません。町で停車したら「🗺 観光する」から出かけてみましょう。'); }
+  if (tab === 'spot') { const v = Object.values(st.spots || {}); body = v.length ? `<p class="note">観光した場所 ${v.length}か所</p><div class="grid">${v.map(e => `<div class="card"><div class="em">${e.e}</div><b>${e.name}</b><small>${e.desc}</small><small class="m">${e.city}${e.n > 1 ? '・' + e.n + '回' : ''}</small>${infoLinks(e.name, e.city, !!(CITY[e.city] || {}).spots)}</div>`).join('')}</div>` : empty('まだありません。町で停車したら「🗺 観光する」から出かけてみましょう。'); }
   if (tab === 'food') { const v = Object.values(st.food || {}); body = v.length ? `<p class="note">食べたもの ${v.length}品</p><div class="grid">${v.map(e => `<div class="card"><div class="em">${e.e}</div><b>${e.name}</b><small>${e.desc}</small><small class="m">${e.city}</small></div>`).join('')}</div>` : empty('まだありません。観光の「ご当地グルメ」で食べると記録されます。'); }
   if (tab === 'gift') { const v = Object.entries(st.gifts || {}); body = v.length ? `<p class="note">おみやげ ${v.length}個<br><small>「飾る」を押すと窓辺に置けます（2つまで）</small></p><div class="grid">${v.map(([k, e]) => `<div class="card"><div class="em">${e.e}</div><b>${e.name}</b><small class="m">${e.city}</small><button class="mini" data-shelf="${k}" ${(st.shelf || []).includes(k) ? 'disabled' : ''}>${(st.shelf || []).includes(k) ? '✓ 飾っています' : '窓辺に飾る'}</button></div>`).join('')}</div>${(st.shelf || []).length ? '<button class="big ghost" id="unshelf">窓辺のおみやげを片づける</button>' : ''}` : empty('まだありません。観光の「おみやげ」で買うと、ここにたまります。'); }
   if (tab === 'words') { const v = Object.values(st.words || {}); body = v.length ? `<p class="note">覚えたあいさつ ${v.length}</p>${v.map(e => `<div class="phrase sm"><small>${e.w[4]}（${e.city}）</small>${sayBtn(e.w[0], e.w[1], e.c || 'JP')}<b>${e.w[0]}</b><span>${e.w[1]}</span>${sayBtn(e.w[2], e.w[3], e.c || 'JP')}<b>${e.w[2]}</b><span>${e.w[3]}</span></div>`).join('')}` : empty('まだありません。観光の「地元のことば」で教えてもらえます。'); }
@@ -2374,6 +2423,13 @@ async function showBackup() {
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
 
 /* ===== 町の情報カード（地名をタップ） ===== */
+// 観光地のくわしい説明（ウィキペディア）と地図へのリンク
+const enc = encodeURIComponent;
+function infoLinks(name, city, specific) {
+  // 名所の名前がはっきりしているときはその名所、そうでないときは町の説明を出す
+  const q = specific ? name : city, mq = name === city ? city : name + ' ' + city;
+  return `<span class="ilinks"><a href="https://ja.wikipedia.org/w/index.php?search=${enc(q)}" target="_blank" rel="noopener">📖 ${specific || name === city ? 'くわしい説明' : city + 'について'}</a><a href="https://www.google.com/maps/search/?api=1&query=${enc(mq)}" target="_blank" rel="noopener">🗺 地図で見る</a></span>`;
+}
 function showPlace(which) {
   if (!P) return;
   const s = P.seg, sea = s.mode === 's';
@@ -2390,11 +2446,12 @@ function showPlace(which) {
    ${FACTS[n] ? `<div class="fact">💡 ${FACTS[n]}</div>` : ''}
    <div class="kv2">
      ${lmn ? `<div><span>🏛 窓から見える名所</span><b>${lmn}${st.lm[n] ? ' ✅' : ''}</b></div>` : ''}
-     ${X.spots ? `<div><span>📍 観光スポット</span><b>${X.spots.map(p => `${p[0]} ${p[1]}`).join('<br>')}</b></div>` : ''}
+     ${X.spots ? `<div><span>📍 観光スポット</span><b>${X.spots.map(p => `<span class="spl">${p[0]} ${p[1]}<small>${p[3]}</small>${infoLinks(p[1], n, true)}</span>`).join('')}</b></div>` : ''}
      <div><span>🍽 名物</span><b>${S0.food.map(f => `${f[0]} ${f[1]}<small>${f[2]}</small>`).join('<br>')}</b></div>
      <div><span>🎁 おみやげ</span><b>${S0.gift.map(f => `${f[0]} ${f[1]}`).join('<br>')}</b></div>
      <div><span>📮 スタンプ</span><b>${visits ? `${visits}回 通りました` : 'まだ通っていません'}</b></div>
    </div>
+   <p class="note">${n}について：${infoLinks(n, n, false)}</p>
    <h3>💬 ${w[4]}のあいさつ</h3>
    <div class="phrase">${sayBtn(w[0], w[1], S0.c)}<small>こんにちは</small><b>${w[0]}</b><span>${w[1]}</span></div>
    <div class="phrase">${sayBtn(w[2], w[3], S0.c)}<small>ありがとう</small><b>${w[2]}</b><span>${w[3]}</span></div>
@@ -2435,12 +2492,12 @@ function finishAct(quiet) {
   let html = '';
   if (a.kind === 'spot') {
     st.spots = st.spots || {}; const e = st.spots[key] || (st.spots[key] = { e: it[0], name: it[1], city: a.city, desc: it[3], n: 0 }); e.n++;
-    html = `<div class="sight-card"><div class="big-em">${it[0]}</div><h2>${it[1]}</h2><p>${it[3]}</p><div class="tag pick">🗺 観光スタンプ GET</div></div>`;
+    html = `<div class="sight-card"><div class="big-em">${it[0]}</div><h2>${it[1]}</h2><p>${it[3]}</p>${infoLinks(it[1], a.city, !!(CITY[a.city] || {}).spots)}<div class="tag pick">🗺 観光スタンプ GET</div></div>`;
   } else if (a.kind === 'food') {
     st.food = st.food || {}; const e = st.food[key] || (st.food[key] = { e: it[0], name: it[1], city: a.city, desc: it[2], n: 0 }); e.n++;
     html = `<div class="sight-card"><div class="big-em">${it[0]}</div><h2>${it[1]}を食べました！</h2><p>${it[2]}</p><div class="tag pick">🍽 グルメ図鑑にのりました</div></div>`;
   } else {
-    st.gifts = st.gifts || {}; st.gifts[key] = { e: it[0], name: it[1], city: a.city, desc: it[2] };
+    st.gifts = st.gifts || {}; st.gifts[key] = { e: it[0], name: it[1], city: a.city, desc: it[2], at: Date.now(), from: (st.spots && Object.values(st.spots).filter(x => x.city === a.city).map(x => x.name)) || [] };
     html = `<div class="sight-card"><div class="big-em">${it[0]}</div><h2>おみやげに「${it[1]}」を買いました</h2><p>${it[2]}</p><button class="big" data-shelf="${key}">窓辺に飾る</button></div>`;
   }
   save(); updateHud();
@@ -2487,7 +2544,8 @@ function showWords() {
 function showSight() {
   if (!st.parked) return;
   const stay = ensureStay(), S0 = sightOf(st.parked), busy = !!st.act;
-  const card = (kind, i, it, hours) => `<button class="sp ${stay.done[kind + i] ? 'done' : ''}" data-start="${kind}:${i}" ${busy ? 'disabled' : ''}><span class="em">${it[0]}</span><b>${it[1]}</b><small>${kind === 'spot' ? it[3] : it[2]}</small><i>⏱ ${durText(hours)}${stay.done[kind + i] ? '・✓ 行った' : ''}</i></button>`;
+  const specific = !!(CITY[st.parked] || {}).spots;
+  const card = (kind, i, it, hours) => `<div class="spw"><button class="sp ${stay.done[kind + i] ? 'done' : ''}" data-start="${kind}:${i}" ${busy ? 'disabled' : ''}><span class="em">${it[0]}</span><b>${it[1]}</b><small>${kind === 'spot' ? it[3] : it[2]}</small><i>⏱ ${durText(hours)}${stay.done[kind + i] ? '・✓ 行った' : ''}</i></button>${kind === 'spot' ? infoLinks(it[1], st.parked, specific) : ''}</div>`;
   modal(`<h2>🗺 ${st.parked}を観光</h2><p class="note">${S0.C.name}・${FACTS[st.parked] || ''}</p>
    ${busy ? `<div class="busy">👣 いまは「${st.act.name}」です。もどってから次に出かけられます。</div>` : '<p class="note">出かけているあいだは車は止まったままです。アプリを閉じても、時間がたつともどってきます。</p>'}
    <h3>📍 名所めぐり</h3><div class="sps">${S0.spots.map((it, i) => card('spot', i, it, it[2])).join('')}</div>
@@ -2507,7 +2565,7 @@ function checkAct() { if (st && st.act && Date.now() >= st.act.end) finishAct(fa
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b || !st) return;
   const a = b.dataset.act;
-  if (a === 'sight') showSight(); else if (a === 'go') depart(); else if (a === 'back') finishAct(false); else if (a === 'words') showWords();
+  if (a === 'sight') showSight(); else if (a === 'go') { depart(); closeModal(); } else if (a === 'back') finishAct(false); else if (a === 'words') showWords();
   else if (a === 'stopnext') { tick(); st.stopMode = 'next'; save(); updateHud(); toast('🅿️ 次の町で止まります'); }
 });
 // たき火（キャンプ場に泊まる夜）
@@ -2530,6 +2588,17 @@ function tick() {
 // 停車中は、着いた町の手前（来た道の終わり）を現在地にする
 const curPos = () => posAt(st.parked ? Math.max(0, st.km - 0.05) : st.km);
 function depart() { if (!st.parked) return; if (st.act) finishAct(true); const n = st.parked; st.parked = null; st.stay = null; st.t = Date.now(); save(); toast(`🚐 ${n}を出発！`); updateHud(); }
+// 町で停車したときの案内。観光への入口をはっきり出す
+function arrived() {
+  const n = st.parked; if (!n || st.preview || document.body.classList.contains('gaze')) return;
+  if (!$('#modal').hidden) { toast(`🅿️ <b>${n}</b>で停車しました<small>「🗺 観光する」から町を観光できます</small>`, 7000); return; }
+  const S0 = sightOf(n);
+  modal(`<div class="arrive"><div class="big-em">🅿️</div><small>${S0.C.name}</small><h2>${n}に到着！</h2>${FACTS[n] ? `<p>${FACTS[n]}</p>` : ''}</div>
+   <p class="note">しばらくここに止まっています。名所めぐり・ご当地グルメ・おみやげ・地元のことばを楽しめます。</p>
+   <button class="big" data-act="sight">🗺 ${n}を観光する</button>
+   <button class="big ghost" data-act="go">▶ 観光しないで出発する</button>
+   <button class="big ghost" data-close>あとで（停車したまま）</button>`, 'arrivem');
+}
 function arriveToasts(res) {
   for (const p of res.passed) toast(`${p.sea ? '⚓' : '📍'} <b>${p.name}</b>に到着<small>${FACTS[p.name] || ''}</small>`, 7000);
   for (const f of res.forks) toast(`🔀 ${f.at}から「${LEG[f.id].name}」へ`);
@@ -2546,8 +2615,10 @@ function back() {
 function frame(ts) {
   requestAnimationFrame(frame);
   if (!st || document.hidden) return;
+  if (HALF && (++fcount & 1)) return; // 重い端末では1コマおきに描く
+  const t0 = performance.now();
   const dt = Math.min(.1, (ts - lastFrame) / 1000 || 0); lastFrame = ts; S.t += dt;
-  const res = tick(); if (res.passed.length || res.forks.length) { arriveToasts(res); S.tiles.clear(); if (st.parked) toast(`🅿️ <b>${st.parked}</b>で停車しました<small>「出発する」を押すと、また走り出します</small>`, 6000); }
+  const res = tick(); if (res.passed.length || res.forks.length) { arriveToasts(res); S.tiles.clear(); if (st.parked) arrived(); }
   P = curPos();
   const W8 = wxState(), alt = sunAlt(P.ll[0], P.ll[1], nowMs()); light(W8, alt);
   const ctx = { biome: biomeOf(P), sea: P.seg.mode === 's', region: P.seg.mode === 's' ? seaRegion(P) : '', lat: P.ll[0], mon: localDate().getUTCMonth() + 1, snow: W8.snowCover };
@@ -2572,6 +2643,12 @@ function frame(ts) {
   if (!st.preview) for (const n in S.lmSeen) if (S.lmSeen[n] > 90 && !st.lm[n]) { st.lm[n] = Date.now(); save(); toast(`🏛 <b>${LMNAME[n] || n}</b>が見えた！<small>名所の記録にのりました</small>`, 5000); }
   if (ts - lastHud > 1000) { lastHud = ts; checkAct(); updateHud(); refreshWx(); refreshGeo(); }
   if (ts - lastSave > 10000) { lastSave = ts; save(); }
+  // 1コマを描くのにかかった時間を見て、重ければ細かさを下げる
+  drawAvg = drawAvg * .95 + (performance.now() - t0) * .05;
+  if (ts - perfAt > 3000) {
+    perfAt = ts;
+    if (drawAvg > 14) { if (PXMAX > 7e5) { PXMAX *= .7; resize(); } else HALF = true; }
+  }
 }
 cv.addEventListener('click', e => {
   const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
@@ -2618,6 +2695,12 @@ function cycleInfo() {
   FSI = { full: 'map', map: 'mini', mini: 'off', off: 'full' }[FSI]; try { localStorage.setItem('camper-fsinfo', FSI); } catch (e) { }
   fsInfo(); toast({ full: 'ℹ️ 情報と地図：くわしく', map: 'ℹ️ 地図と現在地だけ', mini: 'ℹ️ 現在地だけ', off: 'ℹ️ 表示しない（景色だけ）' }[FSI], 1600);
 }
+const FINE = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches; // マウスのある端末（パソコン）
+function fsHint() {
+  const h = $('#fshint'); if (!h) return;
+  h.innerHTML = FINE ? '⌨️ <b>Esc</b> キーで もとの画面に もどれます' : '画面をタップすると ボタンが出ます';
+  h.hidden = false; clearTimeout(h._t); h._t = setTimeout(() => { h.hidden = true; }, 4500);
+}
 function poke() { document.body.classList.remove('calm'); clearTimeout(calmT); if (document.body.classList.contains('full')) calmT = setTimeout(() => document.body.classList.add('calm'), 3500); }
 async function setFull(on, gaze) {
   document.body.classList.toggle('full', on); document.body.classList.toggle('gaze', !!(on && gaze)); if (on && gaze) gazeTick(); $('#b-full').textContent = on ? '✕' : '⛶ 全画面';
@@ -2625,7 +2708,15 @@ async function setFull(on, gaze) {
   try { if (on && el.requestFullscreen && !document.fullscreenElement) await el.requestFullscreen({ navigationUI: 'hide' }); else if (!on && document.fullscreenElement) await document.exitFullscreen(); } catch (e) { }
   try { if (on && navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); else if (!on && wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) { }
   fsInfo(); poke(); setTimeout(resize, 50); setTimeout(resize, 400);
+  if (on) fsHint(); else { const h = $('#fshint'); if (h) h.hidden = true; }
 }
+// 全画面中にマウスを動かす・画面にふれる・キーを押すと、ボタンがまた出る
+let gzMoveT = 0;
+['pointermove', 'pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, e => {
+  const b = document.body.classList; if (!b.contains('full')) return;
+  if (!b.contains('gaze')) { poke(); return; }
+  if (ev === 'pointermove' && e.pointerType === 'mouse' && $('#gzbar').hidden && Date.now() > gzMoveT) gazeBar();
+}, { passive: true }));
 // ながめるモード：ボタンも文字も消して景色だけ。置き時計のように飾る。タップでメニュー
 let GZ = (() => { try { return Object.assign({ clock: true, dim: true }, JSON.parse(localStorage.getItem('camper-gaze') || '{}')); } catch (e) { return { clock: true, dim: true }; } })();
 let gzBarT = 0, gzMoveAt = 0;
@@ -2643,13 +2734,13 @@ function gazeTick() {
 setInterval(gazeTick, 10e3);
 function gazeBar() {
   const b = $('#gzbar');
-  b.innerHTML = `<button data-gz="back">◀ もどる</button><button data-gz="clock">${GZ.clock ? '🕰 時計：あり' : '🕰 時計：なし'}</button><button data-gz="dim">${GZ.dim ? '🌙 夜は暗く：する' : '🌙 夜は暗く：しない'}</button><button data-gz="snd">${SOUND ? '🔊 音：あり' : '🔇 音：なし'}</button>`;
+  b.innerHTML = `<button data-gz="back">◀ もどる${FINE ? '（Esc）' : ''}</button><button data-gz="clock">${GZ.clock ? '🕰 時計：あり' : '🕰 時計：なし'}</button><button data-gz="dim">${GZ.dim ? '🌙 夜は暗く：する' : '🌙 夜は暗く：しない'}</button><button data-gz="snd">${SOUND ? '🔊 音：あり' : '🔇 音：なし'}</button>`;
   b.hidden = false; clearTimeout(gzBarT); gzBarT = setTimeout(() => { b.hidden = true; }, 5000);
 }
 $('#gzcover').onclick = e => { e.stopPropagation(); const b = $('#gzbar'); if (b.hidden) gazeBar(); else { b.hidden = true; } };
 $('#gzbar').onclick = e => {
   e.stopPropagation(); const k = e.target.closest('[data-gz]'); if (!k) return; const g = k.dataset.gz;
-  if (g === 'back') { $('#gzbar').hidden = true; setFull(false); return; }
+  if (g === 'back') { $('#gzbar').hidden = true; gzMoveT = Date.now() + 1500; setFull(false); return; }
   if (g === 'snd') setSound(!SOUND); else { GZ[g] = !GZ[g]; try { localStorage.setItem('camper-gaze', JSON.stringify(GZ)); } catch (er) { } }
   gazeTick(); gazeBar();
 };
