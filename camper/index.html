@@ -184,7 +184,7 @@ body.full #b-full{right:14px;width:38px;padding:0;font-size:18px!important}body.
 body.full.calm #b-snd,body.full.calm #b-full,body.full.calm #b-info{opacity:0}
 body.full.calm #fsinfo{opacity:.8}
 body.full #toasts{top:auto;bottom:calc(70px + env(safe-area-inset-bottom))}
-#b-radio{position:absolute;left:54px;bottom:10px;z-index:5;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:17px;backdrop-filter:blur(4px)}#b-radio.on{background:rgba(230,120,40,.85)}.f-retro #b-radio{left:66px;bottom:24px}.f-round #b-radio{left:calc(21% + 46px);bottom:11%}body.full #b-radio{left:60px;bottom:calc(14px + env(safe-area-inset-bottom))}body.full.calm #b-radio,body.gaze #b-radio{opacity:0;pointer-events:none}.rlist{display:grid;gap:6px;margin:8px 0}.rst{text-align:left;border:1px solid #e6dccb;background:#fffaf0;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;font:inherit;color:inherit;cursor:pointer}.rst small{color:#8a7a66}.rst.on{background:#fde7cf;border-color:#e8a060}
+#b-radio{position:absolute;left:54px;bottom:10px;z-index:5;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:17px;backdrop-filter:blur(4px)}#b-radio.on{background:rgba(230,120,40,.85)}.f-retro #b-radio{left:66px;bottom:24px}.f-round #b-radio{left:calc(21% + 46px);bottom:11%}body.full #b-radio{left:60px;bottom:calc(14px + env(safe-area-inset-bottom))}body.full.calm #b-radio,body.gaze #b-radio{opacity:0;pointer-events:none}.rlist{display:grid;gap:6px;margin:8px 0}.rst{text-align:left;border:1px solid #e6dccb;background:#fffaf0;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;font:inherit;color:inherit;cursor:pointer}.rst small{color:#8a7a66}.rst.on{background:#fde7cf;border-color:#e8a060}.rhp{justify-self:end;margin:-4px 6px 2px;font-size:12px;color:#b0682a;text-decoration:none}
 #b-snd{position:absolute;left:10px;bottom:10px;z-index:5;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:18px;backdrop-filter:blur(4px)}
 #s-vol{width:100%;margin:6px 0;accent-color:var(--accent)}
 .sps{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
@@ -6342,6 +6342,11 @@ function drawFolk(gy, sc, ctx) {
 /* ----- 10 ご当地ラジオ ----- */
 const RADIO = { a: null, list: null, cc: '', cur: null, on: false, busy: false, tried: {} };
 const RB_HOSTS = ['de1', 'nl1', 'at1', 'de2', 'fi1'];
+/* 有料アプリでの利用：規約で「ほかのアプリでの再生は禁止」と書いている局は出さない。
+   はっきり許可を確認できた局は RADIO_OK に入れると、いちばん上に ✅ つきで出る。 */
+const RADIO_NG = /somafm|(^|[^a-z])bbc([^a-z]|$)|boxradio|streamafrica/i;
+const RADIO_OK = []; // 例: [/example\.com/i]  許可をもらった局のホームページや配信URL
+const radioOk = s => RADIO_OK.some(re => re.test((s.homepage || '') + ' ' + (s.url_resolved || '') + ' ' + s.name));
 const radioCC = () => { const cc = ccOf(P) || 'JP'; return cc === 'HI' ? 'US' : cc; };
 async function rbStations(cc) {
   const hs = RB_HOSTS.slice().sort(() => Math.random() - .5);
@@ -6353,7 +6358,8 @@ async function rbStations(cc) {
       clearTimeout(tm); if (!r.ok) continue;
       const j = await r.json(), seen = new Set();
       RADIO.host = h;
-      return j.filter(s => /^https:\/\//.test(s.url_resolved || '') && !/hls|m3u8/i.test(s.codec + s.url_resolved) && !seen.has(s.name.trim().toLowerCase()) && seen.add(s.name.trim().toLowerCase())).slice(0, 10);
+      const L = j.filter(s => /^https:\/\//.test(s.url_resolved || '') && !/hls|m3u8/i.test(s.codec + s.url_resolved) && !RADIO_NG.test(s.name + ' ' + (s.homepage || '') + ' ' + s.url_resolved) && !seen.has(s.name.trim().toLowerCase()) && seen.add(s.name.trim().toLowerCase()));
+      return L.filter(radioOk).concat(L.filter(s => !radioOk(s))).slice(0, 10);
     } catch (e) { }
   }
   return null;
@@ -6383,10 +6389,10 @@ async function showRadio(fresh) {
   if (fresh && cc !== RADIO.cc && !RADIO.busy) { radioLoad(cc).then(() => { if ($('#radiom')) showRadio(); }); }
   const L0 = RADIO.list;
   const rows = RADIO.busy ? `<p class="note">${J('局をさがしています…', 'Finding stations…')}</p>` : !L0 ? `<p class="note">${J('局のリストを読みこめませんでした。インターネットにつながっているか確かめてください。', 'Couldn\'t load the station list. Please check your connection.')}</p>` : !L0.length ? `<p class="note">${J('この場所で聞ける局が見つかりませんでした', 'No stations found for this place')}</p>` :
-    `<div class="rlist">${L0.map((s, i) => `<button class="rst ${RADIO.on && RADIO.cur && RADIO.cur.stationuuid === s.stationuuid ? 'on' : ''}" data-rst="${i}"><b>${RADIO.on && RADIO.cur && RADIO.cur.stationuuid === s.stationuuid ? '🔊 ' : '▶ '}${esc2(s.name.trim())}</b><small>${esc2([s.state, (s.tags || '').split(',').slice(0, 3).join(' ')].filter(Boolean).join('・'))}</small></button>`).join('')}</div>`;
+    `<div class="rlist">${L0.map((s, i) => `<button class="rst ${RADIO.on && RADIO.cur && RADIO.cur.stationuuid === s.stationuuid ? 'on' : ''}" data-rst="${i}"><b>${RADIO.on && RADIO.cur && RADIO.cur.stationuuid === s.stationuuid ? '🔊 ' : '▶ '}${radioOk(s) ? '✅ ' : ''}${esc2(s.name.trim())}</b><small>${esc2([s.state, (s.tags || '').split(',').slice(0, 3).join(' ')].filter(Boolean).join('・'))}</small></button>${/^https?:\/\//.test(s.homepage || '') ? `<a class="rhp" href="${esc2(s.homepage)}" target="_blank" rel="noopener">🔗 ${J('放送局のサイト', 'Station website')}</a>` : ''}`).join('')}</div>`;
   modal(`<div id="radiom"><h2>📻 ${J('ご当地ラジオ', 'Local radio')}</h2><p class="note">${J(`いまいる国（<b>${radioCountry(RADIO.cc || cc)}</b>）で本当に放送しているラジオを、インターネットで聞けます。国境をこえると、次の国の局に切りかわります。`, `Listen to stations really broadcasting in the country you're in (<b>${radioCountry(RADIO.cc || cc)}</b>). When you cross a border, it switches to the next country.`)}</p>${rows}
     ${RADIO.on ? `<button class="big ghost" id="r-stop">⏹ ${J('ラジオを止める', 'Stop the radio')}</button>` : ''}
-    <p class="note"><small>${J('局のリストは radio-browser.info（みんなで作るラジオ局の名簿）から。音が出ないときは別の局を選んでください。通信量が多めなので、Wi-Fiがおすすめです。', 'Station list from radio-browser.info, a community directory. If one doesn\'t play, try another. Uses a fair amount of data, so Wi-Fi is best.')}</small></p>
+    <p class="note"><small>${J('局のリストは radio-browser.info（みんなで作るラジオ局の名簿）から。ほかのアプリでの再生を断っている局は出していません。' + (RADIO_OK.length ? '✅ はアプリでの利用OKを確認ずみの局です。' : '') + '音が出ないときは別の局を選んでください。通信量が多めなので、Wi-Fiがおすすめです。', 'Station list from radio-browser.info, a community directory. Stations whose terms forbid other apps are left out.' + (RADIO_OK.length ? ' ✅ marks stations that have confirmed app use.' : '') + ' If one doesn\'t play, try another. Uses a fair amount of data, so Wi-Fi is best.')}</small></p>
     <button class="big ghost" data-close>${J('とじる', 'Close')}</button></div>`, 'radio');
   document.querySelectorAll('[data-rst]').forEach(b => b.onclick = () => { RADIO.tried = {}; radioPlay(RADIO.list[+b.dataset.rst]); });
   const sp = $('#r-stop'); if (sp) sp.onclick = () => radioStop();
