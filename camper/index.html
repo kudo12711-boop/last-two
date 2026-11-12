@@ -101,7 +101,7 @@ header .r{text-align:right;white-space:nowrap}
 .pk-b{border:0;border-radius:12px;padding:10px 12px;font-weight:900;font-size:15px;background:#fff;color:#2f7fb0;white-space:nowrap}
 .pk-b.sight{background:#ffd36b;color:#5a3a00}.pk-b.ghost{background:rgba(255,255,255,.2);color:#fff}
 .mini{border:1px solid var(--line);background:var(--wall);border-radius:99px;padding:4px 10px;font-size:12px;font-weight:700;margin-top:4px}
-.mini.on{background:#e8f3e0;border-color:#9cc48a;color:#3d6b2c}
+.shmulti{display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:center}.mini.on{background:#e8f3e0;border-color:#9cc48a;color:#3d6b2c}
 .mini:disabled{opacity:.6}
 .modal textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.4 monospace;background:#fff;word-break:break-all;resize:vertical}
 .filebtn{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--line);background:#fff;border-radius:14px;padding:10px 12px;font-weight:700;font-size:14px;cursor:pointer}
@@ -3289,7 +3289,7 @@ const SILL_DESC = EN ? {
   sill.addEventListener('pointerout', e => { if (e.pointerType === 'mouse' && !pinned && e.target.closest('span[data-i]')) hide(); });
   sill.addEventListener('click', e => {
     const put = e.target.closest('[data-sput]'), mp = e.target.closest('[data-smap]');
-    if (put) { e.stopPropagation(); hide(); st.shelf = (st.shelf || []).filter(x => x !== put.dataset.sput); save(); sill.dataset.k = ''; updateSill(); toast(J('🧺 窓辺からしまいました', '🧺 Put away'), 1800); return; }
+    if (put) { e.stopPropagation(); hide(); shRemove1(put.dataset.sput); save(); sill.dataset.k = ''; updateSill(); toast(J('🧺 窓辺からしまいました', '🧺 Put away'), 1800); return; }
     if (mp) { e.stopPropagation(); hide(); showMap(+(lsGet('camper-mapz') || 0)); return; }
   });
   sill.addEventListener('click', e => { const sp = e.target.closest('span[data-i]'); if (!sp) return; e.stopPropagation(); const t = $('#silltip'); if (pinned && t && !t.hidden && t.dataset.i === sp.dataset.i) { hide(); return; } show(sp); pinned = true; sill.classList.add('pin'); t.dataset.i = sp.dataset.i; });
@@ -3570,7 +3570,7 @@ function showRecord(tab = 'dex') {
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showRecord(b.dataset.tab));
   bindShelf(); document.querySelectorAll('[data-shelf]').forEach(b => { const f = b.onclick; b.onclick = () => { f(); showRecord(tab); }; });
   const un = $('#unshelf'); if (un) un.onclick = () => { st.shelf = []; save(); $('#sill').dataset.k = ''; updateSill(); toast(J('🧺 窓辺に飾った物をしまいました', '🧺 Put everything away'), 2000); showRecord(tab); };
-  document.querySelectorAll('[data-unshelf]').forEach(b => b.onclick = () => { st.shelf = (st.shelf || []).filter(x => x !== b.dataset.unshelf); save(); $('#sill').dataset.k = ''; updateSill(); toast(J('🧺 窓辺からしまいました', '🧺 Put away'), 1800); showRecord(tab); });
+  document.querySelectorAll('[data-unshelf]').forEach(b => b.onclick = () => { shRemove1(b.dataset.unshelf); save(); $('#sill').dataset.k = ''; updateSill(); toast(J('🧺 窓辺からしまいました', '🧺 Put away'), 1800); showRecord(tab); });
   document.querySelectorAll('[data-fact]').forEach(b => b.onclick = () => toast(`📍 <b>${tr(b.dataset.fact)}</b><small>${FACTS[b.dataset.fact] || ''}</small>`, 6000));
 }
 function settingsEn(cur) {
@@ -4191,10 +4191,16 @@ function sillHidden() {
 }
 // 窓辺に飾る／しまうボタン（記録の おみやげ・ひろいもの で共通）
 const SHELF_MAX = 6;
-const shelfBtn = k => (st.shelf || []).includes(k) ? `<button class="mini on" data-unshelf="${k}">${J('✓ 飾っています（しまう）', '✓ On display (put away)')}</button>` : `<button class="mini" data-shelf="${k}">${J('窓辺に飾る', 'Display on sill')}</button>`;
+// 同じひろいものを複数持っていれば、その数まで飾れる（窓辺はぜんぶで SHELF_MAX 個まで）
+const shHave = k => k.startsWith('f:') ? Math.max(1, ((st.finds || {})[k.slice(2)] || {}).n || 1) : 1;
+const shCount = k => (st.shelf || []).filter(x => x === k).length;
+const shRemove1 = k => { const a = st.shelf || [], i = a.indexOf(k); if (i >= 0) a.splice(i, 1); st.shelf = a; };
+const shelfBtn = k => { const have = shHave(k), c = shCount(k);
+  if (have <= 1) return c ? `<button class="mini on" data-unshelf="${k}">${J('✓ 飾っています（しまう）', '✓ On display (put away)')}</button>` : `<button class="mini" data-shelf="${k}">${J('窓辺に飾る', 'Display on sill')}</button>`;
+  return `<span class="shmulti"><button class="mini${c ? ' on' : ''}" data-shelf="${k}" ${c >= have ? 'disabled' : ''}>${c >= have ? J(`✓ ぜんぶ飾っています（${c} / ${have}）`, `✓ All on display (${c} / ${have})`) : J(`窓辺に飾る（${c} / ${have}）`, `Display on sill (${c} / ${have})`)}</button>${c ? `<button class="mini" data-unshelf="${k}">${J('1つしまう', 'Put one away')}</button>` : ''}</span>`; };
 function bindShelf() {
   document.querySelectorAll('[data-shelf]').forEach(b => b.onclick = () => {
-    const k = b.dataset.shelf; st.shelf = (st.shelf || []).filter(x => x !== k); st.shelf.unshift(k); const over = st.shelf.length > SHELF_MAX; st.shelf = st.shelf.slice(0, SHELF_MAX);
+    const k = b.dataset.shelf; if (shHave(k) > 1) { if (shCount(k) >= shHave(k)) return; } else st.shelf = (st.shelf || []).filter(x => x !== k); st.shelf = st.shelf || []; st.shelf.unshift(k); const over = st.shelf.length > SHELF_MAX; st.shelf = st.shelf.slice(0, SHELF_MAX);
     save(); $('#sill').dataset.k = ''; updateSill(); b.textContent = J('✓ 窓辺に飾りました', '✓ On the window sill'); b.disabled = true;
     const hid = sillHidden(); if (hid) toast(hid, 5000); else if (over) toast(J(`窓辺は${SHELF_MAX}つまで。いちばん前に飾った物をしまいました`, `The sill holds ${SHELF_MAX}. The oldest one was put away`), 3500);
   });
