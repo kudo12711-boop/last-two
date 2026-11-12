@@ -134,6 +134,7 @@ body.full.parked:not(.gaze) #fspark{display:flex;flex-direction:column;align-ite
 .langsw{display:flex;justify-content:flex-end;gap:6px;margin:-4px 0 4px}.langsw button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-weight:700;font-size:13px;color:var(--ink2)}.langsw button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ilinks{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.ilinks a{font-size:12px;font-weight:700;color:#2f6f9f;background:#eef6fc;border-radius:99px;padding:4px 10px;text-decoration:none;white-space:nowrap}
 .ilinks a:hover{background:#dcecf8}
+.ph.ev{height:140px;margin:8px 0 6px}
 .spw{display:flex;flex-direction:column;gap:2px}.spw .sp{flex:1}.spw .ilinks{padding:0 4px}
 .spl{display:block;margin-bottom:8px}.spl small{display:block}
 .card .ilinks{justify-content:center}
@@ -206,7 +207,8 @@ body.full #toasts{top:auto;bottom:calc(70px + env(safe-area-inset-bottom))}
 .stats{display:flex;gap:6px;justify-content:space-between;font-size:12px;color:var(--ink2)}
 .stats b{display:block;color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
 .stats>div{flex:1;text-align:center}
-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+nav{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.evc{display:flex;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:8px 0}.evc.fest{background:#fff8ee}.eve{font-size:30px;line-height:1}.evc>div>b{display:block;font-size:15px}.evc>div>small{display:block;color:var(--ink2);font-size:12px}.evc p{margin:4px 0;font-size:13px;line-height:1.55}.evv{font-weight:700}.evv.v3{color:#2c7a3f}.evv.v2{color:#2f6fa0}.evv.v1{color:#9a6a1a}.evv.v0{color:#8a7f74}
 nav button{border:0;background:var(--wood2);color:#fff7ea;border-radius:16px;padding:9px 4px 8px;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 3px 0 #4b3423}
 nav button span{font-size:22px;line-height:1}
 nav button:active{transform:translateY(2px);box-shadow:0 1px 0 #4b3423}
@@ -328,6 +330,7 @@ svg.map{touch-action:none;cursor:grab;width:100%;aspect-ratio:1.5/1;border-radiu
     <nav>
       <button id="b-map"><span>🗺</span>地図</button>
       <button id="b-rec"><span>📖</span>記録</button>
+      <button id="b-ev"><span>🗓</span>イベント</button>
       <button id="b-photo"><span>📷</span>絵はがき</button>
       <button id="b-set"><span>⚙️</span>設定</button>
     </nav>
@@ -2506,7 +2509,7 @@ if (EN) { // 英語のときは、表示だけに使うデータを英語に置�
   q('#b-gaze').textContent = '🖼 Gaze mode'; q('#b-gaze').setAttribute('aria-label', 'Gaze mode');
   q('#b-snd').setAttribute('aria-label', 'Sound'); q('#b-info').setAttribute('aria-label', 'Info display'); q('#fsmap').setAttribute('aria-label', 'Open map');
   q('.stats').innerHTML = '<div>Distance<b id="total">0 km</b></div><div>Around the world<b id="lap">Lap 1</b></div><div>Speed<b id="spd"></b></div>';
-  [['#b-map', '🗺', 'Map'], ['#b-rec', '📖', 'Log'], ['#b-photo', '📷', 'Postcard'], ['#b-set', '⚙️', 'Settings']].forEach(([id, e, t]) => { q(id).innerHTML = `<span>${e}</span>${t}`; });
+  [['#b-map', '🗺', 'Map'], ['#b-rec', '📖', 'Log'], ['#b-ev', '🗓', 'Events'], ['#b-photo', '📷', 'Postcard'], ['#b-set', '⚙️', 'Settings']].forEach(([id, e, t]) => { q(id).innerHTML = `<span>${e}</span>${t}`; });
 }
 /* ===== 小道具 ===== */
 const $ = s => document.querySelector(s);
@@ -2919,10 +2922,10 @@ function drawSky(hz, W8, alt) {
   const sa = clamp(1 - L.dl * 2.5) * clamp(1 - L.k * 1.25);
   if (sa > 0.02) for (const s of STARS) { c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)))})`; c.fillRect(s[0] * W, s[1] * hz * .9, s[2] > .85 ? 2 : 1.2, s[2] > .85 ? 2 : 1.2); }
   // 月（本物の位置と満ち欠け。昼間の月はうすく。地平線より下なら見えない）
-  const MV = moonView(P.ll[0], P.ll[1], nowMs());
+  const MV = moonView(P.ll[0], P.ll[1], nowMs()); S.MV = MV;
   const ma = clamp((MV.alt + 1) / 4) * (L.dl > .5 ? .38 * (1 - L.dl * .5) : clamp(1 - L.dl / .7 + .3)) * clamp(1 - L.k * 1.1) * (MV.k < .03 ? 0 : 1);
   if (ma > 0.02) {
-    const mr = Math.max(9, H * .028), mx = W * .24, my = clamp(hz - (MV.alt / 60) * hz * .85, hz * .1, hz - mr);
+    const mr = Math.max(9, H * .028) * (MV.k > .95 && moonDist(nowMs()) < SUPER ? 1.12 : 1), mx = W * .24, my = clamp(hz - (MV.alt / 60) * hz * .85, hz * .1, hz - mr);
     c.save(); c.globalAlpha = ma;
     const gl = c.createRadialGradient(mx, my, mr * .5, mx, my, mr * (2 + 2 * MV.k)); gl.addColorStop(0, `rgba(255,250,220,${.08 + .2 * MV.k})`); gl.addColorStop(1, 'rgba(255,250,220,0)');
     if (L.dl < .5) { c.fillStyle = gl; c.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8); }
@@ -2932,15 +2935,27 @@ function drawSky(hz, W8, alt) {
     c.fillStyle = '#fff6d8'; c.beginPath(); c.arc(0, 0, mr, -Math.PI / 2, Math.PI / 2);
     if (t >= 0) c.ellipse(0, 0, Math.max(.01, mr * t), mr, 0, Math.PI / 2, -Math.PI / 2, true); else c.ellipse(0, 0, mr * -t, mr, 0, Math.PI / 2, Math.PI * 1.5, false);
     c.fill(); c.restore();
+    // 月食：地球のかげ（半影でうす暗く、本影で赤銅色）
+    const LE = S.LE;
+    if (LE) {
+      c.save(); c.globalAlpha = ma; c.beginPath(); c.arc(mx, my, mr, 0, 7); c.clip();
+      c.fillStyle = `rgba(20,16,30,${LE.pd * .45})`; c.fillRect(mx - mr, my - mr, mr * 2, mr * 2);
+      if (LE.um > -.05) { const ux = mx + LE.sx * mr, uy = my + LE.sy * mr, ug = c.createRadialGradient(ux, uy, RU * mr * .8, ux, uy, RU * mr * 1.04); ug.addColorStop(0, LE.total ? 'rgba(150,58,32,.86)' : 'rgba(110,40,26,.9)'); ug.addColorStop(1, 'rgba(110,40,26,0)'); c.fillStyle = ug; c.beginPath(); c.arc(ux, uy, RU * mr * 1.04, 0, 7); c.fill(); }
+      c.restore();
+    }
   }
   // 太陽
   if (alt > -4) {
-    const sx = W * .74, sy = clamp(hz - (alt / 50) * hz * .9, hz * .1, hz + 20), sr = Math.max(10, H * .03);
+    const sx = W * .74, sy = clamp(hz - (alt / 50) * hz * .9, hz * (S.SE ? .22 : .1), hz + 20), sr = Math.max(10, H * .03) * (S.SE ? 1.4 : 1);
     const col = mix([255, 238, 170], [255, 140, 70], L.tw);
     c.save(); c.globalAlpha = clamp(1 - L.k * 1.15) * sstep(-4, 0, alt);
     const gl = c.createRadialGradient(sx, sy, sr * .4, sx, sy, sr * 6); gl.addColorStop(0, css(col, .55)); gl.addColorStop(1, css(col, 0));
-    c.fillStyle = gl; c.fillRect(sx - sr * 6, sy - sr * 6, sr * 12, sr * 12);
-    c.fillStyle = css(col); c.beginPath(); c.arc(sx, sy, sr, 0, 7); c.fill(); c.restore();
+    const SE = S.SE;
+    if (SE && SE.total) { const cg = c.createRadialGradient(sx, sy, sr, sx, sy, sr * 3.2); cg.addColorStop(0, 'rgba(240,244,255,.85)'); cg.addColorStop(.35, 'rgba(210,220,255,.3)'); cg.addColorStop(1, 'rgba(200,210,255,0)'); c.fillStyle = cg; c.beginPath(); c.arc(sx, sy, sr * 3.2, 0, 7); c.fill(); }
+    else { c.globalAlpha *= SE ? Math.sqrt(1 - SE.f) : 1; c.fillStyle = gl; c.fillRect(sx - sr * 6, sy - sr * 6, sr * 12, sr * 12); c.globalAlpha = clamp(1 - L.k * 1.15) * sstep(-4, 0, alt); }
+    c.fillStyle = css(col); c.beginPath(); c.arc(sx, sy, sr, 0, 7); c.fill();
+    if (SE) { c.fillStyle = SE.total ? '#0c0d14' : css(L.top); c.beginPath(); c.arc(sx + SE.dx * sr, sy + SE.dy * sr, sr * SE.rr, 0, 7); c.fill(); } // 日食：月が太陽の前を通る
+    c.restore();
   }
 }
 const CLOUDS = new Map();
@@ -3710,6 +3725,7 @@ function drawBirds(e, p, hz, sc) {
   }
 }
 function drawSkyEvents(hz) {
+  drawShower(S.dt || .016, hz); drawFest(hz);
   for (const e of S.events) {
     const p = (S.t - e.t0) / e.dur; if (p < 0 || p > 1) continue;
     if (e.id === 'shootingstar') { const x = W * (.8 - p * .5) + (e.seed % 100), y = hz * (.1 + p * .3); const g = c.createLinearGradient(x, y, x + 80, y - 40); g.addColorStop(0, `rgba(255,255,255,${1 - p})`); g.addColorStop(1, 'rgba(255,255,255,0)'); c.strokeStyle = g; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 80, y - 40); c.stroke(); }
@@ -4143,7 +4159,7 @@ function showMap(zoom, ctr, w) {
 }
 /* ----- 記録 ----- */
 function showRecord(tab = 'dex') {
-  const tabs = EN ? [['dex', '📖 Wildlife'], ['find', '🐚 Finds'], ['lm', '🏛 Sights'], ['stamp', '📍 Towns'], ['spot', '🗺 Visits'], ['food', '🍽 Food'], ['gift', '🎁 Souvenirs'], ['words', '💬 Words'], ['data', '📊 Stats']] : [['dex', '📖 図鑑'], ['find', '🐚 ひろいもの'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['spot', '🗺 観光'], ['food', '🍽 グルメ'], ['gift', '🎁 おみやげ'], ['words', '💬 ことば'], ['data', '📊 記録']];
+  const tabs = EN ? [['dex', '📖 Wildlife'], ['find', '🐚 Finds'], ['lm', '🏛 Sights'], ['stamp', '📍 Towns'], ['spot', '🗺 Visits'], ['food', '🍽 Food'], ['gift', '🎁 Souvenirs'], ['words', '💬 Words'], ['sky', '🌠 Sky & festivals'], ['data', '📊 Stats']] : [['dex', '📖 図鑑'], ['find', '🐚 ひろいもの'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['spot', '🗺 観光'], ['food', '🍽 グルメ'], ['gift', '🎁 おみやげ'], ['words', '💬 ことば'], ['sky', '🌠 そら・お祭り'], ['data', '📊 記録']];
   let body = '';
   if (tab === 'dex') { const ids = Object.keys(DEX); body = `<p class="note">${J(`${Object.keys(st.dex).length} / ${ids.length} 種類を見つけました`, `Found ${Object.keys(st.dex).length} of ${ids.length}`)}</p><div class="grid">${ids.map(id => { const e = st.dex[id], D = DEX[id]; return e ? `<div class="card"><div class="em">${D[0]}</div><b>${D[1]}</b><small>${D[2]}</small><small class="m">${J(`${e.n}回・はじめて：${e.place || ''}`, `×${e.n} · first seen: ${tr(e.place || '')}`)}</small></div>` : `<div class="card no"><div class="em">？</div><b>？？？</b></div>`; }).join('')}</div>`; }
   if (tab === 'lm') { body = `<p class="note">${J('窓から見えた名所', 'Sights seen from the window')} ${ALL_LM.filter(l => st.lm[l.key]).length} / ${ALL_LM.length}<br><small>${J('アプリを開いているときに、近くを通ると記録されます', 'Recorded when you pass nearby with the app open')}</small></p><div class="list">${ALL_LM.map(l => `<div class="${st.lm[l.key] ? '' : 'no'}">${st.lm[l.key] ? '✅' : '⬜'} ${st.lm[l.key] ? tr(l.name) : '???'}<small>${tr(l.key)}</small></div>`).join('')}</div>`; }
@@ -4165,6 +4181,7 @@ function showRecord(tab = 'dex') {
      ${palSection()}
      <h3>✉️ ${J(`ボトルの手紙（${L.length}通）`, `Letters in bottles (${L.length})`)}</h3>${L.length ? L.map(l => `<div class="letter sm"><small>${fdDate(l.at)}${J('・', ' · ')}${placeText(l.where)}${J('で拾った手紙', '')}</small><p>${J(`「<b>${l.about}</b> は、こんなところだよ。${FACTS[l.about] || ''}」`, `"<b>${tr(l.about)}</b> is a place like this: ${FACTS[l.about] || ''}"`)}</p></div>`).join('') : `<p class="note">${J('まだありません。', 'None yet.')}${st.bottles ? J(`（この機能ができる前に拾った ${st.bottles}本の手紙は残っていません）`, ` (Letters from the ${st.bottles} bottles found before this feature were not kept.)`) : ''}</p>`}`;
   }
+  if (tab === 'sky') body = `<p class="note">${J('窓から見た天体ショーと、通ったお祭り', 'Sky shows seen from the window and festivals you passed')}</p>` + skyLogHtml();
   if (tab === 'data') { const days = (Date.now() - st.started) / 864e5; body = EN ? `<div class="kv"><div><span>Distance driven</span><b>${fmt(traveled())} km</b></div><div><span>Times around Earth</span><b>${(traveled() / 40075).toFixed(2)}</b></div><div><span>Trip day</span><b>Day ${Math.floor(days) + 1}</b></div><div><span>Laps completed</span><b>${st.laps || 0}</b></div><div><span>Starting point</span><b>${tr(st.startName || '東京')}</b></div><div><span>Bottles found</span><b>${st.bottles || 0}</b></div><div><span>Current speed</span><b>${st.speed} km/h</b></div><div><span>Nights stayed</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>` : `<div class="kv"><div><span>走ったきょり</span><b>${fmt(traveled())}km</b></div><div><span>地球何周ぶん？</span><b>${(traveled() / 40075).toFixed(2)}周</b></div><div><span>旅をはじめて</span><b>${Math.floor(days) + 1}日目</b></div><div><span>世界一周</span><b>${st.laps || 0}回 達成</b></div><div><span>出発地</span><b>${st.startName || '東京'}</b></div><div><span>拾ったボトル</span><b>${st.bottles || 0}本</b></div><div><span>いまの速さ</span><b>時速${st.speed}km</b></div><div><span>泊まった回数</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>`; }
   modal(`<h2>${J('旅の記録', 'Travel log')}</h2><div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'rec');
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showRecord(b.dataset.tab));
@@ -4980,10 +4997,10 @@ function frame(ts) {
   if (!st || document.hidden) return;
   if (HALF && (++fcount & 1)) return; // 重い端末では1コマおきに描く
   const t0 = performance.now();
-  const dt = Math.min(.1, (ts - lastFrame) / 1000 || 0); lastFrame = ts; S.t += dt;
+  const dt = Math.min(.1, (ts - lastFrame) / 1000 || 0); lastFrame = ts; S.t += dt; S.dt = dt;
   const res = tick(); if (res.passed.length || res.forks.length) { arriveToasts(res); S.tiles.clear(); if (st.parked) arrived(); }
   P = curPos();
-  const W8 = wxState(), alt = sunAlt(P.ll[0], P.ll[1], nowMs()); light(W8, alt);
+  const W8 = wxState(), alt = sunAlt(P.ll[0], P.ll[1], nowMs()), SE = S.SE; light(W8, SE && alt > -2 ? alt - (alt + 7) * (SE.total ? 1 : .9 * SE.f ** 4) : alt);
   const ctx = { biome: biomeOf(P), sea: P.seg.mode === 's', region: P.seg.mode === 's' ? seaRegion(P) : '', lat: P.ll[0], lon: P.ll[1], mon: localDate().getUTCMonth() + 1, snow: W8.snowCover };
   // 景色の色・形はゆっくり切りかえる
   const T = biomeTarget(ctx.biome, W8);
@@ -5001,10 +5018,10 @@ function frame(ts) {
   c.save(); c.translate(0, bump);
   if (ctx.sea) drawSea(dt, W8, alt, ctx); else drawLand(dt, W8, alt, ctx);
   c.restore();
-  drawWeather(dt, W8, ctx.sea); drawCamp();
+  drawWeather(dt, W8, ctx.sea); drawBunting(); drawCamp();
   if (S.t - (S.auT || 0) > .5) { S.auT = S.t; auUpdate(W8, ctx); }
   if (!st.preview) for (const n in S.lmSeen) if (S.lmSeen[n] > 90 && !st.lm[n]) { st.lm[n] = Date.now(); save(); toast(J(`🏛 <b>${LMNAME[n] || n}</b>が見えた！<small>名所の記録にのりました</small>`, `🏛 You can see <b>${LMNAME[n] || tr(n)}</b>!<small>Added to your sights log</small>`), 5000); }
-  if (ts - lastHud > 1000) { lastHud = ts; checkAct(); updateHud(); refreshWx(); refreshGeo(); }
+  if (ts - lastHud > 1000) { lastHud = ts; skyCheck(); checkAct(); updateHud(); refreshWx(); refreshGeo(); }
   if (ts - lastSave > 10000) { lastSave = ts; save(); }
   // 1コマを描くのにかかった時間を見て、重ければ細かさを下げる
   drawAvg = drawAvg * .95 + (performance.now() - t0) * .05;
@@ -5020,7 +5037,7 @@ cv.addEventListener('click', e => {
 document.addEventListener('visibilitychange', () => { if (!st) return; if (document.hidden) { tick(); save(); } else back(); });
 window.addEventListener('pagehide', () => { if (st) { tick(); save(); } });
 window.addEventListener('resize', resize);
-$('#b-map').onclick = () => showMap(+(lsGet('camper-mapz') || 0)); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-photo').onclick = postcard; $('#fork').onclick = showFork;
+$('#b-map').onclick = () => showMap(+(lsGet('camper-mapz') || 0)); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-ev').onclick = () => showEvents(); $('#b-photo').onclick = postcard; $('#fork').onclick = showFork;
 // 全画面：景色だけを画面いっぱいに。さわらないでいるとボタンや文字が消える
 let wakeLock = null, calmT = 0;
 let FSI = (() => { try { return localStorage.getItem('camper-fsinfo') || 'full'; } catch (e) { return 'full'; } })();
@@ -5147,6 +5164,353 @@ if (QS.has('km')) { st = newState(60); if (QS.get('pick')) QS.get('pick').split(
 else if (!st) { st = newState(60); st.preview = true; startTrip(); showIntro(); }
 else { P = curPos(); startTrip(); back(); }
 requestAnimationFrame(frame);
+
+/* ===== 天体イベントとお祭り（本物の日付・いる場所に合わせる） ===== */
+// 流星群：[id, 日本語, 英語, 極大の月, 日(世界時), 幅(日), 1時間の数(条件のよい空), 放射点の赤緯]
+const SHOWERS = [
+  ['qua', 'しぶんぎ座流星群', 'Quadrantids', 1, 3.6, .6, 110, 49], ['lyr', '4月こと座流星群', 'Lyrids', 4, 22.5, 1.2, 18, 34],
+  ['eta', 'みずがめ座η流星群', 'Eta Aquariids', 5, 6, 3, 50, -1], ['sda', 'みずがめ座δ南流星群', 'Southern Delta Aquariids', 7, 30, 4, 25, -16],
+  ['per', 'ペルセウス座流星群', 'Perseids', 8, 12.8, 2, 100, 58], ['ori', 'オリオン座流星群', 'Orionids', 10, 21.5, 3, 20, 16],
+  ['leo', 'しし座流星群', 'Leonids', 11, 17.3, 1, 15, 22], ['gem', 'ふたご座流星群', 'Geminids', 12, 14.3, 1.2, 150, 33],
+  ['urs', 'こぐま座流星群', 'Ursids', 12, 22.5, .8, 10, 76],
+];
+const shName = s => EN ? s[2] : s[1];
+function showerPeak(s, ms) { // ms にいちばん近い極大の時刻
+  const y = new Date(ms).getUTCFullYear(); let best = 0;
+  for (const yy of [y - 1, y, y + 1]) { const t = Date.UTC(yy, s[3] - 1, 1) + (s[4] - 1) * 864e5; if (!best || Math.abs(t - ms) < Math.abs(best - ms)) best = t; }
+  return best;
+}
+function showerNow(ms) { // いちばん活発な流星群と、そのときの数
+  let r = null;
+  for (const s of SHOWERS) { const dd = (ms - showerPeak(s, ms)) / 864e5, z = s[6] * Math.exp(-((dd / s[5]) ** 2)); if (z > 2 && (!r || z > r.z)) r = { s, z }; }
+  return r;
+}
+const radiantMax = (s, lat) => 90 - Math.abs(lat - s[7]); // 放射点がいちばん高くなるときの高さ
+
+// 月食：[最大の時刻(力学時), 本影食分, 部分食の長さ(分), 皆既の長さ(分)]（出典：EclipseWise, Fred Espenak）
+const LUNAR = [
+  ['2026-08-28T04:14:04', .930, 198, 0], ['2027-02-20T23:14:05', -.057, 0, 0], ['2027-08-17T07:14:58', -.525, 0, 0],
+  ['2028-01-12T04:14:13', .066, 56, 0], ['2028-07-06T18:20:57', .389, 142, 0], ['2028-12-31T16:53:15', 1.246, 209, 71],
+  ['2029-06-26T03:23:22', 1.844, 220, 102], ['2029-12-20T22:43:12', 1.117, 213, 54], ['2030-06-15T18:34:33', .503, 144, 0], ['2030-12-09T22:28:51', -.163, 0, 0],
+];
+const RU = 2.7, RP = 4.75; // 地球の本影・半影の半径（月の半径を1として）
+const lunarMax = e => Date.parse(e[0] + 'Z') - 73e3;
+const lunarKind = e => e[3] ? 'total' : e[1] > 0 ? 'partial' : 'pen';
+function lunarAt(ms) {
+  for (const e of LUNAR) {
+    const dt = (ms - lunarMax(e)) / 6e4; if (Math.abs(dt) > 240) continue;
+    const d0 = RU + 1 - 2 * e[1], v = e[2] ? Math.sqrt((RU + 1) ** 2 - d0 * d0) / (e[2] / 2) : .034;
+    const along = v * dt, dist = Math.hypot(d0, along), pd = clamp((RP + 1 - dist) / 2.2);
+    if (pd <= 0) continue;
+    return { e, sx: along, sy: -d0, um: (RU + 1 - dist) / 2, pd, total: dist <= RU - 1 };
+  }
+  return null;
+}
+
+// 日食：ベッセル要素（出典：EclipseWise, Fred Espenak）[日付, t0, ΔT, x, y, d, l1, l2, μ, tanf1, tanf2, 種類, 見える地域(日本語, 英語)]
+const SOLAR = [
+  ['2027-02-06', 16, 72.6, [.11168, .46649, -.00003, -.00001], [-.27329, .20318, .0001], [-15.548, .0124], [.57195, -.00007, -.00001], [.02566, -.00006, -.00001], [56.4931, 15.0005], .0047426, .004719, 'A', ['南米（チリ・アルゼンチン）〜大西洋〜西アフリカ', 'South America (Chile, Argentina), the Atlantic and West Africa']],
+  ['2027-08-02', 10, 72.8, [-.01977, .54471, -.00004, -.00001], [.16007, -.21116, -.00012], [17.7625, -.0102], [.53062, .00001, -.00001], [-.01546, .00001, -.00001], [328.4225, 15.0021], .0046064, .0045834, 'T', ['スペイン南部・北アフリカ・エジプト・アラビア半島', 'southern Spain, North Africa, Egypt and Arabia']],
+  ['2028-01-26', 15, 73.0, [-.20528, .47426, -.00004, -.00001], [.34028, .17386, .0001], [-18.7283, .0101], [.57414, .00004, -.00001], [.02784, .00004, -.00001], [41.8913, 14.999], .0047501, .0047264, 'A', ['南米北部（エクアドル・ペルー・ブラジル）〜大西洋〜スペイン・ポルトガル', 'northern South America, the Atlantic, Spain and Portugal']],
+  ['2028-07-22', 3, 73.2, [-.15441, .54499, -.00002, -.00001], [-.58642, -.17461, -.0001], [20.1823, -.008], [.53526, -.00009, -.00001], [-.01085, -.00009, -.00001], [223.3787, 15.001], .0046016, .0045786, 'T', ['オーストラリア・ニュージーランド', 'Australia and New Zealand']],
+  ['2029-01-14', 17, 73.4, [-.40744, .50815, -.00004, -.00001], [.98105, .14553, .00009], [-21.163, .0072], [.56268, .00012, -.00001], [.01644, .00012, -.00001], [72.6929, 14.9976], .0047541, .0047304, 'P', ['北アメリカ・中央アメリカ', 'North and Central America']],
+  ['2029-06-12', 4, 73.6, [-.0108, .52476, .00001, -.00001], [1.29541, -.01764, -.00021], [23.1593, .0026], [.55668, -.0001, -.00001], [.01047, -.0001, -.00001], [240.0356, 14.9992], .0046048, .0045819, 'P', ['北極・北ヨーロッパ・アラスカ・北アジア', 'the Arctic, northern Europe, Alaska and northern Asia']],
+  ['2029-07-11', 16, 73.6, [-.13734, .52526, -.00001, -.00001], [-1.42714, -.12804, -.00008], [22.0024, -.0054], [.54877, -.00013, -.00001], [.0026, -.00013, -.00001], [58.6026, 15], .0045994, .0045765, 'P', ['南米の南のはし', 'the southern tip of South America']],
+  ['2029-12-05', 15, 73.8, [-.06384, .57663, 0, -.00001], [-1.05966, -.01402, .00023], [-22.4454, -.0051], [.54066, .00007, -.00001], [-.00547, .00007, -.00001], [47.3099, 14.9972], .0047446, .0047209, 'P', ['南米の南・南極', 'southern South America and Antarctica']],
+  ['2030-06-01', 6, 74.0, [-.26939, .50564, .00002, -.00001], [.55197, .02101, -.00016], [22.0613, .0056], [.56617, -.00001, -.00001], [.01991, -.00001, -.00001], [270.5399, 14.9997], .004612, .004589, 'A', ['北アフリカ・ギリシャ・トルコ・ロシア・北海道', 'North Africa, Greece, Turkey, Russia and Hokkaido']],
+  ['2030-11-25', 7, 74.2, [.04415, .57878, .00002, -.00001], [-.39266, -.05519, .00017], [-20.761, -.008], [.53823, -.00004, -.00001], [-.00789, -.00004, -.00001], [288.2746, 14.9984], .0047361, .0047125, 'T', ['南アフリカ・インド洋・オーストラリア', 'southern Africa, the Indian Ocean and Australia']],
+];
+const solarMax = e => Date.parse(e[0] + 'T00:00:00Z') + e[1] * 36e5 - e[2] * 1000; // だいたいの真ん中（世界時）
+function circOverlap(r, s) { // 半径1と半径rの円（中心のきょりs）の重なりの面積
+  if (s >= 1 + r) return 0; if (s <= Math.abs(1 - r)) return Math.PI * Math.min(1, r) ** 2;
+  const a = Math.acos(clamp((s * s + 1 - r * r) / (2 * s), -1, 1)), b = Math.acos(clamp((s * s + r * r - 1) / (2 * s * r), -1, 1));
+  return a + r * r * b - .5 * Math.sqrt(Math.max(0, (-s + 1 + r) * (s + 1 - r) * (s - 1 + r) * (s + 1 + r)));
+}
+function solarAt(e, lat, lon, ms) {
+  const t = (ms + e[2] * 1000 - Date.parse(e[0] + 'T00:00:00Z') - e[1] * 36e5) / 36e5; if (Math.abs(t) > 3.3) return null;
+  const pl = a => a.reduce((s, v, i) => s + v * t ** i, 0);
+  const x = pl(e[3]), y = pl(e[4]), d = pl(e[5]) * D2R, l1 = pl(e[6]), l2 = pl(e[7]), mu = pl(e[8]);
+  const H = (mu + lon - .00417807 * e[2]) * D2R, u0 = Math.atan(.99664719 * Math.tan(lat * D2R)), rs = .99664719 * Math.sin(u0), rc = Math.cos(u0);
+  const xi = rc * Math.sin(H), eta = rs * Math.cos(d) - rc * Math.cos(H) * Math.sin(d), zeta = rs * Math.sin(d) + rc * Math.cos(H) * Math.cos(d);
+  if (zeta < 0) return null; // 太陽が地平線の下
+  const L1 = l1 - zeta * e[9], L2 = l2 - zeta * e[10], u = x - xi, v = y - eta, m = Math.hypot(u, v);
+  if (m >= L1) return null;
+  const Rs = (L1 + L2) / 2, rr = (L1 - L2) / (L1 + L2), f = clamp(circOverlap(rr, m / Rs) / Math.PI), sg = lat >= 0 ? -1 : 1;
+  return { e, f, rr, dx: sg * u / Rs, dy: sg * v / Rs, total: L2 < 0 && m < -L2, annular: L2 > 0 && m < L2 };
+}
+function solarNow(lat, lon, ms) { for (const e of SOLAR) { const r = solarAt(e, lat, lon, ms); if (r) return r; } return null; }
+const solarKindName = (e, r) => r && r.total ? J('皆既日食', 'total solar eclipse') : r && r.annular ? J('金環日食', 'annular eclipse') : J('部分日食', 'partial solar eclipse');
+
+// 月：きょり（km）と満月・新月さがし
+function moonDist(ms) { const d = ms / 864e5 - 10957.5, r = D2R, M = (134.963 + 13.064993 * d) * r, Dm = (297.850 + 12.190749 * d) * r; return 385001 - 20905 * Math.cos(M) - 3699 * Math.cos(2 * Dm - M) - 2956 * Math.cos(2 * Dm) - 570 * Math.cos(2 * M) + 246 * Math.cos(2 * M - 2 * Dm); }
+const moonK = ms => moonView(0, 0, ms).k;
+function moonPhaseNear(ms, full) { // ms の前後15日でいちばん満月（新月）に近い時刻
+  let best = ms, bv = full ? -1 : 2;
+  for (let t = ms - 15 * 864e5; t <= ms + 15 * 864e5; t += 6 * 36e5) { const k = moonK(t); if (full ? k > bv : k < bv) { bv = k; best = t; } }
+  for (let t = best - 6 * 36e5; t <= best + 6 * 36e5; t += 36e5 / 4) { const k = moonK(t); if (full ? k >= bv : k <= bv) { bv = k; best = t; } }
+  return best;
+}
+function fullMoons(from, to) { const out = []; let t = moonPhaseNear(from, true); if (t < from) t = moonPhaseNear(t + 29.5 * 864e5, true); while (t <= to) { out.push(t); t = moonPhaseNear(t + 29.5 * 864e5, true); } return out; }
+const SUPER = 361500; // これより近い満月をスーパームーンとよぶ
+const isSuper = ms => moonDist(ms) < SUPER;
+
+/* ----- お祭り ----- */
+const dn = (y, m, d) => Date.UTC(y, m - 1, d) / 864e5; // 日の番号
+const rg = (y, m, d, n = 1) => [dn(y, m, d), dn(y, m, d) + n - 1];
+const wday = n => new Date(n * 864e5).getUTCDay();
+const nthW = (y, m, w, k) => { let n = dn(y, m, 1); while (wday(n) !== w) n++; return n + 7 * (k - 1); };
+const lastW = (y, m, w) => { let n = dn(y, m + 1, 1) - 1; while (wday(n) !== w) n--; return n; };
+function easter(y) { const a = y % 19, b = Math.floor(y / 100), c0 = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c0 / 4), k = c0 % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1; return dn(y, mo, da); }
+const localDn = (ms, tz) => Math.floor((ms + tz * 36e5) / 864e5);
+const lunarNY = (y, tz) => { const t = moonPhaseNear(Date.UTC(y, 0, 21) + 15 * 864e5, false); let n = localDn(t, tz); if (n < dn(y, 1, 21)) n = localDn(moonPhaseNear(t + 29.5 * 864e5, false), tz); return n; };
+// [id, 町, 絵文字, 日本語, 英語, 日付のきまり(年)→[最初の日, 最後の日], 説明(日), 説明(英), だいたい=1]
+const FEST = [
+  ['snow', '札幌', '❄️', 'さっぽろ雪まつり', 'Sapporo Snow Festival', y => rg(y, 2, 4, 8), '大通公園に大きな雪像がずらり', 'Giant snow sculptures line Odori Park', 1],
+  ['nebuta', '青森', '🏮', '青森ねぶた祭', 'Aomori Nebuta Festival', y => rg(y, 8, 2, 6), '光る大きな武者の山車が夜の町を進む', 'Huge glowing warrior floats parade at night'],
+  ['tanabata', '仙台', '🎋', '仙台七夕まつり', 'Sendai Tanabata Festival', y => rg(y, 8, 6, 3), '町じゅうに色とりどりの七夕かざり', 'Colorful streamers hang all over town'],
+  ['hakodate', '函館', '🎆', '函館港まつり', 'Hakodate Port Festival', y => rg(y, 8, 1, 5), '港の花火といか踊り', 'Fireworks over the port and the squid dance'],
+  ['sumida', '東京', '🎆', '隅田川花火大会', 'Sumida River Fireworks', y => [lastW(y, 7, 6), lastW(y, 7, 6)], '夏の夜空に約2万発の花火', 'About 20,000 fireworks over the river'],
+  ['hatsumode', '東京', '⛩', '初もうで', 'New Year shrine visits', y => rg(y, 1, 1, 3), '新年に神社へおまいり。屋台も出てにぎやか', 'Crowds visit shrines for the New Year'],
+  ['gion', '京都', '🏮', '祇園祭（宵山・山鉾巡行）', 'Gion Matsuri', y => rg(y, 7, 14, 4), '豪華な山鉾が京都の町をめぐる', 'Grand floats roll through Kyoto'],
+  ['tenjin', '大阪', '🎆', '天神祭', 'Tenjin Matsuri', y => rg(y, 7, 24, 2), '川を船が進み、花火が上がる', 'Boats on the river and fireworks'],
+  ['yamakasa', '福岡', '🏃', '博多祇園山笠', 'Hakata Gion Yamakasa', y => rg(y, 7, 1, 15), '重い山笠をかついで町を走る', 'Teams race through town carrying huge floats'],
+  ['toro', '広島', '🕯', '平和のとうろう流し', 'Peace lantern floating', y => rg(y, 8, 6), '川に灯ろうを流して平和をいのる', 'Lanterns float down the river for peace'],
+  ['seollal', 'ソウル', '🧧', 'ソルラル（旧正月）', 'Seollal (Lunar New Year)', y => { const n = lunarNY(y, 9); return [n - 1, n + 1]; }, '家族が集まる韓国のお正月', 'Korean New Year with family'],
+  ['shunjie', '北京', '🧧', '春節（旧正月）', 'Chinese New Year', y => { const n = lunarNY(y, 8); return [n, n + 6]; }, '爆竹と赤いちょうちんでお祝い', 'Firecrackers and red lanterns everywhere'],
+  ['tet', 'ハノイ', '🧧', 'テト（旧正月）', 'Tết (Lunar New Year)', y => { const n = lunarNY(y, 7); return [n, n + 2]; }, '桃の花とお祝いでいっぱいのベトナムのお正月', 'Vietnam\'s New Year, full of peach blossoms'],
+  ['naadam', 'ウランバートル', '🐎', 'ナーダム', 'Naadam', y => rg(y, 7, 11, 3), '競馬・すもう・弓の草原の祭典', 'Horse racing, wrestling and archery'],
+  ['nowruz', 'テヘラン', '🌱', 'ノウルーズ（イランの新年）', 'Nowruz (Persian New Year)', y => rg(y, 3, 20, 5), '春分の日に始まる新しい年', 'The new year begins at the spring equinox'],
+  ['navruz', 'サマルカンド', '🌱', 'ナブルーズ', 'Navruz', y => rg(y, 3, 21, 3), '春をむかえる中央アジアのお祭り', 'Central Asia welcomes spring'],
+  ['songkran', 'バンコク', '💦', 'ソンクラーン（水かけ祭り）', 'Songkran water festival', y => rg(y, 4, 13, 3), '町じゅうで水をかけあうタイのお正月', 'Thai New Year with water fights everywhere'],
+  ['loykrathong', 'バンコク', '🪷', 'ロイクラトン', 'Loy Krathong', y => { let t = moonPhaseNear(Date.UTC(y, 10, 10), true); if (localDn(t, 7) < dn(y, 10, 29)) t = moonPhaseNear(t + 29.5 * 864e5, true); const n = localDn(t, 7); return [n, n]; }, '満月の夜、灯ろうを川に流す', 'Floating lanterns on the full-moon night'],
+  ['diwali', 'ムンバイ', '🪔', 'ディワリ（光のお祭り）', 'Diwali', y => { let t = moonPhaseNear(Date.UTC(y, 9, 31), false); const n = localDn(t, 5.5); return [n - 1, n]; }, 'ランプと花火で町が光る', 'Lamps and fireworks light up the city', 1],
+  ['vienna', 'ウィーン', '🎄', 'ウィーンのクリスマスマーケット', 'Vienna Christmas Market', y => [dn(y, 11, 15), dn(y, 12, 26)], '市庁舎前に屋台とイルミネーション', 'Stalls and lights in front of City Hall', 1],
+  ['prague', 'プラハ', '🎄', 'プラハのクリスマスマーケット', 'Prague Christmas Market', y => [dn(y, 11, 28), dn(y + 1, 1, 6)], '旧市街広場に大きなツリー', 'A big tree in Old Town Square', 1],
+  ['oktober', 'ミュンヘン', '🍺', 'オクトーバーフェスト', 'Oktoberfest', y => { let e = nthW(y, 10, 0, 1); if (e < dn(y, 10, 3)) e = dn(y, 10, 3); return [nthW(y, 10, 0, 1) - 15, e]; }, '世界一大きなビールのお祭り', 'The world\'s biggest beer festival'],
+  ['venice', 'ベネチア', '🎭', 'ベネチアのカーニバル', 'Carnival of Venice', y => { const E = easter(y); return [E - 58, E - 47]; }, '仮面と衣装で町を歩く', 'Masks and costumes fill the streets'],
+  ['easter', 'ローマ', '✝️', '復活祭（イースター）', 'Easter in Rome', y => { const E = easter(y); return [E, E]; }, 'バチカンのサン・ピエトロ広場に人が集まる', 'Crowds gather in St Peter\'s Square'],
+  ['merce', 'バルセロナ', '🎇', 'メルセ祭', 'La Mercè', y => rg(y, 9, 20, 5), '人間の塔と火の行列', 'Human towers and fire runs'],
+  ['isidro', 'マドリード', '💃', 'サン・イシドロ祭', 'San Isidro Festival', y => rg(y, 5, 11, 5), 'マドリードの守護聖人のお祭り', 'Madrid\'s patron saint festival'],
+  ['bastille', 'パリ', '🎆', '革命記念日', 'Bastille Day', y => rg(y, 7, 14), 'パレードとエッフェル塔の花火', 'A parade and fireworks at the Eiffel Tower'],
+  ['nobel', 'ストックホルム', '🏅', 'ノーベル賞の授賞式', 'Nobel Prize ceremony', y => rg(y, 12, 10), 'コンサートホールで授賞式', 'The award ceremony at the Concert Hall'],
+  ['lucia', 'ストックホルム', '🕯', 'ルシア祭', 'Saint Lucia\'s Day', y => rg(y, 12, 13), 'ろうそくの冠で歌う冬の朝', 'Singing with crowns of candles'],
+  ['santa', 'ロヴァニエミ', '🎅', 'サンタクロース村のクリスマス', 'Christmas at Santa Claus Village', y => rg(y, 12, 20, 6), 'サンタの村がいちばんにぎわう', 'Santa\'s village at its busiest'],
+  ['rio', 'リオデジャネイロ', '💃', 'リオのカーニバル', 'Rio Carnival', y => { const E = easter(y); return [E - 50, E - 46]; }, 'サンバのパレードが夜通し続く', 'Samba parades all night long'],
+  ['rionye', 'リオデジャネイロ', '🎆', 'コパカバーナの年越し', 'New Year at Copacabana', y => rg(y, 12, 31), '白い服で浜辺に集まり花火', 'Dressed in white on the beach for fireworks'],
+  ['muertos', 'メキシコシティ', '💀', '死者の日', 'Day of the Dead', y => rg(y, 10, 31, 3), 'マリーゴールドとガイコツでご先祖をむかえる', 'Marigolds and skulls welcome the ancestors'],
+  ['inti', 'クスコ', '☀️', 'インティ・ライミ（太陽の祭り）', 'Inti Raymi', y => rg(y, 6, 24), 'インカの太陽の神をたたえる', 'Honoring the Inca sun god'],
+  ['tango', 'ブエノスアイレス', '💃', 'タンゴ・フェスティバル', 'Tango Festival', y => rg(y, 8, 13, 14), '世界中のダンサーが集まる', 'Dancers from all over the world', 1],
+  ['mardigras', 'ニューオーリンズ', '🎭', 'マルディグラ', 'Mardi Gras', y => { const E = easter(y); return [E - 58, E - 47]; }, 'パレードからビーズのネックレスが飛ぶ', 'Beads fly from the parade floats'],
+  ['thanks', 'ニューヨーク', '🎈', 'サンクスギビング・パレード', 'Thanksgiving Day Parade', y => { const n = nthW(y, 11, 4, 4); return [n, n]; }, '大きな風船のキャラクターが町を進む', 'Giant character balloons float down the avenue'],
+  ['nynye', 'ニューヨーク', '🎆', 'タイムズスクエアのカウントダウン', 'Times Square countdown', y => rg(y, 12, 31), 'ボールが下りて新年をむかえる', 'The ball drops to welcome the New Year'],
+  ['stpat', 'シカゴ', '💚', '川が緑になる日（聖パトリック祭）', 'St Patrick\'s river dyeing', y => { let n = dn(y, 3, 17); while (wday(n) !== 6) n--; return [n, n]; }, 'シカゴ川をあざやかな緑にそめる', 'The Chicago River turns bright green'],
+  ['rodeo', 'ヒューストン', '🤠', 'ヒューストン・ロデオ', 'Houston Rodeo', y => rg(y, 3, 2, 20), '世界最大のロデオとお祭り', 'The world\'s biggest rodeo', 1],
+  ['fiesta', 'アルバカーキ', '🎈', '国際気球フィエスタ', 'Balloon Fiesta', y => { const n = nthW(y, 10, 6, 1); return [n, n + 8]; }, '朝の空に何百もの熱気球', 'Hundreds of hot-air balloons at dawn'],
+  ['quebec', 'ケベック', '⛄', 'ケベック・ウィンターカーニバル', 'Quebec Winter Carnival', y => { const n = nthW(y, 2, 5, 1) - 7; return [n, n + 16]; }, '雪のお城とボンノムさん', 'Snow castles and Bonhomme', 1],
+  ['honolulu', 'ホノルル', '🏃', 'ホノルルマラソン', 'Honolulu Marathon', y => { const n = nthW(y, 12, 0, 2); return [n, n]; }, '朝の花火とともにスタート', 'Starts with fireworks before dawn'],
+  ['heiva', 'タヒチ', '🌺', 'ヘイヴァ', 'Heiva i Tahiti', y => rg(y, 7, 1, 17), 'ポリネシアのダンスと歌の大会', 'Polynesian dance and song contests', 1],
+  ['vivid', 'シドニー', '💡', 'ビビッド・シドニー', 'Vivid Sydney', y => rg(y, 5, 22, 23), 'オペラハウスが光の絵でかざられる', 'Light art on the Opera House', 1],
+  ['sydnye', 'シドニー', '🎆', 'シドニーの年越し花火', 'Sydney New Year fireworks', y => rg(y, 12, 31), 'ハーバーブリッジから花火の滝', 'Fireworks cascade off the Harbour Bridge'],
+];
+const fName = f => EN ? f[4] : f[3];
+const STOPLL = {}; for (const id in LEGS) for (const s of LEGS[id].stops) if (!STOPLL[s[0]]) STOPLL[s[0]] = [s[1], s[2]];
+const cityTz = n => Math.round((STOPLL[n] || [0, 0])[1] / 15);
+function festRange(f, aroundDn) { // aroundDn をふくむ／その近くの開催日
+  const y = new Date(aroundDn * 864e5).getUTCFullYear(), out = [];
+  for (const yy of [y - 1, y, y + 1]) { try { out.push(f[5](yy)); } catch (e) { } }
+  return out;
+}
+function festNow(P, ms) { // いま近くの町でやっているお祭り
+  if (!P) return null;
+  for (const n of nearbyStops(P)) {
+    if (Math.abs(n.d) > 30) continue;
+    for (const f of FEST) if (f[1] === n.stop.name) { const d = localDn(ms, cityTz(f[1])); if (festRange(f, d).some(r => d >= r[0] && d <= r[1])) return f; }
+  }
+  return null;
+}
+
+/* ----- 先の予定：いまの速さで1周する日数＋2割（最低2週間） ----- */
+const guideDays = (speed = st.speed) => clamp(roughLap() / (speed * 24) * 1.2, 14, 120);
+function withChoices(ch, fn) { const s0 = st.choices; st.choices = ch; try { return fn(); } finally { st.choices = s0; } }
+function branches(maxKm) { // まだ決めていない分かれ道をすべて試した道すじ（最大24本）
+  const out = [];
+  const rec = ch => {
+    if (out.length >= 24) return;
+    let open = null;
+    withChoices(ch, () => walk(L => { if (L.start > maxKm) return false; if (L.fork && !ch[L.key]) { open = L; return false; } }));
+    if (!open) { out.push(ch); return; }
+    for (const o of open.options.filter(owns)) rec(Object.assign({}, ch, { [open.key]: o }));
+  };
+  rec(Object.assign({}, st.choices));
+  return out;
+}
+const projKm = (ms, speed) => st.parked ? st.km : st.km + Math.max(0, ms - Date.now()) / 36e5 * speed;
+const projPos = (ch, ms, speed) => withChoices(ch, () => posAt(projKm(ms, speed)));
+const legOf = p => p && p.leg ? p.leg.name : '';
+function stopKms(ch, name, maxKm) { const out = []; withChoices(ch, () => walkStops((s, km) => { if (km > maxKm) return false; if (s.name === name && km >= st.km - .5) out.push(km); }, 40)); return out; }
+const VERD = { 3: '◎', 2: '○', 1: '△', 0: '✕' };
+// 道すじごとの結果をまとめる（同じなら1行、ちがえばルート名つき）
+function summarize(list) {
+  const best = Math.max(...list.map(x => x.v));
+  const same = list.every(x => x.v === list[0].v);
+  if (same) return `<p class="evv v${list[0].v}">${VERD[list[0].v]} ${list[0].t}</p>`;
+  const seen = new Set(), rows = [];
+  for (const x of list.slice().sort((a, b) => b.v - a.v)) { const k = x.v + x.t + x.leg; if (seen.has(k)) continue; seen.add(k); rows.push(`<p class="evv v${x.v}">${VERD[x.v]} ${x.leg ? `<b>${x.leg}</b>${J('なら：', ': ')}` : ''}${x.t}</p>`); if (rows.length >= 3) break; }
+  return rows.join('') + (best > 0 ? `<p class="note"><small>${J('分かれ道でえらぶルートで変わります', 'Depends on the route you pick at the fork')}</small></p>` : '');
+}
+function speedTip(test) { // ほかの速さなら見られるか
+  for (const [v] of SPEEDS) if (v !== st.speed && test(v) >= 2) return `<p class="note">💡 ${J(`速さを「時速${v}km」にすると見られそうです`, `At ${v} km/h you could make it`)}</p>`;
+  return '';
+}
+const fmtDay = (n, tz) => { const d = new Date(n * 864e5); return EN ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short', timeZone: 'UTC' }) : `${d.getUTCMonth() + 1}月${d.getUTCDate()}日（${'日月火水木金土'[d.getUTCDay()]}）`; };
+const fmtWhen = ms => { const d = new Date(ms); return EN ? d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const inDays = ms => { const d = Math.round((ms - Date.now()) / 864e5); return d <= 0 ? J('きょう', 'today') : d === 1 ? J('あした', 'tomorrow') : J(`${d}日後`, `in ${d} days`); };
+function placeAtP(p) { if (!p) return ''; return tr(p.segKm < p.seg.len / 2 ? p.seg.a.name : p.seg.b.name); }
+
+const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const wikiA = (q, label) => `<a href="https://${LG}.wikipedia.org/w/index.php?search=${enc(q)}" target="_blank" rel="noopener">📖 ${label || J('くわしい説明', 'Learn more')}</a>`;
+const eclWiki = (ms, solar) => { const d = new Date(ms); return EN ? `${solar ? 'Solar' : 'Lunar'} eclipse of ${MON_EN[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}` : `${d.getUTCFullYear()}年${d.getUTCMonth() + 1}月${d.getUTCDate()}日の${solar ? '日食' : '月食'}`; };
+const eclMap = e => { const d = new Date(e[0] + 'T00:00:00Z'); return `<a href="https://eclipsewise.com/solar/SEprime/2001-2100/SE${d.getUTCFullYear()}${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getUTCMonth()]}${String(d.getUTCDate()).padStart(2, '0')}${e[11]}prime.html" target="_blank" rel="noopener">🗺 ${J('見える地域の地図（英語）', 'Visibility map')}</a>`; };
+function upcoming() {
+  const now = Date.now(), days = guideDays(), end = now + days * 864e5, maxKm = st.km + Math.max(...SPEEDS.map(s => s[0])) * days * 24 + 100;
+  const BR = branches(st.km + Math.min(maxKm - st.km, roughLap() * 1.3));
+  const items = [];
+  // 流星群
+  for (const s of SHOWERS) {
+    let pk = showerPeak(s, now); if (pk < now - 864e5 * s[5]) pk = showerPeak(s, pk + 200 * 864e5);
+    if (pk > end || pk < now - 864e5 * s[5]) continue;
+    const res = BR.map(ch => { const p = projPos(ch, pk, st.speed), ra = radiantMax(s, p.ll[0]); return { v: ra > 40 ? 3 : ra > 15 ? 2 : 0, leg: legOf(p), t: ra > 15 ? J(`そのころは <b>${placeAtP(p)}</b> のあたり。${ra > 40 ? '放射点が高く、よく見えます' : '放射点が低めです'}`, `Around <b>${placeAtP(p)}</b> then. ${ra > 40 ? 'The radiant is high: great viewing' : 'The radiant is low'}`) : J(`そのころは <b>${placeAtP(p)}</b> のあたり。この場所からはほとんど見えません`, `Around <b>${placeAtP(p)}</b> then. Hardly visible from there`) }; });
+    const mk = moonK(pk);
+    items.push({ t: pk, e: '🌠', name: shName(s), ph: [shName(s), J('流星群', 'meteor shower')], links: wikiA(shName(s)), when: J(`${fmtWhen(pk)}ごろ（${inDays(pk)}）`, `around ${fmtWhen(pk)} (${inDays(pk)})`), desc: J(`条件のよい空なら1時間に${s[6]}個ほど。夜、晴れていれば窓から流れ星がたくさん見えます。${mk > .7 ? '月が明るいので少し見えにくい年です。' : ''}`, `Up to ${s[6]} meteors an hour under a dark sky. Look out the window on a clear night.${mk > .7 ? ' A bright moon will wash out some this year.' : ''}`), res });
+  }
+  // 月食
+  for (const e of LUNAR) {
+    const g = lunarMax(e); if (g < now - 4 * 36e5 || g > end) continue;
+    const kind = lunarKind(e), half = (e[2] || 120) / 2 * 6e4;
+    const res = BR.map(ch => { const p = projPos(ch, g, st.speed); const a0 = moonView(p.ll[0], p.ll[1], g).alt, a1 = moonView(p.ll[0], p.ll[1], g - half).alt, a2 = moonView(p.ll[0], p.ll[1], g + half).alt; const v = a0 > 5 ? 3 : (a1 > 0 || a2 > 0 || a0 > 0) ? 1 : 0; return { v, leg: legOf(p), t: v === 3 ? J(`<b>${placeAtP(p)}</b> のあたりで、月が出ている時間です`, `Near <b>${placeAtP(p)}</b>, with the moon up`) : v ? J(`<b>${placeAtP(p)}</b> のあたり。月が出る（沈む）ころなので、一部だけ`, `Near <b>${placeAtP(p)}</b>. Only part of it, as the moon rises or sets`) : J(`<b>${placeAtP(p)}</b> のあたり。その時間は月が沈んでいて見えません`, `Near <b>${placeAtP(p)}</b>. The moon is down at that time`) }; });
+    items.push({ t: g, e: '🌕', ph: [J('皆既月食', 'Lunar eclipse'), ''], links: wikiA(eclWiki(g, false)) + wikiA(J('月食', 'Lunar eclipse'), J('月食ってなに？', 'What is a lunar eclipse?')), name: kind === 'total' ? J('皆既月食', 'Total lunar eclipse') : kind === 'partial' ? J('部分月食', 'Partial lunar eclipse') : J('半影月食', 'Penumbral lunar eclipse'), when: `${fmtWhen(g)}${J('（いちばん欠けるころ）', ' (greatest)')}・${inDays(g)}`, desc: kind === 'total' ? J('月が地球のかげにすっぽり入り、赤銅色になります。月が出ている場所なら、世界のどこでも見られます。', 'The moon slips fully into Earth\'s shadow and turns coppery red. Visible anywhere the moon is up.') : kind === 'partial' ? J('月の一部が地球のかげで欠けます。', 'Part of the moon goes dark in Earth\'s shadow.') : J('月がほんのり暗くなります。気づくかどうかの、ひかえめな月食です。', 'The moon dims slightly: a subtle eclipse.'), res });
+  }
+  // 日食（いる場所が大事なので、時間ごとの位置で計算。速さを変えると見られるかも）
+  const solarV = (e, ch, sp) => { const g = solarMax(e); let best = null; for (let t = g - 3.2 * 36e5; t <= g + 3.2 * 36e5; t += 6 * 6e4) { const p = projPos(ch, t, sp), r = solarAt(e, p.ll[0], p.ll[1], t); if (r && sunAlt(p.ll[0], p.ll[1], t) > 0 && (!best || r.f > best.r.f || r.total || r.annular)) best = { r, p, t }; } return best; };
+  const sv = b => !b ? 0 : b.r.total || b.r.annular ? 3 : b.r.f > .2 ? 2 : 1;
+  for (const e of SOLAR) {
+    const g = solarMax(e); if (g < now - 4 * 36e5 || g > end) continue;
+    const res = BR.map(ch => { const b = solarV(e, ch, st.speed), v = sv(b); return { v, leg: b ? legOf(b.p) : '', t: b ? J(`<b>${placeAtP(b.p)}</b> のあたりで ${solarKindName(e, b.r)}（${b.r.total ? '太陽がすっかりかくれる' : `太陽の${Math.round(b.r.f * 100)}%がかくれる`}）`, `Near <b>${placeAtP(b.p)}</b>: ${solarKindName(e, b.r)} (${b.r.total ? 'the sun is fully covered' : `${Math.round(b.r.f * 100)}% of the sun covered`})`) : J('その時間にいる場所からは見えません', 'Not visible from where you\'ll be') }; });
+    const tip = res.some(r => r.v >= 2) ? '' : speedTip(v => Math.max(...BR.map(ch => sv(solarV(e, ch, v)))));
+    items.push({ t: g, e: '🌑', ph: [e[11] === 'A' ? J('金環日食', 'Annular solar eclipse') : J('皆既日食', 'Solar eclipse'), ''], links: wikiA(eclWiki(g, true)) + eclMap(e), name: e[11] === 'T' ? J('皆既日食', 'Total solar eclipse') : e[11] === 'A' ? J('金環日食', 'Annular solar eclipse') : J('部分日食', 'Partial solar eclipse'), when: `${fmtWhen(g)}${J('ごろ', '')}・${inDays(g)}`, desc: J(`見える地域：${e[12][0]}。その時間にその近くを走っていれば、窓の外が欠けた太陽で暗くなります。`, `Visible from ${e[12][1]}. If you're nearby at that time, the light outside will dim.`), res, tip });
+  }
+  // スーパームーン
+  for (const t of fullMoons(now - 864e5, end)) if (isSuper(t)) items.push({ t, e: '🌕', name: J('スーパームーン', 'Supermoon'), ph: [J('スーパームーン', 'Supermoon'), ''], links: wikiA(J('スーパームーン', 'Supermoon')), when: `${fmtWhen(t)}・${inDays(t)}`, desc: J(`いつもより大きく明るい満月（地球から約${fmt(Math.round(moonDist(t) / 1000) * 1000)}km）。`, `A bigger, brighter full moon, about ${fmt(Math.round(moonDist(t) / 1000) * 1000)} km away.`), res: [{ v: 3, t: J('晴れていれば、どこでも見られます', 'Visible anywhere if clear'), leg: '' }] });
+  // お祭り
+  const today = localDn(now, 9);
+  for (const f of FEST) {
+    for (const r of festRange(f, today)) {
+      const st0 = r[0] * 864e5, en0 = (r[1] + 1) * 864e5; if (en0 < now || st0 > end) continue;
+      const tz = cityTz(f[1]);
+      const fv = (ch, sp) => { const kms = stopKms(ch, f[1], st.km + sp * days * 24 + 50); if (!kms.length) return null; let best = null; for (const km of kms) { const ta = st.parked && st.parked === f[1] ? now : now + (km - st.km) / sp * 36e5, d = localDn(ta, tz); const v = d > r[1] ? 0 : d >= r[0] ? 3 : 2; if (!best || v > best.v) best = { v, ta }; } return best; };
+      const res = []; let onRoute = false;
+      for (const ch of BR) { const b = fv(ch, st.speed); if (!b && !stopKms(ch, f[1], st.km + roughLap() * 1.3).length) continue; onRoute = true; const legName = (() => { let n = ''; withChoices(ch, () => walk(L => { if (!L.id) return false; if (L.start > st.km + roughLap() * 1.3) return false; if (LEG[L.id].segs.some(s => s.b.name === f[1]) && L.start + LEG[L.id].len >= st.km) { n = LEG[L.id].name; return false; } })); return n; })(); res.push({ v: b ? b.v : 0, leg: legName, t: !b ? J('この速さでは、お祭りの日までに着きません', 'You won\'t get there in time at this speed') : b.v === 3 ? J(`ちょうどお祭りの日に通ります（${fmtWhen(b.ta)}ごろ）`, `You'll pass by during the festival (around ${fmtWhen(b.ta)})`) : J(`先に着きます（${fmtWhen(b.ta)}ごろ）。町に停車して待てば見られます`, `You'll arrive early (around ${fmtWhen(b.ta)}). Park in town and wait`) }); }
+      if (!onRoute) { const paid = Object.keys(LEG).filter(id => !owns(id) && LEG[id].segs.some(s => s.b.name === f[1])); if (!paid.length) continue; res.push({ v: 0, leg: '', t: J(`追加ルート「${LEG[paid[0]].name}」で通る町です`, `On the extra route “${LEG[paid[0]].name}”`) }); }
+      const tip = res.some(x => x.v >= 2) || !onRoute ? '' : speedTip(v => Math.max(0, ...BR.map(ch => { const b = fv(ch, v); return b ? b.v : 0; })));
+      items.push({ t: st0, e: f[2], name: fName(f), ph: [fName(f), ''], links: infoLinks(fName(f), f[1], true).replace(/^<span class="ilinks">|<\/span>$/g, ''), when: `${fmtDay(r[0])}${r[1] > r[0] ? J(`〜${fmtDay(r[1])}`, ` – ${fmtDay(r[1])}`) : ''}${f[8] ? J('（ごろ）', ' (approx.)') : ''}・${tr(f[1])}`, desc: EN ? f[7] : f[6], res, tip, fest: 1 });
+    }
+  }
+  items.sort((a, b) => a.t - b.t);
+  return { items, days };
+}
+function nextBig(after) { // 案内期間より先の大きな天体ショー
+  const s = SOLAR.find(e => solarMax(e) > after && e[11] !== 'P'), l = LUNAR.find(e => lunarMax(e) > after && e[3]);
+  return [s && J(`🌑 ${fmtDay(Math.floor(solarMax(s) / 864e5))}　${s[11] === 'T' ? '皆既日食' : '金環日食'}（${s[12][0]}）`, `🌑 ${fmtDay(Math.floor(solarMax(s) / 864e5))}: ${s[11] === 'T' ? 'total' : 'annular'} solar eclipse (${s[12][1]})`), l && J(`🌕 ${fmtDay(Math.floor(lunarMax(l) / 864e5))}　皆既月食（月が出ている場所ならどこでも）`, `🌕 ${fmtDay(Math.floor(lunarMax(l) / 864e5))}: total lunar eclipse (anywhere the moon is up)`)].filter(Boolean);
+}
+function skyLogHtml() {
+  const v = Object.values(st.sky || {}).sort((a, b) => b.at - a.at);
+  return v.length ? `<div class="grid">${v.map(e => `<div class="card"><div class="em">${e.e}</div><b>${EN ? e.en : e.ja}</b><small class="m">${fdDate(e.at)}${J('・', ' · ')}${placeText(e.where)}</small><span class="ilinks">${wikiA((EN ? e.en : e.ja).replace(/[（(].*$/, '').trim())}</span></div>`).join('')}</div>` : `<p class="note">${J('まだありません。流星群・月食・日食・スーパームーンを窓から見たり、お祭りの町を通ったりすると記録されます。', 'Nothing yet. Meteor showers, eclipses, supermoons and festivals you see are recorded here.')}</p>`;
+}
+function showEvents(tab = 'next') {
+  let body = '';
+  if (tab === 'next') {
+    const { items, days } = upcoming();
+    body = `<p class="note">${J(`いまの速さ（時速${st.speed}km）で世界を1周するのに約${Math.round(roughLap() / (st.speed * 24))}日。少し余裕をみて、<b>${Math.round(days)}日先</b>までのできごとを案内します。`, `At ${st.speed} km/h a lap takes about ${Math.round(roughLap() / (st.speed * 24))} days. Here is what's coming in the next <b>${Math.round(days)} days</b>.`)}${st.stopMode && st.stopMode !== 'none' ? `<br><small>${J('町で停車すると、予定より遅れます', 'Stopping in towns will delay these estimates')}</small>` : ''}</p>
+      ${items.length ? items.map(x => `<div class="evc${x.fest ? ' fest' : ''}"><div class="eve">${x.e}</div><div><b>${x.name}</b><small>${x.when}</small><p>${x.desc}</p>${(x.res || []).length ? summarize(x.res) : ''}${x.tip || ''}${x.ph ? phBox(x.ph[0], x.ph[1], 'ev') : ''}${x.links ? `<span class="ilinks">${x.links}</span>` : ''}</div></div>`).join('') : `<p class="note">${J('この期間には、大きなできごとはありません。', 'Nothing big in this period.')}</p>`}
+      ${(() => { const nb = nextBig(Date.now() + days * 864e5); return nb.length ? `<h3>${J('その先の大きな天体ショー', 'Big sky shows further ahead')}</h3>${nb.map(t => `<p class="note">${t}</p>`).join('')}` : ''; })()}
+      <p class="note"><small>${J('日食・月食の時刻は EclipseWise（Fred Espenak）の予報をもとにしています。お祭りの日にちは例年の目安です。', 'Eclipse predictions by Fred Espenak, EclipseWise.com. Festival dates are typical dates.')}</small></p>`;
+  } else body = skyLogHtml();
+  modal(`<h2>🗓 ${J('これからのできごと', 'Coming up')}</h2><div class="tabs">${[['next', J('🔭 これから', '🔭 Coming up')], ['log', J('📖 見たもの', '📖 Seen')]].map(([k, n]) => `<button data-etab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'rec');
+  document.querySelectorAll('[data-etab]').forEach(b => b.onclick = () => showEvents(b.dataset.etab)); fillPhotos();
+}
+function skyRecord(key, e, ja, en) {
+  st.sky = st.sky || {}; if (st.sky[key] || st.preview) return false;
+  st.sky[key] = { e, ja, en, at: Date.now(), where: placeKey() }; save();
+  toast(`${e} <b>${EN ? en : ja}</b><small>${J('「これからのできごと」の「見たもの」にのりました', 'Added to your sky & festival log')}</small>`, 5000);
+  return true;
+}
+
+/* ----- 窓の外での見え方 ----- */
+// 流星群の流れ星：放射点から四方に流れる。まれに明るい火球
+function drawShower(dt, hz, W8) {
+  const S0 = S.show; if (!S0) { S.met = []; return; }
+  const night = clamp(1 - L.dl * 2.5) * clamp(1 - L.k * 1.25), ra = radiantMax(S0.s, P.ll[0]);
+  const moonUp = S.MV && S.MV.alt > 0 ? S.MV.k : 0, vis = night * clamp(ra / 40) * (1 - moonUp * .5);
+  const rate = Math.min(.45, S0.z / 400) * vis; // 1秒あたり
+  S.met = S.met || [];
+  if (Math.random() < rate * dt) {
+    const fire = Math.random() < .06, rx = W * (.25 + .5 * hash(S0.s[0].charCodeAt(0))), ry = -hz * .25;
+    const x = Math.random() * W, y = hz * (.05 + Math.random() * .6), a = Math.atan2(y - ry, x - rx);
+    S.met.push({ x, y, a, t0: S.t, dur: fire ? 1.4 : .5 + Math.random() * .5, len: fire ? 200 : 60 + Math.random() * 90, fire });
+    if (vis > .2) { const day = localDate().toISOString().slice(0, 10); skyRecord(`sh:${S0.s[0]}:${day.slice(0, 4)}`, '🌠', S0.s[1], S0.s[2]); if (fire && !S.fireT) { S.fireT = 1; toast(J('🔥 火球！ とても明るい流れ星', '🔥 A fireball! A very bright meteor'), 2500); } }
+  }
+  S.met = S.met.filter(m => S.t - m.t0 < m.dur);
+  for (const m of S.met) {
+    const p = (S.t - m.t0) / m.dur, hx = m.x + Math.cos(m.a) * m.len * p, hy = m.y + Math.sin(m.a) * m.len * p, tx = hx - Math.cos(m.a) * m.len * .6, ty = hy - Math.sin(m.a) * m.len * .6;
+    const g = c.createLinearGradient(hx, hy, tx, ty), al = Math.sin(p * Math.PI);
+    g.addColorStop(0, m.fire ? `rgba(220,255,210,${al})` : `rgba(255,255,255,${al * .9})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    c.strokeStyle = g; c.lineWidth = m.fire ? 3.5 : 1.6; c.beginPath(); c.moveTo(hx, hy); c.lineTo(tx, ty); c.stroke();
+    if (m.fire) { c.fillStyle = `rgba(230,255,220,${al})`; c.beginPath(); c.arc(hx, hy, 3.5, 0, 7); c.fill(); }
+  }
+}
+// お祭りの町：夜は花火、昼は旗かざり
+function drawFest(hz) {
+  const f = S.fest; if (!f) return;
+  if (L.dl < .4) {
+    S.fw = S.fw || [];
+    if (Math.random() < .05) S.fw.push({ x: W * (.15 + Math.random() * .7), y: hz * (.15 + Math.random() * .35), t0: S.t, col: [[255, 120, 120], [255, 220, 120], [140, 220, 255], [200, 150, 255], [140, 255, 170]][Math.random() * 5 | 0], n: 18 + (Math.random() * 14 | 0), r: H * (.06 + Math.random() * .05) });
+    S.fw = S.fw.filter(w => S.t - w.t0 < 2.2);
+    for (const w of S.fw) { const p = (S.t - w.t0) / 2.2, rr = w.r * Math.sqrt(Math.min(1, p * 2.2)), a = 1 - p; c.fillStyle = css(w.col, a); for (let k = 0; k < w.n; k++) { const an = k / w.n * Math.PI * 2; c.beginPath(); c.arc(w.x + Math.cos(an) * rr, w.y + Math.sin(an) * rr + p * p * 20, 2.6, 0, 7); c.fill(); } }
+  }
+}
+function drawBunting() { // 昼のお祭り：窓の上に旗かざり（景色の手前）
+  if (!S.fest || L.dl < .4) return;
+  {
+    const cols = ['#e85d5d', '#f2c14e', '#4fa3e0', '#6cc070', '#b07fe0'];
+    for (let row = 0; row < 2; row++) { const y0 = H * (.1 + row * .08), sag = H * .04; for (let i = 0; i < 18; i++) { const t = i / 17, x = W * t, y = y0 + Math.sin(t * Math.PI) * sag + Math.sin(S.t * 2 + i) * 1.5; c.fillStyle = cols[(i + row * 2) % 5]; c.beginPath(); c.moveTo(x - 9, y); c.lineTo(x + 9, y); c.lineTo(x, y + 16); c.closePath(); c.fill(); } c.strokeStyle = 'rgba(80,60,40,.6)'; c.lineWidth = 1; c.beginPath(); for (let i = 0; i <= 20; i++) { const t = i / 20; c.lineTo(W * t, y0 + Math.sin(t * Math.PI) * sag); } c.stroke(); }
+  }
+}
+// 毎フレーム（1秒に1回くらい）、いまの空と町のできごとを調べる
+function skyCheck() {
+  const ms = nowMs();
+  S.show = showerNow(ms);
+  S.LE = lunarAt(ms);
+  S.SE = solarNow(P.ll[0], P.ll[1], ms);
+  const f = festNow(P, ms);
+  if (f !== S.fest) { S.fest = f; if (f) { const d = localDn(ms, cityTz(f[1])); skyRecord(`fe:${f[0]}:${new Date(d * 864e5).getUTCFullYear()}`, f[2], `${f[3]}（${f[1]}）`, `${f[4]} (${tr(f[1])})`) || toast(`${f[2]} ${J(`${tr(f[1])}では <b>${f[3]}</b> をやっています！`, `<b>${f[4]}</b> is on in ${tr(f[1])}!`)}`, 4500); } }
+  const MV = S.MV;
+  if (S.SE && S.SE.f > .03 && sunAlt(P.ll[0], P.ll[1], ms) > 0) skyRecord(`so:${S.SE.e[0]}`, '🌑', S.SE.total ? '皆既日食' : S.SE.annular ? '金環日食' : '部分日食', S.SE.total ? 'Total solar eclipse' : S.SE.annular ? 'Annular solar eclipse' : 'Partial solar eclipse');
+  if (S.LE && MV && MV.alt > 0 && (S.LE.um > 0 || S.LE.pd > .3)) { const k = lunarKind(S.LE.e); skyRecord(`lu:${S.LE.e[0].slice(0, 10)}`, '🌕', k === 'total' ? '皆既月食' : k === 'partial' ? '部分月食' : '半影月食', k === 'total' ? 'Total lunar eclipse' : k === 'partial' ? 'Partial lunar eclipse' : 'Penumbral lunar eclipse'); }
+  if (MV && MV.alt > 3 && MV.k > .97 && isSuper(ms) && L.dl < .5) skyRecord(`su:${new Date(ms).toISOString().slice(0, 7)}`, '🌕', 'スーパームーン', 'Supermoon');
+}
+// 前の日・当日のお知らせ（開いたときと、うしろで開いているとき）
+function eventSoon() {
+  if (!st || st.preview) return;
+  const now = Date.now(), hits = [];
+  for (const s of SHOWERS) { const pk = showerPeak(s, now); if (pk > now - 6 * 36e5 && pk < now + 36 * 36e5) hits.push([`sh:${s[0]}:${new Date(pk).getUTCFullYear()}`, '🌠', J(`${pk - now < 12 * 36e5 ? '今夜' : 'あしたの夜'}は${s[1]}`, `${s[2]} ${pk - now < 12 * 36e5 ? 'tonight' : 'tomorrow night'}`), J('晴れていたら、夜の窓をのぞいてみて', 'If it\'s clear, look out the window tonight')]); }
+  for (const e of LUNAR) { const g = lunarMax(e); if (g > now && g < now + 36 * 36e5 && e[1] > 0) hits.push([`lu:${e[0]}`, '🌕', J(`${fmtWhen(g)}ごろ 月食`, `Lunar eclipse around ${fmtWhen(g)}`), J('月が出ていれば窓から見られます', 'Watch from the window if the moon is up')]); }
+  for (const e of SOLAR) { const g = solarMax(e); if (g > now && g < now + 36 * 36e5) hits.push([`so:${e[0]}`, '🌑', J(`${fmtWhen(g)}ごろ 日食`, `Solar eclipse around ${fmtWhen(g)}`), J(`見える地域：${e[12][0]}`, `Visible from ${e[12][1]}`)]); }
+  const canNote = NOTIFY && document.hidden && NOTE_OK && Notification.permission === 'granted';
+  for (const [k, e, t, b] of hits) { if (canNote) notify('ev:' + k, `${e} ${t}`, b); if (!S.evToast) S.evToast = new Set(); if (!document.hidden && !S.evToast.has(k)) { S.evToast.add(k); toast(`${e} ${t}<small>${b}</small>`, 5000); } }
+}
+setInterval(eventSoon, 20 * 6e4);
+setTimeout(eventSoon, 5000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(eventSoon, 2500); });
 
 </script>
 </body>
