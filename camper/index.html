@@ -3220,11 +3220,30 @@ const LMD = {
     c.fillStyle = shc([236, 236, 240], d); c.beginPath(); c.ellipse(x, g - 102 * s, 22 * s, 4 * s, 0, 0, 7); c.fill(); rect(x - 10 * s, g - 110 * s, 20 * s, 6 * s, [200, 120, 70], d); rect(x - .8 * s, g - 130 * s, 1.6 * s, 20 * s, [230, 230, 236], d);
   },
   greatwall(x, g, s, d) {
-    const w = 260 * s; c.fillStyle = shc([96, 120, 92], d); c.beginPath(); c.moveTo(x - w, g);
-    for (let k = 0; k <= 40; k++) { const t = k / 40; c.lineTo(x - w + t * 2 * w, g - (30 + 26 * Math.sin(t * 7)) * s); } c.lineTo(x + w, g); c.fill();
-    c.strokeStyle = shc([186, 170, 140], d); c.lineWidth = 4 * s; c.beginPath();
-    for (let k = 0; k <= 40; k++) { const t = k / 40; const xx = x - w + t * 2 * w, yy = g - (34 + 26 * Math.sin(t * 7)) * s; k ? c.lineTo(xx, yy) : c.moveTo(xx, yy); } c.stroke();
-    for (let k = 2; k < 40; k += 9) { const t = k / 40; const xx = x - w + t * 2 * w, yy = g - (34 + 26 * Math.sin(t * 7)) * s; rect(xx - 5 * s, yy - 12 * s, 10 * s, 12 * s, [176, 160, 132], d); }
+    // けわしい山の尾根を、城壁がうねりながら登り下りする。上にはぎざぎざの凹凸（女墻）、ところどころに見張り台
+    const w = 300 * s, N = 120;
+    const tri = v => 1 - Math.abs(((v % 1) + 1) % 1 * 2 - 1), ridge = (t, seed, amp) => { const v = t * 7 + seed, i = Math.floor(v), f = v - i, pk = .45 + .55 * h2(i, 7 + seed * 3), sk = .3 + .4 * h2(i, 11); const u = f < sk ? f / sk : (1 - f) / (1 - sk); return g - (amp * (.3 + .7 * pk * u ** 1.3) + 5 * Math.sin(t * 41 + seed) + 3 * Math.sin(t * 97)) * s; };
+    for (const [seed, amp, dd, wall] of [[2.2, 50, d + .22, .6], [0, 74, d, 1]]) {
+      c.fillStyle = shc([86, 112, 84], dd); c.beginPath(); c.moveTo(x - w, g);
+      for (let k = 0; k <= N; k++) { const t = k / N; c.lineTo(x - w + t * 2 * w, ridge(t, seed, amp)); } c.lineTo(x + w, g); c.fill();
+      // 城壁（尾根の少し下を通る帯）
+      const pts = []; for (let k = 0; k <= N; k++) { const t = k / N; pts.push([x - w + t * 2 * w, ridge(t, seed, amp) + 4 * s * wall]); }
+      const th = 7 * s * wall, wc = [190, 174, 146];
+      c.fillStyle = shc(wc, dd); c.beginPath(); pts.forEach((p, k) => k ? c.lineTo(p[0], p[1] - th) : c.moveTo(p[0], p[1] - th)); for (let k = pts.length - 1; k >= 0; k--) c.lineTo(pts[k][0], pts[k][1]); c.fill();
+      c.fillStyle = shc(mix(wc, [90, 80, 64], .45), dd); c.beginPath(); pts.forEach((p, k) => k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); for (let k = pts.length - 1; k >= 0; k--) c.lineTo(pts[k][0], pts[k][1] + 2.5 * s * wall); c.fill(); // 壁の下の影
+      // 凹凸（女墻）
+      c.fillStyle = shc(wc, dd);
+      const seg = 4.5 * s * wall; let acc = 0;
+      for (let k = 1; k < pts.length; k++) { const [x0, y0] = pts[k - 1], [x1, y1] = pts[k], L2 = Math.hypot(x1 - x0, y1 - y0); for (let u = acc; u < L2; u += seg * 2) { const f = u / L2; c.fillRect(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f - th - 2.2 * s * wall, seg * .9, 2.6 * s * wall); } acc = (acc + Math.ceil((L2 - acc) / (seg * 2)) * seg * 2) - L2; }
+      // 見張り台
+      for (let k = 2; k < N - 1; k++) {
+        const pk = pts.slice(Math.max(0, k - 6), k + 7).every(q => q[1] >= pts[k][1]); if (!pk && k % 29) continue; // 山の頂上と、ところどころ
+        const [tx, ty] = pts[k], tw = 14 * s * wall, tH = 15 * s * wall;
+        rect(tx - tw / 2, ty - th - tH, tw, tH + th, mix(wc, [150, 136, 112], .3), dd);
+        c.fillStyle = shc(mix(wc, [150, 136, 112], .3), dd); for (let m = 0; m < 4; m++) c.fillRect(tx - tw / 2 + m * tw / 3.5, ty - th - tH - 3 * s * wall, tw / 7, 3 * s * wall);
+        c.fillStyle = shc([60, 52, 44], dd); c.beginPath(); c.arc(tx, ty - th - tH * .45, 2.4 * s * wall, Math.PI, 0); c.lineTo(tx + 2.4 * s * wall, ty - th - tH * .2); c.lineTo(tx - 2.4 * s * wall, ty - th - tH * .2); c.fill();
+      }
+    }
   },
   dunes(x, g, s, d) {
     c.fillStyle = shc([226, 176, 110], d); c.beginPath(); c.moveTo(x - 260 * s, g);
