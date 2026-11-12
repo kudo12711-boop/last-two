@@ -2924,18 +2924,62 @@ function drawSky(hz, W8, alt) {
     c.fillStyle = css(col); c.beginPath(); c.arc(sx, sy, sr, 0, 7); c.fill(); c.restore();
   }
 }
+const CLOUDS = new Map();
 function drawClouds(hz, W8) {
-  const tw = 320, o = S.off.cloud, p = 0.12 + W8.cloud / 100 * .85;
-  const base = mix([255, 255, 255], [150, 156, 166], L.k);
-  for (let i = Math.floor(o / tw) - 1; i <= Math.floor((o + W) / tw) + 1; i++) {
-    if (h2(i, 11) > p) continue;
-    const x0 = i * tw - o + h2(i, 12) * tw * .5, y0 = hz * (0.12 + h2(i, 13) * .5), sc = (0.6 + h2(i, 14)) * Math.max(1, H / 500);
-    const n = 4 + Math.floor(h2(i, 15) * 4);
-    const col = sh(mix(base, [255, 170, 130], L.tw * .45), .15);
-    c.fillStyle = css(col, .92 - L.k * .2);
-    c.beginPath();
-    for (let j = 0; j < n; j++) { const cx = x0 + (j - n / 2) * 22 * sc, cy = y0 - Math.sin(j / (n - 1) * Math.PI) * 14 * sc + h2(i, 20 + j) * 6; c.moveTo(cx + 22 * sc, cy); c.arc(cx, cy, (16 + h2(i, 30 + j) * 12) * sc, 0, 7); }
-    c.fill();
+  // 雲：平らな底と、もこもこの上側。上は明るく、底は少し影。遠い雲ほど小さく、平たく、地平線に近い
+  const cov = clamp(W8.cloud / 100), o = S.off.cloud;
+  const sunCol = mix([255, 255, 255], [255, 178, 138], L.tw * .6);
+  const lightC = mix(mix([62, 70, 92], sunCol, L.dl), mix([150, 156, 166], [62, 70, 92], 1 - L.dl), L.k * .75);
+  const shadeC = mix(mix([34, 40, 58], [196, 204, 218], L.dl), [118, 124, 136], L.k * .7);
+  const aBase = (.55 + .4 * L.dl) * (1 - L.fog * .5);
+  // すじ雲（うすく晴れているとき、高い空に）
+  if (cov > .12 && cov < .75 && L.dl > .2) {
+    c.save(); c.globalAlpha = .22 * L.dl * (1 - L.k); c.strokeStyle = css(lightC); c.lineCap = 'round';
+    for (let i = Math.floor(o * .3 / 500) - 1; i <= Math.floor((o * .3 + W) / 500) + 1; i++) { if (h2(i, 61) > .55) continue;
+      const x = i * 500 - o * .3 + h2(i, 62) * 200, y = hz * (.08 + h2(i, 63) * .25);
+      for (let k = 0; k < 5; k++) { c.lineWidth = 2 + h2(i, 64 + k) * 3; c.beginPath(); c.moveTo(x + k * 18, y + k * 5); c.quadraticCurveTo(x + 90 + k * 14, y - 12 + k * 4, x + 200 + k * 10, y + 6 + k * 3); c.stroke(); } }
+    c.restore();
+  }
+  // 一面のくもり空（雲の層）
+  if (cov > .6) {
+    const a = clamp((cov - .6) / .35) * aBase;
+    const g = c.createLinearGradient(0, 0, 0, hz); g.addColorStop(0, css(shadeC, a * .9)); g.addColorStop(.75, css(mix(shadeC, lightC, .5), a * .55)); g.addColorStop(1, css(lightC, 0));
+    c.fillStyle = g; c.fillRect(0, 0, W, hz);
+    c.fillStyle = css(mix(shadeC, [0, 0, 0], .08), a * .5);
+    for (let r = 0; r < 3; r++) { const y = hz * (.12 + r * .17), oo = o * (.6 + r * .2); c.beginPath(); c.moveTo(-10, 0);
+      for (let x = -10; x <= W + 20; x += 16) c.lineTo(x, y + Math.sin((x + oo) * .012 + r) * 10 + Math.sin((x + oo) * .031 + r * 2) * 6); c.lineTo(W + 20, 0); c.fill(); }
+  }
+  // もこもこの積雲：遠い層と近い層
+  const p = .1 + cov * .8;
+  for (const [layer, tw, par, yA, yB, scA] of [[0, 260, .55, .62, .9, .55], [1, 380, 1, .14, .55, 1.05]]) {
+    const oo = o * par;
+    for (let i = Math.floor(oo / tw) - 1; i <= Math.floor((oo + W) / tw) + 1; i++) {
+      const sd = i * 7 + layer * 1000; if (h2(sd, 11) > p) continue;
+      const fy = yA + h2(sd, 13) * (yB - yA), by = hz * fy;     // 雲の底の高さ
+      const persp = .45 + .55 * (1 - fy);                       // 上の雲ほど大きく近い
+      const sc = scA * persp * (.75 + h2(sd, 14) * .6) * Math.max(1, H / 520);
+      const x0 = i * tw - oo + h2(sd, 12) * tw * .6, w = (90 + h2(sd, 15) * 110) * sc, ht = w * (.32 + h2(sd, 16) * .22) * (layer ? 1 : .7);
+      const a = aBase * (layer ? 1 : .8) * (1 - clamp((cov - .85) / .15) * .45);
+      // 雲1つずつを小さな画像にしておき、色が変わったときだけ描きなおす（ぼかしは重いので毎回は描かない）
+      const key = sd + ':' + Math.round(sc * 40) + ':' + lightC.map(v => v >> 3).join(',') + ':' + shadeC.map(v => v >> 3).join(',') + ':' + Math.round(a * 20);
+      let im = CLOUDS.get(key);
+      if (!im) {
+        if (CLOUDS.size > 80) CLOUDS.clear();
+        const pad = 14 * sc, cw = Math.ceil(w * 1.3 + pad * 2), ch = Math.ceil(ht * 2 + pad * 2), k = Math.min(DPR, 1.5);
+        const cv2 = document.createElement('canvas'); cv2.width = Math.max(1, Math.ceil(cw * k)); cv2.height = Math.max(1, Math.ceil(ch * k));
+        const g2 = cv2.getContext('2d'); g2.scale(k, k);
+        const cx = cw / 2, cb = ch - pad, n = 5 + Math.floor(h2(sd, 17) * 4), puffs = [];
+        for (let j = 0; j < n; j++) { const t = (j + .5) / n, u = Math.sin(t * Math.PI); puffs.push([cx - w / 2 + t * w + (h2(sd, 20 + j) - .5) * w * .12, cb - ht * (.25 + .55 * u * (.7 + h2(sd, 30 + j) * .5)), ht * (.32 + .42 * u) * (.8 + h2(sd, 40 + j) * .4)]); }
+        for (let j = 0; j < n; j += 2) { const [px, py, r] = puffs[j]; if (r > ht * .3) puffs.push([px + (h2(sd, 50 + j) - .5) * r, py - r * .55, r * (.45 + h2(sd, 60 + j) * .2)]); } // 上にもこもこを足す
+        g2.beginPath(); g2.rect(0, 0, cw, cb + 1.5 * sc); g2.clip();      // 底は平ら
+        g2.beginPath(); for (const [px, py, r] of puffs) { g2.moveTo(px + r, py); g2.arc(px, py, r, 0, 7); } g2.ellipse(cx, cb - ht * .12, w * .55, ht * .2, 0, 0, 7);
+        const gr = g2.createLinearGradient(0, cb - ht * 1.2, 0, cb); gr.addColorStop(0, css(lightC, a)); gr.addColorStop(.55, css(mix(lightC, shadeC, .35), a)); gr.addColorStop(1, css(shadeC, a));
+        g2.shadowColor = css(lightC, a * .7); g2.shadowBlur = (layer ? 9 : 5) * sc * k; // ふちをやわらかく
+        g2.fillStyle = gr; g2.fill();
+        im = { cv: cv2, cw, ch, cx, cb }; CLOUDS.set(key, im);
+      }
+      c.drawImage(im.cv, x0 - im.cx, by - im.cb, im.cw, im.ch);
+    }
   }
 }
 /* ----- 山なみ ----- */
