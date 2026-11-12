@@ -3223,25 +3223,31 @@ function updateSill() {
       items[i] = f[0]; tips[i] = `<b>${f[0]} ${tr(f[1])}</b><small>🍽 ${J(`${stop.name}の名物で${meal[e]}`, `A ${tr(stop.name)} specialty for ${meal[e]}`)}</small><small>${tr(f[2])}</small>`;
     });
   }
-  (st.shelf || []).forEach((k, i) => {
+  // 飾った物は、左はしと右はしの小物のあいだに並べる（SHELF_MAX個まで）
+  const SI = [], ST = [];
+  (st.shelf || []).forEach(k => {
+    const i = SI.length - 1; SI.push(null); ST.push('');
     if (k.startsWith('f:') || k.startsWith('c:')) {
       // ひろいもの・つくった物
-      const id = k.slice(2), isF = k[0] === 'f', D = isF ? FINDS[id] : CRAFTS[id], R0 = isF ? (st.finds || {})[id] : (st.crafts || {})[id]; if (!D || !R0) return;
-      items[i + 1] = D[0];
+      const id = k.slice(2), isF = k[0] === 'f', D = isF ? FINDS[id] : CRAFTS[id], R0 = isF ? (st.finds || {})[id] : (st.crafts || {})[id]; if (!D || !R0) { SI.pop(); ST.pop(); return; }
+      SI[i + 1] = D[0];
       const at = isF ? R0.first.at : R0.at, wh = isF ? R0.first.where : R0.where;
-      tips[i + 1] = `<b>${D[0]} ${isF ? fdName(id) : crName(id)}</b><small>${isF ? `🐚 ${J(`${placeText(wh)}で拾ったひろいもの`, `Found near ${placeText(wh)}`)}` : `🛠 ${J('旅で拾った物でつくりました', 'Made from things found on the trip')}`}<br>📅 ${fdDate(at)}</small><small>${isF ? fdDesc(id) : crDesc(id)}</small>`;
+      ST[i + 1] = `<b>${D[0]} ${isF ? fdName(id) : crName(id)}</b><small>${isF ? `🐚 ${J(`${placeText(wh)}で拾ったひろいもの`, `Found near ${placeText(wh)}`)}` : `🛠 ${J('旅で拾った物でつくりました', 'Made from things found on the trip')}`}<br>📅 ${fdDate(at)}</small><small>${isF ? fdDesc(id) : crDesc(id)}</small>`;
       return;
     }
-    const g = st.gifts && st.gifts[k]; if (!g) return; items[i + 1] = g.e;
+    const g = st.gifts && st.gifts[k]; if (!g) { SI.pop(); ST.pop(); return; } SI[i + 1] = g.e;
     const dt = g.at ? new Date(g.at) : null, when = dt ? (EN ? dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日`) : '';
-    tips[i + 1] = `${phBox(giftQ(g.name), giftQ2(g.name), 'tip')}<b>${g.e} ${tr(g.name)}</b><small>🎁 ${J(`${g.city}で観光したときに買ったおみやげ`, `A souvenir bought while sightseeing in ${tr(g.city)}`)}${when ? `<br>📅 ${J(`${when}に手に入れました`, `Got it on ${when}`)}` : ''}${g.from && g.from.length ? `<br>👣 ${J('このとき行った所：', 'Places visited: ')}${g.from.map(tr).join(J('、', ', '))}` : ''}</small>${g.desc ? `<small>${tr(g.desc)}</small>` : ''}`;
+    ST[i + 1] = `${phBox(giftQ(g.name), giftQ2(g.name), 'tip')}<b>${g.e} ${tr(g.name)}</b><small>🎁 ${J(`${g.city}で観光したときに買ったおみやげ`, `A souvenir bought while sightseeing in ${tr(g.city)}`)}${when ? `<br>📅 ${J(`${when}に手に入れました`, `Got it on ${when}`)}` : ''}${g.from && g.from.length ? `<br>👣 ${J('このとき行った所：', 'Places visited: ')}${g.from.map(tr).join(J('、', ', '))}` : ''}</small>${g.desc ? `<small>${tr(g.desc)}</small>` : ''}`;
   });
+  if (SI.length) { items = [items[0], ...SI, items[2]]; tips.splice(1, 2, ...ST, tips[2]); }
   SILL_TIPS = tips;
   const key = items.join('') + tips.join('');
   $('#winwrap').classList.toggle('night', hr >= 19 || hr < 5);
   if ($('#sill').dataset.k === key) return;
   $('#sill').dataset.k = key;
-  $('#sill').innerHTML = items.map((e, i) => `<span data-i="${i}" style="${['left:7%', 'left:22%', 'right:7%'][i]}">${e}</span>`).join('') + '<div id="silltip" hidden></div>';
+  // 数に合わせて、左から右へ等間隔に並べる（多いときは少し小さく）
+  const n = items.length, fs = n > 6 ? 21 : n > 4 ? 24 : 26;
+  $('#sill').innerHTML = items.map((e, i) => `<span data-i="${i}" style="left:calc(${(7 + 86 * i / (n - 1)).toFixed(1)}% - ${fs / 2}px);font-size:${fs}px">${e}</span>`).join('') + '<div id="silltip" hidden></div>';
 }
 // 窓辺の小物の説明（マウスを合わせる・タップする）
 let SILL_TIPS = [];
@@ -3530,14 +3536,14 @@ function showRecord(tab = 'dex') {
   const empty = t => `<p class="note">${t}</p>`;
   if (tab === 'spot') { const v = Object.values(st.spots || {}); body = v.length ? `<p class="note">${J(`観光した場所 ${v.length}か所`, `${v.length} places visited`)}</p><div class="grid">${v.map(e => `<div class="card">${phBox((CITY[e.city] || {}).spots ? e.name : e.city, '', 'card')}<div class="em">${e.e}</div><b>${tr(e.name)}</b><small>${tr(e.desc)}</small><small class="m">${tr(e.city)}${e.n > 1 ? J('・' + e.n + '回', ' · ×' + e.n) : ''}</small>${infoLinks(e.name, e.city, !!(CITY[e.city] || {}).spots)}</div>`).join('')}</div>` : empty(J('まだありません。町で停車したら「🗺 観光する」から出かけてみましょう。', 'Nothing yet. When you park in a town, head out with "🗺 Sightsee".')); }
   if (tab === 'food') { const v = Object.values(st.food || {}); body = v.length ? `<p class="note">${J(`食べたもの ${v.length}品`, `${v.length} dishes tried`)}</p><div class="grid">${v.map(e => `<div class="card">${phBox(e.name, '', 'card')}<div class="em">${e.e}</div><b>${tr(e.name)}</b><small>${tr(e.desc)}</small><small class="m">${tr(e.city)}</small></div>`).join('')}</div>` : empty(J('まだありません。観光の「ご当地グルメ」で食べると記録されます。', 'Nothing yet. Try "Local food" while sightseeing.')); }
-  if (tab === 'gift') { const v = Object.entries(st.gifts || {}); body = v.length ? `<p class="note">${J(`おみやげ ${v.length}個<br><small>「飾る」を押すと窓辺に置けます（2つまで）</small>`, `${v.length} souvenirs<br><small>Press "Display" to put one on the window sill (up to 2)</small>`)}${sillHidden() && (st.shelf || []).length ? `<br><small>${sillHidden()}</small>` : ''}</p><div class="grid">${v.map(([k, e]) => `<div class="card">${phBox(giftQ(e.name), giftQ2(e.name), 'card')}<div class="em">${e.e}</div><b>${tr(e.name)}</b><small class="m">${tr(e.city)}</small>${shelfBtn(k)}</div>`).join('')}</div>${(st.shelf || []).length ? `<button class="big ghost" id="unshelf">${J('窓辺に飾った物をぜんぶしまう', 'Put away everything on the sill')}</button>` : ''}` : empty(J('まだありません。観光の「おみやげ」で買うと、ここにたまります。', 'Nothing yet. Souvenirs you buy while sightseeing collect here.')); }
+  if (tab === 'gift') { const v = Object.entries(st.gifts || {}); body = v.length ? `<p class="note">${J(`おみやげ ${v.length}個<br><small>「飾る」を押すと窓辺に置けます（ひろいものとあわせて6つまで）</small>`, `${v.length} souvenirs<br><small>Press "Display" to put one on the window sill (up to 6, together with finds)</small>`)}${sillHidden() && (st.shelf || []).length ? `<br><small>${sillHidden()}</small>` : ''}</p><div class="grid">${v.map(([k, e]) => `<div class="card">${phBox(giftQ(e.name), giftQ2(e.name), 'card')}<div class="em">${e.e}</div><b>${tr(e.name)}</b><small class="m">${tr(e.city)}</small>${shelfBtn(k)}</div>`).join('')}</div>${(st.shelf || []).length ? `<button class="big ghost" id="unshelf">${J('窓辺に飾った物をぜんぶしまう', 'Put away everything on the sill')}</button>` : ''}` : empty(J('まだありません。観光の「おみやげ」で買うと、ここにたまります。', 'Nothing yet. Souvenirs you buy while sightseeing collect here.')); }
   if (tab === 'words') { const v = Object.values(st.words || {}); body = v.length ? `<p class="note">${J(`覚えたあいさつ ${v.length}`, `${v.length} greetings learned`)}</p>${v.map(e => `<div class="phrase sm"><small>${tr(e.w[4])} (${tr(e.city)})</small>${sayBtn(e.w[0], e.w[1], e.c || 'JP')}<b>${e.w[0]}</b><span>${rd(e.w[1])}</span>${sayBtn(e.w[2], e.w[3], e.c || 'JP')}<b>${e.w[2]}</b><span>${rd(e.w[3])}</span></div>`).join('')}` : empty(J('まだありません。観光の「地元のことば」で教えてもらえます。', 'Nothing yet. Locals will teach you in "Local words" while sightseeing.')); }
   if (tab === 'find') {
     const F = st.finds || {}, ids = Object.keys(FINDS), L = st.letters || [], CR = st.crafts || {}, sh = st.shelf || [];
     const shBtn = shelfBtn;
     const cardOf = i => F[i] ? `<div class="card"><div class="em">${FINDS[i][0]}</div><b>${fdName(i)}${F[i].n > 1 ? ` <small>×${F[i].n}</small>` : ''}</b><small>${fdDesc(i)}</small><small class="m">${J('はじめて：', 'First: ')}${fdDate(F[i].first.at)}${J('・', ' · ')}${placeText(F[i].first.where)}</small>${shBtn('f:' + i)}</div>` : `<div class="card no"><div class="em">❔</div><b>???</b><small class="m">${fdHint(i)}</small></div>`;
     const sec = (k, t) => { const g = ids.filter(i => FIND_KIND(i) === k); return `<h3>${t} <small>${g.filter(i => F[i]).length} / ${g.length}</small></h3><div class="grid">${g.map(cardOf).join('')}</div>`; };
-    body = `<p class="note">${J(`見つけたひろいもの ${ids.filter(i => F[i]).length} / ${ids.length} 種類`, `Found ${ids.filter(i => F[i]).length} of ${ids.length} kinds`)}<br><small>${J('海では波間に流れてくる物、陸では道ばたでキラッと光る物をタッチすると拾えます。町では「さんぽ」でも見つかります。拾った物は「窓辺に飾る」で窓辺に置けます（おみやげとあわせて2つまで）', 'Tap things floating in the sea or sparkling by the road to pick them up. You can also find things on town walks. Use "Display on sill" to put them on the window sill (2 at a time, together with souvenirs)')}</small>${sillHidden() && sh.length ? `<br><small>${sillHidden()}</small>` : ''}</p>
+    body = `<p class="note">${J(`見つけたひろいもの ${ids.filter(i => F[i]).length} / ${ids.length} 種類`, `Found ${ids.filter(i => F[i]).length} of ${ids.length} kinds`)}<br><small>${J('海では波間に流れてくる物、陸では道ばたでキラッと光る物をタッチすると拾えます。町では「さんぽ」でも見つかります。拾った物は「窓辺に飾る」で窓辺に置けます（おみやげとあわせて6つまで）', 'Tap things floating in the sea or sparkling by the road to pick them up. You can also find things on town walks. Use "Display on sill" to put them on the window sill (up to 6, together with souvenirs)')}</small>${sillHidden() && sh.length ? `<br><small>${sillHidden()}</small>` : ''}</p>
      ${sec('sea', J('🌊 海で拾う', '🌊 From the sea'))}${sec('land', J('🛣 道ばたで拾う', '🛣 By the road'))}${sec('walk', J('👣 さんぽで拾う', '👣 On town walks'))}
      <h3>🛠 ${J('集めてつくる', 'Make something')}</h3><p class="note"><small>${J('材料がそろうと、ひとつずつつくれます。拾った物はなくなりません。', 'When you have the materials you can make each one once. Your finds are not used up.')}</small></p><div class="grid">${Object.keys(CRAFTS).map(id => { const C = CRAFTS[id], made = CR[id]; return `<div class="card ${made ? '' : 'craft'}"><div class="em">${made ? C[0] : '🛠'}</div><b>${crName(id)}</b><small>${crDesc(id)}</small><small class="m">${C[5].map(([g, need, nm]) => `${EN ? nm[1] : nm[0]} ${Math.min(haveN(g), need)}/${need}`).join(J('・', ' · '))}</small>${made ? shBtn('c:' + id) : `<button class="mini" data-craft="${id}" ${craftReady(id) ? '' : 'disabled'}>${craftReady(id) ? J('🛠 つくる', '🛠 Make it') : J('材料あつめ中', 'Collecting')}</button>`}</div>`; }).join('')}</div>
      ${sh.length ? `<button class="big ghost" id="unshelf">${J('窓辺に飾った物をぜんぶしまう', 'Put away everything on the sill')}</button>` : ''}
@@ -4017,12 +4023,13 @@ function sillHidden() {
   return '';
 }
 // 窓辺に飾る／しまうボタン（記録の おみやげ・ひろいもの で共通）
+const SHELF_MAX = 6;
 const shelfBtn = k => (st.shelf || []).includes(k) ? `<button class="mini on" data-unshelf="${k}">${J('✓ 飾っています（しまう）', '✓ On display (put away)')}</button>` : `<button class="mini" data-shelf="${k}">${J('窓辺に飾る', 'Display on sill')}</button>`;
 function bindShelf() {
   document.querySelectorAll('[data-shelf]').forEach(b => b.onclick = () => {
-    const k = b.dataset.shelf; st.shelf = (st.shelf || []).filter(x => x !== k); st.shelf.unshift(k); st.shelf = st.shelf.slice(0, 2);
+    const k = b.dataset.shelf; st.shelf = (st.shelf || []).filter(x => x !== k); st.shelf.unshift(k); const over = st.shelf.length > SHELF_MAX; st.shelf = st.shelf.slice(0, SHELF_MAX);
     save(); $('#sill').dataset.k = ''; updateSill(); b.textContent = J('✓ 窓辺に飾りました', '✓ On the window sill'); b.disabled = true;
-    const hid = sillHidden(); if (hid) toast(hid, 5000);
+    const hid = sillHidden(); if (hid) toast(hid, 5000); else if (over) toast(J(`窓辺は${SHELF_MAX}つまで。いちばん前に飾った物をしまいました`, `The sill holds ${SHELF_MAX}. The oldest one was put away`), 3500);
   });
 }
 // あいさつの読み上げ（スマホの読み上げ機能。その国の声がなければカタカナを日本語の声で）
