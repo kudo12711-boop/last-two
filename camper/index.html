@@ -2729,6 +2729,23 @@ function sunAlt(lat, lon, ms) {
   const lha = gmst * 15 * D2R + lon * D2R - ra;
   return Math.asin(Math.sin(lat * D2R) * Math.sin(dec) + Math.cos(lat * D2R) * Math.cos(dec) * Math.cos(lha)) / D2R;
 }
+// 月：その場所・その時刻の高さ、光っている割合、光っている側の向き（画面の上から反時計回りの角度）
+function moonView(lat, lon, ms) {
+  const d = ms / 864e5 - 10957.5, r = D2R, e = (23.439 - 0.00000036 * d) * r;
+  // 太陽（赤経・赤緯）
+  const g = (357.529 + 0.98560028 * d) * r, Ls = (280.459 + 0.98564736 * d + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * r;
+  const as = Math.atan2(Math.cos(e) * Math.sin(Ls), Math.cos(Ls)), ds = Math.asin(Math.sin(e) * Math.sin(Ls));
+  // 月（かんたんな式。誤差1度ほど）
+  const Lm = (218.316 + 13.176396 * d) * r, M = (134.963 + 13.064993 * d) * r, F = (93.272 + 13.229350 * d) * r, Dm = (297.850 + 12.190749 * d) * r;
+  const lam = Lm + (6.289 * Math.sin(M) + 1.274 * Math.sin(2 * Dm - M) + 0.658 * Math.sin(2 * Dm) + 0.214 * Math.sin(2 * M) - 0.186 * Math.sin(g)) * r, bet = 5.128 * Math.sin(F) * r;
+  const am = Math.atan2(Math.sin(lam) * Math.cos(e) - Math.tan(bet) * Math.sin(e), Math.cos(lam)), dm = Math.asin(Math.sin(bet) * Math.cos(e) + Math.cos(bet) * Math.sin(e) * Math.sin(lam));
+  const gmst = ((18.697374558 + 24.06570982441908 * d) % 24) * 15 * r, H = gmst + lon * r - am, phi = lat * r;
+  const alt = Math.asin(Math.sin(phi) * Math.sin(dm) + Math.cos(phi) * Math.cos(dm) * Math.cos(H)) / r;
+  const cpsi = Math.sin(ds) * Math.sin(dm) + Math.cos(ds) * Math.cos(dm) * Math.cos(as - am), k = (1 - cpsi) / 2; // 光っている割合（0=新月, 1=満月）
+  const chi = Math.atan2(Math.cos(ds) * Math.sin(as - am), Math.sin(ds) * Math.cos(dm) - Math.cos(ds) * Math.sin(dm) * Math.cos(as - am)); // 明るい側の向き（北から東まわり）
+  const q = Math.atan2(Math.sin(H), Math.tan(phi) * Math.cos(dm) - Math.sin(dm) * Math.cos(H)); // 北と天頂のずれ
+  return { alt, k, theta: chi - q };
+}
 const moonAge = ms => (((ms / 864e5 - 10962.76) % 29.530588) + 29.530588) % 29.530588;
 
 /* ===== 天気 ===== */
@@ -2901,18 +2918,20 @@ function drawSky(hz, W8, alt) {
   c.fillStyle = g; c.fillRect(-W, -H, W * 3, hz + H + 2);
   const sa = clamp(1 - L.dl * 2.5) * clamp(1 - L.k * 1.25);
   if (sa > 0.02) for (const s of STARS) { c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)))})`; c.fillRect(s[0] * W, s[1] * hz * .9, s[2] > .85 ? 2 : 1.2, s[2] > .85 ? 2 : 1.2); }
-  // 月
-  const ma = clamp(1 - L.dl / .7) * clamp(1 - L.k * 1.1);
+  // 月（本物の位置と満ち欠け。昼間の月はうすく。地平線より下なら見えない）
+  const MV = moonView(P.ll[0], P.ll[1], nowMs());
+  const ma = clamp((MV.alt + 1) / 4) * (L.dl > .5 ? .38 * (1 - L.dl * .5) : clamp(1 - L.dl / .7 + .3)) * clamp(1 - L.k * 1.1) * (MV.k < .03 ? 0 : 1);
   if (ma > 0.02) {
-    const mx = W * .24, my = hz * .26, mr = Math.max(9, H * .028), f = moonAge(nowMs()) / 29.53;
+    const mr = Math.max(9, H * .028), mx = W * .24, my = clamp(hz - (MV.alt / 60) * hz * .85, hz * .1, hz - mr);
     c.save(); c.globalAlpha = ma;
-    const gl = c.createRadialGradient(mx, my, mr * .5, mx, my, mr * 4); gl.addColorStop(0, 'rgba(255,250,220,.25)'); gl.addColorStop(1, 'rgba(255,250,220,0)');
-    c.fillStyle = gl; c.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8);
-    c.fillStyle = '#fff6d8'; c.beginPath(); c.arc(mx, my, mr, 0, 7); c.fill();
-    const ill = (1 - Math.cos(f * 2 * Math.PI)) / 2;
-    c.beginPath(); c.arc(mx, my, mr + .5, 0, 7); c.clip();
-    c.fillStyle = css(mix(L.top, [40, 46, 70], .3), .93); c.beginPath(); c.arc(mx + (f < .5 ? -1 : 1) * mr * 2 * ill, my, mr * 1.04, 0, 7); c.fill();
-    c.restore();
+    const gl = c.createRadialGradient(mx, my, mr * .5, mx, my, mr * (2 + 2 * MV.k)); gl.addColorStop(0, `rgba(255,250,220,${.08 + .2 * MV.k})`); gl.addColorStop(1, 'rgba(255,250,220,0)');
+    if (L.dl < .5) { c.fillStyle = gl; c.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8); }
+    c.translate(mx, my); c.rotate(-MV.theta - Math.PI / 2); // 明るい側を +x に向ける
+    if (L.dl < .5) { c.fillStyle = css(mix(L.top, [70, 76, 100], .5), .5); c.beginPath(); c.arc(0, 0, mr, 0, 7); c.fill(); } // 地球照（暗い側がうっすら）
+    const t = 1 - 2 * MV.k; // 1=新月, 0=半月, -1=満月
+    c.fillStyle = '#fff6d8'; c.beginPath(); c.arc(0, 0, mr, -Math.PI / 2, Math.PI / 2);
+    if (t >= 0) c.ellipse(0, 0, Math.max(.01, mr * t), mr, 0, Math.PI / 2, -Math.PI / 2, true); else c.ellipse(0, 0, mr * -t, mr, 0, Math.PI / 2, Math.PI * 1.5, false);
+    c.fill(); c.restore();
   }
   // 太陽
   if (alt > -4) {
