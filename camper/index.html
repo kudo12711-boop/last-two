@@ -3755,11 +3755,27 @@ const PALS = {
       ['おへんじ、海をこえてとどいたよ！ こっちはもう雪で、きのうはそりあそびをしたよ。', 'Your reply crossed the sea! It is already snowing here, and yesterday I went sledding.'],
       ['あなたはわたしの友だちだよ！ おじいちゃんがほった、木のトナカイをいれておくね。', "You're my friend! I'm putting in a wooden reindeer my grandpa carved."]],
     draw: ['🌌', '🛷', '🦌'], gift: ['🦌', 'イングリッドの木のトナカイ', "Ingrid's wooden reindeer", 'おじいちゃんが木をほってつくったトナカイ', 'A reindeer carved from wood by her grandpa'] },
+  // 遠い海の友だち（有料ルートの南の海だけで出会える。七つの海の7人とは別に数える）
+  ana: { bonus: 1, e: '👧', flag: '🇧🇷', c: 'BR', name: ['アナ', 'Ana'], from: ['ブラジル・リオデジャネイロ', 'Rio de Janeiro, Brazil'], sea: ['satl'],
+    words: [['Oi!', 'オイ', 'oi', 'こんにちは', 'Hi'], ['Valeu!', 'ヴァレウ', 'valeu', 'ありがとう', 'Thanks'], ['Amizade', 'アミザージ', 'amizade', '友だち（友情）', 'Friendship']],
+    letters: [['わたしはアナ、9さい。ブラジルのリオデジャネイロにすんでいるよ。南の大西洋は、いまあったかい夏！ ボトル、とおくまで行ってね。', "I'm Ana, 9. I live in Rio de Janeiro, Brazil. It's warm summer here on the South Atlantic! Go far, little bottle."],
+      ['おへんじ、ありがとう！ リオはもうすぐカーニバル。町じゅうでサンバをおどるんだよ。', 'Thanks for your reply! Carnival is coming soon in Rio. The whole city dances samba.'],
+      ['海をこえた友だちができて、とってもうれしい！ カーニバルのお面をおくるね。', "I'm so happy to have a friend across the sea! I'm sending you a carnival mask."]],
+    draw: ['🏖', '💃', '🎭'], gift: ['🎭', 'アナのカーニバルのお面', "Ana's carnival mask", 'リオのカーニバルでつける、キラキラのお面', 'A sparkly mask for the Rio carnival'] },
+  mere: { bonus: 1, e: '👧', flag: '🇫🇯', c: 'FJ', name: ['メレ', 'Mere'], from: ['フィジーの島', 'an island in Fiji'], sea: ['spac'],
+    words: [['Bula!', 'ブラ', 'bula', 'こんにちは', 'Hello'], ['Vinaka!', 'ヴィナカ', 'vinaka', 'ありがとう', 'Thank you'], ['Itokani', 'イトカニ', 'itokani', '友だち', 'Friend']],
+    letters: [['わたしはメレ、8さい。南太平洋のフィジーの島にすんでいるよ。島のみんなは、だれにでも元気に「ブラ！」ってあいさつするの。', "I'm Mere, 8. I live on an island in Fiji in the South Pacific. Everyone here greets everyone with a big \"Bula!\""],
+      ['おへんじ、ありがとう！ きのうはお兄ちゃんのカヌーで、となりの島まで行ったよ。', 'Thanks for writing back! Yesterday I rode in my big brother\'s canoe to the next island.'],
+      ['あなたはわたしの友だち！ お兄ちゃんとつくった、小さなカヌーの模型をおくるね。', "You're my friend! I'm sending you a little model canoe my brother and I made."]],
+    draw: ['🏝', '🛶', '🛶'], gift: ['🛶', 'メレのカヌーの模型', "Mere's model canoe", 'フィジーの島の人たちが乗るカヌーの小さな模型', 'A little model of a Fijian island canoe'] },
 };
 const PAL_GAP = 20 * 36e5; // ふしぎなボトルは多くても約20時間に1通。届く状態でも、海を見て1時間に1本くらいのまれさ（流れてくる物の3.6%）
 const palName = id => EN ? PALS[id].name[1] : PALS[id].name[0];
 // いま届けられる子（おへんじ済みで続きがある子を先に。いなければ、この海の新しい子）
+// 赤道より南の海（有料ルート）は、南大西洋・南太平洋として見る
+const palSea = region => { if (!P || P.seg.mode !== 's' || P.ll[0] > -1) return region; const lon = P.ll[1]; return lon > -70 && lon < 30 ? 'satl' : 'spac'; };
 function palDue(region) {
+  region = palSea(region);
   const P = st.pals || {}; if (Date.now() - (st.palAt || 0) < PAL_GAP) return null;
   for (const k in PALS) { const p = P[k]; if (p && p.n < 3 && p.replied) return k; }
   for (const k in PALS) if (!P[k] && PALS[k].sea.includes(region)) return k;
@@ -3787,14 +3803,15 @@ document.addEventListener('click', e => {
   if ($('#modal .tabs')) showRecord('find'); else closeModal();
 });
 // ひろいもの帳の「ふしぎなボトルの手紙」
+const palCard = k => { const D = PALS[k], p = (st.pals || {})[k]; return `<div class="letter sm pal"><small>${D.flag} ${J(`${D.from[0]}の ${D.name[0]}`, `${D.name[1]}, ${D.from[1]}`)}　✉️ ${p.n} / 3</small>${p.letters.map((l, i) => `<small>${fdDate(l.at)}${J('・', ' · ')}${placeText(l.where)}</small>${palLetter(k, i)}${palWord(k, i)}${p.sent && p.sent[i] ? `<small>↪︎ ${J('おへんじ：', 'You wrote: ')}${p.sent[i]}</small>` : ''}`).join('')}
+      ${p.n >= 3 ? `<div class="palgift">${D.gift[0]} <b>${J(D.gift[1], D.gift[2])}</b> ${shelfBtn('p:' + k)}</div>` : p.replied ? `<small>⏳ ${J('おへんじを流しました。次の手紙を待っています', 'Reply sent. Waiting for the next letter')}</small>` : palReplyBox(k)}</div>`; };
 function palSection() {
   // ひみつの雰囲気：最初のふしぎなボトルを拾うまでは見せない（ボトルの手紙を3通読むと、なぞめいた1行だけ）
-  const P = st.pals || {}, met = Object.keys(PALS).filter(k => P[k]), all = Object.keys(PALS).length;
-  if (!met.length) return (st.bottles || 0) >= 3 ? `<h3>✨ ${J('？？？', '???')}</h3><p class="note"><small>${J('ボトルの手紙を読んでいると、ときどき波の向こうで、青く光るなにかが見える気がする……', 'Reading these bottle letters, you sometimes think you see something glowing blue beyond the waves...')}</small></p>` : '';
+  const P = st.pals || {}, main = Object.keys(PALS).filter(k => !PALS[k].bonus), met = main.filter(k => P[k]), far = Object.keys(PALS).filter(k => PALS[k].bonus && P[k]), all = main.length;
+  if (!met.length && !far.length) return (st.bottles || 0) >= 3 ? `<h3>✨ ${J('？？？', '???')}</h3><p class="note"><small>${J('ボトルの手紙を読んでいると、ときどき波の向こうで、青く光るなにかが見える気がする……', 'Reading these bottle letters, you sometimes think you see something glowing blue beyond the waves...')}</small></p>` : '';
   const done = met.length >= all;
   return `<h3>✨ ${J('ふしぎなボトルの手紙', 'Mysterious bottle letters')} <small>${J(`出会った子 ${met.length} / ${done ? all : '？'}人`, `Friends met: ${met.length} / ${done ? all : '?'}`)}${done ? J('　ぜんぶ出会えた！', ' · You met them all!') : ''}</small></h3><p class="note"><small>${J('海の向こうの子どもから、ボトルでとどいた手紙。おへんじを流すと、いつかまた……', 'Letters from children across the sea. Write back, and someday another may come...')}</small></p>` +
-    met.map(k => { const D = PALS[k], p = P[k]; return `<div class="letter sm pal"><small>${D.flag} ${J(`${D.from[0]}の ${D.name[0]}`, `${D.name[1]}, ${D.from[1]}`)}　✉️ ${p.n} / 3</small>${p.letters.map((l, i) => `<small>${fdDate(l.at)}${J('・', ' · ')}${placeText(l.where)}</small>${palLetter(k, i)}${palWord(k, i)}${p.sent && p.sent[i] ? `<small>↪︎ ${J('おへんじ：', 'You wrote: ')}${p.sent[i]}</small>` : ''}`).join('')}
-      ${p.n >= 3 ? `<div class="palgift">${D.gift[0]} <b>${J(D.gift[1], D.gift[2])}</b> ${shelfBtn('p:' + k)}</div>` : p.replied ? `<small>⏳ ${J('おへんじを流しました。次の手紙を待っています', 'Reply sent. Waiting for the next letter')}</small>` : palReplyBox(k)}</div>`; }).join('') +
+    met.map(palCard).join('') + (far.length ? `<h3>🌏 ${J('遠い海の友だち', 'Friends from faraway seas')}</h3>` + far.map(palCard).join('') : '') +
     (done ? '' : `<p class="note"><small>${J('まだどこかの海で、だれかがボトルに手紙を入れているみたい……', 'Somewhere out at sea, someone else may be putting a letter in a bottle...')}</small></p>`);
 }
 async function postcard() {
