@@ -3056,7 +3056,7 @@ function spawnEvent(ctx, W8, alt) {
   for (const [k, w] of pool) { r -= w; if (r <= 0) { id = k; break; } }
   const dur = { dolphin: 9, flyingfish: 6, whale: 14, breach: 6, sperm: 12, orca: 12, turtle: 12, manta: 12, sunfish: 12, albatross: 14, gull: 12, otter: 14, puffin: 10, nightglow: 22, rainbow: 40, shootingstar: 1.6, aurora: 45, birds: 14, deer: 10, reindeer: 12, kangaroo: 8, llama: 12, horses: 10, camels: 16, bison: 12, eagle: 14, balloon: 40, train: 9, bottle: 22, ship: 30 }[id] || 10;
   const ev = { id, t0: S.t, dur, x0: W * (.55 + Math.random() * .35), d: .22 + Math.random() * .4, seed: Math.random() * 1000 | 0 };
-  if (id === 'bottle') { ev.item = pickFind(ctx.region); const pk = palDue(ctx.region); if (pk && Math.random() < .5) { ev.item = 'magic'; ev.pal = pk; ev.dur = 30; } }
+  if (id === 'bottle') { ev.item = pickFind(ctx.region); const pk = palDue(ctx.region); if (pk && Math.random() < .02) { ev.item = 'magic'; ev.pal = pk; ev.dur = 30; } }
   if (id === 'roadfind') { ev.item = pickWeighted(landFinds(ctx, W8, alt < -6)); ev.dur = 24; } // 海に浮かぶひろいもの（ボトル・貝がら・シーグラスなど）
   S.events.push(ev);
   if (id !== 'ship' && id !== 'bottle' && DEX[id]) setTimeout(() => found(id, false), id === 'whale' ? 1500 : 600);
@@ -3750,7 +3750,7 @@ const PALS = {
       ['あなたはわたしの友だちだよ！ おじいちゃんがほった、木のトナカイをいれておくね。', "You're my friend! I'm putting in a wooden reindeer my grandpa carved."]],
     draw: ['🌌', '🛷', '🦌'], gift: ['🦌', 'イングリッドの木のトナカイ', "Ingrid's wooden reindeer", 'おじいちゃんが木をほってつくったトナカイ', 'A reindeer carved from wood by her grandpa'] },
 };
-const PAL_GAP = 20 * 36e5; // ふしぎなボトルは多くても約20時間に1通
+const PAL_GAP = 20 * 36e5; // ふしぎなボトルは多くても約20時間に1通。届く状態でも、海を見て2時間に1本くらいのまれさ（流れてくる物の2%）
 const palName = id => EN ? PALS[id].name[1] : PALS[id].name[0];
 // いま届けられる子（おへんじ済みで続きがある子を先に。いなければ、この海の新しい子）
 function palDue(region) {
