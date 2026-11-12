@@ -184,6 +184,7 @@ body.full #b-full{right:14px;width:38px;padding:0;font-size:18px!important}body.
 body.full.calm #b-snd,body.full.calm #b-full,body.full.calm #b-info{opacity:0}
 body.full.calm #fsinfo{opacity:.8}
 body.full #toasts{top:auto;bottom:calc(70px + env(safe-area-inset-bottom))}
+#b-radio{position:absolute;left:54px;bottom:10px;z-index:5;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:17px;backdrop-filter:blur(4px)}#b-radio.on{background:rgba(230,120,40,.85)}.f-retro #b-radio{left:66px;bottom:24px}.f-round #b-radio{left:calc(21% + 46px);bottom:11%}body.full #b-radio{left:60px;bottom:calc(14px + env(safe-area-inset-bottom))}body.full.calm #b-radio,body.gaze #b-radio{opacity:0;pointer-events:none}.rlist{display:grid;gap:6px;margin:8px 0}.rst{text-align:left;border:1px solid #e6dccb;background:#fffaf0;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;font:inherit;color:inherit;cursor:pointer}.rst small{color:#8a7a66}.rst.on{background:#fde7cf;border-color:#e8a060}
 #b-snd{position:absolute;left:10px;bottom:10px;z-index:5;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:18px;backdrop-filter:blur(4px)}
 #s-vol{width:100%;margin:6px 0;accent-color:var(--accent)}
 .sps{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
@@ -316,7 +317,7 @@ svg.map{touch-action:none;cursor:grab;width:100%;aspect-ratio:1.5/1;border-radiu
     <div class="r"><div id="clock"></div><div id="wx"></div></div>
   </header>
   <div id="winwrap">
-    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button><button id="b-full" aria-label="全画面">⛶ 全画面</button><button id="b-gaze" aria-label="ながめるモード">🖼 ながめる</button><div id="gzcover"></div><div id="gzclock" hidden></div><div id="gzbar" hidden></div><div id="fshint" hidden></div><div id="fspark"></div><button id="b-info" aria-label="情報の表示">ℹ️</button><div id="fsinfo"></div><div id="fsmap" hidden role="button" aria-label="地図をひらく"></div></div>
+    <div id="win"><canvas id="cv"></canvas><div class="curtain l"></div><div class="curtain r"></div><div id="toasts"></div><button id="b-snd" aria-label="音">🔊</button><button id="b-radio" aria-label="ラジオ">📻</button><button id="b-full" aria-label="全画面">⛶ 全画面</button><button id="b-gaze" aria-label="ながめるモード">🖼 ながめる</button><div id="gzcover"></div><div id="gzclock" hidden></div><div id="gzbar" hidden></div><div id="fshint" hidden></div><div id="fspark"></div><button id="b-info" aria-label="情報の表示">ℹ️</button><div id="fsinfo"></div><div id="fsmap" hidden role="button" aria-label="地図をひらく"></div></div>
     <div id="sill"></div>
   </div>
   <section id="panel">
@@ -3501,14 +3502,15 @@ function drawLand(dt, W8, alt, ctx) {
   const gy0 = gtop + H * .03;
   c.fillStyle = shc(B.ground, .12); c.fillRect(0, gy0, W, H - gy0);
   if (ctx.biome === 'farm' && !W8.snowCover) { for (let k = 0; k < 6; k++) { const y = gy0 + (H * .82 - gy0) * (k / 6) ** 1.2; c.fillStyle = shc(mix(B.ground, k % 2 ? [150, 180, 70] : [100, 150, 60], .3), .1); c.fillRect(0, y, W, (H * .82 - gy0) / 9); } }
+  drawCrops(gy0, ctx);
   // 中景
   const mg = gy0 + (H - gy0) * .32, tw = 100, o = S.off.mid;
   for (let i = Math.floor(o / tw) - 1; i <= Math.floor((o + W) / tw) + 1; i++) {
     let t = S.tiles.get(i); if (!t) { t = tileProps(i, ctx.biome, P); S.tiles.set(i, t); }
-    for (const p of t) drawProp(p, i * tw - o + p.x, mg + (p.z - .5) * 10 * sc, sc * (0.9 + p.z * .2), ctx);
+    for (const p of t) { const x = i * tw - o + p.x, y = mg + (p.z - .5) * 10 * sc, k = bendOf(p); if (k) { c.save(); c.translate(x, y); c.transform(1, 0, k, 1, 0, 0); c.translate(-x, -y); } drawProp(p, x, y, sc * (0.9 + p.z * .2), ctx); if (k) c.restore(); }
   }
   if (S.tiles.size > 60) for (const k of S.tiles.keys()) if (k < Math.floor(o / tw) - 3) S.tiles.delete(k);
-  drawGroundEvents(mg, sc); drawNightMarket(mg, sc); drawTraffic(mg, sc, ctx, W8);
+  drawGroundEvents(mg, sc); drawNightMarket(mg, sc); drawFolk(mg, sc, ctx); drawTraffic(mg, sc, ctx, W8); drawSigns(mg, sc, ctx);
   if (L.fog > 0) { c.fillStyle = css(mix(L.haze, [230, 232, 236], .3), L.fog * .75); c.fillRect(0, 0, W, H); }
   // 近景：電柱や柵、道ばた
   const ny = H * .86;
@@ -4208,7 +4210,7 @@ function showRecord(tab = 'dex') {
      <h3>✉️ ${J(`ボトルの手紙（${L.length}通）`, `Letters in bottles (${L.length})`)}</h3>${L.length ? L.map(l => `<div class="letter sm"><small>${fdDate(l.at)}${J('・', ' · ')}${placeText(l.where)}${J('で拾った手紙', '')}</small><p>${J(`「<b>${l.about}</b> は、こんなところだよ。${FACTS[l.about] || ''}」`, `"<b>${tr(l.about)}</b> is a place like this: ${FACTS[l.about] || ''}"`)}</p></div>`).join('') : `<p class="note">${J('まだありません。', 'None yet.')}${st.bottles ? J(`（この機能ができる前に拾った ${st.bottles}本の手紙は残っていません）`, ` (Letters from the ${st.bottles} bottles found before this feature were not kept.)`) : ''}</p>`}`;
   }
   if (tab === 'sky') body = `<p class="note">${J('窓から見た天体ショーと、通ったお祭り', 'Sky shows seen from the window and festivals you passed')}</p>` + skyLogHtml();
-  if (tab === 'local') body = localLogHtml();
+  if (tab === 'local') body = localLogHtml() + radioLogHtml();
   if (tab === 'data') { const days = (Date.now() - st.started) / 864e5; body = EN ? `<div class="kv"><div><span>Distance driven</span><b>${fmt(traveled())} km</b></div><div><span>Times around Earth</span><b>${(traveled() / 40075).toFixed(2)}</b></div><div><span>Trip day</span><b>Day ${Math.floor(days) + 1}</b></div><div><span>Laps completed</span><b>${st.laps || 0}</b></div><div><span>Starting point</span><b>${tr(st.startName || '東京')}</b></div><div><span>Bottles found</span><b>${st.bottles || 0}</b></div><div><span>Current speed</span><b>${st.speed} km/h</b></div><div><span>Nights stayed</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>` : `<div class="kv"><div><span>走ったきょり</span><b>${fmt(traveled())}km</b></div><div><span>地球何周ぶん？</span><b>${(traveled() / 40075).toFixed(2)}周</b></div><div><span>旅をはじめて</span><b>${Math.floor(days) + 1}日目</b></div><div><span>世界一周</span><b>${st.laps || 0}回 達成</b></div><div><span>出発地</span><b>${st.startName || '東京'}</b></div><div><span>拾ったボトル</span><b>${st.bottles || 0}本</b></div><div><span>いまの速さ</span><b>時速${st.speed}km</b></div><div><span>泊まった回数</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>`; }
   modal(`<h2>${J('旅の記録', 'Travel log')}</h2><div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'rec');
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showRecord(b.dataset.tab));
@@ -5032,7 +5034,7 @@ function frame(ts) {
   P = curPos();
   const W8 = wxState(), alt = sunAlt(P.ll[0], P.ll[1], nowMs()), SE = S.SE; light(W8, SE && alt > -2 ? alt - (alt + 7) * (SE.total ? 1 : .9 * SE.f ** 4) : alt);
   const ctx = { biome: biomeOf(P), sea: P.seg.mode === 's', region: P.seg.mode === 's' ? seaRegion(P) : '', lat: P.ll[0], lon: P.ll[1], mon: localDate().getUTCMonth() + 1, snow: W8.snowCover };
-  S.ctx = ctx; localSky(W8, ctx, alt); localLife(ctx);
+  S.ctx = ctx; localSky(W8, ctx, alt); localLife(ctx); stormCheck(W8);
   // 景色の色・形はゆっくり切りかえる
   const T = biomeTarget(ctx.biome, W8);
   if (!S.rp || prevBiome === '') S.rp = JSON.parse(JSON.stringify(T));
@@ -5045,11 +5047,11 @@ function frame(ts) {
   if (S.t > S.nextEv) { spawnEvent(ctx, W8, alt); S.nextEv = S.t + 18 + Math.random() * 30; }
   S.events = S.events.filter(e => S.t - e.t0 < e.dur);
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const bump = ctx.sea || st.parked ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0);
+  const bump = ctx.sea || st.parked ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0) + (S.storm ? Math.sin(S.t * 17) * Math.sin(S.t * 2.3) * clamp((S.storm.w - 40) / 40) * 3 : 0);
   c.save(); c.translate(0, bump);
   if (ctx.sea) drawSea(dt, W8, alt, ctx); else drawLand(dt, W8, alt, ctx);
   c.restore();
-  drawWeather(dt, W8, ctx.sea); drawSandstorm(dt); drawBunting(); drawCamp();
+  drawWeather(dt, W8, ctx.sea); drawSandstorm(dt); drawStorm(dt, ctx.sea); drawBunting(); drawCamp();
   if (S.t - (S.auT || 0) > .5) { S.auT = S.t; auUpdate(W8, ctx); localSounds(ctx); }
   if (!st.preview) for (const n in S.lmSeen) if (S.lmSeen[n] > 90 && !st.lm[n]) { st.lm[n] = Date.now(); save(); toast(J(`🏛 <b>${LMNAME[n] || n}</b>が見えた！<small>名所の記録にのりました</small>`, `🏛 You can see <b>${LMNAME[n] || tr(n)}</b>!<small>Added to your sights log</small>`), 5000); }
   if (ts - lastHud > 1000) { lastHud = ts; skyCheck(); checkAct(); updateHud(); refreshWx(); refreshGeo(); }
@@ -5890,6 +5892,7 @@ function localizeTile(out, b, P0, i) {
   if (cc === 'IT' && (b === 'farm' || b === 'mount') && r(13) < .4) out.push({ type: 'cypress', x: r(14) * 80, s: 1, z: r(15) });
   if (cc === 'SN' && r(16) < .25) out.push({ type: 'baobab', x: r(17) * 80, s: 1, z: r(18) });
   if ((cc === 'DJ' || cc === 'SN' || (cc === 'AU' && b !== 'city')) && r(19) < .2) out.push({ type: cc === 'AU' ? 'eucalyptus' : 'acacia', x: r(20) * 80, s: 1, z: r(21) });
+  extraTile(out, b, i, cc, r);
   return out;
 }
 function drawLocalProp(p, x, gy, sc, ctx) {
@@ -5914,6 +5917,7 @@ function drawLocalProp(p, x, gy, sc, ctx) {
     case 'eucalyptus': c.strokeStyle = C([226, 214, 196]); c.lineWidth = 2.6 * s; c.beginPath(); c.moveTo(x, gy); c.lineTo(x + 1 * s, gy - 30 * s); c.moveTo(x + 1 * s, gy - 22 * s); c.lineTo(x + 8 * s, gy - 34 * s); c.stroke(); c.fillStyle = C([120, 150, 130]); for (const [dx, dy, r] of [[0, 36, 7], [8, 38, 6], [-6, 30, 5], [9, 30, 4]]) { c.beginPath(); c.arc(x + dx * s, gy - dy * s, r * s, 0, 7); c.fill(); } break;
     case 'acacia': c.strokeStyle = C([96, 76, 56]); c.lineWidth = 2 * s; c.beginPath(); c.moveTo(x, gy); c.lineTo(x, gy - 16 * s); c.lineTo(x - 7 * s, gy - 24 * s); c.moveTo(x, gy - 16 * s); c.lineTo(x + 8 * s, gy - 24 * s); c.stroke(); c.fillStyle = C([110, 140, 70]); c.beginPath(); c.ellipse(x, gy - 26 * s, 18 * s, 4 * s, 0, 0, 7); c.fill(); break;
     case 'saguaro': c.strokeStyle = C([76, 130, 76]); c.lineCap = 'round'; c.lineWidth = 6 * s; c.beginPath(); c.moveTo(x, gy); c.lineTo(x, gy - 40 * s); c.moveTo(x, gy - 18 * s); c.lineTo(x - 10 * s, gy - 18 * s); c.lineTo(x - 10 * s, gy - 30 * s); c.moveTo(x, gy - 22 * s); c.lineTo(x + 10 * s, gy - 22 * s); c.lineTo(x + 10 * s, gy - 34 * s); c.stroke(); c.lineCap = 'butt'; break;
+    default: drawLocalProp2(p, x, gy, sc, ctx);
   }
 }
 
@@ -6020,6 +6024,348 @@ function drawNightMarket(gy, sc) {
     for (let m = 0; m < 6; m++) { c.fillStyle = m % 2 ? 'rgba(255,90,70,.95)' : 'rgba(255,220,130,.95)'; c.beginPath(); c.arc(x + m * 24 * s, y - 34 * s + Math.sin(m * 1.3) * 3 * s, 2.2 * s, 0, 7); c.fill(); }
   }
   seeLocal('nightmarket');
+}
+
+/* ===== ご当地もの その2（標識と文字・洗濯物と旗・畑・道ばたの人と動物・ラジオ・台風） ===== */
+Object.assign(LOCAL, {
+  hangul: ['🇰🇷', 'ハングル', 'Hangul', '韓国の文字。600年ほど前に世宗大王がつくらせた', 'Korea\'s alphabet, created about 600 years ago under King Sejong', 'ハングル', 'Hangul'],
+  hanzi: ['🇨🇳', '簡体字', 'Simplified Chinese', '中国では、画数を少なくした漢字（簡体字）を使う', 'China uses simplified forms of Chinese characters', '簡体字', 'Simplified Chinese characters'],
+  cyrillic: ['🔤', 'キリル文字', 'Cyrillic script', 'ロシア・モンゴル・ブルガリアなどで使う文字', 'The alphabet of Russia, Mongolia, Bulgaria and more', 'キリル文字', 'Cyrillic script'],
+  arabic: ['🔤', 'アラビア文字', 'Arabic script', '右から左へ、文字をつなげて書く', 'Written right to left, with letters joined together', 'アラビア文字', 'Arabic script'],
+  persian: ['🔤', 'ペルシャ文字', 'Persian script', 'アラビア文字に、ペルシャ語の音の文字を足したもの', 'Arabic letters plus a few extra for Persian sounds', 'ペルシア文字', 'Persian alphabet'],
+  greek: ['🔤', 'ギリシャ文字', 'Greek alphabet', 'αβγ…。アルファベットのもとになった文字', 'αβγ… the ancestor of the Latin alphabet', 'ギリシア文字', 'Greek alphabet'],
+  thai: ['🔤', 'タイ文字', 'Thai script', '小さな丸のある、くるんとした形の文字', 'Curly letters with little loops', 'タイ文字', 'Thai script'],
+  lao: ['🔤', 'ラオ文字', 'Lao script', 'タイ文字のなかまで、もっと丸い形', 'A cousin of Thai script with rounder shapes', 'ラーオ文字', 'Lao script'],
+  viet: ['🔤', 'ベトナム語のローマ字', 'Vietnamese alphabet', '声の上がり下がりを、文字の上下の記号で書く', 'Marks above and below letters show the tones', 'クオック・グー', 'Vietnamese alphabet'],
+  devanagari: ['🔤', 'デーヴァナーガリー文字', 'Devanagari', 'ヒンディー語の文字。上の横線でつながる', 'The Hindi script, hung from a line along the top', 'デーヴァナーガリー', 'Devanagari'],
+  sinhala: ['🔤', 'シンハラ文字', 'Sinhala script', 'スリランカの、まるまるとした形の文字', 'Sri Lanka\'s beautifully round letters', 'シンハラ文字', 'Sinhala script'],
+  syllabics: ['🔤', 'イヌイットの文字', 'Inuktitut syllabics', 'カナダ北極圏の文字。三角の向きで音が変わる', 'In Arctic Canada, the direction of a shape changes its sound', 'カナダ先住民文字', 'Inuktitut syllabics'],
+  sign_kangaroo: ['🦘', 'カンガルー注意の標識', 'Kangaroo crossing sign', 'オーストラリアの道の、黄色いひし形の標識', 'The yellow diamond signs of Australian roads', 'カンガルー', 'Kangaroo crossing sign'],
+  sign_moose: ['🦌', 'ヘラジカ注意の標識', 'Moose crossing sign', '北欧やカナダでは、大きなヘラジカが道を横切る', 'Huge moose cross the roads in Scandinavia and Canada', 'ヘラジカ', 'Moose warning sign'],
+  sign_camel: ['🐪', 'ラクダ注意の標識', 'Camel crossing sign', '砂漠の道ではラクダが横切ることも', 'Camels may wander across desert roads', 'ヒトコブラクダ', 'Dromedary'],
+  sign_tanuki: ['🦝', 'タヌキ注意の標識', 'Tanuki crossing sign', '日本の山道にはタヌキやシカ、サルの標識がある', 'Japanese mountain roads have signs for tanuki, deer and monkeys', 'タヌキ', 'Japanese raccoon dog'],
+  sign_bear: ['🐻', 'クマ注意の標識', 'Bear warning sign', 'アメリカの国立公園の近くでは、クマに注意', 'Watch out for bears near American national parks', 'アメリカクロクマ', 'American black bear'],
+  laundry: ['👕', '通りの上の洗濯物', 'Laundry over the street', '南ヨーロッパやアジアの町では、窓から窓へ洗濯物がはためく', 'In southern Europe and Asia, washing flaps between windows', '洗濯物', 'Clothes line'],
+  futon: ['🛏', 'ふとん干し', 'Airing futons', '晴れた日の日本のベランダには、ふとんが干してある', 'On sunny days, Japanese balconies are hung with futons', '布団', 'Futon'],
+  koinobori: ['🎏', 'こいのぼり', 'Koinobori', '5月5日のこどもの日に向けて、空を泳ぐ鯉のかざり', 'Carp streamers swim in the sky for Children\'s Day on May 5', 'こいのぼり', 'Koinobori'],
+  ovoo: ['🪨', 'オボー', 'Ovoo', 'モンゴルの石積み。青い布を巻き、まわりを3回まわって旅の安全を祈る', 'A Mongolian stone cairn; travelers walk around it three times for luck', 'オボー', 'Ovoo'],
+  usflag: ['🇺🇸', '家の前の星条旗', 'Flags on porches', 'アメリカでは家の前に国旗をかかげる人が多い', 'Many American homes fly the flag out front', '星条旗', 'Flag of the United States'],
+  nordicflag: ['🏳', '庭の旗ざお', 'Garden flagpoles', '北欧では庭に旗ざおを立て、誕生日やお祝いの日に国旗をあげる', 'Nordic families raise the flag in the garden on birthdays and holidays', 'ダンネブロ', 'Flag of Denmark'],
+  stork: ['🪺', 'コウノトリの巣', 'Stork nests', '電柱や煙突の上の大きな巣。春から夏はコウノトリが子育て', 'Big nests on poles and chimneys, home to storks from spring to summer', 'シュバシコウ', 'White stork'],
+  rice: ['🌾', '田んぼ', 'Rice paddies', '春は水をはって空をうつし、夏は緑、秋は金色に実る', 'Mirror-like water in spring, green in summer, gold in autumn', '水田', 'Paddy field'],
+  wheat: ['🌾', '小麦畑', 'Wheat fields', '夏に金色の海のように広がる、パンのもとの畑', 'Golden seas of the grain that becomes bread', '小麦', 'Wheat'],
+  corn: ['🌽', 'トウモロコシ畑', 'Cornfields', '夏には人の背より高くなる', 'Taller than a person by late summer', 'トウモロコシ', 'Maize'],
+  vineyard: ['🍇', 'ぶどう畑', 'Vineyards', '春に芽が出て、秋に紫の実がなる。ワインの畑', 'Leaves in spring, purple grapes in autumn — wine country', 'ブドウ畑', 'Vineyard'],
+  sunflower: ['🌻', 'ひまわり畑', 'Sunflower fields', '夏、みんな同じ方を向いてさく', 'In summer they all face the same way', 'ヒマワリ', 'Common sunflower'],
+  lavender: ['💜', 'ラベンダー畑', 'Lavender fields', '初夏、むらさきの列とあまい香り', 'Purple rows and a sweet scent in early summer', 'ラベンダー', 'Lavandula'],
+  tea: ['🍵', '茶畑', 'Tea fields', 'まるく刈りこまれた緑の列。春の新芽がお茶になる', 'Rounded green rows; spring shoots become tea', '茶畑', 'Tea plantation'],
+  cotton: ['☁️', '綿花畑', 'Cotton fields', '秋、白いわたがはじけて畑がまっ白に', 'In autumn the bolls burst and fields turn white', 'ワタ', 'Cotton'],
+  rapeseed: ['🌼', '菜の花畑', 'Rapeseed fields', '春、一面の黄色。油をとるための花', 'Spring fields of yellow flowers grown for oil', 'セイヨウアブラナ', 'Rapeseed'],
+  holycow: ['🐄', '町を歩く牛', 'Cows in the street', 'インドでは牛は神聖な生きもの。道をのんびり歩く', 'Cows are sacred in India and stroll the streets', 'インドの牛', 'Cattle in religion and mythology'],
+  monks: ['🙏', '托鉢のお坊さん', 'Monks\' alms round', '朝、オレンジの衣のお坊さんが列になって歩き、食べ物の施しを受ける', 'At dawn, monks in orange robes walk in line to receive food', '托鉢', 'Alms'],
+  randoseru: ['🎒', 'ランドセルの子どもたち', 'Kids with randoseru', '日本の小学生は、かたいランドセルを背負って歩いて学校へ', 'Japanese schoolchildren walk to school with stiff leather backpacks', 'ランドセル', 'Randoseru'],
+  shepherd: ['🐑', '羊飼いと羊の群れ', 'Shepherd and flock', '草原や山の道を、羊の群れがのんびり横切る', 'Flocks of sheep amble across steppe and mountain roads', '羊飼い', 'Shepherd'],
+  chola: ['👒', 'チョリータ', 'Cholitas', 'アンデスの女性。山高帽とふくらんだスカート、背中に色あざやかな布', 'Andean women in bowler hats and full skirts with bright cloth bundles', 'チョリータ', 'Chola (Bolivia)'],
+  mariachi: ['🎸', 'マリアッチ', 'Mariachi', '大きなソンブレロでギターやバイオリンをひく、メキシコの楽団', 'Mexican bands in wide sombreros playing guitars and violins', 'マリアッチ', 'Mariachi'],
+  cowboy: ['🤠', 'カウボーイ', 'Cowboys', 'アメリカ西部の牧場では、今も馬で牛を追う', 'On western ranches, cattle are still herded on horseback', 'カウボーイ', 'Cowboy'],
+  radio: ['📻', 'ご当地ラジオ', 'Local radio', 'その国で本当に放送しているラジオを、インターネットで聞いた', 'You listened to a real station broadcasting in that country', 'ラジオ', 'Radio'],
+  typhoon: ['🌀', '台風', 'Typhoon', '北西太平洋で生まれる強い熱帯の嵐。台風・ハリケーン・サイクロンは、生まれる海で名前が変わるだけで同じなかま', 'A strong tropical storm of the northwest Pacific. Typhoons, hurricanes and cyclones are the same thing named by ocean', '台風', 'Typhoon'],
+  hurricane: ['🌀', 'ハリケーン', 'Hurricane', '大西洋や東太平洋で生まれる強い熱帯の嵐。カリブ海やアメリカをおそう', 'A strong tropical storm of the Atlantic and eastern Pacific', 'ハリケーン', 'Tropical cyclone'],
+  cyclone: ['🌀', 'サイクロン', 'Cyclone', 'インド洋や南太平洋で生まれる強い熱帯の嵐。南半球ではうずが時計回り', 'A strong tropical storm of the Indian Ocean and South Pacific; it spins clockwise in the south', 'サイクロン', 'Tropical cyclone'],
+});
+
+/* ----- 6 標識と文字 ----- */
+const LNAME = {
+  釜山: ['부산', 'hangul'], ソウル: ['서울', 'hangul'], 仁川: ['인천', 'hangul'],
+  天津: ['天津', 'hanzi'], 北京: ['北京', 'hanzi'], 西安: ['西安', 'hanzi'], 蘭州: ['兰州', 'hanzi'], 敦煌: ['敦煌', 'hanzi'], トルファン: ['吐鲁番', 'hanzi'], ウルムチ: ['乌鲁木齐', 'hanzi'], エレンホト: ['二连浩特', 'hanzi'], 桂林: ['桂林', 'hanzi'],
+  アルマトイ: ['Алматы', 'cyrillic'], ウランバートル: ['Улаанбаатар', 'cyrillic'], ウランウデ: ['Улан-Удэ', 'cyrillic'], バイカル湖: ['Байкал', 'cyrillic'], イルクーツク: ['Иркутск', 'cyrillic'], クラスノヤルスク: ['Красноярск', 'cyrillic'], ノヴォシビルスク: ['Новосибирск', 'cyrillic'], オムスク: ['Омск', 'cyrillic'], エカテリンブルク: ['Екатеринбург', 'cyrillic'], カザン: ['Казань', 'cyrillic'], モスクワ: ['Москва', 'cyrillic'], ミンスク: ['Мінск', 'cyrillic'], ソフィア: ['София', 'cyrillic'], ベオグラード: ['Београд', 'cyrillic'],
+  マシュハド: ['مشهد', 'persian'], テヘラン: ['تهران', 'persian'], タブリーズ: ['تبریز', 'persian'],
+  スエズ: ['السويس', 'arabic'], カイロ: ['القاهرة', 'arabic'], アレクサンドリア: ['الإسكندرية', 'arabic'], カサブランカ: ['الدار البيضاء', 'arabic'], マラケシュ: ['مراكش', 'arabic'], ジブチ: ['جيبوتي', 'arabic'],
+  アテネ: ['Αθήνα', 'greek'], テッサロニキ: ['Θεσσαλονίκη', 'greek'],
+  バンコク: ['กรุงเทพฯ', 'thai'], ビエンチャン: ['ວຽງຈັນ', 'lao'], ハノイ: ['Hà Nội', 'viet'], ハロン湾: ['Vịnh Hạ Long', 'viet'], ムンバイ: ['मुंबई', 'devanagari'], コロンボ: ['කොළඹ', 'sinhala'], イカルイト: ['ᐃᖃᓗᐃᑦ', 'syllabics'],
+};
+const SIGN_ANIMAL = { AU: 'kangaroo', SE: 'moose', NO: 'moose', FI: 'moose', CA: 'moose', EG: 'camel', MA: 'camel', DJ: 'camel', TM: 'camel', JP: 'tanuki', US: 'bear' };
+const SIGN_EMOJI = { kangaroo: '🦘', moose: '🦌', camel: '🐪', tanuki: '🦝', bear: '🐻' };
+const GREEN_SIGN = CCSET('US CA AU NZ IT CH GR');
+function newSign(ctx) {
+  const cc = ccOf(P), an = SIGN_ANIMAL[cc];
+  const animalOk = an && ctx.biome !== 'city' && !(an === 'bear' && !(ctx.biome === 'mount' || ctx.biome === 'forest')) && !(an === 'tanuki' && ctx.biome === 'coast');
+  if (animalOk && Math.random() < .4) return { kind: 'animal', an, cc };
+  const to = P.seg.b, ln = LNAME[to.name], km = Math.max(1, Math.round(P.seg.len - P.segKm));
+  if (km < 3) return null;
+  const jp = cc === 'JP';
+  return { kind: 'name', cc, big: ln ? ln[0] : jp ? to.name : (EN_T[to.name] || to.name), small: ln || jp ? (EN_T[to.name] || '') : '', km, script: ln ? ln[1] : '' };
+}
+function drawSigns(gy, sc, ctx) {
+  if (ctx.sea || !P) return;
+  if (!S.sign && S.vf > 0 && S.t > (S.nextSign || (S.nextSign = S.t + 15))) { const sg = newSign(ctx); if (sg) { sg.o0 = S.off.mid; S.sign = sg; } S.nextSign = S.t + 35 + Math.random() * 50; }
+  const sg = S.sign; if (!sg) return;
+  const s = sc * 1.1, x = W + 60 * s - (S.off.mid - sg.o0) * 1.15, y = gy + 10 * s;
+  if (x < -160 * s) { S.sign = null; return; }
+  const dim = L.night > .55 ? .55 : 1, post = shc([110, 112, 118], .1);
+  if (sg.kind === 'animal') {
+    const diamond = /AU|US|CA|JP/.test(sg.cc), hh = 30 * s;
+    c.fillStyle = post; c.fillRect(x - 1.2 * s, y - hh - 10 * s, 2.4 * s, hh + 10 * s);
+    c.save(); c.translate(x, y - hh - 10 * s); c.globalAlpha = dim;
+    if (diamond) { c.rotate(Math.PI / 4); c.fillStyle = '#f6c400'; c.fillRect(-11 * s, -11 * s, 22 * s, 22 * s); c.strokeStyle = '#111'; c.lineWidth = 1.4 * s; c.strokeRect(-9.6 * s, -9.6 * s, 19.2 * s, 19.2 * s); c.rotate(-Math.PI / 4); }
+    else { c.fillStyle = '#d0202a'; c.beginPath(); c.moveTo(0, -15 * s); c.lineTo(15 * s, 11 * s); c.lineTo(-15 * s, 11 * s); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(0, -9 * s); c.lineTo(10 * s, 8 * s); c.lineTo(-10 * s, 8 * s); c.fill(); }
+    c.font = `${Math.round((diamond ? 13 : 10) * s)}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(SIGN_EMOJI[sg.an], 0, diamond ? 0 : 2 * s); c.restore(); c.textBaseline = 'alphabetic';
+    if (x > W * .15 && x < W * .85) seeLocal('sign_' + sg.an);
+    return;
+  }
+  c.font = `700 ${Math.round(12 * s)}px sans-serif`; const w1 = c.measureText(sg.big).width;
+  c.font = `${Math.round(7 * s)}px sans-serif`; const w2 = c.measureText(sg.small + '   ' + sg.km + ' km').width;
+  const bw = Math.max(w1, w2) + 26 * s, bh = 31 * s, top = y - 22 * s - bh;
+  c.fillStyle = post; c.fillRect(x - bw * .35, top + bh, 2.4 * s, 22 * s); c.fillRect(x + bw * .35 - 2.4 * s, top + bh, 2.4 * s, 22 * s);
+  c.globalAlpha = dim; c.fillStyle = GREEN_SIGN.has(sg.cc) ? '#14703e' : '#1d4f9a'; c.beginPath(); c.roundRect ? c.roundRect(x - bw / 2, top, bw, bh, 3 * s) : c.rect(x - bw / 2, top, bw, bh); c.fill();
+  c.strokeStyle = '#fff'; c.lineWidth = 1 * s; c.beginPath(); c.roundRect ? c.roundRect(x - bw / 2 + 2 * s, top + 2 * s, bw - 4 * s, bh - 4 * s, 2 * s) : c.rect(x - bw / 2 + 2 * s, top + 2 * s, bw - 4 * s, bh - 4 * s); c.stroke();
+  c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = `700 ${Math.round(12 * s)}px sans-serif`; c.fillText(sg.big, x, top + 15 * s);
+  c.font = `${Math.round(7 * s)}px sans-serif`; c.fillText((sg.small ? sg.small + '   ' : '') + sg.km + ' km', x, top + bh - 6 * s); c.globalAlpha = 1;
+  if (sg.script && x > W * .15 && x < W * .85) seeLocal(sg.script);
+}
+
+/* ----- 7 洗濯物と旗 ----- */
+const LAUNDRY = CCSET('IT PT ES GR VN CN IN TR EG MA');
+function extraTile(out, b, i, cc, r) {
+  const put = (type, x, o) => out.push(Object.assign({ type, x, s: .9 + r(60 + out.length) * .25, z: r(70 + out.length) }, o || {}));
+  const mon = localDate().getUTCMonth() + 1;
+  if (b === 'city' && LAUNDRY.has(cc) && r(31) < .35) put('laundry', r(32) * 70, { c: r(33) * 5 | 0 });
+  if (b === 'city' && cc === 'JP' && r(34) < .35) put('futon', r(35) * 70);
+  if (cc === 'JP' && b !== 'city' && b !== 'mount' && mon >= 4 && mon <= 5 && r(36) < .2) put('koinobori', r(37) * 70);
+  if (cc === 'MN' && (b === 'steppe' || b === 'desert' || b === 'mount') && r(38) < .12) put('ovoo', r(39) * 70);
+  if (cc === 'US' && out.some(p => p.type === 'barn' || p.type === 'house') && r(40) < .5) put('usflag', r(41) * 70);
+  if (NORDIC.has(cc) && out.some(p => p.type === 'nordichouse') && r(42) < .5) put('nordicflag', r(43) * 70, { c: cc });
+  if (/PL|ES|PT|MA|BY|HU/.test(cc) && (b === 'farm' || b === 'steppe') && r(44) < .2) put('stork', r(45) * 70);
+}
+function drawLocalProp2(p, x, gy, sc, ctx) {
+  const s = sc * p.s, C = col => css(sh(col, .11)), night = L.night > .55, win = night ? 'rgba(255,214,120,.95)' : C([70, 90, 110]);
+  const hr = localDate().getUTCHours(), seen = id => { if (x > W * .1 && x < W * .9) seeLocal(id); };
+  const flap = k => Math.sin(S.t * 4 + k + p.x) * (1 + (S.storm ? 2.5 : 0));
+  switch (p.type) {
+    case 'laundry': { const pal = [[226, 170, 120], [236, 210, 160], [200, 120, 90], [240, 230, 214], [214, 180, 140]];
+      for (const [bx, bh] of [[-22, 46], [8, 52]]) { c.fillStyle = C(pal[(p.c + (bx > 0 ? 2 : 0)) % 5]); c.fillRect(x + bx * s, gy - bh * s, 24 * s, bh * s); c.fillStyle = win; for (let fy = 0; fy < 3; fy++) for (let fx = 0; fx < 2; fx++) { c.fillRect(x + (bx + 4 + fx * 11) * s, gy - (bh - 6 - fy * 14) * s, 5 * s, 8 * s); c.fillStyle = C([90, 110, 80]); c.fillRect(x + (bx + 3 + fx * 11) * s, gy - (bh - 6 - fy * 14) * s, 1.4 * s, 8 * s); c.fillRect(x + (bx + 8.6 + fx * 11) * s, gy - (bh - 6 - fy * 14) * s, 1.4 * s, 8 * s); c.fillStyle = win; } }
+      if (!W8rain()) { const cl = ['#e8e8e8', '#d94c4c', '#4a7fc0', '#f2c94c', '#7bb661', '#f4f4f4', '#c77dba']; for (const ly of [30, 18]) { c.strokeStyle = C([60, 60, 60]); c.lineWidth = .7 * s; c.beginPath(); c.moveTo(x + 2 * s, gy - ly * s); c.quadraticCurveTo(x + 5 * s, gy - (ly - 3) * s, x + 8 * s, gy - ly * s); c.stroke(); for (let k = 0; k < 4; k++) { const cx = x + (-1 + k * 3) * s; c.fillStyle = cl[(k + ly + p.c) % 7]; c.save(); c.translate(cx, gy - (ly - 1.6) * s); c.rotate(flap(k) * .05); c.fillRect(-1.2 * s, 0, 2.6 * s, (k % 2 ? 4 : 3) * s); c.restore(); } } seen('laundry'); }
+      break; }
+    case 'futon': { c.fillStyle = C([226, 222, 212]); c.fillRect(x - 18 * s, gy - 44 * s, 36 * s, 44 * s); for (let fy = 0; fy < 4; fy++) { const yy = gy - (40 - fy * 10) * s; c.fillStyle = win; c.fillRect(x - 15 * s, yy, 30 * s, 6 * s); c.fillStyle = C([150, 150, 150]); c.fillRect(x - 17 * s, yy + 5 * s, 34 * s, 1.6 * s);
+        if (!night && hr >= 9 && hr <= 15 && !W8rain() && (fy + (p.x | 0)) % 2 === 0) { c.fillStyle = ['#f2f0ea', '#e98f8f', '#8fb4e9', '#f2d48f'][(fy + (p.x | 0)) % 4]; c.fillRect(x - 13 * s + fy * 3 * s, yy + 5.5 * s, 9 * s, 6 * s); seen('futon'); } } break; }
+    case 'koinobori': { c.fillStyle = C([200, 200, 196]); c.fillRect(x - .8 * s, gy - 60 * s, 1.6 * s, 60 * s); c.fillStyle = '#e6c02a'; c.beginPath(); c.arc(x, gy - 61 * s, 1.8 * s, 0, 7); c.fill();
+      [['#2a2a2a', 13], ['#d33a2c', 11], ['#2f6fd0', 9]].forEach(([col, L0], k) => { const yy = gy - (55 - k * 10) * s; c.fillStyle = col; c.beginPath(); c.moveTo(x, yy - 3 * s); for (let t = 0; t <= 1.001; t += .25) c.lineTo(x - L0 * t * s, yy - 3 * s + Math.sin(S.t * 3 + t * 4 + k) * 1.5 * s * t); for (let t = 1; t >= -.001; t -= .25) c.lineTo(x - L0 * t * s, yy + 3 * s + Math.sin(S.t * 3 + t * 4 + k) * 1.5 * s * t); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(x - 2 * s, yy - .5 * s, 1.1 * s, 0, 7); c.fill(); });
+      seen('koinobori'); break; }
+    case 'ovoo': { c.fillStyle = C([130, 124, 116]); c.beginPath(); c.moveTo(x - 12 * s, gy); c.lineTo(x - 5 * s, gy - 14 * s); c.lineTo(x + 5 * s, gy - 14 * s); c.lineTo(x + 12 * s, gy); c.fill(); c.fillStyle = C([160, 150, 140]); for (let k = 0; k < 5; k++) { c.beginPath(); c.arc(x - 8 * s + k * 4 * s, gy - 3 * s - (k % 2) * 4 * s, 2.4 * s, 0, 7); c.fill(); }
+      c.strokeStyle = C([110, 80, 50]); c.lineWidth = 1.4 * s; c.beginPath(); c.moveTo(x, gy - 12 * s); c.lineTo(x, gy - 30 * s); c.stroke(); c.fillStyle = '#3a7bd5'; for (let k = 0; k < 4; k++) { c.save(); c.translate(x, gy - (28 - k * 4) * s); c.rotate(-.3 + flap(k) * .08); c.fillRect(-10 * s, 0, 10 * s, 1.6 * s); c.restore(); } seen('ovoo'); break; }
+    case 'usflag': case 'nordicflag': { c.fillStyle = C([220, 220, 216]); c.fillRect(x - .7 * s, gy - 34 * s, 1.4 * s, 34 * s); const fw = 14 * s, fh = 9 * s, fx = x + .7 * s, fy = gy - 34 * s;
+      c.save(); c.translate(fx, fy); c.transform(1, flap(1) * .03, 0, 1, 0, 0);
+      if (p.type === 'usflag') { for (let k = 0; k < 7; k++) { c.fillStyle = k % 2 ? '#f4f4f4' : '#c8323c'; c.fillRect(0, k * fh / 7, fw, fh / 7 + .3); } c.fillStyle = '#28407a'; c.fillRect(0, 0, fw * .45, fh * 4 / 7); }
+      else { const F = { DK: ['#c8102e', '#fff', null], NO: ['#ba0c2f', '#fff', '#00205b'], SE: ['#006aa7', '#fecc02', null], FI: ['#fff', '#002f6c', null], IS: ['#02529c', '#fff', '#dc1e35'], GL: ['#c8102e', '#fff', null] }[p.c] || ['#c8102e', '#fff', null];
+        c.fillStyle = F[0]; c.fillRect(0, 0, fw, fh); c.fillStyle = F[1]; c.fillRect(fw * .3, 0, fh * .28, fh); c.fillRect(0, fh * .36, fw, fh * .28); if (F[2]) { c.fillStyle = F[2]; c.fillRect(fw * .3 + fh * .07, 0, fh * .14, fh); c.fillRect(0, fh * .43, fw, fh * .14); } }
+      c.restore(); seen(p.type); break; }
+    case 'stork': { c.fillStyle = C([120, 110, 100]); c.fillRect(x - 1.4 * s, gy - 40 * s, 2.8 * s, 40 * s); c.fillStyle = C([120, 92, 60]); c.beginPath(); c.ellipse(x, gy - 41 * s, 8 * s, 3 * s, 0, 0, 7); c.fill();
+      const mon = localDate().getUTCMonth() + 1; if (mon >= 3 && mon <= 8) { c.fillStyle = C([246, 246, 242]); c.beginPath(); c.ellipse(x + 1 * s, gy - 47 * s, 4 * s, 3 * s, -.2, 0, 7); c.fill(); c.fillStyle = '#222'; c.fillRect(x + 1 * s, gy - 46 * s, 4 * s, 1.6 * s); c.fillStyle = C([246, 246, 242]); c.fillRect(x - 3.5 * s, gy - 54 * s, 1.4 * s, 7 * s); c.beginPath(); c.arc(x - 3 * s, gy - 54.5 * s, 1.8 * s, 0, 7); c.fill(); c.fillStyle = '#e04a2a'; c.fillRect(x - 8.5 * s, gy - 55 * s, 4.5 * s, 1 * s); seen('stork'); } break; }
+  }
+}
+const W8rain = () => { const w = S.W8; return w && (w.rain > 0 || w.snow > 0); };
+
+/* ----- 8 畑と作物 ----- */
+function cropOf(cc, lat, lon) {
+  const k = hash((P.seg.a.name.length * 97 + (P.segAbs | 0)) | 0), m = localDate().getUTCMonth() + 1;
+  if (cc === 'JP') return nearbyStops(P).some(n => n.stop.name === '富士山のふもと' && Math.abs(n.d) < 80) && k < .6 ? 'tea' : 'rice';
+  if (cc === 'KR') return 'rice';
+  if (cc === 'CN') return lat < 34 ? (m >= 3 && m <= 4 ? 'rapeseed' : 'rice') : k < .5 ? 'wheat' : 'corn';
+  if (/VN|TH|LA|IN|MY/.test(cc)) return 'rice';
+  if (cc === 'LK') return k < .5 ? 'tea' : 'rice';
+  if (cc === 'FR') return k < .45 ? 'vineyard' : k < .75 ? 'sunflower' : 'lavender';
+  if (/IT|PT|AR|CL/.test(cc)) return k < .7 ? 'vineyard' : 'wheat';
+  if (cc === 'ES') return k < .5 ? 'vineyard' : 'sunflower';
+  if (/HU|BG|RS/.test(cc)) return k < .55 ? 'sunflower' : 'wheat';
+  if (/RU|KZ|BY|PL|CA|DE|CZ|AT/.test(cc)) return k < .7 ? 'wheat' : 'rapeseed';
+  if (/UZ|TM/.test(cc)) return 'cotton';
+  if (cc === 'MX') return 'corn';
+  if (cc === 'US') return lon > -105 && lon < -80 ? (k < .55 ? 'corn' : 'wheat') : lon < -118 && lat > 36 ? 'vineyard' : null;
+  return null;
+}
+function cropStage(crop, lat) {
+  let m = localDate().getUTCMonth() + 1; if (lat < 0) m = (m + 5) % 12 + 1; const trop = Math.abs(lat) < 24;
+  switch (crop) {
+    case 'rice': return trop ? (m >= 11 ? 'gold' : m <= 2 ? 'stub' : m <= 4 ? 'water' : 'green') : m >= 4 && m <= 5 ? 'water' : m >= 6 && m <= 8 ? 'green' : m >= 9 && m <= 10 ? 'gold' : 'stub';
+    case 'wheat': return m >= 6 && m <= 8 ? 'gold' : m === 9 ? 'stub' : m >= 3 ? 'green' : 'young';
+    case 'corn': return m >= 7 && m <= 9 ? 'tall' : m === 10 ? 'dry' : m >= 5 ? 'young' : 'bare';
+    case 'vineyard': return m >= 8 && m <= 10 ? 'grapes' : m >= 4 ? 'leaf' : 'bare';
+    case 'sunflower': return m >= 7 && m <= 8 ? 'bloom' : m === 9 ? 'dry' : m >= 5 ? 'young' : 'bare';
+    case 'lavender': return m >= 6 && m <= 7 ? 'bloom' : 'leaf';
+    case 'tea': return m >= 4 && m <= 5 ? 'fresh' : 'leaf';
+    case 'cotton': return m >= 9 && m <= 10 ? 'bloom' : m >= 6 ? 'leaf' : 'bare';
+    case 'rapeseed': return m >= 3 && m <= 5 ? 'bloom' : 'leaf';
+  }
+}
+const SHOWY = { rice: 'water green gold', wheat: 'gold', corn: 'tall', vineyard: 'leaf grapes', sunflower: 'bloom', lavender: 'bloom', tea: 'leaf fresh', cotton: 'bloom', rapeseed: 'bloom' };
+function drawCrops(gy0, ctx) {
+  if (ctx.biome !== 'farm' || ctx.snow || !P) return;
+  const cc = ccOf(P), crop = cropOf(cc, P.ll[0], P.ll[1]); if (!crop) return;
+  const stg = cropStage(crop, P.ll[0]), yB = H * .82, N = 9;
+  const base = { water: mix(L.bot, [120, 150, 170], .4), green: [96, 160, 70], gold: [214, 182, 80], stub: [150, 124, 84], young: [130, 170, 90], tall: [74, 124, 56], dry: [170, 150, 96], bare: [140, 112, 82], leaf: [104, 140, 70], grapes: [104, 140, 70], bloom: [96, 140, 60], fresh: [120, 176, 70] }[stg];
+  const bcol = crop === 'lavender' && stg === 'bloom' ? [128, 104, 170] : crop === 'rapeseed' && stg === 'bloom' ? [236, 206, 60] : crop === 'tea' ? mix(base, [50, 100, 50], .3) : crop === 'vineyard' ? [150, 120, 86] : base;
+  for (let k = 0; k < N; k++) {
+    const t0 = k / N, t1 = (k + 1) / N, y0 = gy0 + (yB - gy0) * t0 ** 1.25, y1 = gy0 + (yB - gy0) * t1 ** 1.25, f = .35 + 1.3 * t0, o = S.off.mid * (.3 + 1.8 * t0);
+    c.fillStyle = shc(mix(bcol, k % 2 ? [255, 255, 255] : [0, 0, 0], .05), .1); c.fillRect(0, y0, W, y1 - y0 + 1);
+    const gap = 9 * f * Math.max(1, H / 500), n0 = Math.floor(o / gap) - 1;
+    for (let j = n0; j < n0 + W / gap + 3; j++) {
+      const x = j * gap - o, yy = y1 - 1, hh = (y1 - y0), q = h2(j, k);
+      switch (crop) {
+        case 'rice': if (stg === 'water') { if (q < .7) { c.fillStyle = shc([110, 170, 80], .1); c.fillRect(x, yy - 2 * f, 1.2 * f, 2 * f); } } else { c.strokeStyle = shc(stg === 'gold' ? [196, 160, 60] : stg === 'stub' ? [180, 150, 100] : [70, 140, 60], .1); c.lineWidth = 1; c.beginPath(); c.moveTo(x, yy); c.lineTo(x + (stg === 'gold' ? 2 * f : 0), yy - hh * (stg === 'stub' ? .3 : .9)); c.stroke(); } break;
+        case 'wheat': c.strokeStyle = shc(stg === 'gold' ? [236, 200, 100] : [110, 160, 70], .1); c.lineWidth = 1; c.beginPath(); c.moveTo(x, yy); c.lineTo(x + Math.sin(S.t * 2 + j * .3) * f, yy - hh * (stg === 'young' ? .3 : 1)); c.stroke(); break;
+        case 'corn': if (stg !== 'bare') { c.strokeStyle = shc(stg === 'dry' ? [180, 160, 100] : [70, 130, 50], .1); c.lineWidth = 1.4 * f; c.beginPath(); c.moveTo(x, yy); c.lineTo(x, yy - hh * (stg === 'young' ? .6 : 1.8)); c.moveTo(x, yy - hh * .8); c.lineTo(x - 3 * f, yy - hh * .5); c.stroke(); } break;
+        case 'vineyard': if (j % 2 === 0) { c.fillStyle = shc([110, 90, 70], .1); c.fillRect(x, yy - hh * 1.3, 1 * f, hh * 1.3); } if (stg !== 'bare') { c.fillStyle = shc([80, 130, 60], .1); c.fillRect(x, yy - hh * 1.2, gap + .5, hh * .7); if (stg === 'grapes' && q < .5) { c.fillStyle = shc([96, 50, 110], .1); c.beginPath(); c.arc(x + gap * .5, yy - hh * .45, 1.3 * f, 0, 7); c.fill(); } } break;
+        case 'sunflower': if (stg !== 'bare') { c.strokeStyle = shc([80, 130, 50], .1); c.lineWidth = 1; c.beginPath(); c.moveTo(x, yy); c.lineTo(x, yy - hh * 1.4); c.stroke(); if (stg === 'bloom' || stg === 'dry') { c.fillStyle = shc(stg === 'bloom' ? [246, 196, 30] : [140, 110, 60], .1); c.beginPath(); c.arc(x, yy - hh * 1.4, 2.4 * f, 0, 7); c.fill(); c.fillStyle = shc([90, 60, 30], .1); c.beginPath(); c.arc(x, yy - hh * 1.4, 1 * f, 0, 7); c.fill(); } } break;
+        case 'lavender': case 'tea': case 'cotton': { c.fillStyle = shc(crop === 'lavender' ? (stg === 'bloom' ? [150, 110, 200] : [130, 150, 130]) : crop === 'tea' ? (stg === 'fresh' ? [130, 196, 80] : [70, 140, 60]) : (stg === 'bare' ? [140, 112, 82] : [90, 130, 70]), .1); c.beginPath(); c.ellipse(x, yy - hh * .3, gap * .48, hh * .55, 0, Math.PI, 0); c.fill();
+          if (crop === 'cotton' && stg === 'bloom') { c.fillStyle = shc([250, 250, 246], .1); for (let m = 0; m < 3; m++) { c.beginPath(); c.arc(x - gap * .25 + m * gap * .25, yy - hh * (.5 + (m % 2) * .2), 1.2 * f, 0, 7); c.fill(); } } break; }
+        case 'rapeseed': c.fillStyle = shc(stg === 'bloom' ? [250, 220, 60] : [110, 150, 70], .1); c.fillRect(x, yy - hh * .9, 1.6 * f, hh * .6); break;
+      }
+    }
+  }
+  if (SHOWY[crop].split(' ').includes(stg)) seeLocal(crop);
+}
+
+/* ----- 9 道ばたの人と動物 ----- */
+function person(x, y, s, o) { // o: {body, legs, skirt, hat, pack, robe, bowl, guitar}
+  const sw = Math.sin(S.t * 6 + (o.ph || 0)) * 1.6 * s;
+  c.strokeStyle = o.legs || '#333'; c.lineWidth = 1.6 * s; c.beginPath(); c.moveTo(x, y - 7 * s); c.lineTo(x - sw, y); c.moveTo(x, y - 7 * s); c.lineTo(x + sw, y); c.stroke();
+  c.fillStyle = o.body; if (o.robe) { c.beginPath(); c.moveTo(x - 4 * s, y - 2 * s); c.lineTo(x - 3 * s, y - 15 * s); c.lineTo(x + 3 * s, y - 15 * s); c.lineTo(x + 4 * s, y - 2 * s); c.fill(); }
+  else { c.fillRect(x - 2.6 * s, y - 15 * s, 5.2 * s, 8.5 * s); if (o.skirt) { c.fillStyle = o.skirt; c.beginPath(); c.moveTo(x - 5.5 * s, y - 2 * s); c.lineTo(x - 2.6 * s, y - 9 * s); c.lineTo(x + 2.6 * s, y - 9 * s); c.lineTo(x + 5.5 * s, y - 2 * s); c.fill(); } }
+  if (o.pack) { c.fillStyle = o.pack; c.fillRect(x + 2.2 * s, y - 15 * s, 4 * s, 6 * s); }
+  if (o.bundle) { c.fillStyle = o.bundle; c.beginPath(); c.ellipse(x + 3.5 * s, y - 12 * s, 3.5 * s, 4 * s, 0, 0, 7); c.fill(); }
+  c.fillStyle = o.skin || '#d9a679'; c.beginPath(); c.arc(x, y - 18 * s, 2.8 * s, 0, 7); c.fill();
+  if (o.bowl) { c.fillStyle = '#333'; c.beginPath(); c.arc(x - 3 * s, y - 10 * s, 2 * s, 0, Math.PI); c.fill(); }
+  if (o.guitar) { c.fillStyle = '#b5763a'; c.beginPath(); c.ellipse(x - 3 * s, y - 9 * s, 3 * s, 2.4 * s, .5, 0, 7); c.fill(); c.fillRect(x - 1 * s, y - 15 * s, 1 * s, 6 * s); }
+  const hat = o.hat; if (!hat) return; c.fillStyle = hat[1];
+  if (hat[0] === 'cap') { c.beginPath(); c.arc(x, y - 19 * s, 3 * s, Math.PI, 0); c.fill(); c.fillRect(x - 4 * s, y - 19.2 * s, 8 * s, 1 * s); }
+  if (hat[0] === 'bowler') { c.beginPath(); c.arc(x, y - 21 * s, 2.2 * s, Math.PI, 0); c.fill(); c.fillRect(x - 3.4 * s, y - 21 * s, 6.8 * s, .9 * s); }
+  if (hat[0] === 'brim') { c.beginPath(); c.ellipse(x, y - 20.5 * s, (o.wide ? 7.5 : 5) * s, 1.2 * s, 0, 0, 7); c.fill(); c.beginPath(); c.arc(x, y - 21 * s, 2.4 * s, Math.PI, 0); c.fill(); }
+}
+function folkPool(ctx) {
+  const cc = ccOf(P), ld = localDate(), hr = ld.getUTCHours(), dow = ld.getUTCDay(), b = ctx.biome, out = [];
+  if (cc === 'IN' && b !== 'sea') out.push('holycow');
+  if ((cc === 'TH' || cc === 'LA') && hr >= 6 && hr < 8) out.push('monks');
+  if (cc === 'JP' && dow > 0 && dow < 6 && (hr === 7 || (hr >= 14 && hr < 17)) && b !== 'mount') out.push('randoseru');
+  if (/MN|KZ|TR|GR|IR|UZ/.test(cc) && (b === 'steppe' || b === 'mount' || b === 'farm' || b === 'desert')) out.push('shepherd');
+  if ((cc === 'BO' || cc === 'PE') && hr >= 7 && hr < 19) out.push('chola');
+  if (cc === 'MX' && b === 'city' && hr >= 17) out.push('mariachi');
+  if (cc === 'US' && P.ll[1] < -95 && P.ll[1] > -115 && (b === 'steppe' || b === 'desert' || b === 'farm') && hr >= 7 && hr < 19) out.push('cowboy');
+  return out;
+}
+function drawFolk(gy, sc, ctx) {
+  if (ctx.sea || !P || L.night > .7) return;
+  if (!S.folk && S.t > (S.nextFolk || (S.nextFolk = S.t + 12))) { const pool = folkPool(ctx); if (pool.length) S.folk = { id: pool[Math.random() * pool.length | 0], o0: S.off.mid, t0: S.t, n: 2 + (Math.random() * 3 | 0) }; S.nextFolk = S.t + 30 + Math.random() * 40; }
+  const F = S.folk; if (!F) return;
+  const s = sc * 1.05, walk = F.id === 'cowboy' ? 22 : F.id === 'holycow' ? 4 : 9, x0 = W + 40 * s - (S.off.mid - F.o0) - (S.t - F.t0) * walk * s, y = gy + 8 * s;
+  if (x0 < -260 * s) { S.folk = null; return; }
+  const P2 = (k, o) => person(x0 + k * 16 * s, y, s, Object.assign({ ph: k * 1.7 }, o));
+  switch (F.id) {
+    case 'holycow': for (let k = 0; k < Math.min(2, F.n); k++) { const cx = x0 + k * 34 * s; drawAnimal('cow', cx, y, s * 1.1, S.t * 2 + k); c.fillStyle = '#f39c12'; for (let m = 0; m < 5; m++) { c.beginPath(); c.arc(cx - 9 * s + m * 1.6 * s, y - 11 * s + Math.abs(m - 2) * -.8 * s, 1.1 * s, 0, 7); c.fill(); } } break;
+    case 'monks': for (let k = 0; k < F.n + 2; k++) P2(k, { body: '#e8871e', robe: 1, legs: '#c9874f', skin: '#c99063', bowl: 1 }); break;
+    case 'randoseru': for (let k = 0; k < F.n; k++) person(x0 + k * 13 * s, y, s * .78, { ph: k, body: ['#fff', '#9ec6f0', '#f0b6c8'][k % 3], legs: '#334', pack: k % 2 ? '#c0392b' : '#222', hat: ['cap', '#f6d000'] }); break;
+    case 'shepherd': { for (let k = 0; k < 7 + F.n; k++) drawAnimal('sheep', x0 + 10 * s + k * 11 * s + h2(k, 4) * 6 * s, y + h2(k, 5) * 5 * s, s * .8, S.t * 5 + k); const hx = x0 + (18 + F.n * 11) * s + 20 * s; if (ccOf(P) === 'MN') { drawAnimal('horse', hx, y, s, S.t * 5); person(hx, y - 11 * s, s * .9, { body: '#2d5aa0', legs: 'rgba(0,0,0,0)', hat: ['bowler', '#c0392b'] }); } else person(hx, y, s, { body: '#6b5a48', hat: ['cap', '#444'] }); break; }
+    case 'chola': for (let k = 0; k < Math.min(2, F.n); k++) P2(k * 1.6, { body: ['#c0392b', '#2e86c1'][k], skirt: ['#8e44ad', '#16a085'][k], legs: '#444', bundle: k ? '#e67e22' : '#e74c3c', hat: ['bowler', '#3a3a3a'] }); break;
+    case 'mariachi': for (let k = 0; k < 3; k++) P2(k, { body: '#1c1c1c', legs: '#1c1c1c', guitar: k !== 1, hat: ['brim', '#2a2a2a'], wide: 1 }); break;
+    case 'cowboy': drawAnimal('horse', x0, y, s * 1.1, S.t * 10); person(x0, y - 12 * s, s * .9, { body: '#a0522d', legs: 'rgba(0,0,0,0)', hat: ['brim', '#7a5230'] }); for (let k = 0; k < 4; k++) drawAnimal('cow', x0 - 30 * s - k * 22 * s, y + h2(k, 2) * 4 * s, s * .95, S.t * 8 + k); break;
+  }
+  if (x0 > W * .1 && x0 < W * .85) seeLocal(F.id);
+}
+
+/* ----- 10 ご当地ラジオ ----- */
+const RADIO = { a: null, list: null, cc: '', cur: null, on: false, busy: false, tried: {} };
+const RB_HOSTS = ['de1', 'nl1', 'at1', 'de2', 'fi1'];
+const radioCC = () => { const cc = ccOf(P) || 'JP'; return cc === 'HI' ? 'US' : cc; };
+async function rbStations(cc) {
+  const hs = RB_HOSTS.slice().sort(() => Math.random() - .5);
+  for (const h of hs) {
+    try {
+      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 7000);
+      const extra = ccOf(P) === 'HI' ? '&state=Hawaii' : '';
+      const r = await fetch(`https://${h}.api.radio-browser.info/json/stations/search?countrycode=${cc}${extra}&order=clickcount&reverse=true&limit=60&hidebroken=true`, { signal: ctl.signal });
+      clearTimeout(tm); if (!r.ok) continue;
+      const j = await r.json(), seen = new Set();
+      RADIO.host = h;
+      return j.filter(s => /^https:\/\//.test(s.url_resolved || '') && !/hls|m3u8/i.test(s.codec + s.url_resolved) && !seen.has(s.name.trim().toLowerCase()) && seen.add(s.name.trim().toLowerCase())).slice(0, 10);
+    } catch (e) { }
+  }
+  return null;
+}
+function radioPlay(stn) {
+  if (!stn) return; RADIO.cur = stn; RADIO.on = true;
+  if (!RADIO.a) { RADIO.a = new Audio(); RADIO.a.preload = 'none'; RADIO.a.onerror = () => { if (!RADIO.on) return; RADIO.tried[RADIO.cur.stationuuid] = 1; const nx = (RADIO.list || []).find(s => !RADIO.tried[s.stationuuid]); if (nx) radioPlay(nx); else { radioStop(); toast(J('📻 この国の局につながりませんでした', '📻 Couldn\'t reach a station here'), 3000); } }; }
+  RADIO.a.src = stn.url_resolved; RADIO.a.volume = .85;
+  RADIO.a.play().then(() => {
+    const cc = RADIO.cc; st.radio = st.radio || {}; if (!st.radio[cc]) { st.radio[cc] = { at: Date.now(), name: stn.name.trim(), where: placeKey() }; save(); } seeLocal('radio');
+    toast(`📻 <b>${esc2(stn.name.trim())}</b><small>${radioCountry(RADIO.cc)}${J('のラジオ', ' radio')}${stn.tags ? '・' + esc2(stn.tags.split(',').slice(0, 3).join(' ')) : ''}</small>`, 4000);
+  }).catch(() => RADIO.a.onerror());
+  try { if (RADIO.host) fetch(`https://${RADIO.host}.api.radio-browser.info/json/url/${stn.stationuuid}`).catch(() => { }); } catch (e) { }
+  radioBtn(); if ($('#radiom')) showRadio();
+}
+function radioStop() { RADIO.on = false; if (RADIO.a) { RADIO.a.pause(); RADIO.a.removeAttribute('src'); RADIO.a.load(); } radioBtn(); if ($('#radiom')) showRadio(); }
+const esc2 = t => String(t).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+const radioCountry = cc => { const C = COUNTRY[cc] || COUNTRY[cc === 'US' ? 'US' : 'JP']; return C ? tr(C.name) : cc; };
+function radioBtn() { const b = $('#b-radio'); if (b) b.classList.toggle('on', RADIO.on); }
+async function radioLoad(cc) {
+  RADIO.busy = true; RADIO.cc = cc; RADIO.list = null; RADIO.tried = {}; if ($('#radiom')) showRadio();
+  RADIO.list = await rbStations(cc); RADIO.busy = false;
+  return RADIO.list;
+}
+async function showRadio(fresh) {
+  const cc = radioCC();
+  if (fresh && cc !== RADIO.cc && !RADIO.busy) { radioLoad(cc).then(() => { if ($('#radiom')) showRadio(); }); }
+  const L0 = RADIO.list;
+  const rows = RADIO.busy ? `<p class="note">${J('局をさがしています…', 'Finding stations…')}</p>` : !L0 ? `<p class="note">${J('局のリストを読みこめませんでした。インターネットにつながっているか確かめてください。', 'Couldn\'t load the station list. Please check your connection.')}</p>` : !L0.length ? `<p class="note">${J('この場所で聞ける局が見つかりませんでした', 'No stations found for this place')}</p>` :
+    `<div class="rlist">${L0.map((s, i) => `<button class="rst ${RADIO.on && RADIO.cur && RADIO.cur.stationuuid === s.stationuuid ? 'on' : ''}" data-rst="${i}"><b>${RADIO.on && RADIO.cur && RADIO.cur.stationuuid === s.stationuuid ? '🔊 ' : '▶ '}${esc2(s.name.trim())}</b><small>${esc2([s.state, (s.tags || '').split(',').slice(0, 3).join(' ')].filter(Boolean).join('・'))}</small></button>`).join('')}</div>`;
+  modal(`<div id="radiom"><h2>📻 ${J('ご当地ラジオ', 'Local radio')}</h2><p class="note">${J(`いまいる国（<b>${radioCountry(RADIO.cc || cc)}</b>）で本当に放送しているラジオを、インターネットで聞けます。国境をこえると、次の国の局に切りかわります。`, `Listen to stations really broadcasting in the country you're in (<b>${radioCountry(RADIO.cc || cc)}</b>). When you cross a border, it switches to the next country.`)}</p>${rows}
+    ${RADIO.on ? `<button class="big ghost" id="r-stop">⏹ ${J('ラジオを止める', 'Stop the radio')}</button>` : ''}
+    <p class="note"><small>${J('局のリストは radio-browser.info（みんなで作るラジオ局の名簿）から。音が出ないときは別の局を選んでください。通信量が多めなので、Wi-Fiがおすすめです。', 'Station list from radio-browser.info, a community directory. If one doesn\'t play, try another. Uses a fair amount of data, so Wi-Fi is best.')}</small></p>
+    <button class="big ghost" data-close>${J('とじる', 'Close')}</button></div>`, 'radio');
+  document.querySelectorAll('[data-rst]').forEach(b => b.onclick = () => { RADIO.tried = {}; radioPlay(RADIO.list[+b.dataset.rst]); });
+  const sp = $('#r-stop'); if (sp) sp.onclick = () => radioStop();
+}
+setInterval(() => { // 国境をこえたら、次の国の局へ
+  if (!RADIO.on || RADIO.busy || !P) return; const cc = radioCC(); if (!cc || cc === RADIO.cc) return;
+  radioLoad(cc).then(L0 => { if (L0 && L0.length && RADIO.on) { toast(J(`📻 ${radioCountry(cc)}のラジオに切りかえます`, `📻 Switching to radio from ${radioCountry(cc)}`), 2500); radioPlay(L0[0]); } });
+}, 6000);
+function radioLogHtml() {
+  const R = st.radio || {}, ks = Object.keys(R); if (!ks.length) return '';
+  return `<h3>📻 ${J(`聞いたラジオ（${ks.length}か国）`, `Radio heard (${ks.length} countries)`)}</h3><div class="grid">${ks.map(k => `<div class="card"><div class="em">📻</div><b>${radioCountry(k)}</b><small>${esc2(R[k].name)}</small><small class="m">${fdDate(R[k].at)}</small></div>`).join('')}</div>`;
+}
+(() => { const b = document.getElementById('b-radio'); if (b) { b.onclick = e => { e.stopPropagation(); showRadio(true); }; if (EN) b.setAttribute('aria-label', 'Radio'); } })();
+
+/* ----- 台風・ハリケーン・サイクロン ----- */
+function stormCheck(W8) {
+  S.W8 = W8; const w = W8.wind || 0;
+  if (w < 50 || !(W8.rain > .3 || W8.thunder) || !P) { S.storm = null; return; }
+  const lat = P.ll[0], lon = P.ll[1], al = Math.abs(lat), m = localDate().getUTCMonth() + 1;
+  let kind = null;
+  if (al >= 5 && al <= 40) {
+    if (lat > 0 && lon >= 100) kind = m >= 5 && m <= 11 ? 'typhoon' : null;
+    else if (lat > 0 && lon < -20) kind = m >= 6 && m <= 11 ? 'hurricane' : null;
+    else if (lat > 0 && lon >= 40 && lon < 100) kind = (m >= 4 && m <= 6) || (m >= 10 && m <= 12) ? 'cyclone' : null;
+    else if (lat < 0) kind = m >= 11 || m <= 4 ? (lon > -140 && lon < -20 ? null : 'cyclone') : null;
+  }
+  S.storm = { kind, w };
+  if (kind && !S.stormSaid) { S.stormSaid = 1; const L0 = LOCAL[kind]; if ((st.local || {})[kind]) toast(`🌀 <b>${J(`${L0[1]}が来ています`, `A ${L0[2].toLowerCase()} is passing`)}</b><small>${J(`風速 ${Math.round(w)} km/h。景色が大きくゆれています`, `Wind ${Math.round(w)} km/h — the scenery is shaking`)}</small>`, 5000); else seeLocal(kind); }
+}
+function bendOf(p) {
+  if (!S.storm || !/^(tree|conifer|pine|palm|bush|bamboo|cypress|birch|eucalyptus|acacia|olive)$/.test(p.type)) return 0;
+  return (S.storm.w > 80 ? .45 : .3) + Math.sin(S.t * 2.6 + p.x) * .12;
+}
+function drawStorm(dt, sea) {
+  if (!S.storm) { S.leaves = null; return; }
+  const k = clamp((S.storm.w - 50) / 50);
+  c.fillStyle = `rgba(30,40,52,${.12 + .14 * k})`; c.fillRect(0, 0, W, H);
+  S.gust = S.gust || Array.from({ length: 80 }, () => [Math.random() * W * 1.5, Math.random() * H, .5 + Math.random() * .5]);
+  c.strokeStyle = 'rgba(215,228,245,.5)'; c.lineWidth = 1; c.beginPath();
+  for (const g of S.gust) { g[0] -= (900 + 600 * k) * g[2] * dt; g[1] += 260 * g[2] * dt; if (g[0] < -60 || g[1] > H) { g[0] = W + Math.random() * W * .5; g[1] = Math.random() * H * .8; } c.moveTo(g[0], g[1]); c.lineTo(g[0] + 34 * g[2], g[1] - 9 * g[2]); }
+  c.stroke();
+  if (!sea) {
+    S.leaves = S.leaves || Array.from({ length: 14 }, (_, i) => ({ x: Math.random() * W, y: H * (.3 + Math.random() * .5), r: Math.random() * 7, c: ['#5b8f3a', '#8a6a2e', '#c0882f', '#4a7a30'][i % 4] }));
+    for (const f of S.leaves) { f.x -= (500 + 300 * k) * dt; f.y += Math.sin(S.t * 3 + f.r) * 60 * dt; f.r += dt * 9; if (f.x < -20) { f.x = W + 20; f.y = H * (.2 + Math.random() * .6); } c.save(); c.translate(f.x, f.y); c.rotate(f.r); c.fillStyle = f.c; c.beginPath(); c.ellipse(0, 0, 4, 2, 0, 0, 7); c.fill(); c.restore(); }
+  } else {
+    const g = c.createLinearGradient(0, H * .62, 0, H); g.addColorStop(0, 'rgba(235,242,248,0)'); g.addColorStop(1, `rgba(235,242,248,${.15 + .2 * k})`); c.fillStyle = g; c.fillRect(0, H * .62, W, H * .38);
+  }
 }
 
 </script>
