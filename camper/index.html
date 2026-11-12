@@ -69,7 +69,7 @@ header .r{text-align:right;white-space:nowrap}
 #win.sea{box-shadow:0 0 0 10px #f2f4f5,0 0 0 13px #9fb3bf,0 10px 26px 12px rgba(30,60,90,.3);border-radius:28px}
 #win.sea::after{border-radius:28px}
 #win.sea .curtain{display:none}
-#winwrap.sea #sill{display:none}
+
 .frames{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .frames button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:700;font-size:13px}
 .frames.two{grid-template-columns:1fr 1fr}
@@ -4011,7 +4011,6 @@ function finishAct(quiet) {
 // 全画面のときと船の上では窓辺が消えるので、飾っても見えないことを知らせる
 function sillHidden() {
   if (document.body.classList.contains('full')) return J('🪟 全画面のあいだは窓辺が見えません。元の画面にもどると飾ったおみやげが見られます', '🪟 The window sill is hidden in full screen. Go back to the normal view to see your souvenirs');
-  if ($('#winwrap').classList.contains('sea')) return J('⛴ 船の上では窓辺が見えません。陸に上がると飾ったおみやげが見られます', '⛴ The window sill is hidden on the ferry. You\'ll see your souvenirs again on land');
   return '';
 }
 function bindShelf() {
