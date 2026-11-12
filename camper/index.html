@@ -3782,11 +3782,14 @@ document.addEventListener('click', e => {
 });
 // ひろいもの帳の「ふしぎなボトルの手紙」
 function palSection() {
-  const P = st.pals || {}, met = Object.keys(PALS).filter(k => P[k]);
-  return `<h3>🫧 ${J('ふしぎなボトルの手紙', 'Mysterious bottle letters')} <small>${met.length} / ${Object.keys(PALS).length}${J('人', '')}</small></h3><p class="note"><small>${J('海の向こうの子どもから、ときどき手紙がとどきます（多くても1日に1通）。おへんじを流すと、また次の手紙が。3通そろうと贈り物がもらえます。', 'Now and then a letter from a child across the sea floats by (at most one a day). Write back and another letter will come. After three letters you get a gift.')}</small></p>` +
-    (met.length ? met.map(k => { const D = PALS[k], p = P[k]; return `<div class="letter sm pal"><small>${D.flag} ${J(`${D.from[0]}の ${D.name[0]}`, `${D.name[1]}, ${D.from[1]}`)}　✉️ ${p.n} / 3</small>${p.letters.map((l, i) => `<small>${fdDate(l.at)}${J('・', ' · ')}${placeText(l.where)}</small>${palLetter(k, i)}${palWord(k, i)}${p.sent && p.sent[i] ? `<small>↪︎ ${J('おへんじ：', 'You wrote: ')}${p.sent[i]}</small>` : ''}`).join('')}
-      ${p.n >= 3 ? `<div class="palgift">${D.gift[0]} <b>${J(D.gift[1], D.gift[2])}</b> ${shelfBtn('p:' + k)}</div>` : p.replied ? `<small>⏳ ${J('おへんじを流しました。次の手紙を待っています', 'Reply sent. Waiting for the next letter')}</small>` : palReplyBox(k)}</div>`; }).join('') : `<p class="note">${J('まだありません。', 'None yet.')}</p>`) +
-    (met.length < Object.keys(PALS).length ? `<p class="note"><small>${J(`まだ会っていない子が ${Object.keys(PALS).length - met.length}人。いろいろな海を旅すると出会えるかも`, `${Object.keys(PALS).length - met.length} more children to meet. Try sailing different seas`)}</small></p>` : '');
+  // ひみつの雰囲気：最初のふしぎなボトルを拾うまでは見せない（ボトルの手紙を3通読むと、なぞめいた1行だけ）
+  const P = st.pals || {}, met = Object.keys(PALS).filter(k => P[k]), all = Object.keys(PALS).length;
+  if (!met.length) return (st.bottles || 0) >= 3 ? `<h3>🫧 ${J('？？？', '???')}</h3><p class="note"><small>${J('ボトルの手紙を読んでいると、ときどき波の向こうで、青く光るなにかが見える気がする……', 'Reading these bottle letters, you sometimes think you see something glowing blue beyond the waves...')}</small></p>` : '';
+  const done = met.length >= all;
+  return `<h3>🫧 ${J('ふしぎなボトルの手紙', 'Mysterious bottle letters')} <small>${J(`出会った子 ${met.length} / ${done ? all : '？'}人`, `Friends met: ${met.length} / ${done ? all : '?'}`)}${done ? J('　ぜんぶ出会えた！', ' · You met them all!') : ''}</small></h3><p class="note"><small>${J('海の向こうの子どもから、ボトルでとどいた手紙。おへんじを流すと、いつかまた……', 'Letters from children across the sea. Write back, and someday another may come...')}</small></p>` +
+    met.map(k => { const D = PALS[k], p = P[k]; return `<div class="letter sm pal"><small>${D.flag} ${J(`${D.from[0]}の ${D.name[0]}`, `${D.name[1]}, ${D.from[1]}`)}　✉️ ${p.n} / 3</small>${p.letters.map((l, i) => `<small>${fdDate(l.at)}${J('・', ' · ')}${placeText(l.where)}</small>${palLetter(k, i)}${palWord(k, i)}${p.sent && p.sent[i] ? `<small>↪︎ ${J('おへんじ：', 'You wrote: ')}${p.sent[i]}</small>` : ''}`).join('')}
+      ${p.n >= 3 ? `<div class="palgift">${D.gift[0]} <b>${J(D.gift[1], D.gift[2])}</b> ${shelfBtn('p:' + k)}</div>` : p.replied ? `<small>⏳ ${J('おへんじを流しました。次の手紙を待っています', 'Reply sent. Waiting for the next letter')}</small>` : palReplyBox(k)}</div>`; }).join('') +
+    (done ? '' : `<p class="note"><small>${J('まだどこかの海で、だれかがボトルに手紙を入れているみたい……', 'Somewhere out at sea, someone else may be putting a letter in a bottle...')}</small></p>`);
 }
 async function postcard() {
   const pc = document.createElement('canvas'); pc.width = cv.width; pc.height = cv.height + 70 * DPR; const x = pc.getContext('2d');
