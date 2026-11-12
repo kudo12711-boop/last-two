@@ -26,6 +26,15 @@
 | けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 | ふしぎな いきもの ずかん | プログラムで描いた生きものと なかよくなって集め、2ひきから子どもを生む | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/ikimono/) | [ikimono.md](ikimono.md) |
 
+## 実用ツール一覧
+
+プログラムで描くしくみを、ゲームではなく道具として使うもの（2026-11-12 から）。
+
+| ツール | どんな道具 | いまの版 | 使う場所 | 記録 |
+|---|---|---|---|---|
+| もよう・背景メーカー | AI なしで背景・模様を作って保存（将来 Canva・Figma のプラグインに） | v0.1 | [公開ページ](https://kudo12711-boop.github.io/last-two/moyou/) | [moyou.md](moyou.md) |
+| そらタブ | 新しいタブに、いまの時刻と天気の空（Chrome 拡張） | v0.1 | [お試しページ](https://kudo12711-boop.github.io/last-two/sora-tab/newtab.html) | [sora-tab.md](sora-tab.md) |
+
 全ゲーム共通の課金のしくみ: [kakin.md](kakin.md)
 
 海外展開（英語など）の準備: [i18n.md](i18n.md)
@@ -54,6 +63,7 @@
 18. **2026-11-03（公開は 2026-11-11）** くどうさん「ここで開発しているゲームは全て課金する予定です。まだ課金するシステムが組み込まれていないゲームについて組み込むようにしてください」。共通の課金のしくみ（`common/kakin.js`、おためし版）を作り、子ども向け7本と都道府県パズル、入口ページに組み込んだ（[kakin.md](kakin.md)）。
 19. **2026-11-11** 海外展開の準備（くどうさん「全てのアプリについて海外展開を確かめてください」→「進めてください」）。課金のしくみを公開し、まちがいさがし・めいろ・てんつなぎを英語に、子ども向けの7つのゲームに英語の AI の声を入れた。くわしくは [i18n.md](i18n.md)。
 20. **2026-11-12** 「キャンピングカーのように プログラムで描く しくみを生かした新しいゲーム」の相談から3案を提案。くどうさん「1と2に興味があります」「将来的には1と2を合わせたものを作るとして、まずは1から試してもらえますか」→「ふしぎな いきもの ずかん」v0.1 を作成し、くどうさんの「公開する」で公開（[ikimono.md](ikimono.md)）。
+21. **2026-11-12** くどうさん「ゲームの方向性というよりは実用性のあるツールとして、利用できないか」「プラグインする対象は…一般的なソフトも含みます」→ 一般のソフト向けの5案から「1と5に興味があります」。もよう・背景メーカー（[moyou.md](moyou.md)）と Chrome の新しいタブ「そらタブ」（[sora-tab.md](sora-tab.md)）の v0.1 を作成。
 
 ## お金の方針（2026-10-23 決定）
 
@@ -80,7 +90,8 @@
 
 - **リポジトリ** `kudo12711-boop/last-two`（Public）。`main` ブランチがそのまま GitHub Pages（https://kudo12711-boop.github.io/last-two/）になります。
   - `/index.html` … ラスト・ツー
-  - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/fukuwarai/`、`/kezuri/`、`/nukenuke-ring/`、`/kakurenbo/`、`/oukoku/`、`/ikimono/`… それぞれ別のゲーム。ほかのゲームには影響しません。
+  - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/fukuwarai/`、`/kezuri/`、`/nukenuke-ring/`、`/kakurenbo/`、`/oukoku/`、`/ikimono/`… それぞれ別のゲーム。
+  - `/moyou/`（もよう・背景メーカー）、`/sora-tab/`（そらタブ、Chrome 拡張）、`/downloads/`（拡張の zip）… 実用ツール。描く部品 `moyou/engine.js` を2つで共有。ほかのゲームには影響しません。
   - `/games/` … 入口ページ（ゲームを公開したらここにもカードを足す）
   - `/common/kakin.js` … 全ゲーム共通の課金のしくみ（新しいゲームにも入れる。[kakin.md](kakin.md)）
   - `/docs/` … この記録
