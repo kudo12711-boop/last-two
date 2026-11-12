@@ -3710,15 +3710,21 @@ function showBottle() {
   addFind('bottle'); st.letters = st.letters || []; st.letters.unshift({ at: Date.now(), where: placeKey(), about: n }); st.letters = st.letters.slice(0, 300); save();
   modal(`<div class="letter"><div class="em">🍾✉️</div><h2>${J('ボトルの中の手紙', 'A message in a bottle')}</h2><p>${J(`「この先の <b>${n}</b> は、こんなところだよ。<br>${FACTS[n] || ''}」`, `"Up ahead, <b>${tr(n)}</b> is a place like this:<br>${FACTS[n] || ''}"`)}</p><small>${J(`拾ったボトル ${st.bottles}本目`, `Bottle #${st.bottles}`)}</small><small>${J('この手紙は「ひろいもの帳」でいつでも読み返せます', 'You can reread this letter anytime in your finds')}</small></div><button class="big ghost" data-findbook>${J('🐚 ひろいもの帳を見る', '🐚 See your finds')}</button><button class="big" data-close>${J('とじる', 'Close')}</button>`);
 }
-/* ===== ふしぎなボトル（海の向こうの子どもとの文通。6人×3通） ===== */
+/* ===== ふしぎなボトル（海の向こうの子どもとの文通。このゲームの七つの海に1人ずつ、7人×3通） ===== */
 // 子ども: 絵文字・国旗・読み上げの国・名前・住んでいる所・届く海・ことば3つ [書き方, 読み(カナ), 読み(ローマ字), 意味ja, 意味en]・手紙3通・手紙の絵・贈り物
 const PALS = {
-  jiwoo: { e: '👧', flag: '🇰🇷', c: 'KR', name: ['ジウ', 'Ji-woo'], from: ['韓国・プサン', 'Busan, Korea'], sea: ['japan', 'asia'],
+  jiwoo: { e: '👧', flag: '🇰🇷', c: 'KR', name: ['ジウ', 'Ji-woo'], from: ['韓国・プサン', 'Busan, Korea'], sea: ['japan'],
     words: [['안녕!', 'アンニョン', 'annyeong', 'こんにちは', 'Hi'], ['고마워!', 'コマウォ', 'gomawo', 'ありがとう', 'Thank you'], ['친구', 'チング', 'chingu', '友だち', 'Friend']],
     letters: [['わたしはジウ、8さい。韓国のプサンにすんでいます。おばあちゃんの魚の市場のちかくの海から、このボトルをながしたよ。だれかにとどくかな？', "I'm Ji-woo, I'm 8. I live in Busan, Korea. I threw this bottle into the sea near Grandma's fish market. Will it reach someone?"],
       ['おへんじ、とどいたよ！ きのうはおばあちゃんとトッポッキを食べたよ。からいけど大すき。', 'Your reply came! Yesterday I ate tteokbokki with Grandma. It is spicy but I love it.'],
       ['わたしたち、もう友だちだね！ 韓国のおまもり「ポクチュモニ」をいれておくね。しあわせがいっぱい入るふくろだよ。', "We're friends now! I'm putting in a bokjumeoni, a little Korean pouch that holds lots of luck."]],
     draw: ['🐟', '🍢', '🧧'], gift: ['🧧', 'ジウのポクチュモニ', "Ji-woo's lucky pouch", 'しあわせを入れておく、韓国の小さなふくろ', 'A little Korean pouch for keeping good luck'] },
+  mei: { e: '👧', flag: '🇨🇳', c: 'CN', name: ['メイ', 'Mei'], from: ['中国・天津', 'Tianjin, China'], sea: ['asia'],
+    words: [['你好!', 'ニーハオ', 'ni hao', 'こんにちは', 'Hello'], ['谢谢!', 'シエシエ', 'xiexie', 'ありがとう', 'Thank you'], ['朋友', 'ポンヨウ', 'pengyou', '友だち', 'Friend']],
+    letters: [['わたしはメイ、8さい。中国の天津にすんでいます。天津は凧（たこ）で有名な町なんだよ。ボトルさん、風にのって遠くまで行ってね！', "I'm Mei, 8. I live in Tianjin, China. Tianjin is famous for its kites. Fly far away, little bottle!"],
+      ['おへんじ、うれしかった！ きのうはおじいちゃんと肉まんを作ったよ。ふかふかでおいしいの。', 'Your reply made me so happy! Yesterday Grandpa and I made steamed buns. So fluffy and yummy!'],
+      ['わたしたち、もう友だちだね！ 天津の凧をおくるね。窓から空に飛ばすところを想像してみて。', "We're friends now! I'm sending you a Tianjin kite. Imagine flying it from your window."]],
+    draw: ['🐼', '🥟', '🪁'], gift: ['🪁', 'メイの凧', "Mei's kite", '天津の名物。絵のついた美しい凧', 'A beautifully painted kite, a Tianjin specialty'] },
   luca: { e: '👦', flag: '🇮🇹', c: 'IT', name: ['ルカ', 'Luca'], from: ['イタリア・ナポリの近く', 'near Naples, Italy'], sea: ['med'],
     words: [['Ciao!', 'チャオ', 'ciao', 'こんにちは', 'Hi'], ['Grazie!', 'グラツィエ', 'grazie', 'ありがとう', 'Thank you'], ['Amico', 'アミーコ', 'amico', '友だち', 'Friend']],
     letters: [['ぼくはルカ、9さい。イタリアの海べの町にすんでいて、パパは漁師なんだ。このボトル、どこまで行くかな？', "I'm Luca, 9. I live in a seaside town in Italy, and my dad is a fisherman. How far will this bottle go?"],
