@@ -3579,6 +3579,7 @@ function settingsEn(cur) {
   <h3>Utility poles & wires</h3><div class="frames"><button data-poles="on" class="${POLES ? 'on' : ''}">⚡️ Show</button><button data-poles="off" class="${POLES ? '' : 'on'}">🚫 Hide</button></div><p class="note">The roadside utility poles you see in Japan and Asia. When hidden, low fences and street lamps appear instead.</p>
   <h3>Sound</h3><div class="frames"><button data-snd="on" class="${SOUND ? 'on' : ''}">🔊 On</button><button data-snd="off" class="${SOUND ? '' : 'on'}">🔇 Off</button></div>
   <input type="range" id="s-vol" min="0.1" max="1" step="0.05" value="${SVOL}" aria-label="Volume"><p class="note">Engine, rain, wind, waves, town bustle, birds and insects, and the campfire play to match the place and the weather. Sound may not play in silent mode.</p>
+  <h3>Notifications</h3><div class="frames"><button data-notify="on" class="${NOTIFY ? 'on' : ''}">🔔 On</button><button data-notify="off" class="${NOTIFY ? '' : 'on'}">🔕 Off</button></div><p class="note">While this page stays open and you are using other tabs or apps, you'll get a notification when a sight is coming up, when the van parks in a town, and just before a fork in the road. Nothing arrives while the page or browser is closed. On iPhone this works only after adding the page to your Home Screen.</p>
   <h3>Van speed</h3>${speedButtons()}<p class="note">Changing speed doesn't change the distance you've already driven.</p>
   <h3>About the weather</h3><p class="note">Weather and temperature come live from Open-Meteo (a free weather service). If it can't connect, "(est.)" is shown and a likely weather for the season and place is used.</p>
   <h3>Extra routes</h3><p class="note">${PAID().filter(owns).length ? 'Your routes: ' + PAID().filter(owns).map(id => LEG[id].icon + ' ' + LEG[id].name).join(', ') : 'There are 3: Scandinavia & the Northern Lights, Africa & South America, and South Pacific & Australia.'}</p><button class="big" id="b-shop">🛒 See extra routes</button>
@@ -3594,6 +3595,7 @@ function showSettings() {
   <h3>電柱と電線</h3><div class="frames"><button data-poles="on" class="${POLES ? 'on' : ''}">⚡️ 表示する</button><button data-poles="off" class="${POLES ? '' : 'on'}">🚫 表示しない</button></div><p class="note">日本やアジアの道ばたに出てくる電柱です。表示しないときは、低い柵や街灯になります。</p>
   <h3>音</h3><div class="frames"><button data-snd="on" class="${SOUND ? 'on' : ''}">🔊 鳴らす</button><button data-snd="off" class="${SOUND ? '' : 'on'}">🔇 消す</button></div>
   <input type="range" id="s-vol" min="0.1" max="1" step="0.05" value="${SVOL}" aria-label="音の大きさ"><p class="note">エンジン、雨、風、波、町のざわめき、鳥や虫の声、たき火の音が、その場所と天気に合わせて流れます。マナーモードだと鳴らないことがあります。</p>
+  <h3>お知らせ（通知）</h3><div class="frames"><button data-notify="on" class="${NOTIFY ? 'on' : ''}">🔔 知らせる</button><button data-notify="off" class="${NOTIFY ? '' : 'on'}">🔕 知らせない</button></div><p class="note">このページを開いたまま、ほかのタブやアプリを見ているときに、名所が近づいたとき・町で停車したとき・分かれ道の手前で、お知らせを出します。ページやブラウザを閉じているあいだは届きません。iPhoneは、ホーム画面に追加したときだけ使えます。</p>
   <h3>キャンピングカーの速さ</h3>${speedButtons()}<p class="note">速さを変えても、ここまで進んだ距離はそのままです。</p>
   <h3>天気について</h3><p class="note">天気と気温は Open-Meteo（無料の天気サービス）から、その場所のいまの値を取ってきています。つながらないときは「（予想）」と表示して、季節と場所からそれらしい天気にします。</p>
   <h3>追加ルート</h3><p class="note">${PAID().filter(owns).length ? '持っているルート：' + PAID().filter(owns).map(id => LEG[id].icon + ' ' + LEG[id].name).join('、') : '北欧とオーロラ、アフリカと南アメリカ、南太平洋とオーストラリアの3つがあります。'}</p><button class="big" id="b-shop">🛒 追加ルートを見る</button>
@@ -3605,6 +3607,7 @@ function showSettings() {
   document.querySelectorAll('[data-poles]').forEach(b => b.onclick = () => { POLES = b.dataset.poles === 'on'; try { localStorage.setItem('camper-poles', b.dataset.poles); } catch (e) { } document.querySelectorAll('[data-poles]').forEach(x => x.classList.toggle('on', x === b)); });
   document.querySelectorAll('[data-frame]').forEach(b => b.onclick = () => { setFrame(b.dataset.frame); document.querySelectorAll('[data-frame]').forEach(x => x.classList.toggle('on', x === b)); });
   $('#b-backup').onclick = showBackup; $('#b-shop').onclick = () => showShop(null, showSettings);
+  document.querySelectorAll('[data-notify]').forEach(b => b.onclick = async () => { const ok = await setNotify(b.dataset.notify === 'on'); document.querySelectorAll('[data-notify]').forEach(x => x.classList.toggle('on', (x.dataset.notify === 'on') === NOTIFY)); });
   document.querySelectorAll('[data-snd]').forEach(b => b.onclick = () => { setSound(b.dataset.snd === 'on'); document.querySelectorAll('[data-snd]').forEach(x => x.classList.toggle('on', x === b)); });
   $('#s-vol').oninput = e => { SVOL = +e.target.value; try { localStorage.setItem('camper-vol', SVOL); } catch (er) { } if (!SOUND) setSound(true); auVolume(); };
   let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = J('もう一度押すとリセットします', 'Press again to reset'); return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } location.reload(); };
@@ -3814,6 +3817,50 @@ function palSection() {
     met.map(palCard).join('') + (far.length ? `<h3>🌏 ${J('遠い海の友だち', 'Friends from faraway seas')}</h3>` + far.map(palCard).join('') : '') +
     (done ? '' : `<p class="note"><small>${J('まだどこかの海で、だれかがボトルに手紙を入れているみたい……', 'Somewhere out at sea, someone else may be putting a letter in a bottle...')}</small></p>`);
 }
+/* ===== お知らせ（通知）：ページを開いたまま別のタブやアプリにいるとき、名所・町での停車・分かれ道の手前を知らせる ===== */
+const NOTE_OK = 'Notification' in window;
+let NOTIFY = (() => { try { return localStorage.getItem('camper-notify') === 'on'; } catch (e) { return false; } })();
+let swReg = null;
+if (NOTE_OK && 'serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(r => { swReg = r; }).catch(() => { });
+const noteSent = (() => { try { return new Set(JSON.parse(localStorage.getItem('camper-notified') || '[]')); } catch (e) { return new Set(); } })();
+function notify(key, title, body) {
+  if (noteSent.has(key)) return; noteSent.add(key);
+  try { localStorage.setItem('camper-notified', JSON.stringify([...noteSent].slice(-200))); } catch (e) { }
+  const opt = { body, tag: key, lang: EN ? 'en' : 'ja' };
+  try { if (swReg && swReg.showNotification) swReg.showNotification(title, opt); else new Notification(title, opt); } catch (e) { }
+}
+async function setNotify(on) {
+  if (on) {
+    if (!NOTE_OK) { toast(J('この端末のブラウザでは、お知らせが使えません<small>iPhoneは、ホーム画面に追加すると使えます</small>', 'Notifications are not available in this browser<small>On iPhone, add this page to your Home Screen first</small>'), 6000); return false; }
+    let p = Notification.permission; if (p === 'default') { try { p = await Notification.requestPermission(); } catch (e) { } }
+    if (p !== 'granted') { toast(J('お知らせが許可されていません<small>ブラウザの設定で、このページのお知らせ（通知）を許可してください</small>', 'Notifications are blocked<small>Allow notifications for this page in your browser settings</small>'), 6000); return false; }
+  }
+  NOTIFY = on; try { localStorage.setItem('camper-notify', on ? 'on' : 'off'); } catch (e) { }
+  if (on) toast(J('🔔 お知らせをオンにしました<small>このページを開いたまま、ほかの画面を見ているときに届きます</small>', '🔔 Notifications on<small>They arrive while this page stays open in the background</small>'), 5000);
+  return true;
+}
+// 見ていないあいだの進み具合を、旅の記録を変えずに計算してお知らせする
+function noteCheck() {
+  if (!NOTIFY || !st || st.preview || !document.hidden || !NOTE_OK || Notification.permission !== 'granted') return;
+  let pred = st.parked ? st.km : st.km + Math.max(0, Date.now() - st.t) / 36e5 * st.speed, parkAt = null;
+  if (!st.parked && st.stopMode && st.stopMode !== 'none') { const k = nextStopKm(st.km); if (k != null && k <= pred) { pred = k; parkAt = k; } }
+  const lap = st.laps || 0;
+  // 名所：これから見える名所に近づいたら（10分前くらい）
+  const ahead = st.speed / 6;
+  walkStops((stop, km) => {
+    if (km > pred + ahead) return false;
+    if (stop.lm && km > st.km - 1 && km > pred - ahead * 2 && !st.lm[stop.name]) notify(`lm:${lap}:${stop.name}`, J(`🏛 もうすぐ名所「${LMNAME[stop.name] || stop.name}」`, `🏛 Coming up: ${LMNAME[stop.name] || tr(stop.name)}`), J(`${stop.name}のあたりで見えてきます。窓をのぞいてみませんか？`, `You'll see it near ${tr(stop.name)}. Take a look out the window!`));
+    if (parkAt != null && Math.abs(km - parkAt) < .01) { notify(`park:${lap}:${Math.round(km)}`, J(`🅿️ ${stop.name}に着いて停車しました`, `🅿️ Parked in ${tr(stop.name)}`), J('町を観光できます。名所めぐり・ご当地グルメ・おみやげを楽しもう', 'You can go sightseeing: sights, local food and souvenirs')); return false; }
+  }, 30);
+  // 分かれ道：着く10分前くらい
+  const f = nextFork();
+  if (f && f.start - pred <= ahead && f.start > st.km) {
+    const ch = st.choices[f.key];
+    notify(`fork:${lap}:${f.key}`, J(`🔀 もうすぐ${FORK_AT[f.i]}の分かれ道`, `🔀 Fork at ${tr(FORK_AT[f.i])} coming up`), ch ? J(`えらんだ道：${LEG[ch].name}`, `Your route: ${LEG[ch].name}`) : J('どっちに行く？ えらばないと運転手のおまかせになります', 'Which way? If you don\'t choose, the driver will pick'));
+  }
+}
+setInterval(noteCheck, 30000);
+document.addEventListener('visibilitychange', () => { if (document.hidden) setTimeout(noteCheck, 1000); });
 async function postcard() {
   const pc = document.createElement('canvas'); pc.width = cv.width; pc.height = cv.height + 70 * DPR; const x = pc.getContext('2d');
   x.fillStyle = '#fffaf0'; x.fillRect(0, 0, pc.width, pc.height); x.drawImage(cv, 0, 0);
