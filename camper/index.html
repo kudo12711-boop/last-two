@@ -3564,16 +3564,23 @@ async function postcard() {
   // 先にできあがった絵はがきを見せて、「保存・送る」で送る（いきなり送る画面にならないように）
   pc.toBlob(b => {
     const file = new File([b], 'camper-postcard.png', { type: 'image/png' }), url = URL.createObjectURL(b);
-    const canSh = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+    // パソコン（マウス操作）では Windows などの共有画面だと LINE に届かないことがあるので、保存とコピーにする
+    const canSh = !FINE && !!(navigator.canShare && navigator.canShare({ files: [file] }));
+    const canCopy = FINE && !!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
     modal(`<h2>📷 ${J('旅の絵はがき', 'Travel postcard')}</h2><img class="pcard" src="${url}" alt="">
      <p class="note">${J('いま窓から見えている景色を、町の名前・日付・天気・走ったきょりといっしょに1枚の絵にしました。', 'The view from your window right now, with the town, date, weather and distance driven.')}</p>
      <button class="big" id="pc-send">${canSh ? J('📤 保存・送る（LINE・写真など）', '📤 Save or send') : J('💾 画像を保存する', '💾 Save image')}</button>
+     ${canCopy ? `<button class="big ghost" id="pc-copy">📋 ${J('画像をコピー（LINE などに貼りつけ）', 'Copy image (paste into a chat)')}</button><p class="note" id="pc-msg">${J('LINE に送るときは、コピーしてから LINE のトーク画面で Ctrl＋V（貼りつけ）。保存した画像をトーク画面にドラッグしても送れます。', 'To send it, copy it and paste it into your chat with Ctrl+V, or drag the saved image into the chat.')}</p>` : ''}
      <button class="big ghost" id="pc-again">🔄 ${J('いまの景色で撮りなおす', 'Take it again')}</button>
      <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`);
     $('#pc-send').onclick = async () => {
       if (canSh) { try { await navigator.share({ files: [file], title: J('旅の絵はがき', 'Travel postcard') }); return; } catch (e) { if (e.name === 'AbortError') return; } }
       const a = document.createElement('a'); a.href = url; a.download = 'camper-postcard.png'; document.body.appendChild(a); a.click(); a.remove();
       toast(J('💾 絵はがきを保存しました', '💾 Postcard saved'), 2500);
+    };
+    const cp = $('#pc-copy'); if (cp) cp.onclick = async () => {
+      try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': b })]); cp.textContent = J('✓ コピーしました。LINE のトーク画面で Ctrl＋V', '✓ Copied. Paste with Ctrl+V'); }
+      catch (e) { cp.textContent = J('コピーできませんでした。「画像を保存する」を使ってください', 'Could not copy. Please use "Save image"'); }
     };
     $('#pc-again').onclick = () => { URL.revokeObjectURL(url); closeModal(); setTimeout(postcard, 150); };
   }, 'image/png');
