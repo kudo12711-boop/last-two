@@ -2924,7 +2924,7 @@ function drawSky(hz, W8, alt) {
   const g = c.createLinearGradient(0, 0, 0, hz); g.addColorStop(0, css(L.top)); g.addColorStop(1, css(L.bot));
   c.fillStyle = g; c.fillRect(-W, -H, W * 3, hz + H + 2);
   const sa = clamp(1 - L.dl * 2.5) * clamp(1 - L.k * 1.25);
-  drawConst(hz, sa);
+  drawMilkyWay(hz, sa, S.ctx || {}); drawConst(hz, sa);
   if (sa > 0.02) for (const s of STARS) { c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)))})`; c.fillRect(s[0] * W, s[1] * hz * .9, s[2] > .85 ? 2 : 1.2, s[2] > .85 ? 2 : 1.2); }
   // 月（本物の位置と満ち欠け。昼間の月はうすく。地平線より下なら見えない）
   const MV = moonView(P.ll[0], P.ll[1], nowMs()); S.MV = MV;
@@ -3066,7 +3066,7 @@ function tileProps(i, b, P0) {
     if (r(5) < .07) put(us ? 'cow' : 'horse', r(6) * 60);
     if (us && r(7) < .05) put('windmill', 50);
   } else if (b === 'coast') { if (r(1) < .55) put(trop || lat < 34 && lon < -60 ? 'palm' : (japan ? 'pine' : 'tree'), r(2) * 60); if (r(3) < .15) put(japan ? 'jhouse' : 'house', r(4) * 60, { c: Math.floor(r(5) * 4) }); }
-  return out;
+  return localizeTile(out, b, P0, i);
 }
 const HOUSE = [[236, 226, 206], [214, 196, 172], [240, 240, 236], [206, 180, 150]], ROOF = [[160, 70, 56], [80, 86, 100], [120, 80, 60], [60, 70, 80]];
 const BLDG = [[150, 156, 166], [196, 190, 180], [120, 130, 146], [176, 168, 150], [100, 112, 128]];
@@ -3141,6 +3141,7 @@ function drawProp(p, x, gy, sc, ctx) {
       }
       break;
     }
+    default: drawLocalProp(p, x, gy, sc, ctx);
   }
 }
 function drawAnimal(type, x, gy, s, ph) {
@@ -3494,7 +3495,7 @@ function drawLand(dt, W8, alt, ctx) {
   if (B.sea > .02) { c.fillStyle = shc([70, 130, 175], .5); c.fillRect(0, hz, W, seaH + 2); c.fillStyle = shc([255, 255, 255], .4, .25 * B.sea); for (let k = 0; k < 18; k++) c.fillRect((h2(k, 1) * W * 1.3 - S.off.far * 2) % (W * 1.3) - 20, hz + h2(k, 2) * seaH, 14, 1); }
   const gtop = hz + seaH;
   drawRidge(S.off.far, hz + 1, H * B.farAmp, B, B.far, .62, 3, .004, B.jag > .6 ? .62 : null);
-  drawLandmarks(gtop, sc, false);
+  drawLandmarks(gtop, sc, false); drawMirage(gtop);
   drawRidge(S.off.hill, gtop + H * .03, H * B.hillAmp, B, B.hill, .32, 9, .007, null);
   // 地面（畑のすじ）
   const gy0 = gtop + H * .03;
@@ -3507,7 +3508,7 @@ function drawLand(dt, W8, alt, ctx) {
     for (const p of t) drawProp(p, i * tw - o + p.x, mg + (p.z - .5) * 10 * sc, sc * (0.9 + p.z * .2), ctx);
   }
   if (S.tiles.size > 60) for (const k of S.tiles.keys()) if (k < Math.floor(o / tw) - 3) S.tiles.delete(k);
-  drawGroundEvents(mg, sc);
+  drawGroundEvents(mg, sc); drawNightMarket(mg, sc); drawTraffic(mg, sc, ctx, W8);
   if (L.fog > 0) { c.fillStyle = css(mix(L.haze, [230, 232, 236], .3), L.fog * .75); c.fillRect(0, 0, W, H); }
   // 近景：電柱や柵、道ばた
   const ny = H * .86;
@@ -4184,7 +4185,7 @@ function showMap(zoom, ctr, w) {
 }
 /* ----- 記録 ----- */
 function showRecord(tab = 'dex') {
-  const tabs = EN ? [['dex', '📖 Wildlife'], ['find', '🐚 Finds'], ['lm', '🏛 Sights'], ['stamp', '📍 Towns'], ['spot', '🗺 Visits'], ['food', '🍽 Food'], ['gift', '🎁 Souvenirs'], ['words', '💬 Words'], ['sky', '🌠 Sky & festivals'], ['data', '📊 Stats']] : [['dex', '📖 図鑑'], ['find', '🐚 ひろいもの'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['spot', '🗺 観光'], ['food', '🍽 グルメ'], ['gift', '🎁 おみやげ'], ['words', '💬 ことば'], ['sky', '🌠 そら・お祭り'], ['data', '📊 記録']];
+  const tabs = EN ? [['dex', '📖 Wildlife'], ['find', '🐚 Finds'], ['lm', '🏛 Sights'], ['stamp', '📍 Towns'], ['spot', '🗺 Visits'], ['food', '🍽 Food'], ['gift', '🎁 Souvenirs'], ['words', '💬 Words'], ['sky', '🌠 Sky & festivals'], ['local', '🧭 Local finds'], ['data', '📊 Stats']] : [['dex', '📖 図鑑'], ['find', '🐚 ひろいもの'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['spot', '🗺 観光'], ['food', '🍽 グルメ'], ['gift', '🎁 おみやげ'], ['words', '💬 ことば'], ['sky', '🌠 そら・お祭り'], ['local', '🧭 ご当地もの'], ['data', '📊 記録']];
   let body = '';
   if (tab === 'dex') { const ids = Object.keys(DEX); body = `<p class="note">${J(`${Object.keys(st.dex).length} / ${ids.length} 種類を見つけました`, `Found ${Object.keys(st.dex).length} of ${ids.length}`)}</p><div class="grid">${ids.map(id => { const e = st.dex[id], D = DEX[id]; return e ? `<div class="card"><div class="em">${D[0]}</div><b>${D[1]}</b><small>${D[2]}</small><small class="m">${J(`${e.n}回・はじめて：${e.place || ''}`, `×${e.n} · first seen: ${tr(e.place || '')}`)}</small></div>` : `<div class="card no"><div class="em">？</div><b>？？？</b></div>`; }).join('')}</div>`; }
   if (tab === 'lm') { body = `<p class="note">${J('窓から見えた名所', 'Sights seen from the window')} ${ALL_LM.filter(l => st.lm[l.key]).length} / ${ALL_LM.length}<br><small>${J('アプリを開いているときに、近くを通ると記録されます', 'Recorded when you pass nearby with the app open')}</small></p><div class="list">${ALL_LM.map(l => `<div class="${st.lm[l.key] ? '' : 'no'}">${st.lm[l.key] ? '✅' : '⬜'} ${st.lm[l.key] ? tr(l.name) : '???'}<small>${tr(l.key)}</small></div>`).join('')}</div>`; }
@@ -4207,6 +4208,7 @@ function showRecord(tab = 'dex') {
      <h3>✉️ ${J(`ボトルの手紙（${L.length}通）`, `Letters in bottles (${L.length})`)}</h3>${L.length ? L.map(l => `<div class="letter sm"><small>${fdDate(l.at)}${J('・', ' · ')}${placeText(l.where)}${J('で拾った手紙', '')}</small><p>${J(`「<b>${l.about}</b> は、こんなところだよ。${FACTS[l.about] || ''}」`, `"<b>${tr(l.about)}</b> is a place like this: ${FACTS[l.about] || ''}"`)}</p></div>`).join('') : `<p class="note">${J('まだありません。', 'None yet.')}${st.bottles ? J(`（この機能ができる前に拾った ${st.bottles}本の手紙は残っていません）`, ` (Letters from the ${st.bottles} bottles found before this feature were not kept.)`) : ''}</p>`}`;
   }
   if (tab === 'sky') body = `<p class="note">${J('窓から見た天体ショーと、通ったお祭り', 'Sky shows seen from the window and festivals you passed')}</p>` + skyLogHtml();
+  if (tab === 'local') body = localLogHtml();
   if (tab === 'data') { const days = (Date.now() - st.started) / 864e5; body = EN ? `<div class="kv"><div><span>Distance driven</span><b>${fmt(traveled())} km</b></div><div><span>Times around Earth</span><b>${(traveled() / 40075).toFixed(2)}</b></div><div><span>Trip day</span><b>Day ${Math.floor(days) + 1}</b></div><div><span>Laps completed</span><b>${st.laps || 0}</b></div><div><span>Starting point</span><b>${tr(st.startName || '東京')}</b></div><div><span>Bottles found</span><b>${st.bottles || 0}</b></div><div><span>Current speed</span><b>${st.speed} km/h</b></div><div><span>Nights stayed</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>` : `<div class="kv"><div><span>走ったきょり</span><b>${fmt(traveled())}km</b></div><div><span>地球何周ぶん？</span><b>${(traveled() / 40075).toFixed(2)}周</b></div><div><span>旅をはじめて</span><b>${Math.floor(days) + 1}日目</b></div><div><span>世界一周</span><b>${st.laps || 0}回 達成</b></div><div><span>出発地</span><b>${st.startName || '東京'}</b></div><div><span>拾ったボトル</span><b>${st.bottles || 0}本</b></div><div><span>いまの速さ</span><b>時速${st.speed}km</b></div><div><span>泊まった回数</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>`; }
   modal(`<h2>${J('旅の記録', 'Travel log')}</h2><div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'rec');
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showRecord(b.dataset.tab));
@@ -4679,7 +4681,7 @@ function auUpdate(W8, ctx) {
   auSet('surf', indoors ? 0 : sea ? .12 : b === 'coast' ? .1 : 0);
   auSet('rain', (W8.rain || 0) * (indoors ? .08 : lodge === 'car' || moving ? .3 : .22));
   auSet('wind', indoors ? 0 : (.04 + wind * .3) * (W8.snow ? 1.3 : 1));
-  auSet('city', b === 'city' && !sea ? (night ? .05 : .16) : 0);
+  auSet('city', b === 'city' && !sea ? (night || S.siesta ? .05 : .16) : 0);
   if (indoors) return;
   const dry = !(W8.rain > .3);
   if (dry && !sea && !night && b !== 'city' && b !== 'desert' && hr >= 5 && hr < 18) auMaybe('bird', b === 'forest' ? 6 : 12);
@@ -5030,6 +5032,7 @@ function frame(ts) {
   P = curPos();
   const W8 = wxState(), alt = sunAlt(P.ll[0], P.ll[1], nowMs()), SE = S.SE; light(W8, SE && alt > -2 ? alt - (alt + 7) * (SE.total ? 1 : .9 * SE.f ** 4) : alt);
   const ctx = { biome: biomeOf(P), sea: P.seg.mode === 's', region: P.seg.mode === 's' ? seaRegion(P) : '', lat: P.ll[0], lon: P.ll[1], mon: localDate().getUTCMonth() + 1, snow: W8.snowCover };
+  S.ctx = ctx; localSky(W8, ctx, alt); localLife(ctx);
   // 景色の色・形はゆっくり切りかえる
   const T = biomeTarget(ctx.biome, W8);
   if (!S.rp || prevBiome === '') S.rp = JSON.parse(JSON.stringify(T));
@@ -5046,8 +5049,8 @@ function frame(ts) {
   c.save(); c.translate(0, bump);
   if (ctx.sea) drawSea(dt, W8, alt, ctx); else drawLand(dt, W8, alt, ctx);
   c.restore();
-  drawWeather(dt, W8, ctx.sea); drawBunting(); drawCamp();
-  if (S.t - (S.auT || 0) > .5) { S.auT = S.t; auUpdate(W8, ctx); }
+  drawWeather(dt, W8, ctx.sea); drawSandstorm(dt); drawBunting(); drawCamp();
+  if (S.t - (S.auT || 0) > .5) { S.auT = S.t; auUpdate(W8, ctx); localSounds(ctx); }
   if (!st.preview) for (const n in S.lmSeen) if (S.lmSeen[n] > 90 && !st.lm[n]) { st.lm[n] = Date.now(); save(); toast(J(`🏛 <b>${LMNAME[n] || n}</b>が見えた！<small>名所の記録にのりました</small>`, `🏛 You can see <b>${LMNAME[n] || tr(n)}</b>!<small>Added to your sights log</small>`), 5000); }
   if (ts - lastHud > 1000) { lastHud = ts; skyCheck(); checkAct(); updateHud(); refreshWx(); refreshGeo(); }
   if (ts - lastSave > 10000) { lastSave = ts; save(); }
@@ -5728,6 +5731,296 @@ cv.addEventListener('click', e => {
   const h = S.cHits.find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
   if (h) { e.stopPropagation(); showConst(h.k); }
 });
+
+/* ===== その土地ならではのもの（乗りもの・家と木・音・空・くらしの時間） ===== */
+// [絵文字, 日本語, 英語, 説明(日), 説明(英), しらべる言葉(日), しらべる言葉(英)]
+const LOCAL = {
+  tuktuk: ['🛺', 'トゥクトゥク', 'Tuk-tuk', 'エンジン音が「トゥクトゥク」と聞こえる三輪タクシー', 'A three-wheeled taxi named after the sound of its engine', 'トゥクトゥク', 'Auto rickshaw'],
+  motorbikes: ['🛵', 'バイクの大群', 'Swarms of motorbikes', 'ベトナムでは家族みんなで1台のバイクに乗ることも', 'In Vietnam a whole family may ride one motorbike', 'ベトナムのバイク', 'Motorcycles in Vietnam'],
+  autoricksha: ['🛺', 'オートリキシャ', 'Auto rickshaw', '黄色と緑（黒と黄色）の三輪タクシー。インドの町の足', 'Yellow-and-green three-wheelers that get India around', 'オートリクシャー', 'Auto rickshaw'],
+  yellowcab: ['🚕', 'イエローキャブ', 'Yellow cab', 'ニューヨークの黄色いタクシー', 'New York\'s famous yellow taxis', 'イエローキャブ', 'Taxicabs of New York City'],
+  schoolbus: ['🚌', 'スクールバス', 'School bus', '北米では子どもを黄色いバスが学校へ送りむかえ', 'Yellow buses carry North American kids to school', 'スクールバス', 'School bus'],
+  roadtrain: ['🚛', 'ロードトレイン', 'Road train', '荷台を3つも4つもつなげた、オーストラリアの長いトラック', 'Australian trucks pulling three or four trailers', 'ロードトレイン', 'Road train'],
+  horseman: ['🏇', '馬に乗った人', 'Horse riders', '草原では今も馬が大切な乗りもの', 'Horses are still everyday transport on the steppe', 'モンゴルの馬', 'Mongolian horse'],
+  donkeycart: ['🫏', 'ロバの荷車', 'Donkey cart', '野菜や荷物を運ぶ、北アフリカの町の働きもの', 'Hard-working carts carrying goods in North Africa', 'ロバ', 'Donkey cart'],
+  vespa: ['🛵', 'ベスパ', 'Vespa scooter', 'イタリア生まれのかわいいスクーター', 'The stylish Italian scooter', 'ベスパ', 'Vespa'],
+  keitruck: ['🛻', '軽トラ', 'Kei truck', '日本の田舎で大活躍の小さなトラック', 'The tiny trucks of the Japanese countryside', '軽トラック', 'Kei truck'],
+  lada: ['🚗', 'ラーダ', 'Lada', 'ロシア生まれの四角いクルマ。旧ソ連の国々で今も走る', 'The boxy Russian car still common across the former USSR', 'ラーダ (自動車)', 'Lada'],
+  beetle: ['🚕', 'ワーゲンビートル', 'VW Beetle', 'メキシコでは「ボチョ」とよばれて長く愛された', 'Known as the “vocho” and loved for decades in Mexico', 'フォルクスワーゲン・タイプ1', 'Volkswagen Beetle'],
+  bicycles: ['🚲', '自転車の列', 'Rows of bicycles', 'コペンハーゲンは、クルマより自転車が多い町', 'Copenhagen has more bikes than cars', '自転車', 'Cycling in Copenhagen'],
+  postbus: ['🚌', 'ポストバス', 'PostBus', 'アルプスの山道を走る黄色いバス。ラッパのような警笛', 'Yellow buses of the Alps with a three-tone horn', 'ポストバス', 'PostBus Switzerland'],
+  dogsled: ['🛷', '犬ぞり', 'Dog sled', '雪と氷の土地で、犬たちが引くそり', 'Sleds pulled by dogs across the snow', '犬ぞり', 'Dog sled'],
+  tram: ['🚋', '路面電車', 'Tram', '町の道を走る電車。リスボンの黄色い電車が有名', 'Streetcars in the city; Lisbon\'s yellow trams are famous', '路面電車', 'Tram'],
+  chickenbus: ['🚌', 'チキンバス', 'Chicken bus', '古いスクールバスをカラフルにぬった、中米の乗り合いバス', 'Old school buses painted in bright colors in Central America', 'チキンバス', 'Chicken bus'],
+  cyclades: ['🏛', '白い壁と青い屋根', 'White walls and blue domes', '強い日ざしをはね返す、ギリシャの白い家', 'Greek houses painted white against the strong sun', 'キクラデス諸島', 'Cycladic architecture'],
+  nordichouse: ['🏠', 'カラフルな木の家', 'Colorful wooden houses', '北欧では赤・黄・青の木の家が多い', 'Red, yellow and blue wooden houses of the Nordic countries', 'ファルーレッド', 'Falu red'],
+  adobe: ['🧱', '日干しれんがの家', 'Mud-brick houses', '土を固めて日に干したれんがの家。暑さに強い', 'Houses of sun-dried earth bricks that stay cool', '日干しレンガ', 'Adobe'],
+  thaitemple: ['🛕', 'お寺の屋根', 'Temple roofs', '重なる屋根と、反りかえった金色のかざり', 'Layered roofs with golden curling ornaments', 'ワット (寺院)', 'Wat'],
+  chalet: ['🏔', '山小屋風の家', 'Alpine chalets', '雪に強い、木のバルコニーと花の窓', 'Wooden balconies and flower boxes, built for snow', 'シャレー', 'Chalet'],
+  izba: ['🪵', '丸太の家イズバ', 'Izba log houses', 'ロシアの木の家。青くぬった窓わくの彫刻', 'Russian log houses with carved blue window frames', 'イズバ', 'Izba'],
+  hanok: ['🏯', '反りかえった瓦屋根', 'Curved tile roofs', '韓国の伝統の家（韓屋）や中国の家の、はしが上がった屋根', 'Traditional Korean and Chinese roofs with upturned eaves', '韓屋', 'Hanok'],
+  colorful: ['🎨', 'カラフルな家なみ', 'Colorful houses', '中南米では家をあざやかな色でぬる', 'Houses painted in bright colors in Latin America', 'カミニート', 'Caminito'],
+  baobab: ['🌳', 'バオバブ', 'Baobab', '太い幹に水をためる、アフリカの「さかさまの木」', 'Africa\'s “upside-down tree” that stores water in its trunk', 'バオバブ', 'Adansonia'],
+  birch: ['🌳', '白樺', 'Birch', '白い幹の木。ロシアや北欧の森に多い', 'White-barked trees of Russian and Nordic forests', 'シラカンバ', 'Birch'],
+  bamboo: ['🎋', '竹林', 'Bamboo grove', 'アジアの竹。1日に1m近くのびることも', 'Asian bamboo can grow almost a meter a day', '竹', 'Bamboo'],
+  cypress: ['🌲', 'イトスギ', 'Cypress trees', 'イタリアの丘にならぶ、ほそ長い木', 'Tall narrow trees lining Italian hills', 'イトスギ', 'Cupressus sempervirens'],
+  olive: ['🫒', 'オリーブ畑', 'Olive groves', '地中海の太陽が育てる銀色の葉の木', 'Silver-leaved trees of the Mediterranean sun', 'オリーブ', 'Olive'],
+  eucalyptus: ['🌳', 'ユーカリ', 'Eucalyptus', 'コアラのごはん。オーストラリアの森の木', 'Koala food, the tree of Australian forests', 'ユーカリ', 'Eucalyptus'],
+  acacia: ['🌳', 'アカシア', 'Acacia', '平らなかさのような形の、サバンナの木', 'The flat-topped tree of the savanna', 'アカシア', 'Vachellia tortilis'],
+  saguaro: ['🌵', 'サワロサボテン', 'Saguaro cactus', '腕をあげたような形の大きなサボテン', 'Giant cacti that look like they\'re raising their arms', 'サワロ', 'Saguaro'],
+  churchbell: ['🔔', '教会の鐘', 'Church bells', '時刻を知らせる鐘の音が町にひびく', 'Bells ring out the hours over town', '教会の鐘', 'Church bell'],
+  templebell: ['🔔', 'お寺の鐘', 'Temple bell', '朝と夕方に、ゴーンと低い鐘の音', 'A deep bell rings in the morning and evening', '梵鐘', 'Bonshō'],
+  adhan: ['🕌', '祈りの呼びかけ（アザーン）', 'Call to prayer (adhan)', '1日5回、モスクから祈りの時間を知らせる声', 'Five times a day, a voice from the mosque calls to prayer', 'アザーン', 'Adhan'],
+  market: ['🧺', '市場のにぎわい', 'Market bustle', '売り買いの声でにぎやかな市場', 'Lively markets full of voices', 'スーク', 'Souq'],
+  shiphorn: ['🚢', '船の汽笛', 'Ship\'s horn', '港を出入りする船のボーーという音', 'The long blast of ships coming and going', '汽笛', 'Ship\'s horn'],
+  yellowdust: ['🌫', '黄砂', 'Yellow dust', '春、ゴビ砂漠などの砂が風で運ばれ、空が黄色くかすむ', 'In spring, desert dust blows in and turns the sky hazy yellow', '黄砂', 'Asian Dust'],
+  sandstorm: ['🌪', '砂あらし', 'Sandstorm', 'サハラ砂漠の砂が風で舞い上がり、空がオレンジ色に', 'Sahara sand whips up and turns the sky orange', '砂嵐', 'Dust storm'],
+  karlfog: ['🌁', 'サンフランシスコの霧', 'San Francisco fog', '夏の朝と夕方、海から町をおおう霧。「カール」というあだ名がある', 'Summer fog rolls in from the sea; locals call it “Karl”', 'サンフランシスコ', 'Fog in San Francisco'],
+  mirage: ['🏝', '蜃気楼（逃げ水）', 'Mirage', '熱い地面の上で、遠くに水があるように見える', 'Hot ground makes distant “water” appear on the horizon', '逃げ水', 'Mirage'],
+  milkyway: ['🌌', '天の川', 'The Milky Way', '町の明かりがない場所では、星の川がはっきり見える', 'Away from city lights, the river of stars stands out', '天の川', 'Milky Way'],
+  siesta: ['😴', 'シエスタ', 'Siesta', 'スペインでは昼すぎにお店が閉まり、町がしずかになる', 'In Spain shops close after lunch and towns go quiet', 'シエスタ', 'Siesta'],
+  nightmarket: ['🏮', '夜市・屋台の明かり', 'Night markets', 'アジアの町は夜になると屋台の明かりでいっぱい', 'Asian towns fill with glowing food stalls at night', '夜市', 'Night market'],
+  candles: ['🕯', '窓辺のろうそく', 'Candles in the windows', '長い冬の北欧では、窓にろうそくのあかりをかざる', 'In the long Nordic winter, candles glow in every window', 'ヒュッゲ', 'Advent candlestick'],
+  chime: ['🎶', '夕方5時のチャイム', 'Five o\'clock chime', '日本の町では夕方にメロディーが流れ、子どもが家に帰る合図', 'A melody plays in Japanese towns at 5 pm, telling kids to go home', '夕焼け小焼け', 'Yūyake Koyake'],
+};
+const locName = id => EN ? LOCAL[id][2] : LOCAL[id][1];
+const ccOf = p => { if (!p || !p.seg) return ''; const n = p.segKm < p.seg.len / 2 ? p.seg.a.name : p.seg.b.name; return CITY_COUNTRY[n] || ''; };
+const CCSET = s => new Set(s.split(' '));
+const ISLAM = CCSET('TR IR UZ TM KZ EG MA DJ MY SN'), CHURCH = CCSET('BG RS HU AT BY PL CZ IT ES DE CH FR DK SE FI NO PT US PR BR AR CL BO PE EC PA GT MX IS CA RU GR'), TEMPLE = CCSET('JP KR CN TH LA VN LK MN'), MARKET = CCSET('MA EG IN TH VN MX PE BO GT TR IR UZ LK SN DJ LA MY');
+const NORDIC = CCSET('NO SE DK IS GL FI'), NIGHTMKT = CCSET('TH VN LA MY SG CN KR');
+// はじめて見たとき：説明を出して記録に残す
+function seeLocal(id) {
+  if (!st || st.preview || !LOCAL[id]) return; st.local = st.local || {};
+  if (st.local[id]) return;
+  st.local[id] = { at: Date.now(), where: placeKey() }; save();
+  const L0 = LOCAL[id];
+  toast(`${L0[0]} <b>${locName(id)}</b><small>${EN ? L0[4] : L0[3]}<br>${J('記録の「ご当地もの」にのりました', 'Added to “Local finds” in your log')}</small>`, 6500);
+}
+function localLogHtml() {
+  const ids = Object.keys(LOCAL), seen = ids.filter(k => (st.local || {})[k]);
+  return `<p class="note">${J(`見つけたご当地もの ${seen.length} / ${ids.length}`, `Local finds ${seen.length} / ${ids.length}`)}<br><small>${J('その土地ならではの乗りもの・家や木・音・空・くらしの時間。はじめて出会うと記録されます', 'Local vehicles, houses and trees, sounds, skies and daily life, recorded the first time you meet them')}</small></p><div class="grid">${ids.map(k => { const e = (st.local || {})[k], L0 = LOCAL[k]; return e ? `<div class="card"><div class="em">${L0[0]}</div><b>${locName(k)}</b><small>${EN ? L0[4] : L0[3]}</small><small class="m">${fdDate(e.at)}${J('・', ' · ')}${placeText(e.where)}</small><span class="ilinks">${wikiA(EN ? L0[6] : L0[5])}</span></div>` : `<div class="card no"><div class="em">？</div><b>？？？</b></div>`; }).join('')}</div>`;
+}
+
+/* ----- 1 乗りもの ----- */
+function vehiclesFor(cc, b, snow) {
+  const city = b === 'city';
+  if (snow && (cc === 'GL' || (cc === 'NO' && P.ll[0] > 66) || cc === 'FI' && P.ll[0] > 65)) return ['dogsled', 'car'];
+  return ({ TH: ['tuktuk', 'tuktuk', 'car'], LA: ['tuktuk', 'car'], VN: ['motorbikes', 'motorbikes', 'car'], IN: ['autoricksha', 'autoricksha', 'truck'], LK: ['autoricksha', 'car'],
+    US: city ? ['yellowcab', 'yellowcab', 'car', 'schoolbus'] : ['car', 'pickup', 'schoolbus', 'truck'], CA: ['car', 'schoolbus', 'pickup'], AU: ['roadtrain', 'car', 'pickup'],
+    MN: ['horseman', 'horseman', 'car'], KZ: ['horseman', 'lada'], MA: ['donkeycart', 'car'], EG: ['donkeycart', 'car', 'truck'], SN: ['donkeycart', 'car'], IT: ['vespa', 'vespa', 'car'],
+    JP: ['keitruck', 'car', 'car'], RU: ['lada', 'lada', 'truck'], BY: ['lada', 'car'], UZ: ['lada', 'car'], TM: ['lada', 'car'], MX: ['beetle', 'car'], DK: ['bicycles', 'car'], CN: ['bicycles', 'car', 'truck'],
+    CH: ['postbus', 'car'], AT: city ? ['tram', 'car'] : ['postbus', 'car'], PT: city ? ['tram', 'car'] : ['car'], PL: city ? ['tram', 'car'] : ['car', 'truck'], CZ: city ? ['tram', 'car'] : ['car'], HU: city ? ['tram', 'car'] : ['car'],
+    GT: ['chickenbus', 'car'], PA: ['chickenbus', 'car'] }[cc]) || ['car', 'truck'];
+}
+function wheel(x, y, r) { c.fillStyle = '#23262b'; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.fillStyle = '#9aa0a8'; c.beginPath(); c.arc(x, y, r * .45, 0, 7); c.fill(); }
+function rider(x, y, s, col, hat) { c.fillStyle = col; c.fillRect(x - 2.5 * s, y - 9 * s, 5 * s, 9 * s); c.fillStyle = '#e8c4a0'; c.beginPath(); c.arc(x, y - 11.5 * s, 2.6 * s, 0, 7); c.fill(); if (hat === 'cone') { c.fillStyle = '#e6d39a'; c.beginPath(); c.moveTo(x - 5 * s, y - 12 * s); c.lineTo(x, y - 17 * s); c.lineTo(x + 5 * s, y - 12 * s); c.fill(); } else if (hat) { c.fillStyle = hat; c.beginPath(); c.arc(x, y - 12 * s, 3 * s, Math.PI, 0); c.fill(); } }
+function bodyCar(x, y, s, w, h, col, cab = .55, roof = 0) { // 左向き
+  c.fillStyle = col; c.beginPath(); c.roundRect ? c.roundRect(x - w / 2 * s, y - h * s, w * s, h * .55 * s, 3 * s) : c.rect(x - w / 2 * s, y - h * s, w * s, h * .55 * s); c.fill();
+  c.beginPath(); c.moveTo(x - w * .32 * s, y - h * .45 * s - h * .55 * s + h * .1 * s); c.lineTo(x - w * .2 * s, y - h * s - h * .4 * s + h * .55 * s * 0); c.lineTo(x + (w * cab - w * .2) * s, y - h * s - h * .4 * s + 0); c.lineTo(x + (w * cab - w * .12) * s, y - h * .45 * s - h * .55 * s + h * .1 * s); c.fill();
+  c.fillStyle = 'rgba(160,200,230,.85)'; c.fillRect(x - w * .18 * s, y - h * 1.3 * s, w * cab * .75 * s, h * .3 * s);
+  if (roof) { c.fillStyle = roof; c.fillRect(x + w * .05 * s, y - h * 1.55 * s, 7 * s, 3 * s); }
+  wheel(x - w * .3 * s, y - 1.5 * s, 3.4 * s); wheel(x + w * .3 * s, y - 1.5 * s, 3.4 * s);
+}
+function bus(x, y, s, w, col, stripe, n = 6) { c.fillStyle = col; c.fillRect(x - w / 2 * s, y - 18 * s, w * s, 15 * s); if (stripe) { c.fillStyle = stripe; c.fillRect(x - w / 2 * s, y - 8 * s, w * s, 2 * s); } c.fillStyle = 'rgba(150,190,220,.9)'; for (let k = 0; k < n; k++) c.fillRect(x - w / 2 * s + 4 * s + k * (w - 8) / n * s, y - 16 * s, (w - 8) / n * .7 * s, 5 * s); wheel(x - w * .32 * s, y - 2 * s, 3.6 * s); wheel(x + w * .32 * s, y - 2 * s, 3.6 * s); }
+function drawVehicle(v, x, y, s) {
+  const night = L.night > .55;
+  switch (v.type) {
+    case 'car': bodyCar(x, y, s, 30, 10, v.col); break;
+    case 'pickup': bodyCar(x, y, s, 34, 10, v.col, .35); break;
+    case 'yellowcab': bodyCar(x, y, s, 30, 10, '#f2c21b', .55, '#fff6d0'); c.fillStyle = '#222'; for (let k = 0; k < 6; k++) c.fillRect(x - 12 * s + k * 4 * s, y - 6 * s, 2 * s, 1.4 * s); break;
+    case 'beetle': c.fillStyle = '#3fa45b'; c.beginPath(); c.ellipse(x, y - 7 * s, 14 * s, 8 * s, 0, Math.PI, 0); c.fill(); c.fillRect(x - 14 * s, y - 7 * s, 28 * s, 4 * s); c.fillStyle = '#f4f4ee'; c.fillRect(x - 6 * s, y - 14 * s, 10 * s, 4 * s); wheel(x - 9 * s, y - 2 * s, 3.2 * s); wheel(x + 9 * s, y - 2 * s, 3.2 * s); break;
+    case 'lada': c.fillStyle = v.col; c.fillRect(x - 15 * s, y - 9 * s, 30 * s, 6 * s); c.fillRect(x - 8 * s, y - 14 * s, 15 * s, 5 * s); c.fillStyle = 'rgba(160,200,230,.85)'; c.fillRect(x - 7 * s, y - 13 * s, 13 * s, 3.4 * s); wheel(x - 9 * s, y - 2 * s, 3.2 * s); wheel(x + 9 * s, y - 2 * s, 3.2 * s); break;
+    case 'keitruck': c.fillStyle = '#f2f2ee'; c.fillRect(x - 13 * s, y - 14 * s, 9 * s, 11 * s); c.fillStyle = 'rgba(160,200,230,.85)'; c.fillRect(x - 12.5 * s, y - 13 * s, 5 * s, 4 * s); c.fillStyle = '#e6e6e0'; c.fillRect(x - 4 * s, y - 8 * s, 18 * s, 5 * s); if (v.load) { c.fillStyle = v.load; c.beginPath(); c.arc(x + 2 * s, y - 9 * s, 3 * s, 0, 7); c.arc(x + 8 * s, y - 9 * s, 3 * s, 0, 7); c.fill(); } wheel(x - 9 * s, y - 2 * s, 2.8 * s); wheel(x + 9 * s, y - 2 * s, 2.8 * s); break;
+    case 'truck': c.fillStyle = v.col; c.fillRect(x - 18 * s, y - 15 * s, 10 * s, 12 * s); c.fillStyle = '#d8d4cc'; c.fillRect(x - 7 * s, y - 20 * s, 30 * s, 17 * s); c.fillStyle = 'rgba(160,200,230,.85)'; c.fillRect(x - 17 * s, y - 13 * s, 5 * s, 4 * s); wheel(x - 13 * s, y - 2 * s, 3.4 * s); wheel(x + 10 * s, y - 2 * s, 3.4 * s); wheel(x + 18 * s, y - 2 * s, 3.4 * s); break;
+    case 'roadtrain': { c.fillStyle = '#c0392b'; c.fillRect(x - 40 * s, y - 16 * s, 11 * s, 13 * s); c.fillStyle = 'rgba(160,200,230,.85)'; c.fillRect(x - 39 * s, y - 14 * s, 5 * s, 4 * s); for (let k = 0; k < 3; k++) { const tx = x - 27 * s + k * 30 * s; c.fillStyle = k % 2 ? '#c9c2b2' : '#b8b0a0'; c.fillRect(tx, y - 18 * s, 28 * s, 15 * s); wheel(tx + 5 * s, y - 2 * s, 3 * s); wheel(tx + 22 * s, y - 2 * s, 3 * s); } wheel(x - 35 * s, y - 2 * s, 3.2 * s); break; }
+    case 'schoolbus': bus(x, y, s, 46, '#f5b800', '#222', 7); c.fillStyle = '#f5b800'; c.fillRect(x - 27 * s, y - 12 * s, 5 * s, 9 * s); break;
+    case 'postbus': bus(x, y, s, 42, '#f7cf00', '#c8102e', 6); break;
+    case 'chickenbus': bus(x, y, s, 44, '#2f80c0', '#e8482c', 7); c.fillStyle = '#f2c14e'; c.fillRect(x - 22 * s, y - 6 * s, 44 * s, 2 * s); c.fillStyle = '#7a5a3a'; c.fillRect(x - 14 * s, y - 22 * s, 9 * s, 4 * s); c.fillStyle = '#c64'; c.fillRect(x - 3 * s, y - 21 * s, 7 * s, 3 * s); c.fillStyle = '#3a6'; c.fillRect(x + 6 * s, y - 22 * s, 8 * s, 4 * s); break;
+    case 'tram': { const tc = v.col; c.fillStyle = tc; c.fillRect(x - 20 * s, y - 22 * s, 40 * s, 18 * s); c.fillStyle = '#f4f0e6'; c.fillRect(x - 20 * s, y - 10 * s, 40 * s, 3 * s); c.fillStyle = 'rgba(150,190,220,.9)'; for (let k = 0; k < 5; k++) c.fillRect(x - 17 * s + k * 7.4 * s, y - 20 * s, 5 * s, 6 * s); c.strokeStyle = '#333'; c.lineWidth = 1 * s; c.beginPath(); c.moveTo(x, y - 22 * s); c.lineTo(x + 4 * s, y - 28 * s); c.lineTo(x - 3 * s, y - 28 * s); c.stroke(); wheel(x - 12 * s, y - 2.5 * s, 2.6 * s); wheel(x + 12 * s, y - 2.5 * s, 2.6 * s); break; }
+    case 'tuktuk': { const col = v.col; c.fillStyle = col; c.fillRect(x - 9 * s, y - 9 * s, 20 * s, 6 * s); c.fillStyle = '#2d2d2d'; c.fillRect(x - 9 * s, y - 20 * s, 21 * s, 2.5 * s); c.strokeStyle = '#555'; c.lineWidth = 1.2 * s; c.beginPath(); c.moveTo(x - 8 * s, y - 18 * s); c.lineTo(x - 9 * s, y - 9 * s); c.moveTo(x + 11 * s, y - 18 * s); c.lineTo(x + 11 * s, y - 9 * s); c.stroke(); rider(x - 3 * s, y - 8 * s, s * .8, '#4a6fa5'); rider(x + 6 * s, y - 8 * s, s * .8, '#c0504d'); c.fillStyle = col; c.fillRect(x - 14 * s, y - 12 * s, 6 * s, 8 * s); wheel(x - 12 * s, y - 2 * s, 2.6 * s); wheel(x + 7 * s, y - 2 * s, 2.8 * s); break; }
+    case 'autoricksha': { c.fillStyle = '#1d6b3a'; c.beginPath(); c.moveTo(x - 13 * s, y - 6 * s); c.quadraticCurveTo(x - 10 * s, y - 22 * s, x + 2 * s, y - 21 * s); c.lineTo(x + 11 * s, y - 20 * s); c.lineTo(x + 11 * s, y - 6 * s); c.fill(); c.fillStyle = '#f5c400'; c.fillRect(x - 13 * s, y - 9 * s, 24 * s, 6 * s); c.fillRect(x - 11 * s, y - 22 * s, 21 * s, 3 * s); rider(x, y - 8 * s, s * .8, '#e0e0e0'); wheel(x - 10 * s, y - 2 * s, 2.6 * s); wheel(x + 8 * s, y - 2 * s, 2.8 * s); break; }
+    case 'vespa': case 'moto': { const col = v.col; wheel(x - 7 * s, y - 2.5 * s, 2.6 * s); wheel(x + 7 * s, y - 2.5 * s, 2.6 * s); c.fillStyle = col; c.beginPath(); c.moveTo(x - 9 * s, y - 4 * s); c.lineTo(x - 7 * s, y - 14 * s); c.lineTo(x - 4 * s, y - 14 * s); c.lineTo(x - 5 * s, y - 6 * s); c.lineTo(x + 3 * s, y - 6 * s); c.quadraticCurveTo(x + 10 * s, y - 10 * s, x + 10 * s, y - 4 * s); c.fill(); rider(x + 3 * s, y - 7 * s, s * .85, v.shirt || '#555', v.hat || '#e33'); if (v.two) rider(x + 8 * s, y - 6 * s, s * .75, v.shirt2 || '#888', v.hat2); break; }
+    case 'bike': { c.strokeStyle = '#333'; c.lineWidth = 1.2 * s; c.beginPath(); c.arc(x - 6 * s, y - 4 * s, 3.5 * s, 0, 7); c.moveTo(x + 9.5 * s, y - 4 * s); c.arc(x + 6 * s, y - 4 * s, 3.5 * s, 0, 7); c.moveTo(x - 6 * s, y - 4 * s); c.lineTo(x - 1 * s, y - 10 * s); c.lineTo(x + 6 * s, y - 4 * s); c.moveTo(x - 1 * s, y - 10 * s); c.lineTo(x - 3 * s, y - 12 * s); c.stroke(); rider(x + 1 * s, y - 9 * s, s * .8, v.shirt); break; }
+    case 'horseman': drawAnimal('horse', x, y, s * 1.1, S.t * 10 + v.seed); rider(x - 1 * s, y - 12 * s, s * .8, v.shirt, v.hat || '#b33'); break;
+    case 'donkeycart': drawAnimal('sheep', x - 10 * s, y, s * .8, S.t * 6); c.fillStyle = '#9a9488'; c.beginPath(); c.ellipse(x - 11 * s, y - 9 * s, 7 * s, 3.6 * s, 0, 0, 7); c.fill(); c.fillStyle = '#8a6a48'; c.fillRect(x - 2 * s, y - 12 * s, 18 * s, 6 * s); c.strokeStyle = '#6a4a30'; c.lineWidth = 1.2 * s; c.beginPath(); c.moveTo(x - 4 * s, y - 9 * s); c.lineTo(x - 2 * s, y - 9 * s); c.stroke(); c.fillStyle = '#c56'; c.beginPath(); c.arc(x + 4 * s, y - 13 * s, 2.6 * s, 0, 7); c.arc(x + 9 * s, y - 13 * s, 2.6 * s, 0, 7); c.fill(); c.strokeStyle = '#5a4030'; c.lineWidth = 1.6 * s; c.beginPath(); c.arc(x + 7 * s, y - 4.5 * s, 4.5 * s, 0, 7); c.stroke(); rider(x + 3 * s, y - 11 * s, s * .75, '#e8e0d0', '#f2f2ee'); break;
+    case 'dogsled': for (let k = 0; k < 4; k++) { const dx = x - 26 * s + k * 7 * s, b = Math.sin(S.t * 14 + k) * 1.2 * s; c.fillStyle = k % 2 ? '#d8d8d8' : '#6a6a6a'; c.beginPath(); c.ellipse(dx, y - 5 * s + b, 3.4 * s, 2 * s, 0, 0, 7); c.arc(dx - 3.5 * s, y - 7 * s + b, 1.6 * s, 0, 7); c.fill(); } c.strokeStyle = '#555'; c.lineWidth = .8 * s; c.beginPath(); c.moveTo(x - 24 * s, y - 5 * s); c.lineTo(x - 2 * s, y - 6 * s); c.stroke(); c.fillStyle = '#7a5532'; c.fillRect(x - 2 * s, y - 7 * s, 14 * s, 3 * s); c.fillRect(x - 3 * s, y - 2 * s, 17 * s, 1.4 * s); rider(x + 10 * s, y - 7 * s, s * .85, '#c8402c', '#2a5f9e'); break;
+  }
+  if (night && v.type !== 'horseman' && v.type !== 'donkeycart' && v.type !== 'dogsled' && v.type !== 'bike') { c.fillStyle = 'rgba(255,240,190,.9)'; c.beginPath(); c.arc(x - (v.type === 'roadtrain' ? 40 : v.type === 'tram' ? 20 : 15) * s, y - 7 * s, 1.6 * s, 0, 7); c.fill(); }
+}
+const VCOL = ['#c94b4b', '#3d6fb4', '#e8e6e0', '#555b63', '#8aa0b0', '#2e7d5b', '#d9a441'];
+function spawnTraffic(ctx, W8) {
+  const cc = ccOf(P), list = vehiclesFor(cc, ctx.biome, W8.snowCover), type = list[Math.random() * list.length | 0];
+  const base = { t0: S.t, seed: Math.random() * 100, col: VCOL[Math.random() * VCOL.length | 0], shirt: VCOL[Math.random() * VCOL.length | 0], v: 40 + Math.random() * 60 };
+  const out = [];
+  if (type === 'motorbikes') { const n = 5 + (Math.random() * 6 | 0); for (let k = 0; k < n; k++) out.push(Object.assign({}, base, { type: 'moto', off: k * 18 + Math.random() * 10, lane: Math.random() * 6, col: VCOL[k % 7], shirt: VCOL[(k + 3) % 7], hat: Math.random() < .4 ? 'cone' : '#d33', two: Math.random() < .5, shirt2: VCOL[(k + 5) % 7], hat2: Math.random() < .5 ? 'cone' : '#36c', id: 'motorbikes' })); }
+  else if (type === 'bicycles') { const n = 3 + (Math.random() * 4 | 0); for (let k = 0; k < n; k++) out.push(Object.assign({}, base, { type: 'bike', off: k * 16, lane: Math.random() * 4, shirt: VCOL[k % 7], v: 18, id: 'bicycles' })); }
+  else if (type === 'horseman') { const n = 1 + (Math.random() * 3 | 0); for (let k = 0; k < n; k++) out.push(Object.assign({}, base, { type, off: k * 24, lane: k * 2, v: 25, id: type, seed: k * 2 })); }
+  else out.push(Object.assign({}, base, { type, off: 0, lane: 0, id: type, col: type === 'tuktuk' ? ['#2f80c0', '#2e9d5b', '#e4572e'][Math.random() * 3 | 0] : type === 'tram' ? (cc === 'PT' ? '#f2c014' : cc === 'PL' || cc === 'CZ' ? '#c8302c' : '#e8442e') : base.col, load: type === 'keitruck' ? ['#e07b39', '#7bb24f', null][Math.random() * 3 | 0] : null, v: type === 'donkeycart' || type === 'dogsled' ? 18 : type === 'tram' ? 30 : base.v }));
+  S.traffic = (S.traffic || []).concat(out);
+}
+function drawTraffic(gy, sc, ctx, W8) {
+  if (ctx.sea || !P) return;
+  S.traffic = (S.traffic || []).filter(v => S.t - v.t0 < 40);
+  if (!S.nextCar || S.t > S.nextCar + 60) S.nextCar = S.t + 4;
+  if (S.t > S.nextCar) { if (S.traffic.length < 12) spawnTraffic(ctx, W8); S.nextCar = S.t + (ctx.biome === 'city' ? 4 : 9) + Math.random() * (ctx.biome === 'city' ? 6 : 14); }
+  const y0 = gy + 14 * sc, s = sc * .95;
+  for (const v of S.traffic) {
+    const x = W + 60 * s + v.off * s - (S.t - v.t0) * (v.v + 60 * S.vf) * s;
+    if (x < -120 * s || x > W + 400 * s) continue;
+    drawVehicle(v, x, y0 + v.lane * s, s);
+    if (x > W * .15 && x < W * .85 && LOCAL[v.id]) seeLocal(v.id);
+  }
+}
+
+/* ----- 2 家と木 ----- */
+const HOUSE_OF = { GR: 'cyclades', NO: 'nordichouse', SE: 'nordichouse', DK: 'nordichouse', IS: 'nordichouse', GL: 'nordichouse', FI: 'nordichouse', MA: 'adobe', EG: 'adobe', IR: 'adobe', UZ: 'adobe', TM: 'adobe', PE: 'adobe', BO: 'adobe', DJ: 'adobe', TH: 'thaitemple', LA: 'thaitemple', CH: 'chalet', AT: 'chalet', RU: 'izba', BY: 'izba', KR: 'hanok', CN: 'hanok', MX: 'colorful', GT: 'colorful', BR: 'colorful', AR: 'colorful', PR: 'colorful', PA: 'colorful', CL: 'colorful' };
+const TREE_OF = { SN: 'baobab', RU: 'birch', FI: 'birch', SE: 'birch', BY: 'birch', PL: 'birch', CA: 'birch', JP: 'bamboo', VN: 'bamboo', LA: 'bamboo', TH: 'bamboo', IT: 'cypress', AU: 'eucalyptus', DJ: 'acacia', GR: 'olive', ES: 'olive', PT: 'olive', MA: 'olive', TN: 'olive' };
+function localizeTile(out, b, P0, i) {
+  const cc = ccOf(P0), r = k => h2(i * 3 + 7, k);
+  if (!cc) return out;
+  const ht = HOUSE_OF[cc], tt = TREE_OF[cc];
+  for (const p of out) {
+    if ((p.type === 'house' || p.type === 'jhouse') && ht) p.type = ht;
+    if ((p.type === 'tree' || p.type === 'conifer') && tt && r(p.x | 0) < .55 && !(tt === 'bamboo' && b === 'desert')) p.type = tt;
+    if (p.type === 'cactus' && (cc === 'US' || cc === 'MX')) p.type = 'saguaro';
+  }
+  if (ht && b === 'city' && r(1) < .35) out.push({ type: ht, x: r(2) * 80, s: .9 + r(3) * .3, z: r(4), c: r(5) * 4 | 0 });
+  if (ht && (b === 'coast' || b === 'farm' || b === 'steppe' || b === 'desert') && r(6) < .18) out.push({ type: ht, x: r(7) * 80, s: .85 + r(8) * .3, z: r(9), c: r(10) * 4 | 0 });
+  if ((cc === 'GR' || cc === 'IT' || cc === 'ES' || cc === 'PT') && b === 'farm' && r(11) < .5) for (let k = 0; k < 3; k++) out.push({ type: 'olive', x: k * 26 + r(12 + k) * 10, s: .8, z: r(20 + k) });
+  if (cc === 'IT' && (b === 'farm' || b === 'mount') && r(13) < .4) out.push({ type: 'cypress', x: r(14) * 80, s: 1, z: r(15) });
+  if (cc === 'SN' && r(16) < .25) out.push({ type: 'baobab', x: r(17) * 80, s: 1, z: r(18) });
+  if ((cc === 'DJ' || cc === 'SN' || (cc === 'AU' && b !== 'city')) && r(19) < .2) out.push({ type: cc === 'AU' ? 'eucalyptus' : 'acacia', x: r(20) * 80, s: 1, z: r(21) });
+  return out;
+}
+function drawLocalProp(p, x, gy, sc, ctx) {
+  const s = sc * p.s, d = .11, C = col => css(sh(col, d)), night = L.night > .55, win = night ? 'rgba(255,214,120,.95)' : C([70, 90, 110]);
+  if (x > W * .1 && x < W * .9 && LOCAL[p.type]) seeLocal(p.type);
+  switch (p.type) {
+    case 'cyclades': { c.fillStyle = C([246, 246, 242]); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 16 * s); c.fillRect(x + 4 * s, gy - 24 * s, 12 * s, 8 * s); c.fillStyle = C([40, 100, 180]); c.beginPath(); c.arc(x - 4 * s, gy - 16 * s, 6.5 * s, Math.PI, 0); c.fill(); c.fillRect(x + 7 * s, gy - 9 * s, 4 * s, 9 * s); c.fillStyle = win; c.fillRect(x - 10 * s, gy - 10 * s, 4 * s, 4 * s); c.fillStyle = C([40, 100, 180]); c.fillRect(x + 9 * s, gy - 22 * s, 3 * s, 3 * s); break; }
+    case 'nordichouse': { const col = [[166, 44, 38], [226, 176, 60], [70, 110, 150], [236, 232, 222]][p.c || 0]; c.fillStyle = C(col); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 16 * s); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [50, 52, 58]); c.beginPath(); c.moveTo(x - 15 * s, gy - 16 * s); c.lineTo(x, gy - 30 * s); c.lineTo(x + 15 * s, gy - 16 * s); c.fill(); c.fillStyle = C([250, 250, 248]); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 1.4 * s); c.fillRect(x - 13 * s, gy - 16 * s, 1.4 * s, 16 * s); c.fillRect(x + 11.6 * s, gy - 16 * s, 1.4 * s, 16 * s);
+      for (const wx of [-7, 3]) { c.fillStyle = win; c.fillRect(x + wx * s, gy - 12 * s, 5 * s, 6 * s); }
+      const mon = ctx.mon; if (night && (mon >= 11 || mon <= 2)) { seeLocal('candles'); c.fillStyle = 'rgba(255,230,150,1)'; for (const wx of [-7, 3]) for (let k = 0; k < 5; k++) { c.beginPath(); c.arc(x + (wx + .5 + k) * s, gy - 8.5 * s - (2 - Math.abs(k - 2)) * .9 * s, .7 * s, 0, 7); c.fill(); } } break; }
+    case 'adobe': { const col = ctx.lon < -30 ? [196, 150, 110] : [204, 150, 104]; c.fillStyle = C(col); c.fillRect(x - 14 * s, gy - 15 * s, 28 * s, 15 * s); c.fillRect(x + 2 * s, gy - 22 * s, 11 * s, 7 * s); for (let k = 0; k < 6; k++) c.fillRect(x - 14 * s + k * 5 * s, gy - 17 * s, 2.5 * s, 2 * s); c.fillStyle = win; c.fillRect(x - 9 * s, gy - 10 * s, 3.5 * s, 4 * s); c.fillRect(x + 6 * s, gy - 19.5 * s, 3 * s, 3 * s); c.fillStyle = C([90, 60, 40]); c.fillRect(x - 2 * s, gy - 8 * s, 5 * s, 8 * s); break; }
+    case 'thaitemple': { c.fillStyle = C([246, 240, 228]); c.fillRect(x - 15 * s, gy - 12 * s, 30 * s, 12 * s); for (let k = 0; k < 3; k++) { const yy = gy - 12 * s - k * 7 * s, ww = (20 - k * 5) * s; c.fillStyle = C(k % 2 ? [40, 110, 70] : [196, 60, 40]); c.beginPath(); c.moveTo(x - ww, yy); c.lineTo(x - ww * .5, yy - 8 * s); c.lineTo(x + ww * .5, yy - 8 * s); c.lineTo(x + ww, yy); c.fill(); c.strokeStyle = C([220, 176, 60]); c.lineWidth = 1.2 * s; c.beginPath(); c.moveTo(x - ww, yy); c.quadraticCurveTo(x - ww - 2 * s, yy - 5 * s, x - ww + 1 * s, yy - 6 * s); c.moveTo(x + ww, yy); c.quadraticCurveTo(x + ww + 2 * s, yy - 5 * s, x + ww - 1 * s, yy - 6 * s); c.stroke(); } c.fillStyle = C([220, 176, 60]); c.fillRect(x - .8 * s, gy - 44 * s, 1.6 * s, 10 * s); c.fillStyle = win; c.fillRect(x - 3 * s, gy - 9 * s, 6 * s, 9 * s); break; }
+    case 'chalet': { c.fillStyle = C([238, 234, 224]); c.fillRect(x - 15 * s, gy - 10 * s, 30 * s, 10 * s); c.fillStyle = C([128, 86, 52]); c.fillRect(x - 15 * s, gy - 20 * s, 30 * s, 10 * s); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [92, 64, 44]); c.beginPath(); c.moveTo(x - 20 * s, gy - 19 * s); c.lineTo(x, gy - 29 * s); c.lineTo(x + 20 * s, gy - 19 * s); c.fill(); c.fillStyle = C([90, 60, 40]); c.fillRect(x - 15 * s, gy - 12 * s, 30 * s, 1.6 * s); if (!ctx.snow) { c.fillStyle = C([210, 50, 60]); for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(x - 13 * s + k * 5.2 * s, gy - 13.5 * s, 1.4 * s, 0, 7); c.fill(); } } c.fillStyle = win; c.fillRect(x - 10 * s, gy - 18 * s, 4 * s, 4 * s); c.fillRect(x + 6 * s, gy - 18 * s, 4 * s, 4 * s); c.fillRect(x - 3 * s, gy - 7 * s, 6 * s, 7 * s); break; }
+    case 'izba': { c.fillStyle = C([128, 92, 60]); c.fillRect(x - 12 * s, gy - 16 * s, 24 * s, 16 * s); c.strokeStyle = C([96, 66, 42]); c.lineWidth = .9 * s; c.beginPath(); for (let k = 1; k < 6; k++) { c.moveTo(x - 12 * s, gy - k * 2.8 * s); c.lineTo(x + 12 * s, gy - k * 2.8 * s); } c.stroke(); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [80, 90, 84]); c.beginPath(); c.moveTo(x - 15 * s, gy - 16 * s); c.lineTo(x, gy - 29 * s); c.lineTo(x + 15 * s, gy - 16 * s); c.fill(); for (const wx of [-7, 3]) { c.fillStyle = C([60, 120, 190]); c.fillRect(x + (wx - 1) * s, gy - 13 * s, 6 * s, 8 * s); c.fillStyle = win; c.fillRect(x + wx * s, gy - 12 * s, 4 * s, 5 * s); } break; }
+    case 'hanok': { c.fillStyle = C([236, 230, 216]); c.fillRect(x - 13 * s, gy - 12 * s, 26 * s, 12 * s); c.fillStyle = C([120, 80, 52]); for (const bx of [-13, -4, 5, 12]) c.fillRect(x + bx * s, gy - 12 * s, 1.4 * s, 12 * s); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [70, 74, 80]); c.beginPath(); c.moveTo(x - 21 * s, gy - 16 * s); c.quadraticCurveTo(x - 14 * s, gy - 12 * s, x - 10 * s, gy - 20 * s); c.lineTo(x + 10 * s, gy - 20 * s); c.quadraticCurveTo(x + 14 * s, gy - 12 * s, x + 21 * s, gy - 16 * s); c.lineTo(x + 14 * s, gy - 11 * s); c.lineTo(x - 14 * s, gy - 11 * s); c.fill(); c.fillStyle = win; c.fillRect(x - 9 * s, gy - 9 * s, 5 * s, 5 * s); c.fillRect(x + 1 * s, gy - 9 * s, 5 * s, 5 * s); break; }
+    case 'colorful': { const pal = [[232, 92, 74], [60, 170, 200], [246, 196, 70], [130, 190, 90], [210, 110, 170]]; for (let k = 0; k < 3; k++) { const hx = x - 18 * s + k * 12 * s, hh = (13 + ((p.c + k) % 3) * 3) * s; c.fillStyle = C(pal[(p.c + k) % 5]); c.fillRect(hx, gy - hh, 12 * s, hh); c.fillStyle = C([250, 250, 248]); c.fillRect(hx, gy - hh, 12 * s, 1.2 * s); c.fillStyle = win; c.fillRect(hx + 3.5 * s, gy - hh + 3 * s, 5 * s, 4 * s); } break; }
+    case 'baobab': { c.fillStyle = C([150, 120, 96]); c.beginPath(); c.moveTo(x - 7 * s, gy); c.quadraticCurveTo(x - 9 * s, gy - 20 * s, x - 5 * s, gy - 32 * s); c.lineTo(x + 5 * s, gy - 32 * s); c.quadraticCurveTo(x + 9 * s, gy - 20 * s, x + 7 * s, gy); c.fill(); c.strokeStyle = C([150, 120, 96]); c.lineWidth = 2 * s; c.beginPath(); for (let k = 0; k < 6; k++) { const a = -Math.PI * (.15 + k * .14); c.moveTo(x, gy - 31 * s); c.lineTo(x + Math.cos(a) * 14 * s, gy - 31 * s + Math.sin(a) * 9 * s); } c.stroke(); c.fillStyle = C([96, 130, 70]); for (let k = 0; k < 6; k++) { const a = -Math.PI * (.15 + k * .14); c.beginPath(); c.arc(x + Math.cos(a) * 14 * s, gy - 31 * s + Math.sin(a) * 9 * s, 3.4 * s, 0, 7); c.fill(); } break; }
+    case 'birch': { c.fillStyle = C([238, 236, 228]); c.fillRect(x - 1.6 * s, gy - 36 * s, 3.2 * s, 36 * s); c.fillStyle = C([40, 40, 40]); for (let k = 0; k < 6; k++) c.fillRect(x - 1.6 * s + (k % 2) * 1.6 * s, gy - 6 * s - k * 5 * s, 1.6 * s, .9 * s); const tc = treeCol(ctx.lat, ctx.mon, p.x * 7); if (tc) { c.fillStyle = C(mix(tc, [180, 200, 90], .3)); c.beginPath(); c.ellipse(x, gy - 38 * s, 7 * s, 11 * s, 0, 0, 7); c.fill(); } break; }
+    case 'bamboo': { for (let k = 0; k < 6; k++) { const bx = x - 8 * s + k * 3.2 * s, hh = (36 + (k * 7) % 12) * s, sw = Math.sin(S.t * 1.2 + k) * 1.5 * s; c.strokeStyle = C([96, 150, 76]); c.lineWidth = 1.6 * s; c.beginPath(); c.moveTo(bx, gy); c.quadraticCurveTo(bx, gy - hh * .6, bx + sw, gy - hh); c.stroke(); c.fillStyle = C([90, 140, 70]); for (let m = 0; m < 3; m++) { const ly = gy - hh * (.55 + m * .15); c.beginPath(); c.ellipse(bx + 3 * s + sw * .5, ly, 3.6 * s, 1 * s, -.4, 0, 7); c.fill(); } } break; }
+    case 'cypress': c.fillStyle = C([46, 82, 50]); c.beginPath(); c.moveTo(x, gy - 46 * s); c.quadraticCurveTo(x + 6 * s, gy - 22 * s, x + 3 * s, gy - 2 * s); c.lineTo(x - 3 * s, gy - 2 * s); c.quadraticCurveTo(x - 6 * s, gy - 22 * s, x, gy - 46 * s); c.fill(); c.fillStyle = C([90, 70, 52]); c.fillRect(x - 1 * s, gy - 3 * s, 2 * s, 3 * s); break;
+    case 'olive': c.strokeStyle = C([110, 92, 72]); c.lineWidth = 2.4 * s; c.beginPath(); c.moveTo(x, gy); c.quadraticCurveTo(x - 3 * s, gy - 6 * s, x + 1 * s, gy - 11 * s); c.stroke(); c.fillStyle = C([138, 150, 112]); c.beginPath(); c.arc(x, gy - 15 * s, 8 * s, 0, 7); c.arc(x + 6 * s, gy - 13 * s, 5 * s, 0, 7); c.arc(x - 6 * s, gy - 13 * s, 5 * s, 0, 7); c.fill(); break;
+    case 'eucalyptus': c.strokeStyle = C([226, 214, 196]); c.lineWidth = 2.6 * s; c.beginPath(); c.moveTo(x, gy); c.lineTo(x + 1 * s, gy - 30 * s); c.moveTo(x + 1 * s, gy - 22 * s); c.lineTo(x + 8 * s, gy - 34 * s); c.stroke(); c.fillStyle = C([120, 150, 130]); for (const [dx, dy, r] of [[0, 36, 7], [8, 38, 6], [-6, 30, 5], [9, 30, 4]]) { c.beginPath(); c.arc(x + dx * s, gy - dy * s, r * s, 0, 7); c.fill(); } break;
+    case 'acacia': c.strokeStyle = C([96, 76, 56]); c.lineWidth = 2 * s; c.beginPath(); c.moveTo(x, gy); c.lineTo(x, gy - 16 * s); c.lineTo(x - 7 * s, gy - 24 * s); c.moveTo(x, gy - 16 * s); c.lineTo(x + 8 * s, gy - 24 * s); c.stroke(); c.fillStyle = C([110, 140, 70]); c.beginPath(); c.ellipse(x, gy - 26 * s, 18 * s, 4 * s, 0, 0, 7); c.fill(); break;
+    case 'saguaro': c.strokeStyle = C([76, 130, 76]); c.lineCap = 'round'; c.lineWidth = 6 * s; c.beginPath(); c.moveTo(x, gy); c.lineTo(x, gy - 40 * s); c.moveTo(x, gy - 18 * s); c.lineTo(x - 10 * s, gy - 18 * s); c.lineTo(x - 10 * s, gy - 30 * s); c.moveTo(x, gy - 22 * s); c.lineTo(x + 10 * s, gy - 22 * s); c.lineTo(x + 10 * s, gy - 34 * s); c.stroke(); c.lineCap = 'butt'; break;
+  }
+}
+
+/* ----- 3 町の音 ----- */
+function tone(f, dur, vol, at = 0, type = 'sine', vib = 0) { // ゆっくり消える音（鐘・声）
+  const ac = AU.ac, t = ac.currentTime + at, o = ac.createOscillator(), g = ac.createGain(), lp = ac.createBiquadFilter();
+  o.type = type; o.frequency.setValueAtTime(f, t); lp.type = 'lowpass'; lp.frequency.value = 2200;
+  if (vib) { const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 5.2; lg.gain.value = f * vib; lfo.connect(lg); lg.connect(o.frequency); lfo.start(t); lfo.stop(t + dur + .1); }
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + (vib ? .25 : .01)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(lp); lp.connect(g); g.connect(AU.master); o.start(t); o.stop(t + dur + .1);
+  return o;
+}
+const LSFX = {
+  churchbell(n) { for (let k = 0; k < n; k++) { const t = k * 1.9; tone(392, 4, .05, t, 'sine'); tone(392 * 2.4, 2.5, .02, t, 'sine'); tone(392 * 3, 1.6, .012, t, 'sine'); } },
+  templebell() { tone(98, 9, .09, 0); tone(98 * 2.76, 6, .03, 0); tone(98 * 5.4, 3, .012, 0); tone(99.5, 9, .04, .02); },
+  adhan() { // 遠くから聞こえる、ゆるやかな節回し（敬意をこめて、小さく短く）
+    const sc = [0, 1, 4, 5, 7, 8, 11, 12], base = 233; let t = 0;
+    for (const [i, d] of [[0, 1.6], [2, .9], [3, .9], [4, 2.4], [3, .7], [2, .7], [1, 1.2], [2, 2.6], [4, 1], [5, 1.4], [4, .8], [3, 2.6]]) { const o = tone(base * 2 ** (sc[i] / 12), d + .5, .028, t, 'triangle', .012); t += d; }
+  },
+  market() { for (let k = 0; k < 10; k++) { const f = 160 + Math.random() * 220; blip(f, f * (.8 + Math.random() * .5), .12 + Math.random() * .2, .018, 'sawtooth', k * (.18 + Math.random() * .3)); } burst(2.5, .03, 'bandpass', 700, 0, .8); },
+  shiphorn() { tone(110, 3.2, .07, 0, 'sawtooth'); tone(138, 3.2, .04, 0, 'sawtooth'); },
+  chime() { // 夕焼け小焼け（中村雨紅 作詞・草川信 作曲、1923年。著作権は切れています）
+    const N = { G: 392, A: 440, C5: 523.3, D5: 587.3, E5: 659.3, G5: 784 };
+    const mel = [['C5', 1], ['C5', 1], ['C5', 1], ['A', 1], ['G', 1], ['G', 1], ['A', 2], ['G', 1], ['G', 1], ['E5', 1], ['G5', 1], ['E5', 1], ['D5', 1], ['C5', 2]];
+    let t = 0; for (const [n, d] of mel) { tone(N[n], d * .55 + .6, .04, t, 'triangle'); tone(N[n] * 2, d * .4 + .3, .01, t); t += d * .5; }
+  },
+};
+function localSounds(ctx) {
+  if (!AU.ac || !SOUND || AU.ac.state !== 'running' || !P) return;
+  const cc = ccOf(P), ld = localDate(), hr = ld.getUTCHours(), mi = ld.getUTCMinutes(), day = ld.toISOString().slice(0, 10);
+  const near = nearbyStops(P).some(n => Math.abs(n.d) < 20 && !n.port || Math.abs(n.d) < 12), town = ctx.biome === 'city' || near;
+  const once = (key, fn, note) => { const k = key + ':' + day; S.lsDone = S.lsDone || {}; if (S.lsDone[k]) return; S.lsDone[k] = 1; fn(); const id = key.split(':')[0]; if (st.local && st.local[id]) { if (note) toast(note, 3500); } else seeLocal(id); };
+  if (town && !ctx.sea && CHURCH.has(cc) && hr >= 8 && hr <= 20 && mi < 2) once('churchbell:' + hr, () => LSFX.churchbell(Math.min(6, hr % 12 || 12)), `🔔 ${J(`教会の鐘（${hr}時）`, `Church bells (${hr}:00)`)}`);
+  if (town && !ctx.sea && TEMPLE.has(cc) && (hr === 6 || hr === 18) && mi < 3) once('templebell:' + hr, () => LSFX.templebell(), `🔔 ${J('お寺の鐘', 'Temple bell')}`);
+  if (town && !ctx.sea && ISLAM.has(cc)) {
+    const alt = sunAlt(P.ll[0], P.ll[1], nowMs()), slot = alt > -18.5 && alt < -17 && hr < 12 ? 'fajr' : hr === 12 && mi > 20 && mi < 30 ? 'dhuhr' : hr === 15 && mi > 30 && mi < 40 ? 'asr' : alt < .5 && alt > -1 && hr > 12 ? 'maghrib' : alt < -17 && alt > -18.5 && hr > 12 ? 'isha' : '';
+    if (slot) once('adhan:' + slot, () => LSFX.adhan(), `🕌 ${J('モスクから祈りの呼びかけ', 'The call to prayer from a mosque')}`);
+  }
+  if (town && !ctx.sea && MARKET.has(cc) && hr >= 8 && hr < 19 && !(cc === 'ES' && hr >= 14 && hr < 17)) { if (Math.random() < .004) { LSFX.market(); seeLocal('market'); } }
+  if (cc === 'JP' && hr === 17 && mi < 2 && !ctx.sea) once('chime', () => LSFX.chime(), `🎶 ${J('夕方5時のチャイム', 'The 5 pm chime')}`);
+  if (nearbyStops(P).some(n => n.port && Math.abs(n.d) < 4) && Math.random() < .01) { const k = 'shiphorn:' + Math.floor(Date.now() / 6e5); if (!(S.lsDone || {})[k]) { (S.lsDone = S.lsDone || {})[k] = 1; LSFX.shiphorn(); seeLocal('shiphorn'); } }
+}
+
+/* ----- 4 その土地の空 ----- */
+const dayHash = (ld, k) => hash(Math.floor(ld.getTime() / 864e5) * 13 + k);
+function localSky(W8, ctx, alt) {
+  S.lsky = null; if (!P) return;
+  const cc = ccOf(P), ld = localDate(), mon = ld.getUTCMonth() + 1, hr = ld.getUTCHours();
+  if ((cc === 'CN' || cc === 'KR' || cc === 'MN' || cc === 'JP') && mon >= 3 && mon <= 5 && dayHash(ld, 1) < (cc === 'JP' ? .15 : .35) && !W8.rain) {
+    const k = .45; L.top = mix(L.top, [196, 176, 120], k * .6 * L.dl); L.bot = mix(L.bot, [220, 196, 140], k * L.dl); L.haze = L.bot; S.lsky = 'yellowdust';
+  }
+  if ((cc === 'MA' || cc === 'EG' || cc === 'DJ') && ctx.biome === 'desert' && dayHash(ld, 2) < .2) {
+    L.top = mix(L.top, [200, 130, 70], .7 * L.dl); L.bot = mix(L.bot, [226, 160, 90], .8 * L.dl); L.haze = L.bot; L.fog = Math.max(L.fog, .35); S.lsky = 'sandstorm';
+  }
+  if (cc === 'US' && nearbyStops(P).some(n => n.stop.name === 'サンフランシスコ' && Math.abs(n.d) < 70) && mon >= 6 && mon <= 9 && (hr < 11 || hr >= 18)) { L.fog = Math.max(L.fog, .55); S.lsky = 'karlfog'; }
+  if (ctx.biome === 'desert' && alt > 25 && (W8.temp == null ? 30 : W8.temp) > 24 && L.k < .3) S.mirage = 1; else S.mirage = 0;
+  if (S.lsky && L.dl > .3) seeLocal(S.lsky);
+}
+function drawSandstorm(dt) {
+  if (S.lsky !== 'sandstorm') return;
+  S.sand = S.sand || Array.from({ length: 90 }, () => [Math.random(), Math.random(), .3 + Math.random() * .7]);
+  c.fillStyle = 'rgba(210,150,90,.55)';
+  for (const p of S.sand) { p[0] -= dt * (.4 + p[2]) * .6; if (p[0] < -.05) { p[0] = 1.05; p[1] = Math.random(); } c.fillRect(p[0] * W, p[1] * H, 18 * p[2], 1.4); }
+}
+function drawMirage(hz) {
+  if (!S.mirage) return;
+  const g = c.createLinearGradient(0, hz - 4, 0, hz + 10); g.addColorStop(0, 'rgba(170,205,235,0)'); g.addColorStop(.5, 'rgba(170,205,235,.55)'); g.addColorStop(1, 'rgba(170,205,235,0)');
+  c.fillStyle = g; for (let x = 0; x < W; x += 6) { const w = Math.sin(x * .05 + S.t * 3) * 1.5; c.fillRect(x, hz - 4 + w, 6, 14); }
+  seeLocal('mirage');
+}
+// 天の川：銀河の赤道の本物の位置を、星座と同じように空に描く
+const GAL = (() => { const out = [], aP = 192.8595 * D2R, dP = 27.1283 * D2R, lN = 122.932 * D2R; for (let l = 0; l < 360; l += 4) { const L1 = l * D2R, sd = Math.cos(dP) * Math.cos(lN - L1), dec = Math.asin(sd), ra = aP + Math.atan2(Math.sin(lN - L1), Math.cos(dP) * 0 - Math.sin(dP) * Math.cos(lN - L1)); out.push([((ra / D2R / 15) % 24 + 24) % 24, dec / D2R, l]); } return out; })();
+function drawMilkyWay(hz, sa, ctx) {
+  if (sa < .35 || !P || ctx.biome === 'city') return;
+  const moonUp = S.MV && S.MV.alt > 0 ? S.MV.k : 0, cc = ccOf(P);
+  const dark = (ctx.biome === 'desert' || ctx.biome === 'mount' || ctx.biome === 'steppe' || ctx.sea ? 1 : .6) * (['BO', 'CL', 'MN', 'AU', 'MA', 'NA'].includes(cc) ? 1.3 : 1);
+  const a = sa * dark * (1 - moonUp * .7) * .3; if (a < .04) return;
+  c.save(); c.globalCompositeOperation = 'lighter';
+  const A0 = viewAz(P.ll[0]), ms = nowMs(); let shown = 0;
+  for (const [ra, dec, l] of GAL) {
+    const [al, z] = starAltAz(ra, dec, P.ll[0], P.ll[1], ms); if (al < 0) continue;
+    const dz = ((z - A0 + 540) % 360) - 180, x = W / 2 + dz / 60 * W * .37, y = hz - al / 62 * hz * .92; if (x < -60 || x > W + 60) continue;
+    const core = l < 40 || l > 320 ? 1.5 : l > 140 && l < 220 ? .6 : 1, r = (30 + 16 * core) * Math.max(.7, Math.min(H, W) / 500);
+    const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(220,220,255,${a * core})`); g.addColorStop(1, 'rgba(220,220,255,0)'); c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); shown++;
+  }
+  c.restore(); if (shown > 6 && a > .07) seeLocal('milkyway');
+}
+
+/* ----- 5 くらしの時間 ----- */
+function localLife(ctx) {
+  if (!P) return; const cc = ccOf(P), hr = localDate().getUTCHours();
+  S.siesta = cc === 'ES' && ctx.biome === 'city' && hr >= 14 && hr < 17;
+  if (S.siesta) seeLocal('siesta');
+  S.nmkt = NIGHTMKT.has(cc) && (ctx.biome === 'city' || nearbyStops(P).some(n => Math.abs(n.d) < 15)) && hr >= 18 && hr < 24 && !ctx.sea;
+}
+function drawNightMarket(gy, sc) {
+  if (!S.nmkt || L.night < .4) return;
+  const s = sc, y = gy + 6 * s, o = (S.off.mid * 1.05) % 140;
+  for (let k = -1; k < W / 140 + 2; k++) {
+    const x = k * 140 - o;
+    c.fillStyle = 'rgba(60,40,30,.9)'; c.fillRect(x, y - 18 * s, 40 * s, 14 * s);
+    c.fillStyle = ['#c0392b', '#2471a3', '#d68910'][((k + 99) % 3)]; c.beginPath(); c.moveTo(x - 4 * s, y - 18 * s); c.lineTo(x + 20 * s, y - 26 * s); c.lineTo(x + 44 * s, y - 18 * s); c.fill();
+    const gl = c.createRadialGradient(x + 20 * s, y - 12 * s, 2, x + 20 * s, y - 12 * s, 40 * s); gl.addColorStop(0, 'rgba(255,200,120,.45)'); gl.addColorStop(1, 'rgba(255,200,120,0)'); c.fillStyle = gl; c.fillRect(x - 30 * s, y - 50 * s, 100 * s, 80 * s);
+    for (let m = 0; m < 6; m++) { c.fillStyle = m % 2 ? 'rgba(255,90,70,.95)' : 'rgba(255,220,130,.95)'; c.beginPath(); c.arc(x + m * 24 * s, y - 34 * s + Math.sin(m * 1.3) * 3 * s, 2.2 * s, 0, 7); c.fill(); }
+  }
+  seeLocal('nightmarket');
+}
 
 </script>
 </body>
