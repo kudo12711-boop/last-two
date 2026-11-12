@@ -2924,6 +2924,7 @@ function drawSky(hz, W8, alt) {
   const g = c.createLinearGradient(0, 0, 0, hz); g.addColorStop(0, css(L.top)); g.addColorStop(1, css(L.bot));
   c.fillStyle = g; c.fillRect(-W, -H, W * 3, hz + H + 2);
   const sa = clamp(1 - L.dl * 2.5) * clamp(1 - L.k * 1.25);
+  drawConst(hz, sa);
   if (sa > 0.02) for (const s of STARS) { c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)))})`; c.fillRect(s[0] * W, s[1] * hz * .9, s[2] > .85 ? 2 : 1.2, s[2] > .85 ? 2 : 1.2); }
   // 月（本物の位置と満ち欠け。昼間の月はうすく。地平線より下なら見えない）
   const MV = moonView(P.ll[0], P.ll[1], nowMs()); S.MV = MV;
@@ -4198,6 +4199,7 @@ function showRecord(tab = 'dex') {
 function settingsEn(cur) {
   return `<h2>⚙️ Settings</h2><h3>Language / ことば</h3><div class="frames two"><button data-lang="ja">日本語</button><button data-lang="en" class="on">English</button></div><h3>Window style</h3><div class="frames">${FRAMES.map(([k, n]) => `<button data-frame="${k}" class="${k === cur ? 'on' : ''}"><i class="fp-${k}"></i>${n}</button>`).join('')}</div><p class="note">The little things on the window sill change with the local time of day (morning, noon, evening, night) and the weather.</p>
   <h3>When arriving in a town</h3><div class="frames">${[['none', '🚐 Don\'t stop'], ['next', '🅿️ Stop once at the next town'], ['every', '🅿️ Stop every time']].map(([k, n]) => `<button data-stop="${k}" class="${(st.stopMode || 'none') === k ? 'on' : ''}">${n}</button>`).join('')}</div><p class="note">The van doesn't move while parked. Press "Drive on" to get going again.</p>
+  <h3>Constellation lines & names</h3><div class="frames"><button data-const-on="on" class="${CONSTON ? 'on' : ''}">✨ Show</button><button data-const-on="off" class="${CONSTON ? '' : 'on'}">🚫 Stars only</button></div><p class="note">Real constellations appear in the night window (the southern sky north of the equator, the northern sky south of it). Tap a name for details.</p>
   <h3>Utility poles & wires</h3><div class="frames"><button data-poles="on" class="${POLES ? 'on' : ''}">⚡️ Show</button><button data-poles="off" class="${POLES ? '' : 'on'}">🚫 Hide</button></div><p class="note">The roadside utility poles you see in Japan and Asia. When hidden, low fences and street lamps appear instead.</p>
   <h3>Sound</h3><div class="frames"><button data-snd="on" class="${SOUND ? 'on' : ''}">🔊 On</button><button data-snd="off" class="${SOUND ? '' : 'on'}">🔇 Off</button></div>
   <input type="range" id="s-vol" min="0.1" max="1" step="0.05" value="${SVOL}" aria-label="Volume"><p class="note">Engine, rain, wind, waves, town bustle, birds and insects, and the campfire play to match the place and the weather. Sound may not play in silent mode.</p>
@@ -4214,6 +4216,7 @@ function showSettings() {
   const cur = (() => { try { return localStorage.getItem('camper-frame') || 'wood'; } catch (e) { return 'wood'; } })();
   modal(EN ? settingsEn(cur) : `<h2>⚙️ 設定</h2><h3>ことば / Language</h3><div class="frames two"><button data-lang="ja" class="on">日本語</button><button data-lang="en">English</button></div><h3>窓のデザイン</h3><div class="frames">${FRAMES.map(([k, n]) => `<button data-frame="${k}" class="${k === cur ? 'on' : ''}"><i class="fp-${k}"></i>${n}</button>`).join('')}</div><p class="note">窓辺の小物は、その場所の時間帯（朝・昼・夕方・夜）や天気で入れかわります。</p>
   <h3>町に着いたら</h3><div class="frames">${[['none', '🚐 止まらない'], ['next', '🅿️ 次の町で1回止まる'], ['every', '🅿️ 毎回止まる']].map(([k, n]) => `<button data-stop="${k}" class="${(st.stopMode || 'none') === k ? 'on' : ''}">${n}</button>`).join('')}</div><p class="note">止まっているあいだは進みません。「出発する」を押すと、また走り出します。</p>
+  <h3>星座の線と名前</h3><div class="frames"><button data-const-on="on" class="${CONSTON ? 'on' : ''}">✨ 表示する</button><button data-const-on="off" class="${CONSTON ? '' : 'on'}">🚫 星だけ</button></div><p class="note">夜の窓に、本物の位置の星座が出ます（北半球では南の空、南半球では北の空）。名前をタッチすると説明が読めます。</p>
   <h3>電柱と電線</h3><div class="frames"><button data-poles="on" class="${POLES ? 'on' : ''}">⚡️ 表示する</button><button data-poles="off" class="${POLES ? '' : 'on'}">🚫 表示しない</button></div><p class="note">日本やアジアの道ばたに出てくる電柱です。表示しないときは、低い柵や街灯になります。</p>
   <h3>音</h3><div class="frames"><button data-snd="on" class="${SOUND ? 'on' : ''}">🔊 鳴らす</button><button data-snd="off" class="${SOUND ? '' : 'on'}">🔇 消す</button></div>
   <input type="range" id="s-vol" min="0.1" max="1" step="0.05" value="${SVOL}" aria-label="音の大きさ"><p class="note">エンジン、雨、風、波、町のざわめき、鳥や虫の声、たき火の音が、その場所と天気に合わせて流れます。マナーモードだと鳴らないことがあります。</p>
@@ -4226,6 +4229,7 @@ function showSettings() {
   <button class="big ghost" data-close>とじる</button>`);
   document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { tick(); st.speed = +b.dataset.speed; save(); document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b)); updateHud(); });
   document.querySelectorAll('[data-stop]').forEach(b => b.onclick = () => { tick(); st.stopMode = b.dataset.stop; save(); document.querySelectorAll('[data-stop]').forEach(x => x.classList.toggle('on', x === b)); updateHud(); });
+  document.querySelectorAll('[data-const-on]').forEach(b => b.onclick = () => { CONSTON = b.dataset.constOn === 'on'; try { localStorage.setItem('camper-const', b.dataset.constOn); } catch (e) { } document.querySelectorAll('[data-const-on]').forEach(x => x.classList.toggle('on', x === b)); });
   document.querySelectorAll('[data-poles]').forEach(b => b.onclick = () => { POLES = b.dataset.poles === 'on'; try { localStorage.setItem('camper-poles', b.dataset.poles); } catch (e) { } document.querySelectorAll('[data-poles]').forEach(x => x.classList.toggle('on', x === b)); });
   document.querySelectorAll('[data-frame]').forEach(b => b.onclick = () => { setFrame(b.dataset.frame); document.querySelectorAll('[data-frame]').forEach(x => x.classList.toggle('on', x === b)); });
   $('#b-backup').onclick = showBackup; $('#b-shop').onclick = () => showShop(null, showSettings);
@@ -5530,12 +5534,14 @@ function showEvents(tab = 'next') {
     const { items, days } = upcoming(); EVITEMS = items;
     body = `${st.plan ? `<div class="evc plancur"><div class="eve">🧭</div><div><b>${J('いまのプラン', 'Current plan')}</b><small>${planNote().replace(/^<br><small>|<\/small>$/g, '')}</small><button class="mini" id="pl-cancel">${J('プランをやめる', 'Cancel plan')}</button></div></div>` : ''}<p class="note">${J(`いまの速さ（時速${st.speed}km）で世界を1周するのに約${Math.round(roughLap() / (st.speed * 24))}日。少し余裕をみて、<b>${Math.round(days)}日先</b>までのできごとを案内します。`, `At ${st.speed} km/h a lap takes about ${Math.round(roughLap() / (st.speed * 24))} days. Here is what's coming in the next <b>${Math.round(days)} days</b>.`)}${st.stopMode && st.stopMode !== 'none' ? `<br><small>${J('町で停車すると、予定より遅れます', 'Stopping in towns will delay these estimates')}</small>` : ''}</p>
       ${items.length ? items.map(x => `<div class="evc${x.nat ? ' nat' : x.fest ? ' fest' : ''}"><div class="eve">${x.e}</div><div><b>${x.name}</b><small>${x.when}</small><p>${x.desc}</p>${(x.res || []).length ? summarize(x.res) : ''}${x.tip || ''}${x.ph ? phBox(x.ph[0], x.ph[1], 'ev') : ''}${x.links ? `<span class="ilinks">${x.links}</span>` : ''}${x.ev ? `<button class="mini planb" data-plan="${EVITEMS.indexOf(x)}">🧭 ${J('間に合うプランを見る', 'Plan to get there')}</button>` : ''}</div></div>`).join('') : `<p class="note">${J('この期間には、大きなできごとはありません。', 'Nothing big in this period.')}</p>`}
+      ${constSection()}
       ${(() => { const nb = nextBig(Date.now() + days * 864e5); return nb.length ? `<h3>${J('その先の大きな天体ショー', 'Big sky shows further ahead')}</h3>${nb.map(t => `<p class="note">${t}</p>`).join('')}` : ''; })()}
       <p class="note"><small>${J('日食・月食の時刻は EclipseWise（Fred Espenak）の予報をもとにしています。お祭りや季節のできごとの日にちは例年の目安です。', 'Eclipse predictions by Fred Espenak, EclipseWise.com. Festival and seasonal dates are typical dates.')}</small></p>`;
   } else body = skyLogHtml();
   modal(`<h2>🗓 ${J('これからのできごと', 'Coming up')}</h2><div class="tabs">${[['next', J('🔭 これから', '🔭 Coming up')], ['log', J('📖 見たもの', '📖 Seen')]].map(([k, n]) => `<button data-etab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'rec');
   document.querySelectorAll('[data-etab]').forEach(b => b.onclick = () => showEvents(b.dataset.etab)); fillPhotos();
   document.querySelectorAll('[data-plan]').forEach(b => b.onclick = () => { b.textContent = J('🧭 さがしています…', '🧭 Searching…'); setTimeout(() => showPlan(+b.dataset.plan), 30); });
+  document.querySelectorAll('[data-const]').forEach(b => b.onclick = () => showConst(b.dataset.const, () => showEvents()));
   const pc = $('#pl-cancel'); if (pc) pc.onclick = () => { st.plan = null; save(); updateHud(); showEvents(); };
 }
 function skyRecord(key, e, ja, en) {
@@ -5612,6 +5618,97 @@ function eventSoon() {
 setInterval(eventSoon, 20 * 6e4);
 setTimeout(eventSoon, 5000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(eventSoon, 2500); });
+
+/* ===== 星座（本物の星の位置。その場所・その時刻の空に） ===== */
+// [日本語, 英語, 季節(日), 季節(英), 説明(日), 説明(英), 星[[赤経h, 赤緯°, 等級, 色?]], 線[[i, j]]]
+const CONST = {
+  orion: ['オリオン座', 'Orion', '冬', 'winter', '三つ星が目印の狩人。赤いベテルギウスと白いリゲルが光る', 'A hunter with a famous three-star belt, red Betelgeuse and white Rigel', [[5.919, 7.41, .5, 'r'], [5.242, -8.2, .1], [5.419, 6.35, 1.6], [5.796, -9.67, 2.1], [5.679, -1.94, 1.8], [5.604, -1.2, 1.7], [5.533, -.3, 2.2], [5.585, 9.93, 3.4]], [[0, 2], [0, 4], [2, 6], [6, 5], [5, 4], [4, 3], [6, 1], [7, 0], [7, 2]]],
+  cma: ['おおいぬ座', 'Canis Major', '冬', 'winter', '夜空でいちばん明るい星シリウスがある', 'Home of Sirius, the brightest star in the night sky', [[6.752, -16.72, -1.46], [6.378, -17.96, 2], [6.977, -28.97, 1.5], [7.14, -26.39, 1.8], [7.402, -29.3, 2.4]], [[0, 1], [0, 3], [3, 2], [3, 4]]],
+  cmi: ['こいぬ座', 'Canis Minor', '冬', 'winter', 'プロキオンは、シリウス・ベテルギウスと「冬の大三角」をつくる', 'Procyon forms the Winter Triangle with Sirius and Betelgeuse', [[7.655, 5.22, .4], [7.453, 8.29, 2.9]], [[0, 1]]],
+  gem: ['ふたご座', 'Gemini', '冬', 'winter', 'カストルとポルックス、仲よしのふたご。ふたご座流星群の出どころ', 'The twins Castor and Pollux; the Geminids come from here', [[7.577, 31.89, 1.6], [7.755, 28.03, 1.1, 'o'], [6.629, 16.4, 1.9], [6.383, 25.13, 3], [7.335, 21.98, 3.5], [6.248, 22.51, 2.9]], [[0, 1], [0, 3], [3, 5], [1, 4], [4, 2]]],
+  tau: ['おうし座', 'Taurus', '冬', 'winter', 'オレンジのアルデバランと、青白い星の集まり「すばる」', 'Orange Aldebaran and the Pleiades star cluster', [[4.599, 16.51, .9, 'o'], [5.438, 28.61, 1.7], [5.627, 21.14, 3], [4.477, 19.18, 3.5], [4.33, 15.63, 3.6], [3.79, 24.1, 1.6, 'b']], [[0, 4], [4, 3], [3, 1], [0, 2], [4, 5]]],
+  aur: ['ぎょしゃ座', 'Auriga', '冬', 'winter', '五角形の中に、明るい黄色のカペラ', 'A pentagon with bright yellow Capella', [[5.278, 46, .1, 'y'], [5.992, 44.95, 1.9], [5.995, 37.21, 2.6], [5.438, 28.61, 1.7], [4.95, 33.17, 2.7], [5.033, 43.82, 3]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]]],
+  leo: ['しし座', 'Leo', '春', 'spring', '「？」を裏がえしたような形がライオンの頭。しし座流星群の出どころ', 'The backwards question mark is the lion\'s head; the Leonids come from here', [[10.139, 11.97, 1.4], [11.818, 14.57, 2.1], [10.333, 19.84, 2], [11.235, 20.52, 2.6], [11.237, 15.43, 3.3], [10.122, 16.76, 3.5], [10.278, 23.42, 3.4], [9.879, 26, 3.9], [9.764, 23.77, 3]], [[0, 5], [5, 2], [2, 6], [6, 7], [7, 8], [2, 3], [3, 1], [1, 4], [4, 0], [3, 4]]],
+  vir: ['おとめ座', 'Virgo', '春', 'spring', '青白く光るスピカ。「春の大曲線」のゴール', 'Bright blue-white Spica, the end of the Spring Arc', [[13.42, -11.16, 1, 'b'], [12.694, -1.45, 2.7], [13.036, 10.96, 2.8]], [[0, 1], [1, 2]]],
+  boo: ['うしかい座', 'Boötes', '春', 'spring', 'オレンジのアークトゥルス。北斗七星の柄のカーブをのばした先にある', 'Orange Arcturus: follow the arc of the Big Dipper\'s handle', [[14.261, 19.18, -.05, 'o'], [14.75, 27.07, 2.4], [13.911, 18.4, 2.7], [14.535, 38.31, 3], [15.032, 40.39, 3.5], [15.258, 33.31, 3.5]], [[0, 2], [0, 1], [1, 5], [5, 4], [4, 3], [3, 0]]],
+  sco: ['さそり座', 'Scorpius', '夏', 'summer', '赤いアンタレスはさそりの心臓。S字のしっぽ', 'Red Antares is the scorpion\'s heart, with an S-shaped tail', [[16.49, -26.43, 1, 'r'], [16.006, -22.62, 2.3], [16.091, -19.81, 2.6], [15.981, -26.11, 2.9], [16.353, -25.59, 2.9], [16.598, -28.22, 2.8], [16.836, -34.29, 2.3], [16.864, -38.05, 3], [16.91, -42.36, 3.6], [17.203, -43.24, 3.3], [17.622, -43, 1.9], [17.793, -40.13, 3], [17.708, -39.03, 2.4], [17.56, -37.1, 1.6], [17.513, -37.3, 2.7]], [[2, 1], [1, 3], [1, 4], [4, 0], [0, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11], [11, 12], [12, 13], [13, 14]]],
+  sgr: ['いて座', 'Sagittarius', '夏', 'summer', 'ティーポットの形。この方向に天の川の中心がある', 'Shaped like a teapot, pointing to the center of the Milky Way', [[18.403, -34.38, 1.8], [18.921, -26.3, 2], [19.044, -29.88, 2.6], [18.35, -29.83, 2.7], [18.466, -25.42, 2.8], [18.097, -30.42, 3], [18.761, -26.99, 3.2], [19.116, -27.67, 3.3]], [[5, 3], [3, 0], [0, 5], [3, 4], [4, 6], [6, 3], [6, 1], [1, 7], [7, 2], [2, 6], [2, 0]]],
+  lyr: ['こと座', 'Lyra', '夏', 'summer', '七夕の織姫星ベガ。夏の大三角のひとつ', 'Vega, the weaver princess star of the Tanabata story', [[18.616, 38.78, 0, 'b'], [18.835, 33.36, 3.5], [18.982, 32.69, 3.2], [18.746, 37.61, 4.3], [18.908, 36.9, 4.3]], [[0, 3], [3, 1], [1, 2], [2, 4], [4, 3]]],
+  aql: ['わし座', 'Aquila', '夏', 'summer', '七夕の彦星アルタイル。天の川をはさんでベガと向かいあう', 'Altair, the cowherd star across the Milky Way from Vega', [[19.846, 8.87, .8], [19.771, 10.61, 2.7], [19.922, 6.41, 3.7], [19.09, 13.86, 3], [19.104, -4.88, 3.4], [19.425, 3.11, 3.4]], [[1, 0], [0, 2], [0, 5], [5, 4], [5, 3]]],
+  cyg: ['はくちょう座', 'Cygnus', '夏', 'summer', '天の川を飛ぶ白鳥。「北十字」ともよばれる。しっぽのデネブは夏の大三角', 'A swan flying along the Milky Way, also called the Northern Cross', [[20.69, 45.28, 1.3], [20.37, 40.26, 2.2], [20.77, 33.97, 2.5], [19.75, 45.13, 2.9], [19.512, 27.96, 3.1, 'o'], [19.938, 35.08, 3.9]], [[0, 1], [1, 5], [5, 4], [2, 1], [1, 3]]],
+  peg: ['ペガスス座', 'Pegasus', '秋', 'autumn', '大きな「秋の四辺形」。つばさのある馬', 'The Great Square of autumn, a winged horse', [[23.079, 15.21, 2.5], [23.063, 28.08, 2.4, 'o'], [.22, 15.18, 2.8], [.14, 29.09, 2.1], [21.736, 9.88, 2.4], [22.17, 6.2, 3.5]], [[0, 1], [1, 3], [3, 2], [2, 0], [0, 5], [5, 4]]],
+  cas: ['カシオペヤ座', 'Cassiopeia', '秋', 'autumn', 'W の形。北極星を見つける目印になる', 'The W shape that helps you find the North Star', [[.153, 59.15, 2.3], [.675, 56.54, 2.2], [.945, 60.72, 2.2], [1.43, 60.24, 2.7], [1.907, 63.67, 3.4]], [[0, 1], [1, 2], [2, 3], [3, 4]]],
+  uma: ['北斗七星（おおぐま座）', 'Big Dipper (Ursa Major)', '春', 'spring', 'ひしゃくの形の7つの星。先の2つの間を5倍のばすと北極星', 'Seven stars shaped like a ladle; its pointer stars lead to the North Star', [[11.062, 61.75, 1.8], [11.031, 56.38, 2.4], [11.897, 53.69, 2.4], [12.257, 57.03, 3.3], [12.9, 55.96, 1.8], [13.399, 54.93, 2.2], [13.792, 49.31, 1.9]], [[0, 1], [1, 2], [2, 3], [3, 0], [3, 4], [4, 5], [5, 6]]],
+  umi: ['北極星', 'Polaris (North Star)', '一年中', 'all year', 'ほとんど動かない北の目印。高さはその場所の緯度とほぼ同じ', 'It barely moves and marks north; its height equals your latitude', [[2.53, 89.26, 2]], []],
+  cru: ['南十字星（みなみじゅうじ座）', 'Southern Cross (Crux)', '南半球', 'southern sky', '南の空の目印。日本からはほとんど見えない、あこがれの星座', 'The guide of the southern sky, hard to see from the north', [[12.443, -63.1, .8, 'b'], [12.795, -59.69, 1.3, 'b'], [12.519, -57.11, 1.6, 'r'], [12.252, -58.75, 2.8]], [[0, 2], [1, 3]]],
+  cen: ['ケンタウルス座', 'Centaurus', '南半球', 'southern sky', 'αケンタウリは太陽にいちばん近い恒星のなかま。南十字を指す', 'Alpha Centauri, the nearest star system, points to the Southern Cross', [[14.66, -60.83, -.3, 'y'], [14.064, -60.37, .6, 'b']], [[0, 1]]],
+  car: ['カノープス（りゅうこつ座）', 'Canopus (Carina)', '冬・南の空', 'southern sky', '2番目に明るい星。日本では低くて、見ると長生きするといわれる', 'The second-brightest star in the night sky', [[6.399, -52.7, -.7]], []],
+  psa: ['みなみのうお座', 'Piscis Austrinus', '秋', 'autumn', '秋の空にぽつんと光るフォーマルハウト', 'Fomalhaut, the lonely bright star of autumn', [[22.961, -29.62, 1.2]], []],
+};
+const CSTAR = ['', 'rgb(255,170,140)', 'rgb(255,205,150)', 'rgb(255,240,190)', 'rgb(200,220,255)'];
+const starCol = c => c === 'r' ? CSTAR[1] : c === 'o' ? CSTAR[2] : c === 'y' ? CSTAR[3] : c === 'b' ? CSTAR[4] : 'rgb(250,250,255)';
+const cName = k => EN ? CONST[k][1] : CONST[k][0];
+let CONSTON = (() => { try { return localStorage.getItem('camper-const') !== 'off'; } catch (e) { return true; } })();
+function starAltAz(ra, dec, lat, lon, ms) {
+  const d = ms / 864e5 - 10957.5, lst = ((18.697374558 + 24.06570982441908 * d) % 24) * 15 + lon, H = (lst - ra * 15) * D2R, de = dec * D2R, ph = lat * D2R;
+  const alt = Math.asin(Math.sin(ph) * Math.sin(de) + Math.cos(ph) * Math.cos(de) * Math.cos(H));
+  const az = Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(ph) - Math.tan(de) * Math.cos(ph)) / D2R + 180; // 北0°・東90°
+  return [alt / D2R, az];
+}
+const viewAz = lat => lat >= 0 ? 180 : 0; // 窓から見る夜空：北半球は南の空、南半球は北の空
+// 星座の星を画面の位置に（10秒ごとに計算しなおす）
+function constSky(hz) {
+  const ms = nowMs();
+  if (S.cst && Math.abs(ms - S.cst.ms) < 1e4 && S.cst.W === W && Math.abs(S.cst.hz - hz) < 6 && S.cst.lat === P.ll[0]) return S.cst;
+  const A0 = viewAz(P.ll[0]), out = { ms, W, hz, lat: P.ll[0], list: [] };
+  for (const k in CONST) {
+    const C = CONST[k], pts = C[6].map(s => { const [a, z] = starAltAz(s[0], s[1], P.ll[0], P.ll[1], ms); let dz = ((z - A0 + 540) % 360) - 180; return { alt: a, x: W / 2 + dz / 60 * W * .37, y: hz - a / 62 * hz * .92, m: s[2], c: s[3] }; });
+    const vis = pts.filter(p => p.alt > 1 && p.x > -20 && p.x < W + 20 && p.y > 4);
+    if (!vis.length) continue;
+    out.list.push({ k, pts, vis, cx: vis.reduce((a, p) => a + p.x, 0) / vis.length, cy: Math.min(...vis.map(p => p.y)) - 8 });
+  }
+  return (S.cst = out);
+}
+function drawConst(hz, sa) {
+  S.cHits = [];
+  if (sa < .05 || !P) return;
+  const cs = constSky(hz);
+  for (const o of cs.list) {
+    if (CONSTON) { c.strokeStyle = `rgba(180,200,255,${.38 * sa})`; c.lineWidth = 1.2; c.beginPath(); for (const [i, j] of CONST[o.k][7]) { const a = o.pts[i], b = o.pts[j]; if (a.alt < 0 || b.alt < 0) continue; c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); } c.stroke(); }
+    for (const p of o.vis) { const r = Math.max(1.3, 3.2 - p.m * .6); c.fillStyle = starCol(p.c); c.globalAlpha = sa * clamp(.5 + (3 - p.m) * .2, .35, 1) * clamp(p.alt / 6); c.beginPath(); c.arc(p.x, p.y, r, 0, 7); c.fill(); if (p.m < .6) { c.globalAlpha *= .25; c.beginPath(); c.arc(p.x, p.y, r * 2.6, 0, 7); c.fill(); } }
+    c.globalAlpha = 1;
+    if (CONSTON && (o.vis.length >= 2 || CONST[o.k][6].length === 1)) {
+      const t = cName(o.k); c.font = `600 ${Math.max(10, Math.min(13, W / 60))}px sans-serif`; c.textAlign = 'center';
+      c.fillStyle = `rgba(215,225,255,${.8 * sa})`; c.fillText(t, o.cx, o.cy); c.textAlign = 'left';
+      const w = c.measureText(t).width; S.cHits.push({ k: o.k, x: o.cx - w / 2 - 8, y: o.cy - 16, w: w + 16, h: 24 });
+    }
+  }
+}
+// 今夜（現地の21時ごろ）見える星座
+function tonightConst() {
+  if (!P) return [];
+  const off = wx ? wx.off : Math.round(P.ll[1] / 15) * 3600, loc = new Date(Date.now() + off * 1000);
+  let t = Date.UTC(loc.getUTCFullYear(), loc.getUTCMonth(), loc.getUTCDate(), 21) - off * 1000; if (t < Date.now() - 3 * 36e5) t += 864e5;
+  return Object.keys(CONST).map(k => { const C = CONST[k], alts = C[6].map(s => starAltAz(s[0], s[1], P.ll[0], P.ll[1], t)), up = alts.filter(a => a[0] > 10); return { k, n: up.length / C[6].length, alt: Math.max(...alts.map(a => a[0])), az: alts[0][1] }; }).filter(o => o.n >= .6).sort((a, b) => b.alt - a.alt);
+}
+const dirName = az => { const i = Math.round(az / 45) % 8; return EN ? ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'][i] : ['北', '北東', '東', '南東', '南', '南西', '西', '北西'][i]; };
+function showConst(k, back) {
+  const C = CONST[k], [alt, az] = starAltAz(C[6][0][0], C[6][0][1], P.ll[0], P.ll[1], nowMs());
+  const now = alt > 5 ? J(`いま ${dirName(az)}の空、高さ${Math.round(alt)}度に出ています${L.dl > .5 ? '（昼なので見えません）' : ''}`, `Now in the ${dirName(az)} sky, ${Math.round(alt)}° up${L.dl > .5 ? ' (hidden by daylight)' : ''}`) : alt > 0 ? J('いまは地平線のすぐ上です', 'Just above the horizon now') : J('いまは地平線の下です', 'Below the horizon now');
+  modal(`<h2>✨ ${cName(k)}</h2><p class="note">${J(`見ごろ：${C[2]}`, `Best: ${C[3]}`)}</p><p>${EN ? C[5] : C[4]}</p><p class="evv v${alt > 5 ? 3 : 0}">${now}</p>${phBox(cName(k).replace(/（.*$/, ''), EN ? '' : (CONST[k][0].match(/（(.*)）/) || [])[1] || '', 'ev')}<span class="ilinks">${wikiA(cName(k).replace(/[（(].*$/, '').trim())}</span>
+    <button class="big ghost" id="cs-back">${back ? J('もどる', 'Back') : J('とじる', 'Close')}</button>`);
+  fillPhotos(); $('#cs-back').onclick = () => back ? back() : closeModal();
+}
+function constSection() {
+  const tn = tonightConst(); if (!tn.length) return '';
+  return `<h3>🌌 ${J('今夜の星座（21時ごろ）', 'Tonight\'s constellations (around 9 pm)')}</h3><p class="note"><small>${J(`いまいる ${placeName()} の空。タッチすると説明が読めます`, `The sky over ${placeName()}. Tap for details`)}</small></p><div class="chips">${tn.map(o => `<button class="chip" data-const="${o.k}">${cName(o.k)}<small> ${dirName(o.az)}</small></button>`).join('')}</div>`;
+}
+cv.addEventListener('click', e => {
+  if (!S.cHits || !S.cHits.length) return;
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  const h = S.cHits.find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
+  if (h) { e.stopPropagation(); showConst(h.k); }
+});
 
 </script>
 </body>
