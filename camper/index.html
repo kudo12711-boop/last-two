@@ -3563,24 +3563,20 @@ async function postcard() {
   x.font = `${13 * DPR}px sans-serif`; const ld = localDate(); x.fillText(J(`${$('#wx').textContent}　${ld.getUTCMonth() + 1}月${ld.getUTCDate()}日 現地${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}　走行${fmt(traveled())}km`, `${$('#wx').textContent}   ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][ld.getUTCMonth()]} ${ld.getUTCDate()}, local ${String(ld.getUTCHours()).padStart(2, '0')}:${String(ld.getUTCMinutes()).padStart(2, '0')}   ${fmt(traveled())} km driven`), 16 * DPR, cv.height + 54 * DPR, pc.width - 32 * DPR);
   // 先にできあがった絵はがきを見せて、「保存・送る」で送る（いきなり送る画面にならないように）
   pc.toBlob(b => {
-    const file = new File([b], 'camper-postcard.png', { type: 'image/png' }), url = URL.createObjectURL(b);
-    // パソコン（マウス操作）では Windows などの共有画面だと LINE に届かないことがあるので、保存とコピーにする
+    const d0 = new Date(), fname = `camper-postcard-${d0.getFullYear()}${String(d0.getMonth() + 1).padStart(2, '0')}${String(d0.getDate()).padStart(2, '0')}-${String(d0.getHours()).padStart(2, '0')}${String(d0.getMinutes()).padStart(2, '0')}.png`;
+    const file = new File([b], fname, { type: 'image/png' }), url = URL.createObjectURL(b);
+    // パソコン（マウス操作）では Windows などの共有画面だと LINE に届かないことがあるので、保存してドラッグしてもらう（コピー＆貼りつけも LINE のPC版では効かなかった）
     const canSh = !FINE && !!(navigator.canShare && navigator.canShare({ files: [file] }));
-    const canCopy = FINE && !!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
     modal(`<h2>📷 ${J('旅の絵はがき', 'Travel postcard')}</h2><img class="pcard" src="${url}" alt="">
      <p class="note">${J('いま窓から見えている景色を、町の名前・日付・天気・走ったきょりといっしょに1枚の絵にしました。', 'The view from your window right now, with the town, date, weather and distance driven.')}</p>
      <button class="big" id="pc-send">${canSh ? J('📤 保存・送る（LINE・写真など）', '📤 Save or send') : J('💾 画像を保存する', '💾 Save image')}</button>
-     ${canCopy ? `<button class="big ghost" id="pc-copy">📋 ${J('画像をコピー（LINE などに貼りつけ）', 'Copy image (paste into a chat)')}</button><p class="note" id="pc-msg">${J('LINE に送るときは、コピーしてから LINE のトーク画面で Ctrl＋V（貼りつけ）。保存した画像をトーク画面にドラッグしても送れます。', 'To send it, copy it and paste it into your chat with Ctrl+V, or drag the saved image into the chat.')}</p>` : ''}
+      ${FINE ? `<p class="note">${J('LINE に送るときは、「画像を保存する」を押してから、ダウンロードフォルダにできた <b>camper-postcard-日付.png</b> を LINE のトーク画面にドラッグしてください。', 'To send it in a chat app, save the image, then drag the new <b>camper-postcard-(date).png</b> from your Downloads folder into the chat.')}</p>` : ''}
      <button class="big ghost" id="pc-again">🔄 ${J('いまの景色で撮りなおす', 'Take it again')}</button>
      <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`);
     $('#pc-send').onclick = async () => {
       if (canSh) { try { await navigator.share({ files: [file], title: J('旅の絵はがき', 'Travel postcard') }); return; } catch (e) { if (e.name === 'AbortError') return; } }
-      const a = document.createElement('a'); a.href = url; a.download = 'camper-postcard.png'; document.body.appendChild(a); a.click(); a.remove();
+      const a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove();
       toast(J('💾 絵はがきを保存しました', '💾 Postcard saved'), 2500);
-    };
-    const cp = $('#pc-copy'); if (cp) cp.onclick = async () => {
-      try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': b })]); cp.textContent = J('✓ コピーしました。LINE のトーク画面で Ctrl＋V', '✓ Copied. Paste with Ctrl+V'); }
-      catch (e) { cp.textContent = J('コピーできませんでした。「画像を保存する」を使ってください', 'Could not copy. Please use "Save image"'); }
     };
     $('#pc-again').onclick = () => { URL.revokeObjectURL(url); closeModal(); setTimeout(postcard, 150); };
   }, 'image/png');
