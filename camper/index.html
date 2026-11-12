@@ -139,7 +139,7 @@ body.full.parked:not(.gaze) #fspark{display:flex;flex-direction:column;align-ite
 .card .ilinks{justify-content:center}
 #sill span{cursor:pointer}#sill.tipon{z-index:20}
 #silltip{position:absolute;bottom:44px;width:230px;z-index:8;background:rgba(255,252,244,.97);color:#3a2c22;border-radius:12px;padding:9px 12px;box-shadow:0 4px 14px rgba(0,0,0,.28);font-size:13px;line-height:1.55;pointer-events:none}
-#silltip b{display:block;font-size:14px}#silltip small{display:block;color:#6b5a4c;font-size:12px;margin-top:2px}
+#sill.pin #silltip{pointer-events:auto}#silltip .mini{margin:6px 6px 0 0}#silltip b{display:block;font-size:14px}#silltip small{display:block;color:#6b5a4c;font-size:12px;margin-top:2px}
 body.gaze #gzcover{display:block;position:absolute;inset:0;z-index:7;background:transparent;transition:background 2s}
 body.gaze.gz-dim #gzcover{background:rgba(0,0,0,.45)}
 body.gaze #b-snd,body.gaze #b-full,body.gaze #b-info,body.gaze #fsinfo,body.gaze #fsmap,body.gaze #toasts{display:none!important}
@@ -3224,23 +3224,23 @@ function updateSill() {
     });
   }
   // 飾った物は、左はしと右はしの小物のあいだに並べる（SHELF_MAX個まで）
-  const SI = [], ST = [];
+  const SI = [], ST = [], SK = [];
   (st.shelf || []).forEach(k => {
-    const i = SI.length - 1; SI.push(null); ST.push('');
+    const i = SI.length - 1; SI.push(null); ST.push(''); SK.push(k);
     if (k.startsWith('f:') || k.startsWith('c:')) {
       // ひろいもの・つくった物
-      const id = k.slice(2), isF = k[0] === 'f', D = isF ? FINDS[id] : CRAFTS[id], R0 = isF ? (st.finds || {})[id] : (st.crafts || {})[id]; if (!D || !R0) { SI.pop(); ST.pop(); return; }
+      const id = k.slice(2), isF = k[0] === 'f', D = isF ? FINDS[id] : CRAFTS[id], R0 = isF ? (st.finds || {})[id] : (st.crafts || {})[id]; if (!D || !R0) { SI.pop(); ST.pop(); SK.pop(); return; }
       SI[i + 1] = D[0];
       const at = isF ? R0.first.at : R0.at, wh = isF ? R0.first.where : R0.where;
       ST[i + 1] = `<b>${D[0]} ${isF ? fdName(id) : crName(id)}</b><small>${isF ? `🐚 ${J(`${placeText(wh)}で拾ったひろいもの`, `Found near ${placeText(wh)}`)}` : `🛠 ${J('旅で拾った物でつくりました', 'Made from things found on the trip')}`}<br>📅 ${fdDate(at)}</small><small>${isF ? fdDesc(id) : crDesc(id)}</small>`;
       return;
     }
-    const g = st.gifts && st.gifts[k]; if (!g) { SI.pop(); ST.pop(); return; } SI[i + 1] = g.e;
+    const g = st.gifts && st.gifts[k]; if (!g) { SI.pop(); ST.pop(); SK.pop(); return; } SI[i + 1] = g.e;
     const dt = g.at ? new Date(g.at) : null, when = dt ? (EN ? dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日`) : '';
     ST[i + 1] = `${phBox(giftQ(g.name), giftQ2(g.name), 'tip')}<b>${g.e} ${tr(g.name)}</b><small>🎁 ${J(`${g.city}で観光したときに買ったおみやげ`, `A souvenir bought while sightseeing in ${tr(g.city)}`)}${when ? `<br>📅 ${J(`${when}に手に入れました`, `Got it on ${when}`)}` : ''}${g.from && g.from.length ? `<br>👣 ${J('このとき行った所：', 'Places visited: ')}${g.from.map(tr).join(J('、', ', '))}` : ''}</small>${g.desc ? `<small>${tr(g.desc)}</small>` : ''}`;
   });
   if (SI.length) { items = [items[0], ...SI, items[2]]; tips.splice(1, 2, ...ST, tips[2]); }
-  SILL_TIPS = tips;
+  SILL_TIPS = tips; SILL_KEYS = items.map((e, i) => SI.length && i > 0 && i <= SI.length ? SK[i - 1] : null);
   const key = items.join('') + tips.join('');
   $('#winwrap').classList.toggle('night', hr >= 19 || hr < 5);
   if ($('#sill').dataset.k === key) return;
@@ -3250,7 +3250,7 @@ function updateSill() {
   $('#sill').innerHTML = items.map((e, i) => `<span data-i="${i}" style="left:calc(${(7 + 86 * i / (n - 1)).toFixed(1)}% - ${fs / 2}px);font-size:${fs}px">${e}</span>`).join('') + '<div id="silltip" hidden></div>';
 }
 // 窓辺の小物の説明（マウスを合わせる・タップする）
-let SILL_TIPS = [];
+let SILL_TIPS = [], SILL_KEYS = [];
 const SILL_DESC = EN ? {
   '☕': ['Coffee', 'For a morning or afternoon break'], '🍵': ['Hot tea', 'A warm cup on a cold day (5°C or below)'], '🥤': ['Cold drink', 'Gulped down on a hot day (28°C or above)'], '🧃': ['Juice', 'For a hot afternoon'],
   '🥐': ['Croissant', 'Breakfast on the road'], '🪴': ['House plant', 'A little potted plant traveling with us'], '🗺': ['Road map', 'Checking today\'s route'], '🧭': ['Compass', 'Which way is north?'],
@@ -3270,14 +3270,20 @@ const SILL_DESC = EN ? {
   const sill = $('#sill'); let pinned = false;
   const show = sp => {
     const t = $('#silltip'); if (!t || !sp) return; const i = +sp.dataset.i;
-    t.innerHTML = SILL_TIPS[i] || ''; t.hidden = false; fillPhotos(t); sill.classList.add('tipon');
+    const k = SILL_KEYS[i];
+    t.innerHTML = (SILL_TIPS[i] || '') + (k ? `<button class="mini" data-sput="${k}">🧺 ${J('しまう', 'Put away')}</button>` : '') + (sp.textContent === '🗺' ? `<button class="mini" data-smap>🗺 ${J('地図で道を見る', 'See the route')}</button>` : ''); t.hidden = false; fillPhotos(t); sill.classList.add('tipon');
     const r = sp.getBoundingClientRect(), R = sill.getBoundingClientRect();
     t.style.left = Math.max(0, Math.min(R.width - 230, r.left - R.left + r.width / 2 - 115)) + 'px';
   };
-  const hide = () => { const t = $('#silltip'); if (t) t.hidden = true; pinned = false; sill.classList.remove('tipon'); };
+  const hide = () => { const t = $('#silltip'); if (t) t.hidden = true; pinned = false; sill.classList.remove('tipon', 'pin'); };
   sill.addEventListener('pointerover', e => { const sp = e.target.closest('span[data-i]'); if (sp && e.pointerType === 'mouse') show(sp); });
   sill.addEventListener('pointerout', e => { if (e.pointerType === 'mouse' && !pinned && e.target.closest('span[data-i]')) hide(); });
-  sill.addEventListener('click', e => { const sp = e.target.closest('span[data-i]'); if (!sp) return; e.stopPropagation(); const t = $('#silltip'); if (pinned && t && !t.hidden && t.dataset.i === sp.dataset.i) { hide(); return; } show(sp); pinned = true; t.dataset.i = sp.dataset.i; });
+  sill.addEventListener('click', e => {
+    const put = e.target.closest('[data-sput]'), mp = e.target.closest('[data-smap]');
+    if (put) { e.stopPropagation(); hide(); st.shelf = (st.shelf || []).filter(x => x !== put.dataset.sput); save(); sill.dataset.k = ''; updateSill(); toast(J('🧺 窓辺からしまいました', '🧺 Put away'), 1800); return; }
+    if (mp) { e.stopPropagation(); hide(); showMap(+(lsGet('camper-mapz') || 0)); return; }
+  });
+  sill.addEventListener('click', e => { const sp = e.target.closest('span[data-i]'); if (!sp) return; e.stopPropagation(); const t = $('#silltip'); if (pinned && t && !t.hidden && t.dataset.i === sp.dataset.i) { hide(); return; } show(sp); pinned = true; sill.classList.add('pin'); t.dataset.i = sp.dataset.i; });
   document.addEventListener('click', e => { if (pinned && !e.target.closest('#sill')) hide(); });
 })();
 let POLES = true; try { POLES = localStorage.getItem('camper-poles') !== 'off'; } catch (e) { }
