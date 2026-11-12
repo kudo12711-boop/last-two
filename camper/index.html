@@ -299,6 +299,7 @@ svg.map{touch-action:none;cursor:grab;width:100%;aspect-ratio:1.5/1;border-radiu
 .kv div{background:var(--wall);border-radius:14px;padding:10px 12px}.kv span{display:block;font-size:12px;color:var(--ink2)}.kv b{font-size:20px}
 .letter{background:#fbf3df;border-radius:16px;padding:18px;text-align:center;border:1px dashed #c8a878}
 .letter .em{font-size:40px}
+.letter.sm{text-align:left;padding:10px 14px;margin:8px 0;border-radius:12px}.letter.sm p{margin:4px 0 0;font-size:14px}.letter.sm small{color:var(--ink2)}.letter small{display:block}
 </style>
 </head>
 <body>
@@ -3022,7 +3023,7 @@ function evPool(ctx, W8, alt) {
       hawaii: { turtle: 3, manta: 2, whale: 2, breach: .8, dolphin: 2 }, north: { orca: 3, otter: 2, puffin: 2, whale: 2, breach: .5, albatross: 1 },
     }[ctx.region] || { dolphin: 2 };
     for (const k in R) add(k, R[k]);
-    add('bottle', 1.2);
+    add('bottle', 2);
     if (nearbyStops(P).some(n => n.port && Math.abs(n.d) < 40)) add('gull', 4);
     add('ship', .8);
   } else {
@@ -3049,6 +3050,7 @@ function spawnEvent(ctx, W8, alt) {
   for (const [k, w] of pool) { r -= w; if (r <= 0) { id = k; break; } }
   const dur = { dolphin: 9, flyingfish: 6, whale: 14, breach: 6, sperm: 12, orca: 12, turtle: 12, manta: 12, sunfish: 12, albatross: 14, gull: 12, otter: 14, puffin: 10, nightglow: 22, rainbow: 40, shootingstar: 1.6, aurora: 45, birds: 14, deer: 10, reindeer: 12, kangaroo: 8, llama: 12, horses: 10, camels: 16, bison: 12, eagle: 14, balloon: 40, train: 9, bottle: 22, ship: 30 }[id] || 10;
   const ev = { id, t0: S.t, dur, x0: W * (.55 + Math.random() * .35), d: .22 + Math.random() * .4, seed: Math.random() * 1000 | 0 };
+  if (id === 'bottle') ev.item = pickFind(ctx.region); // 海に浮かぶひろいもの（ボトル・貝がら・シーグラスなど）
   S.events.push(ev);
   if (id !== 'ship' && id !== 'bottle' && DEX[id]) setTimeout(() => found(id, false), id === 'whale' ? 1500 : 600);
 }
@@ -3084,7 +3086,7 @@ function drawSeaEvents(hz, sc) {
       case 'puffin': for (let k = 0; k < 3; k++) { const bx = x - p * 120 * s + k * 20 * s, by = y - 6 * s; c.fillStyle = '#222'; c.beginPath(); c.ellipse(bx, by, 6 * s, 4 * s, 0, 0, 7); c.fill(); c.beginPath(); c.arc(bx - 5 * s, by - 4 * s, 3 * s, 0, 7); c.fill(); c.fillStyle = '#eee'; c.fillRect(bx - 7 * s, by - 5 * s, 2.5 * s, 2 * s); c.fillStyle = '#f07030'; c.beginPath(); c.moveTo(bx - 8 * s, by - 5 * s); c.lineTo(bx - 12 * s, by - 3 * s); c.lineTo(bx - 8 * s, by - 2 * s); c.fill(); } break;
       case 'albatross': case 'gull': case 'birds': drawBirds(e, p, hz, sc); break;
       case 'nightglow': { const a = Math.sin(p * Math.PI); for (let k = 0; k < 50; k++) { const yy = H * (.6 + h2(k, 1) * .18), xx = ((h2(k, 2) * W * 1.5 - S.off.sea * .8) % (W * 1.5) + W * 1.5) % (W * 1.5) - 30; c.fillStyle = `rgba(110,220,255,${a * (.3 + .5 * Math.abs(Math.sin(S.t * 2 + k)))})`; c.fillRect(xx, yy, 18 + h2(k, 3) * 30, 2); } break; }
-      case 'bottle': { const bx = x - p * W * .3, by = y + Math.sin(S.t * 2) * 2 * s; e.hit = [bx, by, 30 * Math.max(1, s)]; c.save(); c.translate(bx, by); c.rotate(.6 + Math.sin(S.t * 1.7) * .2); c.fillStyle = 'rgba(80,170,110,.9)'; c.fillRect(-8 * s, -3 * s, 14 * s, 6 * s); c.fillRect(6 * s, -1.5 * s, 5 * s, 3 * s); c.fillStyle = '#c8a070'; c.fillRect(11 * s, -1.5 * s, 2 * s, 3 * s); c.fillStyle = 'rgba(255,250,230,.9)'; c.fillRect(-5 * s, -1.5 * s, 8 * s, 3 * s); c.restore();
+      case 'bottle': { const bx = x - p * W * .3, by = y + Math.sin(S.t * 2) * 2 * s; e.hit = [bx, by, 30 * Math.max(1, s)]; if (e.item && e.item !== 'bottle') { c.save(); c.translate(bx, by); c.rotate(Math.sin(S.t * 1.7) * .25); c.font = `${Math.round(22 * Math.max(1, s))}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(FINDS[e.item][0], 0, 0); c.restore(); } else { c.save(); c.translate(bx, by); c.rotate(.6 + Math.sin(S.t * 1.7) * .2); c.fillStyle = 'rgba(80,170,110,.9)'; c.fillRect(-8 * s, -3 * s, 14 * s, 6 * s); c.fillRect(6 * s, -1.5 * s, 5 * s, 3 * s); c.fillStyle = '#c8a070'; c.fillRect(11 * s, -1.5 * s, 2 * s, 3 * s); c.fillStyle = 'rgba(255,250,230,.9)'; c.fillRect(-5 * s, -1.5 * s, 8 * s, 3 * s); c.restore(); }
         if (p < .9) { c.fillStyle = `rgba(255,255,255,${.5 + .5 * Math.sin(S.t * 5)})`; c.font = `700 ${Math.max(11, 11 * sc)}px sans-serif`; c.textAlign = 'center'; c.fillText(J('タッチ！', 'Tap!'), bx, by - 14 * Math.max(1, s)); } break; }
       case 'ship': break;
     }
@@ -3497,7 +3499,7 @@ function showMap(zoom, ctr, w) {
 }
 /* ----- 記録 ----- */
 function showRecord(tab = 'dex') {
-  const tabs = EN ? [['dex', '📖 Wildlife'], ['lm', '🏛 Sights'], ['stamp', '📍 Towns'], ['spot', '🗺 Visits'], ['food', '🍽 Food'], ['gift', '🎁 Souvenirs'], ['words', '💬 Words'], ['data', '📊 Stats']] : [['dex', '📖 図鑑'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['spot', '🗺 観光'], ['food', '🍽 グルメ'], ['gift', '🎁 おみやげ'], ['words', '💬 ことば'], ['data', '📊 記録']];
+  const tabs = EN ? [['dex', '📖 Wildlife'], ['find', '🐚 Finds'], ['lm', '🏛 Sights'], ['stamp', '📍 Towns'], ['spot', '🗺 Visits'], ['food', '🍽 Food'], ['gift', '🎁 Souvenirs'], ['words', '💬 Words'], ['data', '📊 Stats']] : [['dex', '📖 図鑑'], ['find', '🐚 ひろいもの'], ['lm', '🏛 名所'], ['stamp', '📍 町'], ['spot', '🗺 観光'], ['food', '🍽 グルメ'], ['gift', '🎁 おみやげ'], ['words', '💬 ことば'], ['data', '📊 記録']];
   let body = '';
   if (tab === 'dex') { const ids = Object.keys(DEX); body = `<p class="note">${J(`${Object.keys(st.dex).length} / ${ids.length} 種類を見つけました`, `Found ${Object.keys(st.dex).length} of ${ids.length}`)}</p><div class="grid">${ids.map(id => { const e = st.dex[id], D = DEX[id]; return e ? `<div class="card"><div class="em">${D[0]}</div><b>${D[1]}</b><small>${D[2]}</small><small class="m">${J(`${e.n}回・はじめて：${e.place || ''}`, `×${e.n} · first seen: ${tr(e.place || '')}`)}</small></div>` : `<div class="card no"><div class="em">？</div><b>？？？</b></div>`; }).join('')}</div>`; }
   if (tab === 'lm') { body = `<p class="note">${J('窓から見えた名所', 'Sights seen from the window')} ${ALL_LM.filter(l => st.lm[l.key]).length} / ${ALL_LM.length}<br><small>${J('アプリを開いているときに、近くを通ると記録されます', 'Recorded when you pass nearby with the app open')}</small></p><div class="list">${ALL_LM.map(l => `<div class="${st.lm[l.key] ? '' : 'no'}">${st.lm[l.key] ? '✅' : '⬜'} ${st.lm[l.key] ? tr(l.name) : '???'}<small>${tr(l.key)}</small></div>`).join('')}</div>`; }
@@ -3507,6 +3509,11 @@ function showRecord(tab = 'dex') {
   if (tab === 'food') { const v = Object.values(st.food || {}); body = v.length ? `<p class="note">${J(`食べたもの ${v.length}品`, `${v.length} dishes tried`)}</p><div class="grid">${v.map(e => `<div class="card">${phBox(e.name, '', 'card')}<div class="em">${e.e}</div><b>${tr(e.name)}</b><small>${tr(e.desc)}</small><small class="m">${tr(e.city)}</small></div>`).join('')}</div>` : empty(J('まだありません。観光の「ご当地グルメ」で食べると記録されます。', 'Nothing yet. Try "Local food" while sightseeing.')); }
   if (tab === 'gift') { const v = Object.entries(st.gifts || {}); body = v.length ? `<p class="note">${J(`おみやげ ${v.length}個<br><small>「飾る」を押すと窓辺に置けます（2つまで）</small>`, `${v.length} souvenirs<br><small>Press "Display" to put one on the window sill (up to 2)</small>`)}${sillHidden() && (st.shelf || []).length ? `<br><small>${sillHidden()}</small>` : ''}</p><div class="grid">${v.map(([k, e]) => `<div class="card">${phBox(giftQ(e.name), giftQ2(e.name), 'card')}<div class="em">${e.e}</div><b>${tr(e.name)}</b><small class="m">${tr(e.city)}</small><button class="mini" data-shelf="${k}" ${(st.shelf || []).includes(k) ? 'disabled' : ''}>${(st.shelf || []).includes(k) ? J('✓ 飾っています', '✓ On display') : J('窓辺に飾る', 'Display on sill')}</button></div>`).join('')}</div>${(st.shelf || []).length ? `<button class="big ghost" id="unshelf">${J('窓辺のおみやげを片づける', 'Clear the window sill')}</button>` : ''}` : empty(J('まだありません。観光の「おみやげ」で買うと、ここにたまります。', 'Nothing yet. Souvenirs you buy while sightseeing collect here.')); }
   if (tab === 'words') { const v = Object.values(st.words || {}); body = v.length ? `<p class="note">${J(`覚えたあいさつ ${v.length}`, `${v.length} greetings learned`)}</p>${v.map(e => `<div class="phrase sm"><small>${tr(e.w[4])} (${tr(e.city)})</small>${sayBtn(e.w[0], e.w[1], e.c || 'JP')}<b>${e.w[0]}</b><span>${rd(e.w[1])}</span>${sayBtn(e.w[2], e.w[3], e.c || 'JP')}<b>${e.w[2]}</b><span>${rd(e.w[3])}</span></div>`).join('')}` : empty(J('まだありません。観光の「地元のことば」で教えてもらえます。', 'Nothing yet. Locals will teach you in "Local words" while sightseeing.')); }
+  if (tab === 'find') {
+    const F = st.finds || {}, ids = Object.keys(FINDS), L = st.letters || [];
+    body = `<p class="note">${J(`見つけたひろいもの ${ids.filter(i => F[i]).length} / ${ids.length} 種類`, `Found ${ids.filter(i => F[i]).length} of ${ids.length} kinds`)}<br><small>${J('船で海をわたるとき、波間に流れてくる物をタッチすると拾えます', 'While crossing the sea by ferry, tap things floating by to pick them up')}</small></p><div class="grid">${ids.map(i => F[i] ? `<div class="card"><div class="em">${FINDS[i][0]}</div><b>${fdName(i)}${F[i].n > 1 ? ` <small>×${F[i].n}</small>` : ''}</b><small>${fdDesc(i)}</small><small class="m">${J('はじめて：', 'First: ')}${fdDate(F[i].first.at)}${J('・', ' · ')}${placeText(F[i].first.where)}</small></div>` : `<div class="card no"><div class="em">❔</div><b>???</b><small class="m">${FINDS[i][5] ? J(`${FINDS[i][5].map(r => FIND_SEA[r][0]).filter((v, k, a) => a.indexOf(v) === k).join('・')}で見つかるかも`, `Maybe in ${FINDS[i][5].map(r => FIND_SEA[r][1]).filter((v, k, a) => a.indexOf(v) === k).join(', ')}`) : J('どの海でも見つかるかも', 'Could turn up in any sea')}</small></div>`).join('')}</div>
+     <h3>✉️ ${J(`ボトルの手紙（${L.length}通）`, `Letters in bottles (${L.length})`)}</h3>${L.length ? L.map(l => `<div class="letter sm"><small>${fdDate(l.at)}${J('・', ' · ')}${placeText(l.where)}${J('で拾った手紙', '')}</small><p>${J(`「<b>${l.about}</b> は、こんなところだよ。${FACTS[l.about] || ''}」`, `"<b>${tr(l.about)}</b> is a place like this: ${FACTS[l.about] || ''}"`)}</p></div>`).join('') : `<p class="note">${J('まだありません。', 'None yet.')}${st.bottles ? J(`（この機能ができる前に拾った ${st.bottles}本の手紙は残っていません）`, ` (Letters from the ${st.bottles} bottles found before this feature were not kept.)`) : ''}</p>`}`;
+  }
   if (tab === 'data') { const days = (Date.now() - st.started) / 864e5; body = EN ? `<div class="kv"><div><span>Distance driven</span><b>${fmt(traveled())} km</b></div><div><span>Times around Earth</span><b>${(traveled() / 40075).toFixed(2)}</b></div><div><span>Trip day</span><b>Day ${Math.floor(days) + 1}</b></div><div><span>Laps completed</span><b>${st.laps || 0}</b></div><div><span>Starting point</span><b>${tr(st.startName || '東京')}</b></div><div><span>Bottles found</span><b>${st.bottles || 0}</b></div><div><span>Current speed</span><b>${st.speed} km/h</b></div><div><span>Nights stayed</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>` : `<div class="kv"><div><span>走ったきょり</span><b>${fmt(traveled())}km</b></div><div><span>地球何周ぶん？</span><b>${(traveled() / 40075).toFixed(2)}周</b></div><div><span>旅をはじめて</span><b>${Math.floor(days) + 1}日目</b></div><div><span>世界一周</span><b>${st.laps || 0}回 達成</b></div><div><span>出発地</span><b>${st.startName || '東京'}</b></div><div><span>拾ったボトル</span><b>${st.bottles || 0}本</b></div><div><span>いまの速さ</span><b>時速${st.speed}km</b></div><div><span>泊まった回数</span><b>🏕${(st.lodges || {}).camp || 0} 🏨${(st.lodges || {}).hotel || 0} 🚐${(st.lodges || {}).car || 0}</b></div></div>`; }
   modal(`<h2>${J('旅の記録', 'Travel log')}</h2><div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')}</div>${body}<button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'rec');
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showRecord(b.dataset.tab));
@@ -3550,11 +3557,48 @@ function showSettings() {
   $('#s-vol').oninput = e => { SVOL = +e.target.value; try { localStorage.setItem('camper-vol', SVOL); } catch (er) { } if (!SOUND) setSound(true); auVolume(); };
   let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = J('もう一度押すとリセットします', 'Press again to reset'); return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } location.reload(); };
 }
+/* ===== ひろいもの（海に浮かんで流れてくる物。タッチで拾って「ひろいもの帳」に） ===== */
+// id: [絵, 名前, 英語名, 説明, 英語の説明, 出る海（null=どこでも）, 出やすさ]
+const FINDS = {
+  bottle: ['🍾', '手紙入りのボトル', 'Message in a bottle', 'この先の町のことが書かれた手紙が入っている', 'A letter about a town up ahead', null, 5],
+  seaglass: ['💎', 'シーグラス', 'Sea glass', '波にもまれて丸くなったガラスのかけら', 'Glass worn smooth by the waves', null, 3],
+  sakura: ['🐚', 'さくら貝', 'Pink tellin shell', 'うすいピンク色の小さな貝がら', 'A tiny, pale pink shell', ['japan', 'asia'], 3],
+  hotate: ['🐚', 'ホタテの貝がら', 'Scallop shell', '扇の形をした大きな貝がら', 'A big fan-shaped shell', ['north', 'japan'], 2],
+  mussel: ['🐚', 'ムール貝の貝がら', 'Mussel shell', '黒くて細長い貝がら。ヨーロッパの海の名物', 'A long black shell from European seas', ['med', 'atlantic', 'azores'], 2.5],
+  triton: ['🐚', 'ほら貝', 'Triton shell', '吹くと「ぼーっ」と鳴る大きな巻き貝', 'A big spiral shell you can blow like a horn', ['tropic', 'hawaii', 'pacific'], 2],
+  coral: ['🪸', 'さんごのかけら', 'Piece of coral', 'あたたかい海のさんごのかけら', 'A piece of coral from warm seas', ['tropic', 'hawaii'], 1.5],
+  coconut: ['🥥', 'ヤシの実', 'Coconut', '海を流れて島から島へ旅をする実', 'A seed that floats from island to island', ['tropic', 'hawaii', 'pacific'], 1.2],
+  driftwood: ['🪵', '流木', 'Driftwood', '遠くの森から海を旅してきた木', 'Wood that drifted from a faraway forest', ['north', 'atlantic', 'pacific'], 2],
+  float: ['🔮', 'ガラスの浮き玉', 'Glass fishing float', '昔の漁師さんがあみに使っていたガラスの玉', 'A glass ball once used on fishing nets', ['japan', 'north'], .8],
+  feather: ['🪶', 'アホウドリの羽根', 'Albatross feather', '何千kmも飛ぶ鳥の大きな羽根', 'A big feather from a bird that flies thousands of km', ['pacific', 'north'], .8],
+};
+const FIND_SEA = { japan: ['日本の海', 'the seas around Japan'], asia: ['アジアの海', 'Asian seas'], med: ['地中海', 'the Mediterranean'], atlantic: ['大西洋', 'the Atlantic'], azores: ['大西洋', 'the Atlantic'], tropic: ['南のあたたかい海', 'warm southern seas'], hawaii: ['ハワイの海', 'the seas off Hawaii'], pacific: ['太平洋', 'the Pacific'], north: ['北の冷たい海', 'cold northern seas'] };
+function pickFind(region) {
+  const pool = Object.entries(FINDS).filter(([, f]) => !f[5] || f[5].includes(region));
+  let r = Math.random() * pool.reduce((a, [, f]) => a + f[6], 0);
+  for (const [id, f] of pool) { r -= f[6]; if (r <= 0) return id; }
+  return 'bottle';
+}
+// いまいる場所（保存用に日本語の町の名前のまま）
+function placeKey() { if (!P) return []; const s = P.seg; return P.segKm < 8 ? [s.a.name] : s.len - P.segKm < 8 ? [s.b.name] : [s.a.name, s.b.name]; }
+const placeText = w => (w || []).map(tr).join(J('〜', ' – '));
+const fdName = id => EN ? FINDS[id][2] : FINDS[id][1], fdDesc = id => EN ? FINDS[id][4] : FINDS[id][3];
+const fdDate = t => { const d = new Date(t); return EN ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`; };
+function addFind(id) {
+  st.finds = st.finds || {}; const now = { at: Date.now(), where: placeKey() };
+  const e = st.finds[id] || (st.finds[id] = { n: 0, first: now }); e.n++; e.last = now; return e;
+}
+function showFind(id) {
+  const isNew = !(st.finds && st.finds[id]); const e = addFind(id); save();
+  modal(`<div class="letter"><div class="em">${FINDS[id][0]}</div><h2>${J(`${fdName(id)}を拾いました`, `You found: ${fdName(id)}`)}</h2><p>${fdDesc(id)}</p><small>${isNew ? J('🆕 はじめて見つけました！ひろいもの帳にのりました', '🆕 A new find! Added to your finds') : J(`${e.n}こ目`, `#${e.n}`)}${J('・', ' · ')}${placeText(e.last.where)}</small></div><button class="big ghost" data-findbook>${J('🐚 ひろいもの帳を見る', '🐚 See your finds')}</button><button class="big" data-close>${J('とじる', 'Close')}</button>`);
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-findbook]')) showRecord('find'); });
 function showBottle() {
   // 次の港（または次の町）についての手紙
   let tgt = null; walkStops((stop, km) => { if (km > st.km) { tgt = stop; return false; } }, 3);
-  const n = tgt ? tgt.name : '東京'; st.bottles = (st.bottles || 0) + 1; save();
-  modal(`<div class="letter"><div class="em">🍾✉️</div><h2>${J('ボトルの中の手紙', 'A message in a bottle')}</h2><p>${J(`「この先の <b>${n}</b> は、こんなところだよ。<br>${FACTS[n] || ''}」`, `"Up ahead, <b>${tr(n)}</b> is a place like this:<br>${FACTS[n] || ''}"`)}</p><small>${J(`拾ったボトル ${st.bottles}本目`, `Bottle #${st.bottles}`)}</small></div><button class="big" data-close>${J('とじる', 'Close')}</button>`);
+  const n = tgt ? tgt.name : '東京'; st.bottles = (st.bottles || 0) + 1;
+  addFind('bottle'); st.letters = st.letters || []; st.letters.unshift({ at: Date.now(), where: placeKey(), about: n }); st.letters = st.letters.slice(0, 300); save();
+  modal(`<div class="letter"><div class="em">🍾✉️</div><h2>${J('ボトルの中の手紙', 'A message in a bottle')}</h2><p>${J(`「この先の <b>${n}</b> は、こんなところだよ。<br>${FACTS[n] || ''}」`, `"Up ahead, <b>${tr(n)}</b> is a place like this:<br>${FACTS[n] || ''}"`)}</p><small>${J(`拾ったボトル ${st.bottles}本目`, `Bottle #${st.bottles}`)}</small><small>${J('この手紙は「ひろいもの帳」でいつでも読み返せます', 'You can reread this letter anytime in your finds')}</small></div><button class="big ghost" data-findbook>${J('🐚 ひろいもの帳を見る', '🐚 See your finds')}</button><button class="big" data-close>${J('とじる', 'Close')}</button>`);
 }
 async function postcard() {
   const pc = document.createElement('canvas'); pc.width = cv.width; pc.height = cv.height + 70 * DPR; const x = pc.getContext('2d');
@@ -4025,7 +4069,7 @@ function frame(ts) {
 }
 cv.addEventListener('click', e => {
   const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-  for (const ev of S.events) if (ev.id === 'bottle' && ev.hit && Math.hypot(x - ev.hit[0], y - ev.hit[1]) < ev.hit[2] + 12) { ev.dur = 0; showBottle(); return; }
+  for (const ev of S.events) if (ev.id === 'bottle' && ev.hit && Math.hypot(x - ev.hit[0], y - ev.hit[1]) < ev.hit[2] + 12) { ev.dur = 0; if (ev.item && ev.item !== 'bottle') showFind(ev.item); else showBottle(); return; }
 });
 document.addEventListener('visibilitychange', () => { if (!st) return; if (document.hidden) { tick(); save(); } else back(); });
 window.addEventListener('pagehide', () => { if (st) { tick(); save(); } });
