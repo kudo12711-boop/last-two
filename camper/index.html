@@ -3233,7 +3233,7 @@ function updateSill() {
       // ふしぎなボトルの子どもからの贈り物
       const id = k.slice(2), D = PALS[id], R0 = (st.pals || {})[id]; if (!D || !R0 || !R0.gift) { SI.pop(); ST.pop(); SK.pop(); return; }
       SI[i + 1] = D.gift[0];
-      ST[i + 1] = `<b>${D.gift[0]} ${J(D.gift[1], D.gift[2])}</b><small>🫧 ${J(`${D.from[0]}の${D.name[0]}から、ふしぎなボトルでとどいた贈り物`, `A gift from ${D.name[1]} in ${D.from[1]}, sent in a mysterious bottle`)}<br>📅 ${fdDate(R0.gift)}</small><small>${EN ? D.gift[4] : D.gift[3]}</small>`;
+      ST[i + 1] = `<b>${D.gift[0]} ${J(D.gift[1], D.gift[2])}</b><small>✨ ${J(`${D.from[0]}の${D.name[0]}から、ふしぎなボトルでとどいた贈り物`, `A gift from ${D.name[1]} in ${D.from[1]}, sent in a mysterious bottle`)}<br>📅 ${fdDate(R0.gift)}</small><small>${EN ? D.gift[4] : D.gift[3]}</small>`;
       return;
     }
     if (k.startsWith('f:') || k.startsWith('c:')) {
@@ -3768,7 +3768,7 @@ function showPal(id) {
   const i = p.n, D = PALS[id]; p.n++; p.replied = false; p.letters.push({ at: Date.now(), where: placeKey() }); st.palAt = Date.now();
   if (p.n === 3) p.gift = Date.now();
   save();
-  modal(`<div class="letter pal"><div class="em">🫧🍾</div><h2>${J('ふしぎなボトル', 'A mysterious bottle')}</h2><small>${D.flag} ${J(`${D.from[0]}の ${D.name[0]} から（${i + 1}通目）`, `From ${D.name[1]} in ${D.from[1]} (letter ${i + 1})`)}</small><div class="paldraw">${D.draw[i]}</div>${palLetter(id, i)}
+  modal(`<div class="letter pal"><div class="em">✨🍾</div><h2>${J('ふしぎなボトル', 'A mysterious bottle')}</h2><small>${D.flag} ${J(`${D.from[0]}の ${D.name[0]} から（${i + 1}通目）`, `From ${D.name[1]} in ${D.from[1]} (letter ${i + 1})`)}</small><div class="paldraw">${D.draw[i]}</div>${palLetter(id, i)}
     <small>${J('この国のことばを覚えたよ', 'A new word!')}</small>${palWord(id, i)}</div>
     ${p.n < 3 ? palReplyBox(id) : `<div class="sight-card"><div class="big-em">${D.gift[0]}</div><h2>${J(`${D.name[0]}から贈り物がとどきました`, `A gift from ${D.name[1]}!`)}</h2><p>${J(`「${D.gift[1]}」`, D.gift[2])}<br><small>${EN ? D.gift[4] : D.gift[3]}</small></p>${shelfBtn('p:' + id)}</div>`}
     <button class="big ghost" data-findbook>${J('🐚 ひろいもの帳を見る', '🐚 See your finds')}</button><button class="big" data-close>${J('とじる', 'Close')}</button>`);
@@ -3784,9 +3784,9 @@ document.addEventListener('click', e => {
 function palSection() {
   // ひみつの雰囲気：最初のふしぎなボトルを拾うまでは見せない（ボトルの手紙を3通読むと、なぞめいた1行だけ）
   const P = st.pals || {}, met = Object.keys(PALS).filter(k => P[k]), all = Object.keys(PALS).length;
-  if (!met.length) return (st.bottles || 0) >= 3 ? `<h3>🫧 ${J('？？？', '???')}</h3><p class="note"><small>${J('ボトルの手紙を読んでいると、ときどき波の向こうで、青く光るなにかが見える気がする……', 'Reading these bottle letters, you sometimes think you see something glowing blue beyond the waves...')}</small></p>` : '';
+  if (!met.length) return (st.bottles || 0) >= 3 ? `<h3>✨ ${J('？？？', '???')}</h3><p class="note"><small>${J('ボトルの手紙を読んでいると、ときどき波の向こうで、青く光るなにかが見える気がする……', 'Reading these bottle letters, you sometimes think you see something glowing blue beyond the waves...')}</small></p>` : '';
   const done = met.length >= all;
-  return `<h3>🫧 ${J('ふしぎなボトルの手紙', 'Mysterious bottle letters')} <small>${J(`出会った子 ${met.length} / ${done ? all : '？'}人`, `Friends met: ${met.length} / ${done ? all : '?'}`)}${done ? J('　ぜんぶ出会えた！', ' · You met them all!') : ''}</small></h3><p class="note"><small>${J('海の向こうの子どもから、ボトルでとどいた手紙。おへんじを流すと、いつかまた……', 'Letters from children across the sea. Write back, and someday another may come...')}</small></p>` +
+  return `<h3>✨ ${J('ふしぎなボトルの手紙', 'Mysterious bottle letters')} <small>${J(`出会った子 ${met.length} / ${done ? all : '？'}人`, `Friends met: ${met.length} / ${done ? all : '?'}`)}${done ? J('　ぜんぶ出会えた！', ' · You met them all!') : ''}</small></h3><p class="note"><small>${J('海の向こうの子どもから、ボトルでとどいた手紙。おへんじを流すと、いつかまた……', 'Letters from children across the sea. Write back, and someday another may come...')}</small></p>` +
     met.map(k => { const D = PALS[k], p = P[k]; return `<div class="letter sm pal"><small>${D.flag} ${J(`${D.from[0]}の ${D.name[0]}`, `${D.name[1]}, ${D.from[1]}`)}　✉️ ${p.n} / 3</small>${p.letters.map((l, i) => `<small>${fdDate(l.at)}${J('・', ' · ')}${placeText(l.where)}</small>${palLetter(k, i)}${palWord(k, i)}${p.sent && p.sent[i] ? `<small>↪︎ ${J('おへんじ：', 'You wrote: ')}${p.sent[i]}</small>` : ''}`).join('')}
       ${p.n >= 3 ? `<div class="palgift">${D.gift[0]} <b>${J(D.gift[1], D.gift[2])}</b> ${shelfBtn('p:' + k)}</div>` : p.replied ? `<small>⏳ ${J('おへんじを流しました。次の手紙を待っています', 'Reply sent. Waiting for the next letter')}</small>` : palReplyBox(k)}</div>`; }).join('') +
     (done ? '' : `<p class="note"><small>${J('まだどこかの海で、だれかがボトルに手紙を入れているみたい……', 'Somewhere out at sea, someone else may be putting a letter in a bottle...')}</small></p>`);
