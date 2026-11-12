@@ -2931,7 +2931,7 @@ function drawSky(hz, W8, alt) {
   const MV = moonView(P.ll[0], P.ll[1], nowMs()); S.MV = MV;
   const ma = clamp((MV.alt + 1) / 4) * (L.dl > .5 ? .38 * (1 - L.dl * .5) : clamp(1 - L.dl / .7 + .3)) * clamp(1 - L.k * 1.1) * (MV.k < .03 ? 0 : 1);
   if (ma > 0.02) {
-    const mr = Math.max(9, H * .028) * (MV.k > .95 && moonDist(nowMs()) < SUPER ? 1.12 : 1), mx = W * .24, my = clamp(hz - (MV.alt / 60) * hz * .85, hz * .1, hz - mr);
+    const mr = Math.max(9, H * .028) * (MV.k > .95 && moonDist(nowMs()) < SUPER ? 1.12 : 1), mx = W * .24, my = clamp(hz - (MV.alt / 60) * hz * .85, hz * .1, hz - mr); addHit(mx - mr * 1.8, my - mr * 1.8, mx + mr * 1.8, my + mr * 1.8, 'MOON');
     c.save(); c.globalAlpha = ma;
     const gl = c.createRadialGradient(mx, my, mr * .5, mx, my, mr * (2 + 2 * MV.k)); gl.addColorStop(0, `rgba(255,250,220,${.08 + .2 * MV.k})`); gl.addColorStop(1, 'rgba(255,250,220,0)');
     if (L.dl < .5) { c.fillStyle = gl; c.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8); }
@@ -2952,7 +2952,7 @@ function drawSky(hz, W8, alt) {
   }
   // 太陽
   if (alt > -4) {
-    const sx = W * .74, sy = clamp(hz - (alt / 50) * hz * .9, hz * (S.SE ? .22 : .1), hz + 20), sr = Math.max(10, H * .03) * (S.SE ? 1.4 : 1);
+    const sx = W * .74, sy = clamp(hz - (alt / 50) * hz * .9, hz * (S.SE ? .22 : .1), hz + 20), sr = Math.max(10, H * .03) * (S.SE ? 1.4 : 1); if (sy < hz) addHit(sx - sr * 1.8, sy - sr * 1.8, sx + sr * 1.8, sy + sr * 1.8, 'SUN');
     const col = mix([255, 238, 170], [255, 140, 70], L.tw);
     c.save(); c.globalAlpha = clamp(1 - L.k * 1.15) * sstep(-4, 0, alt);
     const gl = c.createRadialGradient(sx, sy, sr * .4, sx, sy, sr * 6); gl.addColorStop(0, css(col, .55)); gl.addColorStop(1, css(col, 0));
@@ -3476,7 +3476,7 @@ function drawLandmarks(gy, sc, sea) {
       const r = LMR[lm] || 32; if (Math.abs(n.d) > r) continue;
       const x = W * .5 + n.d / r * W * .8;
       const s = sc * (0.75 + 0.35 * (1 - Math.abs(n.d) / r));
-      LMD[lm](x, gy, s, .42);
+      LMD[lm](x, gy, s, .42); if (LMNAME[n.stop.name] && x > -60 && x < W + 60) addHit(x - 70 * s, gy - 110 * s, x + 70 * s, gy, 'M:' + n.stop.name);
       if (Math.abs(n.d) < r * .55) { S.lmSeen[n.stop.name] = (S.lmSeen[n.stop.name] || 0) + 1; }
     }
     if (sea && n.port && n.stop.lm !== 'icecoast' && Math.abs(n.d) < 26) {
@@ -3701,17 +3701,17 @@ function drawSeaEvents(hz, sc) {
     const x = e.x0 - drift;
     const dark = shc([50, 62, 80], .2 * (1 - e.d));
     switch (e.id) {
-      case 'dolphin': for (let k = 0; k < 4; k++) { const q = ((S.t - e.t0) * .9 - k * .35) % 1.6; if (q < 0 || q > 1) continue; const jx = x + k * 26 * s - q * 50 * s, jy = y - Math.sin(q * Math.PI) * 26 * s, ang = Math.cos(q * Math.PI) * -.9;
-        c.save(); c.translate(jx, jy); c.rotate(ang); c.fillStyle = shc([90, 110, 130], .2 * (1 - e.d)); c.beginPath(); c.ellipse(0, 0, 14 * s, 4 * s, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-1 * s, -3 * s); c.lineTo(3 * s, -9 * s); c.lineTo(5 * s, -3 * s); c.fill(); c.beginPath(); c.moveTo(13 * s, 0); c.lineTo(18 * s, -4 * s); c.lineTo(18 * s, 4 * s); c.fill(); c.restore();
+      case 'dolphin': for (let k = 0; k < 4; k++) { const q = ((S.t - e.t0) * .9 - k * .35) % 1.6; if (q < 0 || q > 1) continue; const jx = x + k * 26 * s - q * 50 * s, jy = y - Math.sin(q * Math.PI) * 26 * s, ang = Math.cos(q * Math.PI) * .9;
+        c.save(); c.translate(jx, jy); c.rotate(ang); drawDolphin(s * .9, e.d); c.restore();
         if (q < .1 || q > .9) splash(jx, y, s * .6); } break;
-      case 'flyingfish': for (let k = 0; k < 5; k++) { const fx = x - p * 300 * s - k * 22 * s, fy = y - 8 * s - Math.sin(p * 9 + k) * 3 * s - k * 2 * s; c.fillStyle = 'rgba(220,230,240,.9)'; c.beginPath(); c.moveTo(fx - 7 * s, fy); c.lineTo(fx + 7 * s, fy); c.lineTo(fx + 1 * s, fy - 5 * s); c.closePath(); c.fill(); } break;
+      case 'flyingfish': for (let k = 0; k < 5; k++) { const fx = x - p * 300 * s - k * 22 * s, fy = y - 8 * s - Math.sin(p * 9 + k) * 3 * s - k * 2 * s; drawFlyingFish(fx, fy, s * .8, k); if (h2(k, Math.floor(S.t * 3)) < .2) { c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(fx + 6 * s, y - 1, 10 * s, 1.4); } } break;
       case 'whale': case 'sperm': {
         if (p < .45) { const a = Math.sin(p / .45 * Math.PI); c.fillStyle = dark; c.beginPath(); c.ellipse(x, y, 34 * s, 7 * s * a, 0, Math.PI, 0); c.fill(); if (p > .08 && p < .3) for (let k = 0; k < 14; k++) { c.fillStyle = 'rgba(255,255,255,.65)'; c.beginPath(); c.arc(x + (e.id === 'sperm' ? -26 : -8) * s + (h2(k, 1) - .5) * 10 * s - (k * .8) * s, y - (8 + h2(k, 2) * 30 * ((p - .08) / .22)) * s, 2.5 * s, 0, 7); c.fill(); } }
         else if (p < .85) { const q = (p - .45) / .4, ty = y - Math.sin(q * Math.PI) * 30 * s; c.fillStyle = dark; c.beginPath(); c.moveTo(x, y); c.lineTo(x - 2 * s, ty + 6 * s); c.quadraticCurveTo(x - 16 * s, ty, x - 22 * s, ty - 6 * s); c.quadraticCurveTo(x - 8 * s, ty + 2 * s, x, ty + 2 * s); c.quadraticCurveTo(x + 8 * s, ty + 2 * s, x + 22 * s, ty - 6 * s); c.quadraticCurveTo(x + 16 * s, ty, x + 2 * s, ty + 6 * s); c.lineTo(x, y); c.fill(); if (q > .8) splash(x, y, s); }
         break;
       }
-      case 'breach': { const q = p, by = y - Math.sin(q * Math.PI) * 70 * s; c.save(); c.translate(x, by); c.rotate(-1.2 + q * 1.6); c.fillStyle = dark; c.beginPath(); c.ellipse(0, 0, 40 * s, 10 * s, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(240,240,240,.8)'; c.beginPath(); c.ellipse(-10 * s, 5 * s, 22 * s, 4 * s, 0, 0, 7); c.fill(); c.restore(); if (q > .7) splash(x, y, s * 2.2); break; }
-      case 'orca': for (let k = 0; k < 3; k++) { const a = Math.max(0, Math.sin((p * 3 + k * .3) * Math.PI)); const ox = x + k * 40 * s; c.fillStyle = '#111'; c.beginPath(); c.moveTo(ox - 6 * s, y); c.lineTo(ox - 1 * s, y - (18 + k * 4) * s * a); c.lineTo(ox + 5 * s, y); c.fill(); c.beginPath(); c.ellipse(ox + 2 * s, y, 18 * s, 4 * s * a, 0, Math.PI, 0); c.fill(); c.fillStyle = '#eee'; c.beginPath(); c.ellipse(ox - 10 * s, y - 2 * s * a, 4 * s, 1.5 * s * a + .1, 0, 0, 7); c.fill(); } break;
+      case 'breach': { const q = p, by = y - Math.sin(q * Math.PI) * 70 * s; c.save(); c.translate(x, by); c.rotate(1.2 - q * 1.6); drawHumpback(s); c.restore(); if (q > .7) splash(x, y, s * 2.2); break; }
+      case 'orca': for (let k = 0; k < 3; k++) { const a = Math.max(0, Math.sin((p * 3 + k * .3) * Math.PI)); const ox = x + k * 40 * s; if (a > .01) drawOrca(ox, y, s, a, k); } break;
       case 'turtle': { const a = sstep(0, .15, p) * (1 - sstep(.85, 1, p)); c.fillStyle = shc([90, 110, 70], .1); c.beginPath(); c.ellipse(x, y + 2 * s - a * 3 * s, 12 * s, 6 * s * (.4 + a * .6), 0, Math.PI, 0); c.fill(); c.beginPath(); c.arc(x - 13 * s, y - a * 4 * s, 3 * s * a, 0, 7); c.fill(); break; }
       case 'manta': { c.save(); c.globalAlpha = Math.sin(p * Math.PI) * .6; const f = Math.sin(S.t * 2) * 6 * s; c.fillStyle = 'rgba(20,40,60,1)'; c.beginPath(); c.moveTo(x - 4 * s, y + 6 * s); c.lineTo(x + 18 * s, y + 6 * s - f); c.lineTo(x + 8 * s, y + 14 * s); c.lineTo(x - 8 * s, y + 14 * s); c.lineTo(x - 26 * s, y + 6 * s - f); c.closePath(); c.fill(); c.restore(); break; }
       case 'sunfish': { const a = Math.sin(p * Math.PI); const fl = Math.sin(S.t * 3) * .5; c.fillStyle = shc([150, 160, 170], .1); c.save(); c.translate(x, y); c.rotate(fl * .3); c.beginPath(); c.moveTo(-4 * s, 0); c.lineTo(0, -20 * s * a); c.lineTo(5 * s, 0); c.fill(); c.restore(); c.beginPath(); c.ellipse(x, y, 16 * s, 3 * s * a, 0, Math.PI, 0); c.fill(); break; }
@@ -3735,8 +3735,9 @@ function drawSeaEvents(hz, sc) {
       case 'nightglow': { const a = Math.sin(p * Math.PI); for (let k = 0; k < 50; k++) { const yy = H * (.6 + h2(k, 1) * .18), xx = ((h2(k, 2) * W * 1.5 - S.off.sea * .8) % (W * 1.5) + W * 1.5) % (W * 1.5) - 30; c.fillStyle = `rgba(110,220,255,${a * (.3 + .5 * Math.abs(Math.sin(S.t * 2 + k)))})`; c.fillRect(xx, yy, 18 + h2(k, 3) * 30, 2); } break; }
       case 'bottle': { const bx = x - p * W * .3, by = y + Math.sin(S.t * 2) * 2 * s; e.hit = [bx, by, 30 * Math.max(1, s)]; if (e.item === 'magic') { c.save(); c.translate(bx, by); const g = c.createRadialGradient(0, 0, 2, 0, 0, 26 * s), a = .45 + Math.sin(S.t * 3) * .2; g.addColorStop(0, `rgba(170,230,255,${a})`); g.addColorStop(1, 'rgba(170,230,255,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, 26 * s, 0, 7); c.fill(); c.rotate(.6 + Math.sin(S.t * 1.7) * .2); c.fillStyle = 'rgba(70,140,230,.95)'; c.fillRect(-8 * s, -3.5 * s, 15 * s, 7 * s); c.fillRect(7 * s, -1.7 * s, 5 * s, 3.4 * s); c.fillStyle = '#e8506a'; c.fillRect(6 * s, -3.5 * s, 1.6 * s, 7 * s); c.fillStyle = 'rgba(255,250,230,.95)'; c.fillRect(-5 * s, -1.6 * s, 9 * s, 3.2 * s); c.restore(); } else if (e.item && e.item !== 'bottle') { c.save(); c.translate(bx, by); c.rotate(Math.sin(S.t * 1.7) * .25); c.font = `${Math.round(22 * Math.max(1, s))}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(FINDS[e.item][0], 0, 0); c.restore(); } else { c.save(); c.translate(bx, by); c.rotate(.6 + Math.sin(S.t * 1.7) * .2); c.fillStyle = 'rgba(80,170,110,.9)'; c.fillRect(-8 * s, -3 * s, 14 * s, 6 * s); c.fillRect(6 * s, -1.5 * s, 5 * s, 3 * s); c.fillStyle = '#c8a070'; c.fillRect(11 * s, -1.5 * s, 2 * s, 3 * s); c.fillStyle = 'rgba(255,250,230,.9)'; c.fillRect(-5 * s, -1.5 * s, 8 * s, 3 * s); c.restore(); }
         if (p < .9) { c.fillStyle = `rgba(255,255,255,${.5 + .5 * Math.sin(S.t * 5)})`; c.font = `700 ${Math.max(11, 11 * sc)}px sans-serif`; c.textAlign = 'center'; c.fillText(J('タッチ！', 'Tap!'), bx, by - 14 * Math.max(1, s)); } break; }
-      case 'ship': break;
+      case 'ship': drawShip(e, p, hz, sc); break;
     }
+    if (DEX[e.id] && !/^(ship|bottle|albatross|gull|birds)$/.test(e.id)) addHit(x - 50 * s, y - 60 * s, x + 90 * s, y + 10 * s, 'D:' + e.id);
   }
 }
 function splash(x, y, s) { c.fillStyle = 'rgba(255,255,255,.75)'; for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(x + (h2(k, Math.floor(S.t * 10)) - .5) * 14 * s, y - h2(k, 3) * 8 * s, 1.8 * s, 0, 7); c.fill(); } }
@@ -3751,14 +3752,15 @@ function drawBirds(e, p, hz, sc) {
     const x = bx + ox, y = by + oy + (e.id === 'albatross' ? Math.sin(p * 9) * 20 * sc : 0);
     c.beginPath(); c.moveTo(x - w, y - f); c.quadraticCurveTo(x - w / 2, y - f - 3, x, y); c.quadraticCurveTo(x + w / 2, y - f - 3, x + w, y - f); c.stroke();
   }
+  if (DEX[e.id]) addHit(bx - 30 * sc, by - 30 * sc, bx + (n * 26 + 30) * sc, by + 60 * sc, 'D:' + e.id);
 }
 function drawSkyEvents(hz) {
   drawShower(S.dt || .016, hz); drawFest(hz);
   for (const e of S.events) {
     const p = (S.t - e.t0) / e.dur; if (p < 0 || p > 1) continue;
-    if (e.id === 'shootingstar') { const x = W * (.8 - p * .5) + (e.seed % 100), y = hz * (.1 + p * .3); const g = c.createLinearGradient(x, y, x + 80, y - 40); g.addColorStop(0, `rgba(255,255,255,${1 - p})`); g.addColorStop(1, 'rgba(255,255,255,0)'); c.strokeStyle = g; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 80, y - 40); c.stroke(); }
-    if (e.id === 'aurora') { const a = Math.sin(p * Math.PI) * .55; for (let k = 0; k < 3; k++) { c.fillStyle = `rgba(${k === 1 ? '160,90,220' : '80,240,160'},${a * (k === 1 ? .4 : .5)})`; c.beginPath(); c.moveTo(0, hz * .6); for (let x = 0; x <= W; x += 20) c.lineTo(x, hz * (.2 + k * .08) + Math.sin(x * .01 + S.t * .4 + k) * 20); c.lineTo(W, hz * .6); for (let x = W; x >= 0; x -= 20) c.lineTo(x, hz * (.55 + k * .03) + Math.sin(x * .013 + S.t * .3 + k) * 14); c.fill(); } }
-    if (e.id === 'rainbow') { const a = Math.sin(p * Math.PI) * .35, cx = W * .3, r = Math.min(W, H) * .5; const cols = ['255,60,60', '255,160,40', '255,240,60', '80,220,80', '60,140,255', '140,80,220']; c.lineWidth = Math.max(4, r * .025); cols.forEach((cl, k) => { c.strokeStyle = `rgba(${cl},${a})`; c.beginPath(); c.arc(cx, hz + 10, r - k * c.lineWidth, Math.PI, 0); c.stroke(); }); }
+    if (e.id === 'shootingstar') { const x = W * (.8 - p * .5) + (e.seed % 100), y = hz * (.1 + p * .3); addHit(x - 20, y - 50, x + 100, y + 20, 'D:shootingstar'); const g = c.createLinearGradient(x, y, x + 80, y - 40); g.addColorStop(0, `rgba(255,255,255,${1 - p})`); g.addColorStop(1, 'rgba(255,255,255,0)'); c.strokeStyle = g; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 80, y - 40); c.stroke(); }
+    if (e.id === 'aurora') { addHit(0, hz * .05, W, hz * .55, 'D:aurora'); const a = Math.sin(p * Math.PI) * .55; for (let k = 0; k < 3; k++) { c.fillStyle = `rgba(${k === 1 ? '160,90,220' : '80,240,160'},${a * (k === 1 ? .4 : .5)})`; c.beginPath(); c.moveTo(0, hz * .6); for (let x = 0; x <= W; x += 20) c.lineTo(x, hz * (.2 + k * .08) + Math.sin(x * .01 + S.t * .4 + k) * 20); c.lineTo(W, hz * .6); for (let x = W; x >= 0; x -= 20) c.lineTo(x, hz * (.55 + k * .03) + Math.sin(x * .013 + S.t * .3 + k) * 14); c.fill(); } }
+    if (e.id === 'rainbow') { const a = Math.sin(p * Math.PI) * .35, cx = W * .3, r = Math.min(W, H) * .5; addHit(cx - r, hz - r, cx + r, hz - r * .6, 'D:rainbow'); const cols = ['255,60,60', '255,160,40', '255,240,60', '80,220,80', '60,140,255', '140,80,220']; c.lineWidth = Math.max(4, r * .025); cols.forEach((cl, k) => { c.strokeStyle = `rgba(${cl},${a})`; c.beginPath(); c.arc(cx, hz + 10, r - k * c.lineWidth, Math.PI, 0); c.stroke(); }); }
     if (e.id === 'balloon') { LMD.balloons(e.x0 - (S.t - e.t0) * 6, hz, Math.max(.7, H / 420) * .8, .3, 3); }
     if (e.id === 'eagle') { const x = e.x0 + Math.cos(S.t * .5) * 60, y = hz * .35 + Math.sin(S.t * .5) * 20; c.strokeStyle = shc([50, 40, 34], .3); c.lineWidth = 2.5; c.beginPath(); c.moveTo(x - 18, y - 3); c.quadraticCurveTo(x - 8, y - 6, x, y); c.quadraticCurveTo(x + 8, y - 6, x + 18, y - 3); c.stroke(); }
     if (e.id === 'birds') drawBirds(e, p, hz, Math.max(.7, H / 420));
@@ -3778,16 +3780,16 @@ function drawGroundEvents(gy, sc) {
       if (p < .92) { c.fillStyle = `rgba(255,255,255,${.6 + .4 * tw})`; c.font = `700 ${Math.max(11, 11 * sc)}px sans-serif`; c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 3; c.strokeText(J('タッチ！', 'Tap!'), x, y - r * 1.5); c.fillText(J('タッチ！', 'Tap!'), x, y - r * 1.5); }
       c.textBaseline = 'alphabetic';
     }
-    if (e.id === 'deer') { const x = e.x0 - (S.t - e.t0) * 70 * S.vf; drawAnimal('deer', x, gy, s, 0); }
-    if (e.id === 'reindeer' || e.id === 'llama') for (let k = 0; k < 3; k++) drawAnimal(e.id, e.x0 + k * 30 * s - (S.t - e.t0) * 40 * S.vf, gy + h2(k, 3) * 6, s, S.t * 4 + k);
-    if (e.id === 'kangaroo') for (let k = 0; k < 2; k++) { const t = S.t - e.t0, hop = Math.abs(Math.sin(t * 5 + k)) * 14 * s; drawAnimal('kangaroo', W * (1.1 - p * 1.3) + k * 40 * s - t * 20 * S.vf, gy - hop, s, 0); }
+    if (e.id === 'deer') { const x = e.x0 - (S.t - e.t0) * 70 * S.vf; drawAnimal('deer', x, gy, s, 0); addHit(x - 16 * s, gy - 26 * s, x + 16 * s, gy, 'D:deer'); }
+    if (e.id === 'reindeer' || e.id === 'llama') for (let k = 0; k < 3; k++) { const x = e.x0 + k * 30 * s - (S.t - e.t0) * 40 * S.vf; drawAnimal(e.id, x, gy + h2(k, 3) * 6, s, S.t * 4 + k); addHit(x - 16 * s, gy - 26 * s, x + 16 * s, gy + 6, 'D:' + e.id); }
+    if (e.id === 'kangaroo') for (let k = 0; k < 2; k++) { const t = S.t - e.t0, hop = Math.abs(Math.sin(t * 5 + k)) * 14 * s; const kx = W * (1.1 - p * 1.3) + k * 40 * s - t * 20 * S.vf; drawAnimal('kangaroo', kx, gy - hop, s, 0); addHit(kx - 16 * s, gy - hop - 28 * s, kx + 16 * s, gy, 'D:kangaroo'); }
     if (e.id === 'horses' || e.id === 'bison' || e.id === 'camels') {
       const n = e.id === 'camels' ? 5 : 6, sp = e.id === 'camels' ? 55 : e.id === 'horses' ? 20 : 45;
       const type = e.id === 'horses' ? 'horse' : e.id === 'bison' ? 'bison' : 'camel';
-      for (let k = 0; k < n; k++) drawAnimal(type, e.x0 + 60 - (S.t - e.t0) * sp * S.vf + k * 26 * s + h2(k, 1) * 10, gy + h2(k, 2) * 8, s, S.t * (type === 'horse' ? 12 : 5) + k);
+      for (let k = 0; k < n; k++) { const x = e.x0 + 60 - (S.t - e.t0) * sp * S.vf + k * 26 * s + h2(k, 1) * 10; drawAnimal(type, x, gy + h2(k, 2) * 8, s, S.t * (type === 'horse' ? 12 : 5) + k); addHit(x - 16 * s, gy - 26 * s, x + 16 * s, gy + 8, 'D:' + e.id); }
     }
     if (e.id === 'train') {
-      const x = W * (1.2 - p * 1.6) * 1, ty = gy - 4 * sc;
+      const x = W * (1.2 - p * 1.6) * 1, ty = gy - 4 * sc; addHit(x, ty - 20 * sc, x + 8 * 52 * sc, ty, 'T');
       for (let k = 0; k < 8; k++) { const cx = x + k * 52 * sc; c.fillStyle = shc(k === 0 ? [210, 70, 60] : [230, 230, 226], .2); c.fillRect(cx, ty - 16 * sc, 50 * sc, 16 * sc); c.fillStyle = L.night > .5 ? 'rgba(255,220,140,.9)' : shc([70, 100, 130], .2); for (let w = 0; w < 5; w++) c.fillRect(cx + 5 * sc + w * 9 * sc, ty - 12 * sc, 6 * sc, 5 * sc); }
     }
   }
@@ -5051,7 +5053,7 @@ function frame(ts) {
   c.save(); c.translate(0, bump);
   if (ctx.sea) drawSea(dt, W8, alt, ctx); else drawLand(dt, W8, alt, ctx);
   c.restore();
-  drawWeather(dt, W8, ctx.sea); drawSandstorm(dt); drawStorm(dt, ctx.sea); drawBunting(); drawCamp();
+  drawWeather(dt, W8, ctx.sea); drawSandstorm(dt); drawStorm(dt, ctx.sea); drawSignTip(); drawBunting(); drawCamp();
   if (S.t - (S.auT || 0) > .5) { S.auT = S.t; auUpdate(W8, ctx); localSounds(ctx); }
   if (!st.preview) for (const n in S.lmSeen) if (S.lmSeen[n] > 90 && !st.lm[n]) { st.lm[n] = Date.now(); save(); toast(J(`🏛 <b>${LMNAME[n] || n}</b>が見えた！<small>名所の記録にのりました</small>`, `🏛 You can see <b>${LMNAME[n] || tr(n)}</b>!<small>Added to your sights log</small>`), 5000); }
   if (ts - lastHud > 1000) { lastHud = ts; skyCheck(); checkAct(); updateHud(); refreshWx(); refreshGeo(); }
@@ -5731,7 +5733,7 @@ cv.addEventListener('click', e => {
   if (!S.cHits || !S.cHits.length) return;
   const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
   const h = S.cHits.find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
-  if (h) { e.stopPropagation(); showConst(h.k); }
+  if (h) { e.stopImmediatePropagation(); showConst(h.k); }
 });
 
 /* ===== その土地ならではのもの（乗りもの・家と木・音・空・くらしの時間） ===== */
@@ -5869,7 +5871,7 @@ function drawTraffic(gy, sc, ctx, W8) {
   for (const v of S.traffic) {
     const x = W + 60 * s + v.off * s - (S.t - v.t0) * (v.v + 60 * S.vf) * s;
     if (x < -120 * s || x > W + 400 * s) continue;
-    drawVehicle(v, x, y0 + v.lane * s, s);
+    drawVehicle(v, x, y0 + v.lane * s, s); if (LOCAL[v.id]) addHit(x - 22 * s, y0 + v.lane * s - 22 * s, x + 22 * s, y0 + v.lane * s, 'L:' + v.id);
     if (x > W * .15 && x < W * .85 && LOCAL[v.id]) seeLocal(v.id);
   }
 }
@@ -5898,6 +5900,7 @@ function localizeTile(out, b, P0, i) {
 function drawLocalProp(p, x, gy, sc, ctx) {
   const s = sc * p.s, d = .11, C = col => css(sh(col, d)), night = L.night > .55, win = night ? 'rgba(255,214,120,.95)' : C([70, 90, 110]);
   if (x > W * .1 && x < W * .9 && LOCAL[p.type]) seeLocal(p.type);
+  if (LOCAL[p.type]) addHit(x - 16 * s, gy - 46 * s, x + 16 * s, gy, 'L:' + p.type);
   switch (p.type) {
     case 'cyclades': { c.fillStyle = C([246, 246, 242]); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 16 * s); c.fillRect(x + 4 * s, gy - 24 * s, 12 * s, 8 * s); c.fillStyle = C([40, 100, 180]); c.beginPath(); c.arc(x - 4 * s, gy - 16 * s, 6.5 * s, Math.PI, 0); c.fill(); c.fillRect(x + 7 * s, gy - 9 * s, 4 * s, 9 * s); c.fillStyle = win; c.fillRect(x - 10 * s, gy - 10 * s, 4 * s, 4 * s); c.fillStyle = C([40, 100, 180]); c.fillRect(x + 9 * s, gy - 22 * s, 3 * s, 3 * s); break; }
     case 'nordichouse': { const col = [[166, 44, 38], [226, 176, 60], [70, 110, 150], [236, 232, 222]][p.c || 0]; c.fillStyle = C(col); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 16 * s); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [50, 52, 58]); c.beginPath(); c.moveTo(x - 15 * s, gy - 16 * s); c.lineTo(x, gy - 30 * s); c.lineTo(x + 15 * s, gy - 16 * s); c.fill(); c.fillStyle = C([250, 250, 248]); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 1.4 * s); c.fillRect(x - 13 * s, gy - 16 * s, 1.4 * s, 16 * s); c.fillRect(x + 11.6 * s, gy - 16 * s, 1.4 * s, 16 * s);
@@ -5991,6 +5994,7 @@ function drawMirage(hz) {
 // 天の川：銀河の赤道の本物の位置を、星座と同じように空に描く
 const GAL = (() => { const out = [], aP = 192.8595 * D2R, dP = 27.1283 * D2R, lN = 122.932 * D2R; for (let l = 0; l < 360; l += 4) { const L1 = l * D2R, sd = Math.cos(dP) * Math.cos(lN - L1), dec = Math.asin(sd), ra = aP + Math.atan2(Math.sin(lN - L1), Math.cos(dP) * 0 - Math.sin(dP) * Math.cos(lN - L1)); out.push([((ra / D2R / 15) % 24 + 24) % 24, dec / D2R, l]); } return out; })();
 function drawMilkyWay(hz, sa, ctx) {
+  addHit(0, 0, W, hz, 'W');
   if (sa < .35 || !P || ctx.biome === 'city') return;
   const moonUp = S.MV && S.MV.alt > 0 ? S.MV.k : 0, cc = ccOf(P);
   const dark = (ctx.biome === 'desert' || ctx.biome === 'mount' || ctx.biome === 'steppe' || ctx.sea ? 1 : .6) * (['BO', 'CL', 'MN', 'AU', 'MA', 'NA'].includes(cc) ? 1.3 : 1);
@@ -6090,11 +6094,11 @@ const GREEN_SIGN = CCSET('US CA AU NZ IT CH GR');
 function newSign(ctx) {
   const cc = ccOf(P), an = SIGN_ANIMAL[cc];
   const animalOk = an && ctx.biome !== 'city' && !(an === 'bear' && !(ctx.biome === 'mount' || ctx.biome === 'forest')) && !(an === 'tanuki' && ctx.biome === 'coast');
-  if (animalOk && Math.random() < .4) return { kind: 'animal', an, cc };
+  if (animalOk && Math.random() < .4) return { kind: 'animal', an, cc, script: '' };
   const to = P.seg.b, ln = LNAME[to.name], km = Math.max(1, Math.round(P.seg.len - P.segKm));
   if (km < 3) return null;
   const jp = cc === 'JP';
-  return { kind: 'name', cc, big: ln ? ln[0] : jp ? to.name : (EN_T[to.name] || to.name), small: ln || jp ? (EN_T[to.name] || '') : '', km, script: ln ? ln[1] : '' };
+  return { kind: 'name', cc, to: to.name, big: ln ? ln[0] : jp ? to.name : (EN_T[to.name] || to.name), small: ln || jp ? (EN_T[to.name] || '') : '', km, script: ln ? ln[1] : '' };
 }
 function drawSigns(gy, sc, ctx) {
   if (ctx.sea || !P) return;
@@ -6111,6 +6115,7 @@ function drawSigns(gy, sc, ctx) {
     else { c.fillStyle = '#d0202a'; c.beginPath(); c.moveTo(0, -15 * s); c.lineTo(15 * s, 11 * s); c.lineTo(-15 * s, 11 * s); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(0, -9 * s); c.lineTo(10 * s, 8 * s); c.lineTo(-10 * s, 8 * s); c.fill(); }
     c.font = `${Math.round((diamond ? 13 : 10) * s)}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(SIGN_EMOJI[sg.an], 0, diamond ? 0 : 2 * s); c.restore(); c.textBaseline = 'alphabetic';
     if (x > W * .15 && x < W * .85) seeLocal('sign_' + sg.an);
+    addHit(x - 16 * s, y - hh - 27 * s, x + 16 * s, y - hh + 7 * s, 'sign');
     return;
   }
   c.font = `700 ${Math.round(12 * s)}px sans-serif`; const w1 = c.measureText(sg.big).width;
@@ -6122,7 +6127,67 @@ function drawSigns(gy, sc, ctx) {
   c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = `700 ${Math.round(12 * s)}px sans-serif`; c.fillText(sg.big, x, top + 15 * s);
   c.font = `${Math.round(7 * s)}px sans-serif`; c.fillText((sg.small ? sg.small + '   ' : '') + sg.km + ' km', x, top + bh - 6 * s); c.globalAlpha = 1;
   if (sg.script && x > W * .15 && x < W * .85) seeLocal(sg.script);
+  addHit(x - bw / 2, top, x + bw / 2, top + bh, 'sign');
 }
+// 看板の訳：マウスを合わせる（スマホはタップ）と出る
+const ANIMAL_JA = { kangaroo: ['カンガルーの飛び出しに注意', 'Watch for kangaroos'], moose: ['ヘラジカの飛び出しに注意', 'Watch for moose'], camel: ['ラクダの横断に注意', 'Watch for camels'], tanuki: ['動物（タヌキ）の飛び出しに注意', 'Watch for animals (tanuki)'], bear: ['クマに注意', 'Watch for bears'] };
+// マウスを合わせる（スマホはタップ）と説明が出るしくみ。描いたものが毎コマ「当たり範囲」を登録する
+function addHit(x0, y0, x1, y1, key) { (S.hits = S.hits || []).push([x0, y0, x1, y1, key]); }
+const CROP_TXT = {
+  rice: { water: ['田植えのころ。水をはった田んぼが空をうつす', 'Planting time: flooded paddies mirror the sky'], green: ['稲がぐんぐん育っている', 'The rice is growing fast'], gold: ['実った稲。もうすぐ稲刈り', 'Ripe rice, almost harvest time'], stub: ['稲刈りのあと。次の春を待っている', 'Harvested; waiting for spring'] },
+  wheat: { young: ['冬をこす小さな芽', 'Young shoots waiting out the winter'], green: ['青い穂がのびている', 'Green ears are growing'], gold: ['金色の穂。もうすぐ収穫', 'Golden and nearly ready to harvest'], stub: ['収穫のあと', 'After the harvest'] },
+  corn: { young: ['芽が出たばかり', 'Just sprouted'], tall: ['人の背より高くなった', 'Taller than a person now'], dry: ['実が乾いて収穫まぢか', 'Drying out before harvest'], bare: ['畑はお休み中', 'Fields resting'] },
+  vineyard: { bare: ['葉が落ちた冬のぶどう畑', 'Bare winter vines'], leaf: ['葉がしげっている', 'Leafy vines'], grapes: ['紫の実がなって、ぶどうつみの季節', 'Purple grapes — harvest season'] },
+  sunflower: { young: ['まだ花の前', 'Not yet in bloom'], bloom: ['満開。花は朝、東を向いている', 'In full bloom, facing east in the morning'], dry: ['花が終わって種をとるころ', 'Done blooming; seeds being harvested'], bare: ['畑はお休み中', 'Fields resting'] },
+  lavender: { leaf: ['花の前の、銀色っぽい葉', 'Silvery leaves before the flowers'], bloom: ['むらさきの花が満開', 'In full purple bloom'] },
+  tea: { leaf: ['まるく刈りこまれたお茶の木', 'Neatly trimmed tea bushes'], fresh: ['新茶の季節。やわらかい新芽をつむ', 'First-flush season: picking the tender new leaves'] },
+  cotton: { bare: ['畑はお休み中', 'Fields resting'], leaf: ['葉がしげり、花がさく', 'Leaves and flowers growing'], bloom: ['白いわたがはじけた。手でつむ', 'White bolls have burst open'] },
+  rapeseed: { leaf: ['花の前の葉', 'Leaves before blooming'], bloom: ['一面の黄色い花', 'A sea of yellow flowers'] },
+};
+function hitText(key) {
+  const [k, a, b] = key.split(':');
+  if (k === 'sign') { const sg = S.sign; if (!sg) return null;
+    if (sg.kind === 'animal') return [J(...ANIMAL_JA[sg.an]), J('動物注意の標識', 'Animal crossing sign')];
+    return [J(`${sg.to} まで あと ${sg.km} km`, `${EN_T[sg.to] || sg.to} — ${sg.km} km ahead`), sg.script ? J(`${LOCAL[sg.script][1]}で「${sg.to}」と書いてあります`, `“${EN_T[sg.to] || sg.to}” written in ${LOCAL[sg.script][2]}`) : sg.cc === 'JP' ? J('日本語（漢字）とローマ字の看板', 'Written in Japanese (kanji) and English letters') : J('この国の文字（ラテン文字）の看板', 'Written in Latin letters')]; }
+  if (k === 'L' && LOCAL[a]) { const L0 = LOCAL[a]; return [`${L0[0]} ${EN ? L0[2] : L0[1]}`, EN ? L0[4] : L0[3]]; }
+  if (k === 'C' && LOCAL[a]) { const L0 = LOCAL[a], t = (CROP_TXT[a] || {})[b]; return [`${L0[0]} ${EN ? L0[2] : L0[1]}`, (t ? (EN ? t[1] : t[0]) + J('。', '. ') : '') + (EN ? L0[4] : L0[3])]; }
+  if (k === 'D' && DEX[a]) { const D = DEX[a]; return [`${D[0]} ${tr(D[1])}`, tr(D[2])]; }
+  return null;
+}
+function wrapTxt(t, maxW) { const out = []; let line = ''; for (const ch of (EN ? t.split(/(?<= )/) : [...t])) { if (c.measureText(line + ch).width > maxW && line) { out.push(line); line = ch.trimStart(); } else line += ch; } if (line) out.push(line); return out.slice(0, 3); }
+function drawSignTip() { // いちばん手前に説明の吹き出しを描く（名前はむかしのまま）
+  const hits = S.hits || []; S.hits = []; S.lastHits = hits;
+  let h = null;
+  if (S.pin && S.t < S.pin.until) { h = hits.filter(q => q[4] === S.pin.key).pop() || null; if (!h) S.pin = null; }
+  if (!h && S.mouse) { const [mx, my] = S.mouse; h = hits.filter(q => mx > q[0] - 6 && mx < q[2] + 6 && my > q[1] - 6 && my < q[3] + 6).sort((u, v) => (u[2] - u[0]) * (u[3] - u[1]) - (v[2] - v[0]) * (v[3] - v[1]))[0] || null; }
+  const cv0 = document.getElementById('cv'); if (cv0) { const cur = h ? 'help' : ''; if (cv0.style.cursor !== cur) cv0.style.cursor = cur; }
+  if (!h) return; const tx0 = hitText2(h[4]) || hitText(h[4]); if (!tx0) return;
+  const tx = [tx0[0], tx0[1]], hint = S.mouse && !(S.pin && S.pin.touch) ? J('クリックで くわしく', 'Click for more') : J('もう一度タップで くわしく', 'Tap again for more');
+  const fs = clamp(Math.min(W, H) / 38, 11, 15), maxW = Math.min(W * .7, 320);
+  c.font = `700 ${fs}px sans-serif`; const w1 = c.measureText(tx[0]).width;
+  c.font = `${fs * .85}px sans-serif`; const lines = wrapTxt(tx[1], maxW), w2 = Math.max(c.measureText(hint).width, ...lines.map(l => c.measureText(l).width));
+  const bw = Math.min(Math.max(w1, w2), maxW) + 22, bh = fs * 1.5 + (lines.length + 1) * fs * 1.15 + 12;
+  const isField = h[4][0] === 'C', fp = (S.pin && S.pin.pt) || S.mouse, ax = isField && fp ? fp[0] : (h[0] + h[2]) / 2, ay = isField && fp ? fp[1] - 10 : h[1] - 4;
+  const mg = document.body.classList.contains('full') || document.body.classList.contains('gaze') ? 8 : W * .1, bx = clamp(ax - bw / 2, mg, Math.max(mg, W - bw - mg)); let by = ay - bh - 8; if (by < 6) by = Math.min(H - bh - 6, (isField ? ay + 20 : h[3] + 12));
+  c.fillStyle = 'rgba(255,252,244,.96)'; c.strokeStyle = 'rgba(80,60,40,.35)'; c.lineWidth = 1;
+  c.beginPath(); c.roundRect ? c.roundRect(bx, by, bw, bh, 8) : c.rect(bx, by, bw, bh); c.fill(); c.stroke();
+  if (by < ay) { c.beginPath(); c.moveTo(ax - 6, by + bh); c.lineTo(ax, by + bh + 7); c.lineTo(ax + 6, by + bh); c.fill(); }
+  c.textAlign = 'left'; c.fillStyle = '#4a3a2a'; c.font = `700 ${fs}px sans-serif`; c.fillText(tx[0], bx + 11, by + 6 + fs);
+  c.fillStyle = '#6f5f4b'; c.font = `${fs * .85}px sans-serif`; lines.forEach((l, i) => c.fillText(l, bx + 11, by + 8 + fs * 1.5 + i * fs * 1.15 + fs * .7));
+  c.fillStyle = '#b07a3a'; c.fillText(hint, bx + 11, by + 8 + fs * 1.5 + lines.length * fs * 1.15 + fs * .7);
+}
+(() => {
+  const cv0 = document.getElementById('cv'); if (!cv0) return;
+  const pos = e => { const r = cv0.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  const at = (x, y) => (S.lastHits || []).filter(q => x > q[0] - 8 && x < q[2] + 8 && y > q[1] - 8 && y < q[3] + 8).sort((u, v) => (u[2] - u[0]) * (u[3] - u[1]) - (v[2] - v[0]) * (v[3] - v[1]))[0];
+  cv0.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') S.mouse = pos(e); });
+  cv0.addEventListener('mouseleave', () => { S.mouse = null; });
+  cv0.addEventListener('click', e => { const [x, y] = pos(e), h = at(x, y); if (!h) { S.pin = null; return; }
+    if ((S.events || []).some(ev => ev.hit && Math.hypot(x - ev.hit[0], y - ev.hit[1]) < ev.hit[2] + 12)) return;
+    const mouse = e.pointerType ? e.pointerType === 'mouse' : matchMedia('(pointer: fine)').matches;
+    if (mouse || (S.pin && S.pin.key === h[4] && S.t < S.pin.until)) { openInfo(h[4]); return; }
+    S.pin = { key: h[4], until: S.t + 7, pt: [x, y], touch: 1 }; });
+})();
 
 /* ----- 7 洗濯物と旗 ----- */
 const LAUNDRY = CCSET('IT PT ES GR VN CN IN TR EG MA');
@@ -6140,6 +6205,7 @@ function extraTile(out, b, i, cc, r) {
 function drawLocalProp2(p, x, gy, sc, ctx) {
   const s = sc * p.s, C = col => css(sh(col, .11)), night = L.night > .55, win = night ? 'rgba(255,214,120,.95)' : C([70, 90, 110]);
   const hr = localDate().getUTCHours(), seen = id => { if (x > W * .1 && x < W * .9) seeLocal(id); };
+  if (LOCAL[p.type]) addHit(x - 16 * s, gy - (p.type === 'koinobori' ? 62 : 46) * s, x + 16 * s, gy, 'L:' + p.type);
   const flap = k => Math.sin(S.t * 4 + k + p.x) * (1 + (S.storm ? 2.5 : 0));
   switch (p.type) {
     case 'laundry': { const pal = [[226, 170, 120], [236, 210, 160], [200, 120, 90], [240, 230, 214], [214, 180, 140]];
@@ -6222,6 +6288,7 @@ function drawCrops(gy0, ctx) {
       }
     }
   }
+  addHit(0, gy0, W, yB, 'C:' + crop + ':' + stg);
   if (SHOWY[crop].split(' ').includes(stg)) seeLocal(crop);
 }
 
@@ -6268,6 +6335,7 @@ function drawFolk(gy, sc, ctx) {
     case 'mariachi': for (let k = 0; k < 3; k++) P2(k, { body: '#1c1c1c', legs: '#1c1c1c', guitar: k !== 1, hat: ['brim', '#2a2a2a'], wide: 1 }); break;
     case 'cowboy': drawAnimal('horse', x0, y, s * 1.1, S.t * 10); person(x0, y - 12 * s, s * .9, { body: '#a0522d', legs: 'rgba(0,0,0,0)', hat: ['brim', '#7a5230'] }); for (let k = 0; k < 4; k++) drawAnimal('cow', x0 - 30 * s - k * 22 * s, y + h2(k, 2) * 4 * s, s * .95, S.t * 8 + k); break;
   }
+  addHit(x0 - 12 * s, y - 26 * s, x0 + (F.id === 'shepherd' ? 120 : 56) * s, y, 'L:' + F.id);
   if (x0 > W * .1 && x0 < W * .85) seeLocal(F.id);
 }
 
@@ -6366,6 +6434,113 @@ function drawStorm(dt, sea) {
   } else {
     const g = c.createLinearGradient(0, H * .62, 0, H); g.addColorStop(0, 'rgba(235,242,248,0)'); g.addColorStop(1, `rgba(235,242,248,${.15 + .2 * k})`); c.fillStyle = g; c.fillRect(0, H * .62, W, H * .38);
   }
+}
+
+/* ----- 説明その2（月と太陽・名所・海の生きもの・空・天気・列車と船） ----- */
+Object.assign(LOCAL, {
+  ship_container: ['🚢', 'コンテナ船', 'Container ship', '世界の荷物の多くは、鉄の箱（コンテナ）を何千個も積んだ船で運ばれる', 'Most of the world\'s goods travel in steel boxes stacked thousands high on ships like this', 'コンテナ船', 'Container ship'],
+  ship_cruise: ['🛳', 'クルーズ船', 'Cruise ship', 'ホテルのような大きな客船。プールや劇場もある', 'A floating hotel with pools and theaters', 'クルーズ客船', 'Cruise ship'],
+  ship_fishing: ['🎣', 'イカ釣り漁船', 'Squid-fishing boat', '夜、強い電球の光でイカを集める。宇宙からも光が見えるほど', 'At night, bright lamps lure squid — visible even from space', 'イカ釣り漁船', 'Squid fishing'],
+  ship_yacht: ['⛵', 'ヨット', 'Sailing yacht', '風の力だけで進む船。ヨットで大西洋や世界一周をする人もいる', 'Moved by wind alone; some sail all the way around the world', 'ヨット', 'Sailing yacht'],
+  ship_icebreaker: ['🧊', '砕氷船', 'Icebreaker', '厚い船体で氷を割りながら進む。日本の南極観測船「しらせ」も砕氷船', 'A thick hull smashes through the ice, like Japan\'s Antarctic ship Shirase', '砕氷船', 'Icebreaker'],
+  ship_dhow: ['⛵', 'ダウ船', 'Dhow', '三角の帆の木の船。アラビア海やインド洋で千年以上使われてきた', 'Wooden boats with triangular sails, used in the Indian Ocean for over a thousand years', 'ダウ船', 'Dhow'],
+});
+const SKYTXT = {
+  aurora: ['太陽から飛んできた小さな粒が、地球の磁石の力で北や南の空に集まり、空気を光らせる', 'Particles from the Sun are steered by Earth\'s magnetism toward the poles, where they make the air glow'],
+  rainbow: ['太陽を背にしたとき、雨つぶの中で光が曲がって7色に分かれる。虹はいつも太陽の反対側に出る', 'Sunlight bends inside raindrops and splits into colors; a rainbow is always opposite the Sun'],
+  shootingstar: ['宇宙のちりが地球の空気に飛びこんで燃え、光る。流星群は、彗星が残したちりの帯を地球が通るとき', 'Space dust burns up in our air. Meteor showers happen when Earth passes through a comet\'s dust trail'],
+  nightglow: ['夜光虫というプランクトンが、波にゆられると青く光る', 'Tiny plankton glow blue when the waves stir them'],
+};
+const TRAIN_OF = { RU: ['シベリア鉄道', 'Trans-Siberian Railway', '東の端から西の端まで約9300km、7日かけて走る世界一長い鉄道', 'About 9,300 km over 7 days — the longest railway in the world', 'シベリア鉄道', 'Trans-Siberian Railway'], MN: ['モンゴル縦貫鉄道', 'Trans-Mongolian Railway', '北京からウランバートルを通ってロシアへ続く', 'Runs from Beijing through Ulaanbaatar into Russia', 'モンゴル縦貫鉄道', 'Trans-Mongolian Railway'], CN: ['中国の高速鉄道', 'China high-speed rail', '世界でいちばん長い高速鉄道網。時速350kmで走る', 'The world\'s largest high-speed network, running at 350 km/h', '中国高速鉄道', 'High-speed rail in China'], KR: ['KTX', 'KTX', '韓国の高速鉄道。ソウルと釜山を約2時間半で結ぶ', 'Korea\'s bullet train links Seoul and Busan in about 2.5 hours', 'KTX', 'Korea Train Express'], JP: ['日本の鉄道', 'Japanese railways', '時間ぴったりに走ることで世界に知られる', 'Famous for running exactly on time', '日本の鉄道', 'Rail transport in Japan'], US: ['アムトラックと貨物列車', 'Amtrak and freight trains', 'アメリカでは1kmを超える長い貨物列車も走る', 'American freight trains can be over a kilometer long', 'アムトラック', 'Amtrak'], CA: ['カナディアン号', 'The Canadian', 'トロントからバンクーバーまで4日かけて大陸を横断する', 'Crosses the continent from Toronto to Vancouver in four days', 'カナディアン (列車)', 'The Canadian'], AU: ['ザ・ガン', 'The Ghan', 'オーストラリアを南北に縦断する長距離列車', 'A long-distance train crossing Australia from south to north', 'ザ・ガン', 'The Ghan'], FR: ['TGV', 'TGV', 'フランスの高速列車。時速574.8kmの記録をもつ', 'France\'s high-speed train, record holder at 574.8 km/h', 'TGV', 'TGV'], DE: ['ICE', 'ICE', 'ドイツの高速列車', 'Germany\'s high-speed train', 'ICE (列車)', 'Intercity Express'], IT: ['フレッチャロッサ', 'Frecciarossa', 'イタリアの赤い高速列車「赤い矢」', 'Italy\'s red high-speed “red arrow”', 'フレッチャロッサ', 'Frecciarossa'], ES: ['AVE', 'AVE', 'スペインの高速鉄道', 'Spain\'s high-speed rail', 'AVE (列車)', 'AVE'], CH: ['氷河急行', 'Glacier Express', 'アルプスをゆっくり走る「世界一遅い急行」', 'The “slowest express in the world” through the Alps', '氷河急行', 'Glacier Express'], AT: ['レールジェット', 'Railjet', 'オーストリアの赤い特急', 'Austria\'s red express train', 'レールジェット', 'Railjet'], IN: ['インドの鉄道', 'Indian Railways', '1日に2000万人以上が乗る、世界有数の鉄道', 'Carries over 20 million passengers a day', 'インド鉄道', 'Indian Railways'], KZ: ['カザフスタンの鉄道', 'Kazakhstan railways', '広い草原をまっすぐに走る', 'Straight lines across the endless steppe', 'カザフスタン鉄道', 'Kazakhstan Temir Zholy'], UZ: ['アフラシャブ号', 'Afrosiyob', 'タシケントとサマルカンドを結ぶ高速列車', 'High-speed train between Tashkent and Samarkand', 'ウズベキスタン鉄道', 'Afrosiyob'] };
+const moonAge2 = ms => (((ms - 947182440000) / 864e5) % 29.530588 + 29.530588) % 29.530588;
+function moonPhaseName(a) {
+  const N = [[1.5, '新月', 'New moon'], [6, '三日月', 'Crescent moon'], [9, '上弦の月', 'First quarter'], [13.5, 'ふくらんでいく月', 'Waxing gibbous'], [16.5, '満月', 'Full moon'], [21, '欠けていく月', 'Waning gibbous'], [23.5, '下弦の月', 'Last quarter'], [28, '有明の月（細い月）', 'Waning crescent'], [99, '新月', 'New moon']];
+  const n = N.find(q => a < q[0]); return J(n[1], n[2]);
+}
+function sunNext() { // 日の出・日の入りまでの時間
+  const ms0 = nowMs(), up0 = sunAlt(P.ll[0], P.ll[1], ms0) > -.83;
+  for (let m = 5; m < 26 * 60; m += 5) if ((sunAlt(P.ll[0], P.ll[1], ms0 + m * 6e4) > -.83) !== up0) return [up0, m];
+  return [up0, null];
+}
+const hm = m => m >= 60 ? J(`${Math.floor(m / 60)}時間${m % 60 ? (m % 60) + '分' : ''}`, `${Math.floor(m / 60)} h ${m % 60} min`) : J(`${m}分`, `${m} min`);
+function hitText2(key) {
+  const [k, a] = key.split(':');
+  if (k === 'W') { const W8 = S.W8 || wxState(), w = (WX[W8.code] || ['', '🌡']); const real = wx && wx.real;
+    return [`${w[1]} ${w[0]}  ${Math.round(W8.temp)}℃`, J(`風 ${Math.round(W8.wind || 0)} km/h・雲 ${Math.round(W8.cloud)}%。`, `Wind ${Math.round(W8.wind || 0)} km/h · clouds ${Math.round(W8.cloud)}%. `) + (S.storm && S.storm.kind ? J(`${LOCAL[S.storm.kind][1]}が通過中。`, `A ${LOCAL[S.storm.kind][2].toLowerCase()} is passing. `) : S.storm ? J('強い風の嵐。', 'A strong windstorm. ') : '') + (real ? J('いまこの場所の本物の天気です', 'This is the real weather here right now') : J('通信できないので予想の天気です', 'Estimated (offline)'))]; }
+  if (k === 'SUN') { const [up, m] = sunNext(), alt = sunAlt(P.ll[0], P.ll[1], nowMs());
+    return [J('☀️ 太陽', '☀️ The Sun'), (m == null ? (up ? J('白夜：一日じゅう沈まない', 'Midnight sun: it never sets today') : J('極夜：一日じゅう昇らない', 'Polar night: it never rises today')) : up ? J(`日の入りまで あと${hm(m)}`, `Sunset in ${hm(m)}`) : J(`日の出まで あと${hm(m)}`, `Sunrise in ${hm(m)}`)) + J(`・高さ ${Math.round(alt)}°`, ` · ${Math.round(alt)}° high`)]; }
+  if (k === 'MOON') { const ms = nowMs(), age = moonAge2(ms), MV = S.MV || { k: 0 }, fm = (typeof fullMoons === 'function' ? fullMoons(ms, ms + 32 * 864e5) : [])[0], dd = fm ? Math.max(0, Math.round((fm - ms) / 864e5)) : null;
+    return [`🌙 ${moonPhaseName(age)}`, J(`月齢 ${age.toFixed(1)}・光っている部分 ${Math.round(MV.k * 100)}%`, `Moon age ${age.toFixed(1)} days · ${Math.round(MV.k * 100)}% lit`) + (dd != null && !(age > 13.5 && age < 16.5) ? J(`・次の満月まで あと${dd}日`, ` · next full moon in ${dd} days`) : '')]; }
+  if (k === 'M') { const nm = LMNAME[a] || a; return [`🏛 ${nm}`, (typeof FACTS !== 'undefined' && FACTS[a] ? tr(FACTS[a]) : J(`${tr(a)}の近くの名所`, `A landmark near ${tr(a)}`))]; }
+  if (k === 'T') { const T = TRAIN_OF[ccOf(P)]; return T ? [`🚆 ${J(T[0], T[1])}`, J(T[2], T[3])] : [J('🚆 並んで走る列車', '🚆 A passing train'), J('しばらくいっしょに走る', 'Running alongside for a while')]; }
+  if (k === 'S') { const L0 = LOCAL['ship_' + a]; return L0 ? [`${L0[0]} ${EN ? L0[2] : L0[1]}`, EN ? L0[4] : L0[3]] : null; }
+  if (k === 'D' && SKYTXT[a] && DEX[a]) return [`${DEX[a][0]} ${tr(DEX[a][1])}`, J(...SKYTXT[a])];
+  return null;
+}
+function infoQuery(key) {
+  const [k, a, b] = key.split(':'), L0 = LOCAL[k === 'S' ? 'ship_' + a : a];
+  if ((k === 'L' || k === 'C' || k === 'S') && L0) return EN ? L0[6] : L0[5];
+  if (k === 'D' && DEX[a]) return tr(DEX[a][1]);
+  if (k === 'M') return LMNAME[a] || a;
+  if (k === 'T') { const T = TRAIN_OF[ccOf(P)]; return T ? (EN ? T[5] : T[4]) : null; }
+  if (k === 'MOON') return J('月相', 'Lunar phase'); if (k === 'SUN') return J('日の出', 'Sunrise');
+  if (k === 'sign') { const sg = S.sign; return sg && sg.kind === 'name' ? (EN ? EN_T[sg.to] || sg.to : sg.to) : sg ? (EN ? LOCAL['sign_' + sg.an][6] : LOCAL['sign_' + sg.an][5]) : null; }
+  return null;
+}
+function openInfo(key) {
+  const tx = hitText(key) || hitText2(key); if (!tx) return; const q = infoQuery(key);
+  S.pin = null;
+  modal(`<h2>${tx[0]}</h2><p>${tx[1]}</p>${q ? `<p class="ilinks">${wikiA(q)}</p>` : ''}<button class="big ghost" data-close>${J('とじる', 'Close')}</button>`, 'info');
+}
+
+/* 海の生きものの形 */
+const DOLPH = (() => { const p = new Path2D();
+  p.moveTo(-17, .6); p.quadraticCurveTo(-14.5, -.6, -11.5, -1.4); p.quadraticCurveTo(-9.5, -4.4, -4, -4.6); p.quadraticCurveTo(4, -4.4, 10, -2.2); p.quadraticCurveTo(13.5, -1, 16, -.6);
+  p.lineTo(20.5, -3.6); p.quadraticCurveTo(19.4, -.9, 18.6, 0); p.quadraticCurveTo(19.4, .9, 20.5, 3.6); p.lineTo(16, .7);
+  p.quadraticCurveTo(12, 1.6, 8, 2.8); p.quadraticCurveTo(0, 4.8, -8, 3.4); p.quadraticCurveTo(-13, 2.4, -15, 1.4); p.quadraticCurveTo(-16.6, 1.1, -17, .6); p.closePath();
+  p.moveTo(-1.5, -4.4); p.quadraticCurveTo(.5, -7.6, 4.8, -9.4); p.quadraticCurveTo(3.4, -6.4, 5.2, -4); p.closePath();
+  p.moveTo(-7.5, 2.8); p.quadraticCurveTo(-4.5, 6.2, -2.4, 6.6); p.quadraticCurveTo(-3.6, 4.4, -4.2, 3); p.closePath(); return p; })();
+function drawDolphin(s, d) {
+  c.save(); c.scale(s, s); c.fillStyle = shc([74, 92, 112], .2 * (1 - d)); c.fill(DOLPH);
+  c.save(); c.clip(DOLPH); c.fillStyle = shc([196, 204, 212], .2 * (1 - d)); c.beginPath(); c.ellipse(-3, 4.2, 15, 3.2, .05, 0, 7); c.fill(); c.restore();
+  c.fillStyle = 'rgba(20,24,30,.8)'; c.beginPath(); c.arc(-11.6, -.7, .55, 0, 7); c.fill(); c.restore();
+}
+const FFISH = (() => { const p = new Path2D(); p.moveTo(-8, 0); p.quadraticCurveTo(-6, -2, 0, -1.7); p.quadraticCurveTo(5, -1.3, 7, -.5); p.lineTo(10.4, -3.2); p.lineTo(8.8, 0); p.lineTo(11, 3.8); p.lineTo(7, .5); p.quadraticCurveTo(2, 1.8, -4, 1.6); p.quadraticCurveTo(-7, 1.3, -8, 0); p.closePath(); return p; })();
+function drawFlyingFish(x, y, s, k) {
+  c.save(); c.translate(x, y); c.scale(s, s); const fl = Math.sin(S.t * 30 + k) * .4;
+  c.fillStyle = 'rgba(170,215,250,.45)'; c.beginPath(); c.moveTo(-3.5, -.8); c.quadraticCurveTo(1, -8.5 - fl, 8.5, -7.6); c.quadraticCurveTo(5, -3.6, 1.5, -.6); c.closePath(); c.fill();
+  c.fillStyle = shc([40, 84, 140], .1); c.fill(FFISH); c.fillStyle = 'rgba(225,232,240,.9)'; c.save(); c.clip(FFISH); c.fillRect(-9, .2, 20, 3); c.restore();
+  c.fillStyle = 'rgba(190,225,252,.7)'; c.beginPath(); c.moveTo(-2.5, -.6); c.quadraticCurveTo(2.5, -6.2 + fl, 9, -5.4); c.quadraticCurveTo(5.4, -2.4, 2.4, -.2); c.closePath(); c.fill();
+  c.fillStyle = '#111'; c.beginPath(); c.arc(-6, -.5, .45, 0, 7); c.fill(); c.restore();
+}
+const HUMP = (() => { const p = new Path2D(); p.moveTo(-40, 1); p.quadraticCurveTo(-37, -5.5, -25, -7.6); p.quadraticCurveTo(0, -10.6, 20, -6); p.quadraticCurveTo(30, -3, 35, -1); p.lineTo(44, -8.6); p.quadraticCurveTo(41.6, -1.6, 40.6, 0); p.quadraticCurveTo(41.6, 1.6, 44, 8.6); p.lineTo(35, 1.2); p.quadraticCurveTo(20, 6.4, 0, 9); p.quadraticCurveTo(-25, 10, -34, 6); p.quadraticCurveTo(-39, 4, -40, 1); p.closePath(); return p; })();
+function drawHumpback(s) {
+  c.save(); c.scale(s / 1.05, s / 1.05); c.fillStyle = shc([46, 54, 66], .15); c.fill(HUMP);
+  c.save(); c.clip(HUMP); c.fillStyle = shc([214, 218, 222], .15); c.beginPath(); c.ellipse(-12, 8.5, 26, 4, .04, 0, 7); c.fill(); c.strokeStyle = shc([150, 156, 164], .15); c.lineWidth = .5; for (let k = 0; k < 6; k++) { c.beginPath(); c.moveTo(-36 + k * 1.2, 4 + k * .5); c.lineTo(-14 + k * 1.5, 7.6 + k * .5); c.stroke(); } c.restore();
+  c.fillStyle = shc([232, 234, 236], .15); c.beginPath(); c.moveTo(-21, 5); c.quadraticCurveTo(-8, 20, 6, 24); c.quadraticCurveTo(-5, 15.6, -14, 5.4); c.closePath(); c.fill();
+  c.fillStyle = shc([70, 78, 90], .15); for (let k = 0; k < 5; k++) { c.beginPath(); c.arc(-37 + k * 3, -3 - (k % 2) * 1.4, .9, 0, 7); c.fill(); }
+  c.restore();
+}
+function drawOrca(ox, y, s, a, k) {
+  c.fillStyle = '#121418'; c.beginPath(); c.moveTo(ox - 22 * s, y); c.quadraticCurveTo(ox - 4 * s, y - 9 * s * a, ox + 20 * s, y); c.fill();
+  const fh = (16 + k * 5) * s * a, fy = y - 5.5 * s * a; c.beginPath(); c.moveTo(ox - 6 * s, fy + 1); c.quadraticCurveTo(ox - 4 * s, fy - fh * .6, ox - 1 * s, fy - fh); c.quadraticCurveTo(ox + 1 * s, fy - fh * .45, ox + 5 * s, fy + 1); c.fill();
+  c.fillStyle = 'rgba(150,156,166,.85)'; c.beginPath(); c.ellipse(ox + 8 * s, y - 4.6 * s * a, 5 * s, 1.4 * s * a + .1, -.1, 0, 7); c.fill();
+  c.fillStyle = '#f2f4f6'; c.beginPath(); c.ellipse(ox - 14 * s, y - 3.6 * s * a, 3.4 * s, 1.3 * s * a + .1, -.2, 0, 7); c.fill();
+}
+function drawShip(e, p, hz, sc) {
+  if (!e.ship) { const r = (S.ctx && S.ctx.region) || 'pacific', pick = a => a[e.seed % a.length]; e.ship = pick({ japan: ['fishing', 'container', 'fishing'], asia: ['container', 'fishing'], med: ['cruise', 'yacht', 'container'], atlantic: ['yacht', 'container'], azores: ['yacht', 'yacht', 'container'], tropic: ['cruise', 'yacht'], hawaii: ['cruise', 'yacht'], arctic: ['icebreaker'], south: ['icebreaker'], indian: ['dhow', 'container'], north: ['container', 'fishing'] }[r] || ['container', 'cruise']); }
+  const s = sc * (.5 + e.d * .9), x = W * 1.15 - p * W * 1.35, y = hz + 2 + e.d * 10, night = L.night > .55, win = night ? 'rgba(255,220,140,.95)' : 'rgba(210,225,240,.9)';
+  const hull = (w, h, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(x - w / 2 * s, y - h * s); c.lineTo(x + w / 2 * s, y - h * s); c.lineTo(x + (w / 2 - 3) * s, y); c.lineTo(x - (w / 2 - 6) * s, y); c.closePath(); c.fill(); };
+  switch (e.ship) {
+    case 'container': { hull(90, 7, shc([150, 40, 40], .3)); const cols = ['#c0392b', '#2471a3', '#d68910', '#1e8449', '#7d3c98', '#5d6d7e']; for (let r = 0; r < 3; r++) for (let k = 0; k < 13; k++) { if (h2(k + e.seed, r) < .15) continue; c.fillStyle = cols[(k * 7 + r * 3 + e.seed) % 6]; c.fillRect(x - 40 * s + k * 5.4 * s, y - (11 + r * 3.6) * s, 5 * s, 3.4 * s); } c.fillStyle = shc([236, 236, 232], .3); c.fillRect(x + 32 * s, y - 20 * s, 9 * s, 13 * s); c.fillStyle = win; c.fillRect(x + 33 * s, y - 18 * s, 7 * s, 1.6 * s); break; }
+    case 'cruise': { hull(80, 6, shc([30, 50, 90], .3)); c.fillStyle = shc([246, 246, 244], .3); c.beginPath(); c.moveTo(x - 34 * s, y - 6 * s); c.lineTo(x - 30 * s, y - 20 * s); c.lineTo(x + 34 * s, y - 20 * s); c.lineTo(x + 38 * s, y - 6 * s); c.fill(); c.fillStyle = win; for (let r = 0; r < 4; r++) c.fillRect(x - 30 * s + r, y - (9 + r * 3) * s, 64 * s, 1.1 * s); c.fillStyle = '#c0392b'; c.fillRect(x + 18 * s, y - 26 * s, 6 * s, 6 * s); break; }
+    case 'fishing': { hull(26, 5, shc([236, 236, 230], .3)); c.fillStyle = shc([236, 236, 230], .3); c.fillRect(x + 2 * s, y - 11 * s, 7 * s, 6 * s); c.strokeStyle = shc([80, 80, 80], .3); c.lineWidth = .8 * s; c.beginPath(); c.moveTo(x - 10 * s, y - 5 * s); c.lineTo(x - 10 * s, y - 14 * s); c.lineTo(x + 10 * s, y - 14 * s); c.stroke(); for (let k = 0; k < 7; k++) { const bx = x - 10 * s + k * 3.3 * s; if (night) { const g = c.createRadialGradient(bx, y - 13 * s, 0, bx, y - 13 * s, 10 * s); g.addColorStop(0, 'rgba(230,255,220,.8)'); g.addColorStop(1, 'rgba(230,255,220,0)'); c.fillStyle = g; c.fillRect(bx - 10 * s, y - 23 * s, 20 * s, 20 * s); } c.fillStyle = night ? '#f4fff0' : '#ddd'; c.beginPath(); c.arc(bx, y - 13 * s, .9 * s, 0, 7); c.fill(); } break; }
+    case 'yacht': { hull(22, 4, shc([246, 246, 244], .3)); c.strokeStyle = shc([90, 90, 90], .3); c.lineWidth = .8 * s; c.beginPath(); c.moveTo(x, y - 4 * s); c.lineTo(x, y - 30 * s); c.stroke(); c.fillStyle = shc([250, 250, 248], .3); c.beginPath(); c.moveTo(x + .6 * s, y - 29 * s); c.lineTo(x + 11 * s, y - 6 * s); c.lineTo(x + .6 * s, y - 6 * s); c.fill(); c.beginPath(); c.moveTo(x - .6 * s, y - 27 * s); c.lineTo(x - 9 * s, y - 6 * s); c.lineTo(x - .6 * s, y - 6 * s); c.fill(); break; }
+    case 'icebreaker': { hull(60, 8, shc([196, 40, 36], .3)); c.fillStyle = shc([246, 246, 244], .3); c.fillRect(x - 6 * s, y - 20 * s, 26 * s, 12 * s); c.fillRect(x + 2 * s, y - 25 * s, 10 * s, 5 * s); c.fillStyle = win; c.fillRect(x - 4 * s, y - 17 * s, 22 * s, 1.6 * s); c.fillStyle = 'rgba(240,248,255,.85)'; for (let k = 0; k < 6; k++) c.fillRect(x - 40 * s - k * 9 * s, y - 1 * s + h2(k, 2) * 2 * s, 7 * s, 2 * s); break; }
+    case 'dhow': { c.fillStyle = shc([130, 90, 56], .3); c.beginPath(); c.moveTo(x - 16 * s, y - 7 * s); c.quadraticCurveTo(x, y + 1 * s, x + 14 * s, y - 5 * s); c.lineTo(x + 12 * s, y); c.lineTo(x - 12 * s, y); c.fill(); c.strokeStyle = shc([100, 70, 44], .3); c.lineWidth = .9 * s; c.beginPath(); c.moveTo(x, y - 4 * s); c.lineTo(x, y - 22 * s); c.stroke(); c.fillStyle = shc([240, 230, 206], .3); c.beginPath(); c.moveTo(x - 14 * s, y - 8 * s); c.lineTo(x + 8 * s, y - 30 * s); c.lineTo(x + 2 * s, y - 6 * s); c.fill(); break; }
+  }
+  addHit(x - 40 * s, y - 30 * s, x + 44 * s, y + 4, 'S:' + e.ship);
+  if (x > W * .15 && x < W * .85) seeLocal('ship_' + e.ship);
 }
 
 </script>
