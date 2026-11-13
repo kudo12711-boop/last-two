@@ -1,0 +1,5 @@
+{
+  "name": { "message": "Sky Tab - live sky new tab" },
+  "short": { "message": "Sky Tab" },
+  "desc": { "message": "Every new tab shows the sky as it is now: the time of day and your local weather, drawn by code. No AI, no images, no tracking." }
+}
