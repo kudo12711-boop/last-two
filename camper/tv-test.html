@@ -4718,7 +4718,7 @@ function auMaybe(name, every) { // 平均 every 秒に1回くらい鳴らす
   if (now >= AU.next[name]) { SFX[name](); AU.next[name] = now + every * (.4 + Math.random() * 1.2); }
 }
 function auUpdate(W8, ctx) {
-  if (!AU.ac || !SOUND || AU.ac.state !== 'running') return;
+  if (!AU.ac || !SOUND || (AU.ac.state !== 'running' && !window.TVSND)) return;
   const moving = !st.parked, sea = ctx.sea, b = ctx.biome, hr = localDate().getUTCHours(), night = L.night > .5;
   const lodge = st.parked && st.stay && st.stay.lodge, indoors = night && lodge === 'hotel';
   const wind = clamp(((W8.wind || 0) - 8) / 40, 0, 1);
@@ -6778,7 +6778,7 @@ showSettings = function () {
   const box = document.createElement('div');
   box.innerHTML = `<h3>${J('テレビ向けの画面', 'TV mode')}</h3><div class="frames">${[['auto', J('🤖 自動', '🤖 Auto')], ['on', J('📺 テレビ向け', '📺 TV')], ['off', J('📱 ふつう', '📱 Normal')]].map(([k, n]) => `<button data-tv="${k}" class="${TVPREF === k ? 'on' : ''}">${n}</button>`).join('')}</div>
     <p class="note">${J('テレビ（Fire TV など）で見るときの画面です。文字とボタンが大きくなり、リモコンの矢印で選んで決定ボタンで押せます。1分半ほど操作がないと、景色だけの「ながら見」になります。「自動」は、テレビのブラウザかどうかを見て切りかえます。アドレスの最後に ?tv をつけて開いても、テレビ向けになります。', 'For watching on a TV (Fire TV etc.): bigger text and buttons, choose with the remote\'s arrows and press OK. After about 90 seconds without input it switches to scenery only. "Auto" detects TV browsers. You can also open the page with ?tv at the end of the address.')}</p>`;
-  if (TV) { const yn = v => v == null ? '…' : v ? '○' : '×'; box.innerHTML += `<h3>${J('開いたときに残っていた旅', 'Trip found on open')}</h3><p class="note">${J('ふつうの保存', 'Storage')} ${yn(TVDIAG.ls)} ／ ${J('予備', 'Backup')} ${yn(TVDIAG.idb)} ／ ${J('クッキー', 'Cookie')} ${yn(TVDIAG.ck)} ／ ${J('アドレス', 'Address')} ${yn(TVDIAG.hash)}${'<br>' + J('音', 'Sound') + ': ' + (SOUND ? J('鳴らす', 'on') : J('消す', 'off')) + ' ／ ' + (AU.ac ? ({ running: J('鳴っている', 'playing'), suspended: J('止まっている', 'suspended') }[AU.ac.state] || AU.ac.state) : J('まだ始まっていない', 'not started'))}${TVPERF.fps != null ? '<br>' + J('全画面のなめらかさ', 'Full screen') + `: ${J('約', '~')}${TVPERF.fps} ${J('コマ/秒', 'fps')}（${J('描く時間', 'draw')} ${TVPERF.draw}ms・${TVPERF.px}）${TVPERF.n != null || TVPERF.g != null ? '<br>' + J('ふつうの全画面', 'Full screen') + ' ' + (TVPERF.n ?? '-') + ' ／ ' + J('時計が出る ながら見', 'Clock view') + ' ' + (TVPERF.g ?? '-') + J(' コマ/秒', ' fps') : ''}${TVPERF.jn != null || TVPERF.jg != null ? '<br>' + J('引っかかり（1分あたり）', 'Hitches per minute') + ': ' + J('ふつう', 'normal') + ' ' + (TVPERF.jn ?? '-') + ' ／ ' + J('ながら見', 'clock') + ' ' + (TVPERF.jg ?? '-') : ''}` : ''}</p><div class="frames"><button id="tv-bm">📌 ${J('ブックマークの案内をもう一度', 'Show bookmark tip again')}</button></div>`; }
+  if (TV) { const yn = v => v == null ? '…' : v ? '○' : '×'; box.innerHTML += `<h3>${J('開いたときに残っていた旅', 'Trip found on open')}</h3><p class="note">${J('ふつうの保存', 'Storage')} ${yn(TVDIAG.ls)} ／ ${J('予備', 'Backup')} ${yn(TVDIAG.idb)} ／ ${J('クッキー', 'Cookie')} ${yn(TVDIAG.ck)} ／ ${J('アドレス', 'Address')} ${yn(TVDIAG.hash)}${'<br>' + J('音', 'Sound') + ': ' + (SOUND ? J('鳴らす', 'on') : J('消す', 'off')) + ' ／ ' + (AU.ac ? ({ running: J('鳴っている', 'playing'), suspended: J('止まっている', 'suspended') }[AU.ac.state] || AU.ac.state) : J('まだ始まっていない', 'not started'))}${'<br>' + J('テレビ用の音', 'TV sound') + ': ' + (tvSndInfo || J('まだ', 'not yet')) + ' ／ ' + Object.entries(TVL).filter(([n, l]) => l.v > 0).map(([n, l]) => n + (l.el.paused ? '(止)' : '(▶)')).join(' ')}${TVERR.length ? '<br>' + J('エラー', 'Errors') + ': ' + TVERR.map(x => x.replace(/</g, '&lt;')).join('<br>') : ''}${TVPERF.fps != null ? '<br>' + J('全画面のなめらかさ', 'Full screen') + `: ${J('約', '~')}${TVPERF.fps} ${J('コマ/秒', 'fps')}（${J('描く時間', 'draw')} ${TVPERF.draw}ms・${TVPERF.px}）${TVPERF.n != null || TVPERF.g != null ? '<br>' + J('ふつうの全画面', 'Full screen') + ' ' + (TVPERF.n ?? '-') + ' ／ ' + J('時計が出る ながら見', 'Clock view') + ' ' + (TVPERF.g ?? '-') + J(' コマ/秒', ' fps') : ''}${TVPERF.jn != null || TVPERF.jg != null ? '<br>' + J('引っかかり（1分あたり）', 'Hitches per minute') + ': ' + J('ふつう', 'normal') + ' ' + (TVPERF.jn ?? '-') + ' ／ ' + J('ながら見', 'clock') + ' ' + (TVPERF.jg ?? '-') : ''}` : ''}</p><div class="frames"><button id="tv-bm">📌 ${J('ブックマークの案内をもう一度', 'Show bookmark tip again')}</button></div>`; }
   lang.after(box);
   if (TV) {
     const t = document.createElement('div');
@@ -6808,7 +6808,7 @@ async function tvHash(force) {
   if (!TV || !st || st.preview || QS.has('km')) return; if (!force && Date.now() - tvHashAt < 60e3) return; tvHashAt = Date.now();
   try { tick(); const code = await tvCode(); history.replaceState(history.state, '', location.pathname + location.search + '#trip=' + code); } catch (e) { }
 }
-setInterval(() => tvHash(), 15e3);
+// （テレビのブラウザはアドレスが変わるたびに上に英数字のアドレスを出すので、定期的には書きかえない）
 document.addEventListener('visibilitychange', () => { if (document.hidden) tvHash(true); });
 window.addEventListener('pagehide', () => tvHash(true));
 (async () => { // 開いたときに旅がなく、アドレスに旅が入っていれば、そこから続ける
@@ -6947,17 +6947,10 @@ function tvBeep2(quiet) {
 }
 
 // ----- テレビ：絵はがきはテレビのブラウザに保存できないので、スマホで同じ旅を開いて受けとる -----
-const _postcard = postcard;
-postcard = function (...a) {
-  const r = _postcard.apply(this, a);
-  if (!TV) return r;
-  let n = 0; const iv = setInterval(() => {
-    const b = $('#pc-send'); if (!b && ++n < 40) return; clearInterval(iv); if (!b || b.dataset.tv) return;
-    b.dataset.tv = '1'; b.textContent = J('📱 スマホで受けとる', '📱 Get it on your phone');
-    b.onclick = () => tvToPhone();
-  }, 100);
-  return r;
-};
+new MutationObserver(() => { // 絵はがきの画面が出たら（テレビは絵を作るのに時間がかかるので、出たときに）ボタンを差しかえる
+  if (!TV) return; const b = $('#pc-send'); if (!b || b.dataset.tv) return;
+  b.dataset.tv = '1'; b.textContent = J('📱 スマホで受けとる', '📱 Get it on your phone'); b.onclick = () => tvToPhone();
+}).observe($('#sheet'), { childList: true, subtree: true });
 function tvQRLib() {
   return window.QRCode ? Promise.resolve() : new Promise((ok, ng) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = ok; s.onerror = ng; document.head.appendChild(s); });
 }
@@ -7000,23 +6993,56 @@ let tvUnlocked = false;
   setTimeout(() => postcard(), 2500);
 })();
 
-// ----- テレビ：アプリの音を「ふつうの音声」として流す -----
-// Fire TV では Web Audio をそのまま鳴らしても聞こえず、音声ファイル（audio 要素）なら鳴るので、
-// アプリの音をいったん音声の流れにして、audio 要素で再生する
-let tvOut = null;
-const _auBuild = auBuild;
-auBuild = function () {
-  _auBuild();
-  if (!TV || !AU.ac.createMediaStreamDestination) return;
-  try {
-    const d = AU.ac.createMediaStreamDestination();
-    AU.master.disconnect(); AU.master.connect(d);
-    tvOut = new Audio(); tvOut.srcObject = d.stream; tvOut.play().catch(() => { });
-    AU.tvDest = d;
-  } catch (e) { }
+
+// ----- テレビ：音は「音声ファイル」で鳴らす -----
+// Fire TV では Web Audio の音が聞こえず、音声ファイル（ためす2）なら鳴る。そこで、エンジン音・風・雨などの
+// くり返しの音を最初に音声ファイルに書き出して、audio 要素でくり返し再生し、音量だけを変える
+const TVERR = [];
+const tvErr = m => { TVERR.push(new Date().toTimeString().slice(0, 8) + ' ' + String(m).slice(0, 140)); if (TVERR.length > 5) TVERR.shift(); };
+window.addEventListener('error', e => tvErr(e.message || 'error'));
+window.addEventListener('unhandledrejection', e => tvErr('promise: ' + ((e.reason && e.reason.message) || e.reason)));
+function tvWav(buf) {
+  const d = buf.getChannelData(0), sr = buf.sampleRate, n = d.length, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  const fade = sr * .05; for (let i = 0; i < n; i++) { const f = Math.min(1, i / fade, (n - 1 - i) / fade) * .7 + .3; v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[i] * (i < fade || n - i < fade ? f : 1))) * 32000, true); }
+  return URL.createObjectURL(new Blob([ab], { type: 'audio/wav' }));
+}
+const TVL = {}; let tvSndOn = false, tvSndInfo = '';
+const TV_LAYERS = { engine: ['brown', [['lowpass', 320]]], road: ['pink', [['bandpass', 700, .5], ['lowpass', 1800]]], waves: ['brown', [['lowpass', 700]], [.11, .7]], surf: ['pink', [['highpass', 900], ['lowpass', 3500]], [.11, .85]], rain: ['white', [['highpass', 1200], ['lowpass', 7000]]], wind: ['pink', [['bandpass', 500, 1.8]], [.07, .5]], city: ['brown', [['bandpass', 260, .6]]] };
+async function tvSndBuild() {
+  if (tvSndOn) return; tvSndOn = true; window.TVSND = true; auVolume();
+  const sr = 22050, len = 9; // 9秒のくり返し（波のうねり 0.11Hz ≒ 1回）
+  for (const [name, [kind, filters, lfo]] of Object.entries(TV_LAYERS)) {
+    const el = new Audio(); el.loop = true; el.volume = 0; TVL[name] = { el, v: 0 };
+    try {
+      const oc = new OfflineAudioContext(1, sr * len, sr), src = oc.createBufferSource(); src.buffer = noiseBuf(oc, kind); src.loop = true;
+      let node = src; for (const [type, f, q] of filters) { const bq = oc.createBiquadFilter(); bq.type = type; bq.frequency.value = f; bq.Q.value = q || .7; node.connect(bq); node = bq; }
+      const g = oc.createGain(); node.connect(g); g.connect(oc.destination);
+      if (lfo) { g.gain.value = 1 - lfo[1]; const o = oc.createOscillator(); o.frequency.value = 1 / len; const og = oc.createGain(); og.gain.value = lfo[1]; o.connect(og); og.connect(g.gain); o.start(); }
+      src.start(); const out = await oc.startRendering();
+      el.src = tvWav(out); el.play().catch(e => tvErr(name + ': ' + e.message));
+    } catch (e) { tvErr(name + ': ' + e.message); }
+  }
+  tvSndInfo = Object.keys(TVL).length + J('つの音を用意', ' sounds ready');
+}
+// アプリが音量を変えるとき、テレビでは audio 要素の音量にする
+const _auSet = auSet;
+auSet = function (name, v) {
+  _auSet(name, v); if (!TV) return;
+  if (!tvSndOn) tvSndBuild();
+  const l = TVL[name]; if (!l) return; l.v = v;
+  try { l.el.volume = Math.max(0, Math.min(1, v * (SOUND ? SVOL : 0) * 1.1)); if (l.el.paused && v > 0 && SOUND && l.el.src) l.el.play().catch(e => tvErr(name + ': ' + e.message)); } catch (e) { tvErr(e.message); }
 };
-['click', 'keydown', 'pointerdown'].forEach(t => document.addEventListener(t, () => { if (tvOut && tvOut.paused && SOUND) tvOut.play().catch(() => { }); }, { capture: true, passive: true }));
-document.addEventListener('visibilitychange', () => { if (!tvOut) return; if (document.hidden) tvOut.pause(); else if (SOUND) tvOut.play().catch(() => { }); });
+['click', 'keydown', 'pointerdown'].forEach(t => document.addEventListener(t, () => {
+  if (!TV || !SOUND) return; if (!tvSndOn) tvSndBuild();
+  for (const l of Object.values(TVL)) if (l.el.paused && l.el.src) l.el.play().catch(() => { });
+}, { capture: true, passive: true }));
+document.addEventListener('visibilitychange', () => { for (const l of Object.values(TVL)) { if (document.hidden) l.el.pause(); else if (SOUND && TV && l.el.src) l.el.play().catch(() => { }); } });
+const _setSound2 = setSound;
+setSound = function (on) { const r = _setSound2.apply(this, arguments); for (const [n, l] of Object.entries(TVL)) { if (!on) l.el.pause(); else { l.el.volume = Math.min(1, l.v * SVOL * 1.1); if (l.el.src) l.el.play().catch(() => { }); } } return r; };
+const _auVolume = auVolume;
+auVolume = function () { _auVolume(); if (TV && window.TVSND && AU.master) AU.master.gain.setTargetAtTime(0, AU.ac.currentTime, .05); for (const l of Object.values(TVL)) l.el.volume = Math.min(1, l.v * (SOUND ? SVOL : 0) * 1.1); };
 
 </script>
 </body>
