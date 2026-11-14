@@ -308,6 +308,18 @@ svg.map{touch-action:none;cursor:grab;width:100%;aspect-ratio:1.5/1;border-radiu
 .letter.pal{background:#eef6fb;border-color:#8bb8d8}.paldraw{font-size:46px;margin:6px 0}.palword{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap;background:#fff;border-radius:12px;padding:6px 10px;margin:6px 0}.palword b{font-size:20px}.palword span{font-size:13px;color:var(--ink2)}.letter.sm .palword{justify-content:flex-start}
 .palreply{display:flex;flex-direction:column;gap:6px;margin:12px 0;text-align:left}.palreply .mini{text-align:left;white-space:normal}.palgift{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .letter.sm{text-align:left;padding:10px 14px;margin:8px 0;border-radius:12px}.letter.sm p{margin:4px 0 0;font-size:14px}.letter.sm small{color:var(--ink2)}.letter small{display:block}
+
+/* テレビ向けの画面（tv.js）・リモコン操作の光る枠 */
+body.kbnav :focus{outline:4px solid #ffcf3f!important;outline-offset:3px;box-shadow:0 0 0 10px rgba(255,207,63,.38)!important}
+body.kbnav :focus:not(:focus-visible){outline:4px solid #ffcf3f!important}
+body.tv #app{grid-template-columns:minmax(0,1fr) minmax(300px,34%)}
+body.tv header,body.tv #panel,body.tv #sheet,body.tv #toasts,body.tv #fsinfo,body.tv #gzbar,body.tv #fshint{zoom:var(--tvz,1.3)}
+body.tv #win>button{zoom:calc(var(--tvz,1.3) * .85)}
+body.tv #addr,body.tv .stats,body.tv #nextlm{display:none}
+body.tv #sheet{max-height:calc(92vh / var(--tvz,1.3))}
+body.tv #panel{padding-right:10px}
+body.lite *,body.tv *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.lite #win>button,body.tv #win>button{background:rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
@@ -2865,7 +2877,7 @@ if (EN) for (const k in DEX) DEX[k] = [DEX[k][0], tr(DEX[k][1]), tr(DEX[k][2])];
 const cv = $('#cv'), c = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 // 大きな画面（パソコンの全画面など）で重くなりすぎないよう、絵の細かさに上限をつける
-let PXMAX = 2.2e6, HALF = false, drawAvg = 8, perfAt = 0, fcount = 0;
+let PXMAX = 2.2e6, PXMIN = 7e5, HALF = false, drawAvg = 8, perfAt = 0, fcount = 0, ivAvg = 16;
 function resize() {
   const r = cv.getBoundingClientRect(); DPR = Math.min(2, window.devicePixelRatio || 1);
   W = Math.max(1, r.width); H = Math.max(1, r.height);
@@ -5032,6 +5044,7 @@ function back() {
 function frame(ts) {
   requestAnimationFrame(frame);
   if (!st || document.hidden) return;
+  { const iv = ts - (S.lastTs || ts); S.lastTs = ts; if (iv > 0 && iv < 200) ivAvg = ivAvg * .95 + iv * .05; } // 画面が実際に何コマ出せているか
   if (HALF && (++fcount & 1)) return; // 重い端末では1コマおきに描く
   const t0 = performance.now();
   const dt = Math.min(.1, (ts - lastFrame) / 1000 || 0); lastFrame = ts; S.t += dt; S.dt = dt;
@@ -5065,7 +5078,8 @@ function frame(ts) {
   drawAvg = drawAvg * .95 + (performance.now() - t0) * .05;
   if (ts - perfAt > 3000) {
     perfAt = ts;
-    if (drawAvg > 14) { if (PXMAX > 7e5) { PXMAX *= .7; resize(); } else HALF = true; }
+    // 描くのが重い、または画面の書きかえが追いつかない（1コマ24ms以上）なら、細かさを下げて引きのばす。ぼかし効果も止める
+    if (drawAvg > 14 || ivAvg > 24) { document.body.classList.add('lite'); if (PXMAX > PXMIN) { PXMAX = Math.max(PXMIN, PXMAX * .7); resize(); } else if (drawAvg > 14) HALF = true; }
   }
 }
 cv.addEventListener('click', e => {
@@ -6554,6 +6568,167 @@ function drawShip(e, p, hz, sc) {
   addHit(x - 40 * s, y - 30 * s, x + 44 * s, y + 4, 'S:' + e.ship);
   if (x > W * .15 && x < W * .85) seeLocal('ship_' + e.ship);
 }
+
+/* ===== テレビ向けの画面（Fire TV など）=====
+   ・リモコンの矢印キーで選び、決定ボタンで押す（選んでいる所が光る）
+   ・文字とボタンを大きく
+   ・しばらく操作がないと「ながら見」（景色だけ）。分かれ道はいつもどおり運転手さんのおまかせ
+   ・画面が消えにくいようにする
+   切りかえ：設定（自動／テレビ／ふつう）、アドレスの ?tv（?tv=0 でふつう）。自動は、ブラウザの名前（AFT・Silk など）や、
+   マウスもタッチもない大きな画面で判断。矢印キーを押すと、どの画面でもリモコン操作（光る枠）になる */
+const TV_UA = /AFT|Silk|SmartTV|SMART-TV|Tizen|Web0S|WebOS|BRAVIA|GoogleTV|Android ?TV|CrKey|HbbTV|NetCast|Viera|AQUOS/i;
+let TVPREF = (() => { const q = new URLSearchParams(location.search).get('tv'); if (q !== null) { const v = q === '0' || q === 'off' ? 'off' : 'on'; try { localStorage.setItem('camper-tv', v); } catch (e) { } return v; } try { return localStorage.getItem('camper-tv') || 'auto'; } catch (e) { return 'auto'; } })();
+const tvAuto = () => TV_UA.test(navigator.userAgent) || (!('ontouchstart' in window) && !navigator.maxTouchPoints && window.matchMedia && matchMedia('(hover: none)').matches && matchMedia('(pointer: none)').matches && innerWidth >= 900);
+let TV = false, tvKeyAt = Date.now();
+function tvZoom() { document.documentElement.style.setProperty('--tvz', Math.max(1.2, Math.min(3, 1.3 * innerHeight / 540)).toFixed(3)); }
+function setTV(on, quiet) {
+  TV = !!on; document.body.classList.toggle('tv', TV); if (TV) { tvZoom(); kbNav(true); tvWake(true); } else tvWake(false);
+  // テレビの機械は力が弱いので、景色は少しあらく描いて引きのばす（絵柄なので目立たない）。重ければさらに下げる
+  if (TV) { PXMAX = Math.min(PXMAX, 6e5); PXMIN = 3e5; document.body.classList.add('lite'); } else { PXMAX = 2.2e6; PXMIN = 7e5; HALF = false; }
+  setTimeout(resize, 50); if (TV && !quiet) toast(J('📺 テレビ向けの画面です。矢印で選んで、決定ボタンで押します。「もどる」でとじます', '📺 TV mode: use the arrows to choose, OK to press, Back to close'), 5000);
+}
+window.addEventListener('resize', () => { if (TV) tvZoom(); });
+
+// ----- リモコン操作（矢印で選ぶ） -----
+function kbNav(on) { document.body.classList.toggle('kbnav', on); }
+const NATIVE = 'button,a[href],input,select,textarea,summary';
+function tvScope() {
+  if (!$('#modal').hidden) return $('#sheet');
+  const gb = $('#gzbar'); if (gb && !gb.hidden) return gb;
+  if (document.body.classList.contains('gaze')) return null;
+  return document.body;
+}
+function tvVisible(el, inSheet) {
+  if (el.disabled || el.closest('[hidden]')) return false;
+  const r = el.getBoundingClientRect(); if (r.width < 4 || r.height < 4) return false;
+  if (!inSheet && (r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth)) return false;
+  const cs = getComputedStyle(el); return cs.visibility !== 'hidden' && cs.display !== 'none' && +cs.opacity > .05 && cs.pointerEvents !== 'none';
+}
+function tvCands(root) {
+  const out = [], inSheet = root.id === 'sheet';
+  for (const el of root.querySelectorAll('*')) {
+    if (el.closest('#toasts,#modal[hidden]') || (root === document.body && el.closest('#modal'))) continue;
+    const nat = el.matches(NATIVE) || el.hasAttribute('data-close') || el.getAttribute('role') === 'button' || (el.hasAttribute('tabindex') && el.tabIndex >= 0);
+    if (!nat) { // マウスの形が「指」になる所も押せる所とみなす（いちばん外側だけ）
+      if (getComputedStyle(el).cursor !== 'pointer') continue;
+      const p = el.parentElement; if (p && p !== root && getComputedStyle(p).cursor === 'pointer') continue;
+    } else if (el.parentElement && el.parentElement.closest(NATIVE)) continue;
+    if (el.matches('input[type=hidden]') || !tvVisible(el, inSheet)) continue;
+    out.push(el);
+  }
+  return out;
+}
+function tvFocus(el) { if (!el) return; if (!el.matches(NATIVE) && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1'); el.focus({ preventScroll: true }); el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+function tvMove(dir) {
+  const root = tvScope(); if (!root) return false;
+  const C = tvCands(root); if (!C.length) return false;
+  const cur = document.activeElement && root.contains(document.activeElement) && C.includes(document.activeElement) ? document.activeElement : null;
+  if (!cur) { tvFocus(C[0]); return true; }
+  const a = cur.getBoundingClientRect(), ax = (a.left + a.right) / 2, ay = (a.top + a.bottom) / 2;
+  let best = null, bs = 1e9;
+  for (const el of C) {
+    if (el === cur) continue;
+    const b = el.getBoundingClientRect(), bx = (b.left + b.right) / 2, by = (b.top + b.bottom) / 2;
+    let main, side;
+    if (dir === 'ArrowRight') { if (b.left < a.right - 6 && bx <= ax + 6) continue; main = Math.max(0, b.left - a.right); side = Math.max(0, Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom)) ? Math.abs(by - ay) : 0; }
+    else if (dir === 'ArrowLeft') { if (b.right > a.left + 6 && bx >= ax - 6) continue; main = Math.max(0, a.left - b.right); side = Math.max(0, Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom)) ? Math.abs(by - ay) : 0; }
+    else if (dir === 'ArrowDown') { if (b.top < a.bottom - 6 && by <= ay + 6) continue; main = Math.max(0, b.top - a.bottom); side = Math.max(0, Math.max(a.left, b.left) - Math.min(a.right, b.right)) ? Math.abs(bx - ax) : 0; }
+    else { if (b.bottom > a.top + 6 && by >= ay - 6) continue; main = Math.max(0, a.top - b.bottom); side = Math.max(0, Math.max(a.left, b.left) - Math.min(a.right, b.right)) ? Math.abs(bx - ax) : 0; }
+    const sc = main + side * 2.5; if (sc < bs) { bs = sc; best = el; }
+  }
+  if (best) { tvFocus(best); return true; }
+  if (root.id === 'sheet' && (dir === 'ArrowDown' || dir === 'ArrowUp')) { root.scrollBy({ top: dir === 'ArrowDown' ? 140 : -140, behavior: 'smooth' }); return true; }
+  return false;
+}
+const TV_BACK = ['Escape', 'GoBack', 'BrowserBack', 'Back'];
+function tvBack() {
+  if (!$('#modal').hidden) { closeModal(); return true; }
+  const gb = $('#gzbar'); if (gb && !gb.hidden) { gb.hidden = true; return true; }
+  if (document.body.classList.contains('full')) { gzMoveT = Date.now() + 1500; setFull(false); return true; }
+  return false;
+}
+document.addEventListener('keydown', e => {
+  tvKeyAt = Date.now();
+  const k = e.key, t = e.target, typing = t && (t.matches('textarea,select') || (t.matches('input') && !/^(range|button|checkbox|radio)$/.test(t.type)));
+  const arrow = /^Arrow/.test(k);
+  if (arrow && !document.body.classList.contains('kbnav')) kbNav(true);
+  if (TV && !document.body.classList.contains('kbnav')) kbNav(true);
+  if (k === 'Escape' && document.body.classList.contains('full') && $('#modal').hidden) { const g2 = $('#gzbar'); if (g2) g2.hidden = true; }
+  if (TV_BACK.includes(k) || (k === 'Backspace' && !typing)) { if (k !== 'Escape' || !$('#modal').hidden || !document.body.classList.contains('full')) { if (tvBack()) e.preventDefault(); e.stopImmediatePropagation(); } return; }
+  const gaze = document.body.classList.contains('gaze'), gb = $('#gzbar');
+  if (gaze && gb && gb.hidden && (arrow || k === 'Enter' || k === ' ')) { e.preventDefault(); gazeBar(); tvFocus(gb.querySelector('button')); return; }
+  if (gaze && gb && !gb.hidden) { clearTimeout(gzBarT); gzBarT = setTimeout(() => { gb.hidden = true; }, 8000); }
+  if (arrow) {
+    if (typing && (k === 'ArrowLeft' || k === 'ArrowRight')) return;
+    if (t && t.matches('input[type=range]') && (k === 'ArrowLeft' || k === 'ArrowRight')) return;
+    if (tvMove(k)) e.preventDefault();
+    return;
+  }
+  if ((k === 'Enter' || k === ' ') && t && t !== document.body && !t.matches(NATIVE)) { e.preventDefault(); t.click(); }
+}, true);
+// ダイアログが開いたら中の最初のボタンへ、とじたら元の場所へ
+let tvPrev = null;
+new MutationObserver(() => {
+  if (!document.body.classList.contains('kbnav')) return;
+  if (!$('#modal').hidden) { if (!$('#sheet').contains(document.activeElement)) { tvPrev = document.activeElement; setTimeout(() => { const C = tvCands($('#sheet')); tvFocus(C.find(el => !el.matches('[data-close]')) || C[0]); }, 60); } }
+  else if (tvPrev && document.contains(tvPrev)) { tvFocus(tvPrev); tvPrev = null; }
+}).observe($('#modal'), { attributes: true, attributeFilter: ['hidden'] });
+new MutationObserver(() => { // ダイアログの中身が入れかわったとき（次のページなど）
+  if (document.body.classList.contains('kbnav') && !$('#modal').hidden && !$('#sheet').contains(document.activeElement)) { const C = tvCands($('#sheet')); tvFocus(C.find(el => !el.matches('[data-close]')) || C[0]); }
+}).observe($('#sheet'), { childList: true });
+// ながめるモードのボタンを押したあとも、同じボタンを光らせたまま
+$('#gzbar').addEventListener('click', e => { const k = e.target.closest('[data-gz]'); if (!k || !document.body.classList.contains('kbnav')) return; const g = k.dataset.gz; setTimeout(() => { const b = $('#gzbar').querySelector('[data-gz="' + g + '"]'); if (b && !$('#gzbar').hidden) tvFocus(b); }, 0); });
+// マウスやタッチを使ったら光る枠は消す（テレビ向けの画面のときは消さない）
+document.addEventListener('pointerdown', () => { if (!TV) kbNav(false); }, { passive: true });
+
+// ----- テレビの「もどる」ボタン：アプリから出てしまわないよう、ひとつ前にもどる操作を受けとめる -----
+let tvHist = false;
+function tvHistArm() { if (TV && !tvHist) { try { history.pushState({ tv: 1 }, ''); tvHist = true; } catch (e) { } } }
+window.addEventListener('popstate', () => { if (!tvHist) return; tvHist = false; if (tvBack()) tvHistArm(); else history.back(); });
+
+// ----- ながら見：しばらく操作がないと景色だけに -----
+setInterval(() => {
+  if (!TV || !st || document.body.classList.contains('gaze') || !$('#modal').hidden) return;
+  if (Date.now() - tvKeyAt > 90e3) { gzMoveAt = 0; setFull(true, true); }
+}, 5000);
+
+// ----- 画面が消えにくいように -----
+let tvVid = null;
+async function tvWake(on) {
+  if (!on) { if (tvVid) { tvVid.pause(); tvVid.remove(); tvVid = null; } return; }
+  try { if (navigator.wakeLock && !wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { }
+  if (!tvVid) { // 画面を起こしておく機能がないブラウザ用：見えない小さな動画を音なしでくり返し再生
+    tvVid = document.createElement('video'); tvVid.muted = true; tvVid.loop = true; tvVid.playsInline = true; tvVid.setAttribute('playsinline', ''); tvVid.setAttribute('aria-hidden', 'true');
+    tvVid.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:-1';
+    tvVid.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMrbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAlV0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHNbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABeG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAThzdGJsAAAAuHN0c2QAAAAAAAAAAQAAAKhhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALmF2Y0MBQsAK/+EAFmdCwArZHsBEAAADAAQAAAMACDxImSABAAVoy4PLIAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAApAAAAKQAAAABhzdHRzAAAAAAAAAAEAAAACAABAAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAACAAAAAQAAABxzdHN6AAAAAAAAAAAAAAACAAAChgAAAAoAAAAUc3RjbwAAAAAAAAABAAADWwAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAAKYbWRhdAAAAnAGBf//bNxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBb///w9FAAFPf4AAAAAGQZo4CvqA';
+    document.body.appendChild(tvVid);
+  }
+  tvVid.play().catch(() => { });
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && TV) { wakeLock = null; tvWake(true); } });
+document.addEventListener('keydown', () => { if (TV && tvVid && tvVid.paused) tvVid.play().catch(() => { }); tvHistArm(); }, { passive: true });
+
+// 全画面に入ったときの案内を、テレビ用のことばに
+const _fsHint = fsHint;
+fsHint = function () {
+  if (!TV) return _fsHint();
+  const h = $('#fshint'); if (!h) return;
+  h.innerHTML = J('リモコンの<b>「もどる」</b>で もとの画面に、矢印か決定ボタンでメニューが出ます', 'Press <b>Back</b> on the remote to return; arrows or OK show the menu');
+  h.hidden = false; clearTimeout(h._t); h._t = setTimeout(() => { h.hidden = true; }, 4500);
+};
+// ----- 設定に「テレビ向けの画面」を足す -----
+const _showSettings = showSettings;
+showSettings = function () {
+  _showSettings();
+  const lang = $('#sheet .frames'); if (!lang) return;
+  const box = document.createElement('div');
+  box.innerHTML = `<h3>${J('テレビ向けの画面', 'TV mode')}</h3><div class="frames">${[['auto', J('🤖 自動', '🤖 Auto')], ['on', J('📺 テレビ向け', '📺 TV')], ['off', J('📱 ふつう', '📱 Normal')]].map(([k, n]) => `<button data-tv="${k}" class="${TVPREF === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+    <p class="note">${J('テレビ（Fire TV など）で見るときの画面です。文字とボタンが大きくなり、リモコンの矢印で選んで決定ボタンで押せます。1分半ほど操作がないと、景色だけの「ながら見」になります。「自動」は、テレビのブラウザかどうかを見て切りかえます。アドレスの最後に ?tv をつけて開いても、テレビ向けになります。', 'For watching on a TV (Fire TV etc.): bigger text and buttons, choose with the remote\'s arrows and press OK. After about 90 seconds without input it switches to scenery only. "Auto" detects TV browsers. You can also open the page with ?tv at the end of the address.')}</p>`;
+  lang.after(box);
+  box.querySelectorAll('[data-tv]').forEach(b => b.onclick = () => { TVPREF = b.dataset.tv; try { localStorage.setItem('camper-tv', TVPREF); } catch (e) { } box.querySelectorAll('[data-tv]').forEach(x => x.classList.toggle('on', x === b)); setTV(TVPREF === 'on' || (TVPREF === 'auto' && tvAuto()), true); });
+};
+$('#b-set').onclick = showSettings;
+setTV(TVPREF === 'on' || (TVPREF === 'auto' && tvAuto()));
 
 </script>
 </body>
