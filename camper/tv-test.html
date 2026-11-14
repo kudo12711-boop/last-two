@@ -6937,11 +6937,11 @@ function tvBeep1() {
     const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 660; g.gain.value = .5; o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + .7);
   } catch (e) { toast('🔔 1: ' + e.message, 4000); }
 }
-function tvBeep2() {
-  const sr = 22050, n = sr * .7 | 0, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+function tvBeep2(quiet) {
+  const sr = 22050, n = sr * (quiet ? .3 : .7) | 0, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
   const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
   w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
-  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.sin(i / sr * 2 * Math.PI * 880) * 16000 * Math.min(1, (n - i) / 2000), true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.sin(i / sr * 2 * Math.PI * 880) * (quiet ? 2 : 16000) * Math.min(1, (n - i) / 2000), true);
   const a = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))); a.play().catch(e => toast('🔔 2: ' + e.message, 4000));
 }
 
@@ -6980,6 +6980,15 @@ setSound = function (on) {
   if (TV && !on) tvWake(true);
   return r;
 };
+
+// Fire TV では、ふつうの音声ファイルを一度鳴らすと、アプリの音（Web Audio）も鳴るようになる。
+// そこで、最初にボタンを押したときに、聞こえないくらい小さな音を1回だけ鳴らしておく
+let tvUnlocked = false;
+['click', 'keydown', 'pointerdown'].forEach(t => document.addEventListener(t, () => {
+  if (!TV || tvUnlocked || !SOUND) return; tvUnlocked = true;
+  try { tvBeep2(true); } catch (e) { }
+  setTimeout(() => { try { if (AU.ac && AU.ac.state !== 'running') AU.ac.resume(); } catch (e) { } }, 400);
+}, { capture: true, passive: true }));
 
 </script>
 </body>
