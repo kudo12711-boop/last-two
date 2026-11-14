@@ -6957,11 +6957,11 @@ function tvQRLib() {
 async function tvToPhone() {
   let url = location.origin + location.pathname;
   try { tick(); url += '#trip=' + await tvCode() + '&pc=1'; } catch (e) { }
-  modal(`<h2>📱 ${J('スマホで受けとる', 'Get it on your phone')}</h2>
-    <p class="note">${J('テレビのブラウザには画像を保存できません。スマホのカメラでこのコードを読みとると、スマホで同じ旅の続きが開きます。そこで「📷 絵はがき」を押すと、スマホに保存したり LINE で送ったりできます。', 'TV browsers cannot save images. Scan this code with your phone camera to open the same trip on your phone, then press "📷 Postcard" there to save or share it.')}</p>
-    <div id="tv-qr" style="background:#fff;padding:12px;width:max-content;margin:8px auto"></div>
+  modal(`<h2 style="margin:0 0 6px">📱 ${J('スマホのカメラで読みとってください', 'Scan with your phone camera')}</h2>
+    <div id="tv-qr" style="background:#fff;padding:16px;width:max-content;margin:4px auto;image-rendering:pixelated"></div>
+    <p class="note">${J('スマホで同じ旅が開き、絵はがきが出ます。そこで保存やLINEで送れます（テレビのブラウザには画像を保存できないため）。', 'The same trip opens on your phone with the postcard, ready to save or share (TV browsers cannot save images).')}</p>
     <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`);
-  try { await tvQRLib(); new QRCode($("#tv-qr"), { text: url, width: 190, height: 190, correctLevel: QRCode.CorrectLevel.L }); }
+  try { await tvQRLib(); const q = $('#tv-qr'); new QRCode(q, { text: url, width: 248, height: 248, correctLevel: QRCode.CorrectLevel.L }); q.querySelectorAll('img,canvas').forEach(x => { x.style.imageRendering = 'pixelated'; x.style.width = x.style.height = '248px'; }); }
   catch (e) { $('#tv-qr').textContent = J('コードを作れませんでした（インターネットの接続を確かめてください）', 'Could not make the code (check the internet connection)'); }
 }
 $('#b-photo').onclick = postcard;
@@ -7005,44 +7005,48 @@ function tvWav(buf) {
   const d = buf.getChannelData(0), sr = buf.sampleRate, n = d.length, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab);
   const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
   w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
-  const fade = sr * .05; for (let i = 0; i < n; i++) { const f = Math.min(1, i / fade, (n - 1 - i) / fade) * .7 + .3; v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[i] * (i < fade || n - i < fade ? f : 1))) * 32000, true); }
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[i] * Math.sin(Math.PI * i / n))) * 32000, true); // 両はしが0の山形：もう1本と半分ずらすと、合わせた大きさが一定になる
   return URL.createObjectURL(new Blob([ab], { type: 'audio/wav' }));
 }
 const TVL = {}; let tvSndOn = false, tvSndInfo = '';
 const TV_LAYERS = { engine: ['brown', [['lowpass', 320]]], road: ['pink', [['bandpass', 700, .5], ['lowpass', 1800]]], waves: ['brown', [['lowpass', 700]], [.11, .7]], surf: ['pink', [['highpass', 900], ['lowpass', 3500]], [.11, .85]], rain: ['white', [['highpass', 1200], ['lowpass', 7000]]], wind: ['pink', [['bandpass', 500, 1.8]], [.07, .5]], city: ['brown', [['bandpass', 260, .6]]] };
 async function tvSndBuild() {
   if (tvSndOn) return; tvSndOn = true; window.TVSND = true; auVolume();
-  const sr = 22050, len = 9; // 9秒のくり返し（波のうねり 0.11Hz ≒ 1回）
+  const sr = 22050, len = 12; // 12秒のくり返しを2本、半分ずらして重ねる（つなぎ目で音が切れないように）
   for (const [name, [kind, filters, lfo]] of Object.entries(TV_LAYERS)) {
-    const el = new Audio(); el.loop = true; el.volume = 0; TVL[name] = { el, v: 0 };
+    const el = new Audio(), el2 = new Audio(); el.loop = el2.loop = true; el.volume = el2.volume = 0; TVL[name] = { el, el2, v: 0 };
     try {
       const oc = new OfflineAudioContext(1, sr * len, sr), src = oc.createBufferSource(); src.buffer = noiseBuf(oc, kind); src.loop = true;
       let node = src; for (const [type, f, q] of filters) { const bq = oc.createBiquadFilter(); bq.type = type; bq.frequency.value = f; bq.Q.value = q || .7; node.connect(bq); node = bq; }
       const g = oc.createGain(); node.connect(g); g.connect(oc.destination);
       if (lfo) { g.gain.value = 1 - lfo[1]; const o = oc.createOscillator(); o.frequency.value = 1 / len; const og = oc.createGain(); og.gain.value = lfo[1]; o.connect(og); og.connect(g.gain); o.start(); }
       src.start(); const out = await oc.startRendering();
-      el.src = tvWav(out); el.play().catch(e => tvErr(name + ': ' + e.message));
+      const u = tvWav(out); el.src = el2.src = u; el.play().catch(e => tvErr(name + ': ' + e.message));
+      el2.addEventListener('loadedmetadata', () => { try { el2.currentTime = len / 2; } catch (e) { } }, { once: true }); el2.play().catch(e => tvErr(name + '2: ' + e.message));
     } catch (e) { tvErr(name + ': ' + e.message); }
   }
   tvSndInfo = Object.keys(TVL).length + J('つの音を用意', ' sounds ready');
 }
-// アプリが音量を変えるとき、テレビでは audio 要素の音量にする
+// アプリが音量を変えるとき、テレビでは audio 要素の音量にする（1つの音に2本ずつ）
+const tvEls = l => [l.el, l.el2];
+const tvVol = l => Math.max(0, Math.min(1, l.v * (SOUND ? SVOL : 0) * 1.1));
+function tvPlay(l, name) { for (const e of tvEls(l)) { e.volume = tvVol(l); if (e.paused && e.src && SOUND && !document.hidden) e.play().catch(er => tvErr(name + ': ' + er.message)); } }
 const _auSet = auSet;
 auSet = function (name, v) {
   _auSet(name, v); if (!TV) return;
   if (!tvSndOn) tvSndBuild();
   const l = TVL[name]; if (!l) return; l.v = v;
-  try { l.el.volume = Math.max(0, Math.min(1, v * (SOUND ? SVOL : 0) * 1.1)); if (l.el.paused && v > 0 && SOUND && l.el.src) l.el.play().catch(e => tvErr(name + ': ' + e.message)); } catch (e) { tvErr(e.message); }
+  try { if (v > 0) tvPlay(l, name); else for (const e of tvEls(l)) e.volume = 0; } catch (e) { tvErr(e.message); }
 };
 ['click', 'keydown', 'pointerdown'].forEach(t => document.addEventListener(t, () => {
   if (!TV || !SOUND) return; if (!tvSndOn) tvSndBuild();
-  for (const l of Object.values(TVL)) if (l.el.paused && l.el.src) l.el.play().catch(() => { });
+  for (const [n, l] of Object.entries(TVL)) tvPlay(l, n);
 }, { capture: true, passive: true }));
-document.addEventListener('visibilitychange', () => { for (const l of Object.values(TVL)) { if (document.hidden) l.el.pause(); else if (SOUND && TV && l.el.src) l.el.play().catch(() => { }); } });
+document.addEventListener('visibilitychange', () => { for (const [n, l] of Object.entries(TVL)) { if (document.hidden) tvEls(l).forEach(e => e.pause()); else if (SOUND && TV) tvPlay(l, n); } });
 const _setSound2 = setSound;
-setSound = function (on) { const r = _setSound2.apply(this, arguments); for (const [n, l] of Object.entries(TVL)) { if (!on) l.el.pause(); else { l.el.volume = Math.min(1, l.v * SVOL * 1.1); if (l.el.src) l.el.play().catch(() => { }); } } return r; };
+setSound = function (on) { const r = _setSound2.apply(this, arguments); for (const [n, l] of Object.entries(TVL)) { if (!on) tvEls(l).forEach(e => e.pause()); else tvPlay(l, n); } return r; };
 const _auVolume = auVolume;
-auVolume = function () { _auVolume(); if (TV && window.TVSND && AU.master) AU.master.gain.setTargetAtTime(0, AU.ac.currentTime, .05); for (const l of Object.values(TVL)) l.el.volume = Math.min(1, l.v * (SOUND ? SVOL : 0) * 1.1); };
+auVolume = function () { _auVolume(); if (TV && window.TVSND && AU.master) AU.master.gain.setTargetAtTime(0, AU.ac.currentTime, .05); for (const l of Object.values(TVL)) tvEls(l).forEach(e => e.volume = tvVol(l)); };
 
 </script>
 </body>
