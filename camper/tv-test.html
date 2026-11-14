@@ -317,6 +317,7 @@ body.tv header,body.tv #panel,body.tv #sheet,body.tv #toasts,body.tv #fsinfo,bod
 body.tv #win>button{zoom:calc(var(--tvz,1.3) * .85)}
 body.tv #addr,body.tv .stats,body.tv #nextlm{display:none}
 body.tv #sheet{max-height:calc(92vh / var(--tvz,1.3))}
+body.tv #tvscroll{position:fixed;right:2.5vw;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:3vh;z-index:5}body.tv #tvscroll[hidden]{display:none}#tvscroll button{width:11vh;height:11vh;border-radius:50%;border:none;background:#ffcf3f;color:#333;font-size:5vh;box-shadow:0 4px 14px #0006;cursor:pointer}#tvscroll button:disabled{opacity:.3}
 body.tv #panel{padding-right:10px}
 body.lite *,body.tv *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 body.lite #win>button,body.tv #win>button{background:rgba(0,0,0,.5)}
@@ -4294,7 +4295,7 @@ function showSettings() {
   document.querySelectorAll('[data-notify]').forEach(b => b.onclick = async () => { const ok = await setNotify(b.dataset.notify === 'on'); document.querySelectorAll('[data-notify]').forEach(x => x.classList.toggle('on', (x.dataset.notify === 'on') === NOTIFY)); });
   document.querySelectorAll('[data-snd]').forEach(b => b.onclick = () => { setSound(b.dataset.snd === 'on'); document.querySelectorAll('[data-snd]').forEach(x => x.classList.toggle('on', x === b)); });
   $('#s-vol').oninput = e => { SVOL = +e.target.value; try { localStorage.setItem('camper-vol', SVOL); } catch (er) { } if (!SOUND) setSound(true); auVolume(); };
-  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = J('もう一度押すとリセットします', 'Press again to reset'); return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } idbSet('ls', null).catch(() => { }).finally(() => location.reload()); };
+  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = J('もう一度押すとリセットします', 'Press again to reset'); return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } idbSet('ls', null).catch(() => { }).finally(() => { if (window.tvForget) tvForget(); location.reload(); }); };
 }
 /* ===== ひろいもの（海に浮かんで流れてくる物。タッチで拾って「ひろいもの帳」に） ===== */
 // id: [絵, 名前, 英語名, 説明, 英語の説明, 出る海（null=どこでも）, 出やすさ]
@@ -6685,12 +6686,12 @@ document.addEventListener('pointerdown', () => { tvKeyAt = Date.now(); }, { pass
 const tvCursor = () => Date.now() - tvPtrAt < 120e3;
 document.addEventListener('keydown', e => {
   tvKeyAt = Date.now();
-  if (tvCursor() && !TV_BACK.includes(e.key)) return;
+  if (tvCursor() && !TV_BACK.includes(e.key) && e.key !== 'Backspace') return;
   const k = e.key, t = e.target, typing = t && (t.matches('textarea,select') || (t.matches('input') && !/^(range|button|checkbox|radio)$/.test(t.type)));
   const arrow = /^Arrow/.test(k);
   if (arrow && !document.body.classList.contains('kbnav')) kbNav(true);
   if (k === 'Escape' && document.body.classList.contains('full') && $('#modal').hidden) { const g2 = $('#gzbar'); if (g2) g2.hidden = true; }
-  if (TV_BACK.includes(k) || (k === 'Backspace' && !typing)) { if (k !== 'Escape' || !$('#modal').hidden || !document.body.classList.contains('full')) { if (tvBack()) e.preventDefault(); e.stopImmediatePropagation(); } return; }
+  if (TV_BACK.includes(k) || (k === 'Backspace' && !typing)) { if (k !== 'Escape' || !$('#modal').hidden || !document.body.classList.contains('full')) { if (tvBack()) { e.preventDefault(); tvBackKeyAt = Date.now(); } e.stopImmediatePropagation(); } return; }
   const gaze = document.body.classList.contains('gaze'), gb = $('#gzbar');
   if (gaze && gb && gb.hidden && (arrow || k === 'Enter' || k === ' ')) { e.preventDefault(); gazeBar(); tvFocus(gb.querySelector('button')); return; }
   if (gaze && gb && !gb.hidden) { clearTimeout(gzBarT); gzBarT = setTimeout(() => { gb.hidden = true; }, 8000); }
@@ -6720,7 +6721,10 @@ document.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' ||
 // ----- テレビの「もどる」ボタン：アプリから出てしまわないよう、ひとつ前にもどる操作を受けとめる -----
 let tvHist = false;
 function tvHistArm() { if (TV && !tvHist) { try { history.pushState({ tv: 1 }, ''); tvHist = true; } catch (e) { } } }
-window.addEventListener('popstate', () => { if (!tvHist) return; tvHist = false; if (tvBack()) tvHistArm(); else history.back(); });
+window.addEventListener('popstate', () => { if (!tvHist) return; tvHist = false; if (Date.now() - tvBackKeyAt < 800) return; if (!tvBack()) history.back(); });
+let tvBackKeyAt = 0;
+// カーソルで押したときも「もどる」の受け皿を作る（ブラウザは、押した操作のあとでないと受け皿を認めないため）
+['pointerdown', 'click'].forEach(t => document.addEventListener(t, () => tvHistArm(), { capture: true, passive: true }));
 
 // ----- ながら見：しばらく操作がないと景色だけに -----
 setInterval(() => {
@@ -6760,7 +6764,9 @@ showSettings = function () {
   const box = document.createElement('div');
   box.innerHTML = `<h3>${J('テレビ向けの画面', 'TV mode')}</h3><div class="frames">${[['auto', J('🤖 自動', '🤖 Auto')], ['on', J('📺 テレビ向け', '📺 TV')], ['off', J('📱 ふつう', '📱 Normal')]].map(([k, n]) => `<button data-tv="${k}" class="${TVPREF === k ? 'on' : ''}">${n}</button>`).join('')}</div>
     <p class="note">${J('テレビ（Fire TV など）で見るときの画面です。文字とボタンが大きくなり、リモコンの矢印で選んで決定ボタンで押せます。1分半ほど操作がないと、景色だけの「ながら見」になります。「自動」は、テレビのブラウザかどうかを見て切りかえます。アドレスの最後に ?tv をつけて開いても、テレビ向けになります。', 'For watching on a TV (Fire TV etc.): bigger text and buttons, choose with the remote\'s arrows and press OK. After about 90 seconds without input it switches to scenery only. "Auto" detects TV browsers. You can also open the page with ?tv at the end of the address.')}</p>`;
+  if (TV) { const yn = v => v == null ? '…' : v ? '○' : '×'; box.innerHTML += `<h3>${J('開いたときに残っていた旅', 'Trip found on open')}</h3><p class="note">${J('ふつうの保存', 'Storage')} ${yn(TVDIAG.ls)} ／ ${J('予備', 'Backup')} ${yn(TVDIAG.idb)} ／ ${J('クッキー', 'Cookie')} ${yn(TVDIAG.ck)} ／ ${J('アドレス', 'Address')} ${yn(TVDIAG.hash)}</p><div class="frames"><button id="tv-bm">📌 ${J('ブックマークの案内をもう一度', 'Show bookmark tip again')}</button></div>`; }
   lang.after(box);
+  const bm = box.querySelector('#tv-bm'); if (bm) bm.onclick = () => { closeModal(); tvBmTip(); };
   box.querySelectorAll('[data-tv]').forEach(b => b.onclick = () => { TVPREF = b.dataset.tv; try { localStorage.setItem('camper-tv', TVPREF); } catch (e) { } box.querySelectorAll('[data-tv]').forEach(x => x.classList.toggle('on', x === b)); setTV(TVPREF === 'on' || (TVPREF === 'auto' && tvAuto()), true); });
 };
 $('#b-set').onclick = showSettings;
@@ -6790,7 +6796,80 @@ window.addEventListener('pagehide', () => tvHash(true));
   closeModal(); st = o.s; P = curPos(); startTrip(); back();
   toast(J('💾 アドレスに入っていた旅から続けます', '💾 Continuing the trip saved in the address'), 5000);
 })();
-setTimeout(() => { if (TV && st && !st.preview) { tvHash(true); toast(J('📌 ブラウザのメニューで「ブックマークに追加」しておくと、ブラウザを閉じても、そのブックマークから旅の続きを開けます', '📌 Add this page to your bookmarks from the browser menu: even after closing the browser, the bookmark reopens your trip'), 9000); } }, 20e3);
+// ----- 旅の案内（ブックマーク）：旅が20秒すすんだら1回だけ出す -----
+let tvRunAt = 0, tvTipDone = false;
+try { tvTipDone = sessionStorage.getItem('camper-bmtip') === '1'; } catch (e) { }
+function tvBmTip() {
+  tvHash(true);
+  toast(J('📌 ブラウザのメニューで「ブックマークに追加」しておくと、ブラウザを閉じても、そのブックマークから旅の続きを開けます', '📌 Add this page to your bookmarks from the browser menu: even after closing the browser, the bookmark reopens your trip'), 12000);
+}
+setInterval(() => {
+  if (!TV || !st || st.preview) { tvRunAt = 0; return; }
+  if (!tvRunAt) tvRunAt = Date.now();
+  if (tvTipDone || Date.now() - tvRunAt < 20e3 || !$('#modal').hidden) return;
+  tvTipDone = true; try { sessionStorage.setItem('camper-bmtip', '1'); } catch (e) { }
+  tvBmTip();
+}, 3e3);
+
+// ----- クッキーにも旅を入れておく（テレビのブラウザが ほかの保存を消しても、残ることがあるため） -----
+const CK_PATH = location.pathname.replace(/[^/]*$/, '');
+function ckGetAll() { const o = {}; document.cookie.split(/;\s*/).forEach(c => { const k = c.indexOf('='); if (k > 0) o[c.slice(0, k)] = c.slice(k + 1); }); return o; }
+function ckSet(k, v) { document.cookie = k + '=' + v + ';path=' + CK_PATH + ';max-age=' + (v ? 315360000 : 0) + ';SameSite=Lax' + (location.protocol === 'https:' ? ';Secure' : ''); }
+function ckRead() {
+  const o = ckGetAll(), n = +o.camper_n || 0; if (!n) return null;
+  let code = ''; for (let i = 0; i < n; i++) { if (o['camper_t' + i] == null) return null; code += o['camper_t' + i]; }
+  return /^CAMPER[01]-[A-Za-z0-9_-]+$/.test(code) ? code : null;
+}
+let tvCkAt = 0;
+async function tvCookie(force) {
+  if (!st || st.preview || QS.has('km')) return; if (!force && Date.now() - tvCkAt < 60e3) return; tvCkAt = Date.now();
+  try {
+    tick(); const code = await tvCode(); const parts = code.match(/.{1,3800}/g) || [];
+    if (parts.length > 24) return;
+    const old = +ckGetAll().camper_n || 0;
+    parts.forEach((p, i) => ckSet('camper_t' + i, p)); for (let i = parts.length; i < old; i++) ckSet('camper_t' + i, '');
+    ckSet('camper_n', String(parts.length));
+  } catch (e) { }
+}
+setInterval(() => { if (TV) tvCookie(); }, 15e3);
+document.addEventListener('visibilitychange', () => { if (document.hidden && TV) tvCookie(true); });
+window.addEventListener('pagehide', () => { if (TV) tvCookie(true); });
+
+// 開いたときに、どこに旅が残っていたかを覚えておく（設定の画面に出す）
+const TVDIAG = { ls: !!(st && !st.preview), hash: /trip=CAMPER/.test(location.hash), ck: !!ckRead(), idb: null };
+(MIRROR_ON ? mirrorLoad() : Promise.resolve(null)).then(o => { TVDIAG.idb = !!o; });
+(async () => { // 旅がなく、アドレスにも無いとき、クッキーから続ける
+  if (!st || !st.preview || TVDIAG.hash) return; const code = ckRead(); if (!code) return;
+  let o; try { o = await readCode(code); } catch (e) { return; }
+  if (!st.preview || !o || !o.s) return;
+  let ok = false; try { localStorage.setItem(KEY, JSON.stringify(o.s)); ok = localStorage.getItem(KEY) != null; for (const [k, v] of [['camper-frame', o.f], ['camper-poles', o.p], ['camper-sound', o.snd]]) if (v != null) localStorage.setItem(k, v); } catch (e) { }
+  if (ok) { try { if (!sessionStorage.getItem('camper-restored')) { sessionStorage.setItem('camper-restored', 'ck'); st = null; location.reload(); return; } } catch (e) { } }
+  closeModal(); st = o.s; P = curPos(); startTrip(); back();
+  toast(J('💾 クッキーに入っていた旅から続けます', '💾 Continuing the trip saved in a cookie'), 5000);
+})();
+try { if (sessionStorage.getItem('camper-restored') === 'ck' && st && !st.preview) { sessionStorage.setItem('camper-restored', '2'); setTimeout(() => toast(J('💾 クッキーに入っていた旅から続けます', '💾 Continuing the trip saved in a cookie'), 5000), 1500); } } catch (e) { }
+
+// ----- 下に続く画面を、カーソルでも動かせるように ▲▼ ボタンを出す -----
+const tvScr = document.createElement('div'); tvScr.id = 'tvscroll'; tvScr.hidden = true;
+tvScr.innerHTML = '<button id="tvs-up" aria-label="up">▲</button><button id="tvs-dn" aria-label="down">▼</button>';
+$('#modal').appendChild(tvScr);
+const tvSheetBy = d => { const sh = $('#sheet'); sh.scrollBy({ top: d * sh.clientHeight * .7, behavior: 'smooth' }); setTimeout(tvScrUpd, 450); };
+tvScr.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (b) tvSheetBy(b.id === 'tvs-up' ? -1 : 1); });
+function tvScrUpd() {
+  const sh = $('#sheet'), on = TV && !$('#modal').hidden && sh.scrollHeight > sh.clientHeight + 8;
+  tvScr.hidden = !on; if (!on) return;
+  $('#tvs-up').disabled = sh.scrollTop < 4; $('#tvs-dn').disabled = sh.scrollTop + sh.clientHeight >= sh.scrollHeight - 4;
+}
+$('#sheet').addEventListener('scroll', tvScrUpd, { passive: true });
+new MutationObserver(() => setTimeout(tvScrUpd, 80)).observe($('#modal'), { attributes: true, attributeFilter: ['hidden'], childList: true, subtree: true });
+window.addEventListener('resize', tvScrUpd); setInterval(tvScrUpd, 1000); setTimeout(tvScrUpd, 300);
+
+
+// リセットしたら、アドレスとクッキーの旅も消す
+window.tvForget = function () {
+  try { const o = ckGetAll(), n = Math.max(+o.camper_n || 0, 24); for (let i = 0; i < n; i++) if (o['camper_t' + i] != null) ckSet('camper_t' + i, ''); ckSet('camper_n', ''); } catch (e) { }
+  try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) { }
+};
 
 </script>
 </body>
