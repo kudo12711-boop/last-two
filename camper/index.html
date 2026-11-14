@@ -2587,7 +2587,24 @@ let OWNED = (() => { try { return JSON.parse(localStorage.getItem('camper-owned'
 const QS = new URLSearchParams(location.search);
 let st = null;
 function load() { try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { st = null; } }
-function save() { if (!st || st.preview || QS.has('km')) return; try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } }
+function save() { if (!st || st.preview || QS.has('km')) return; try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } mirrorSave(); }
+// 予備の保存：ブラウザ（テレビのブラウザなど）が閉じるときに localStorage を消してしまうことがあるので、
+// 旅と設定を IndexedDB にも写しておき、localStorage が空なら そこから戻す。ブラウザにも「消さないで」とお願いする
+const MIRROR_SKIP = /^camper-(img|wx|geo)/;
+let mirrorAt = 0, persistAsked = false;
+function idb() { return new Promise((res, rej) => { try { const r = indexedDB.open('camper', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); }
+async function idbSet(k, v) { const db = await idb(); return new Promise(res => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = tx.onerror = () => { db.close(); res(); }; }); }
+async function idbGet(k) { const db = await idb(); return new Promise(res => { const rq = db.transaction('kv').objectStore('kv').get(k); rq.onsuccess = () => { db.close(); res(rq.result); }; rq.onerror = () => { db.close(); res(null); }; }); }
+function mirrorSave(force) {
+  if (!force && Date.now() - mirrorAt < 30e3) return; mirrorAt = Date.now();
+  try {
+    const ls = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('camper-') && !MIRROR_SKIP.test(k)) ls[k] = localStorage.getItem(k); }
+    if (!ls[KEY] && st && !st.preview) ls[KEY] = JSON.stringify(st);
+    if (ls[KEY]) idbSet('ls', { at: Date.now(), ls }).catch(() => { });
+  } catch (e) { }
+  if (!persistAsked && navigator.storage && navigator.storage.persist) { persistAsked = true; navigator.storage.persist().catch(() => { }); }
+}
+async function mirrorLoad() { try { const o = await idbGet('ls'); return o && o.ls && o.ls[KEY] ? o : null; } catch (e) { return null; } }
 function newState(speed, from = '東京') {
   const f = findStart(from);
   return { v: 1, km: f.km, startKm: f.km, startName: from, laps: 0, t: Date.now(), speed, started: Date.now(), choices: f.choices, auto: {}, stamps: { [from]: 1 }, lm: {}, dex: {}, bottles: 0 };
@@ -4276,7 +4293,7 @@ function showSettings() {
   document.querySelectorAll('[data-notify]').forEach(b => b.onclick = async () => { const ok = await setNotify(b.dataset.notify === 'on'); document.querySelectorAll('[data-notify]').forEach(x => x.classList.toggle('on', (x.dataset.notify === 'on') === NOTIFY)); });
   document.querySelectorAll('[data-snd]').forEach(b => b.onclick = () => { setSound(b.dataset.snd === 'on'); document.querySelectorAll('[data-snd]').forEach(x => x.classList.toggle('on', x === b)); });
   $('#s-vol').oninput = e => { SVOL = +e.target.value; try { localStorage.setItem('camper-vol', SVOL); } catch (er) { } if (!SOUND) setSound(true); auVolume(); };
-  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = J('もう一度押すとリセットします', 'Press again to reset'); return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } location.reload(); };
+  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = J('もう一度押すとリセットします', 'Press again to reset'); return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } idbSet('ls', null).catch(() => { }).finally(() => location.reload()); };
 }
 /* ===== ひろいもの（海に浮かんで流れてくる物。タッチで拾って「ひろいもの帳」に） ===== */
 // id: [絵, 名前, 英語名, 説明, 英語の説明, 出る海（null=どこでも）, 出やすさ]
@@ -5086,8 +5103,8 @@ cv.addEventListener('click', e => {
   const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
   for (const ev of S.events) if ((ev.id === 'bottle' || ev.id === 'roadfind') && ev.hit && Math.hypot(x - ev.hit[0], y - ev.hit[1]) < ev.hit[2] + 12) { ev.dur = 0; if (ev.item === 'magic') showPal(ev.pal); else if (ev.item && ev.item !== 'bottle') showFind(ev.item); else showBottle(); return; }
 });
-document.addEventListener('visibilitychange', () => { if (!st) return; if (document.hidden) { tick(); save(); } else back(); });
-window.addEventListener('pagehide', () => { if (st) { tick(); save(); } });
+document.addEventListener('visibilitychange', () => { if (!st) return; if (document.hidden) { tick(); save(); mirrorSave(true); } else back(); });
+window.addEventListener('pagehide', () => { if (st) { tick(); save(); mirrorSave(true); } });
 window.addEventListener('resize', resize);
 $('#b-map').onclick = () => showMap(+(lsGet('camper-mapz') || 0)); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-ev').onclick = () => showEvents(); $('#b-photo').onclick = postcard; $('#fork').onclick = showFork;
 // 全画面：景色だけを画面いっぱいに。さわらないでいるとボタンや文字が消える
@@ -5213,8 +5230,19 @@ function startTrip() {
 load();
 resize();
 if (QS.has('km')) { st = newState(60); if (QS.get('pick')) QS.get('pick').split(',').forEach((v, i) => st.choices['0:' + [1, 2, 4, 6][i]] = v); advance(+QS.get('km')); P = posAt(st.km); startTrip(); if (QS.get('ev')) setTimeout(() => { S.events.push({ id: QS.get('ev'), t0: S.t, dur: 30, x0: W * .6, d: .3, seed: 5 }); }, 300); }
-else if (!st) { st = newState(60); st.preview = true; startTrip(); showIntro(); }
-else { P = curPos(); startTrip(); back(); }
+else if (!st) {
+  st = newState(60); st.preview = true; startTrip(); showIntro();
+  mirrorLoad().then(o => { // 予備の保存から旅をもどす
+    if (!o || !st || !st.preview) return;
+    let s0; try { s0 = JSON.parse(o.ls[KEY]); } catch (e) { return; } if (!s0 || typeof s0.km !== 'number') return;
+    let ok = false; try { for (const k in o.ls) localStorage.setItem(k, o.ls[k]); ok = localStorage.getItem(KEY) === o.ls[KEY]; } catch (e) { }
+    // 書きもどせたら読みこみ直して、設定（ことば・窓など）もまとめて反映。書けないブラウザでは、このまま旅だけ続ける
+    if (ok) { try { if (!sessionStorage.getItem('camper-restored')) { sessionStorage.setItem('camper-restored', '1'); st = null; location.reload(); return; } } catch (e) { } }
+    closeModal(); st = s0; P = curPos(); startTrip(); back();
+    toast(J('💾 前回の旅を、予備の保存からもどしました', '💾 Your trip was restored from the backup copy'), 5000);
+  });
+}
+else { P = curPos(); startTrip(); back(); try { if (sessionStorage.getItem('camper-restored') === '1') { sessionStorage.setItem('camper-restored', '2'); setTimeout(() => toast(J('💾 前回の旅を、予備の保存からもどしました', '💾 Your trip was restored from the backup copy'), 5000), 1500); } } catch (e) { } }
 requestAnimationFrame(frame);
 
 /* ===== 天体イベントとお祭り（本物の日付・いる場所に合わせる） ===== */
