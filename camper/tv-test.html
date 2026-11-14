@@ -320,6 +320,7 @@ body.tv #sheet{max-height:calc(92vh / var(--tvz,1.3))}
 body.tv #tvscroll{position:fixed;right:2.5vw;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:3vh;z-index:5}body.tv #tvscroll[hidden]{display:none}#tvscroll button{width:11vh;height:11vh;border-radius:50%;border:none;background:#ffcf3f;color:#333;font-size:5vh;box-shadow:0 4px 14px #0006;cursor:pointer}#tvscroll button:disabled{opacity:.3}
 body.tv #panel{padding-right:10px}
 body.lite *,body.tv *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.tv.full #fsmap svg,body.tv.full #fsmap,body.tv.full #fsinfo,body.tv.full #b-info,body.tv.full #b-snd,body.tv.full #b-full,body.tv.full #b-radio{border-radius:0!important;box-shadow:none!important;transition:none!important;text-shadow:none!important}body.tv.full #fsmap,body.tv.full #fsmap.solid,body.tv.full.calm #fsmap{opacity:1;overflow:visible;border:2px solid #fff}body.tv.full #fsinfo,body.tv.full.calm #fsinfo{opacity:1;background:rgb(28,32,40)}body.tv.full #b-info,body.tv.full #b-snd,body.tv.full #b-radio{background:rgb(40,40,40)}
 body.lite #win>button,body.tv #win>button{background:rgba(0,0,0,.5)}
 </style>
 </head>
@@ -6776,7 +6777,7 @@ showSettings = function () {
   const box = document.createElement('div');
   box.innerHTML = `<h3>${J('テレビ向けの画面', 'TV mode')}</h3><div class="frames">${[['auto', J('🤖 自動', '🤖 Auto')], ['on', J('📺 テレビ向け', '📺 TV')], ['off', J('📱 ふつう', '📱 Normal')]].map(([k, n]) => `<button data-tv="${k}" class="${TVPREF === k ? 'on' : ''}">${n}</button>`).join('')}</div>
     <p class="note">${J('テレビ（Fire TV など）で見るときの画面です。文字とボタンが大きくなり、リモコンの矢印で選んで決定ボタンで押せます。1分半ほど操作がないと、景色だけの「ながら見」になります。「自動」は、テレビのブラウザかどうかを見て切りかえます。アドレスの最後に ?tv をつけて開いても、テレビ向けになります。', 'For watching on a TV (Fire TV etc.): bigger text and buttons, choose with the remote\'s arrows and press OK. After about 90 seconds without input it switches to scenery only. "Auto" detects TV browsers. You can also open the page with ?tv at the end of the address.')}</p>`;
-  if (TV) { const yn = v => v == null ? '…' : v ? '○' : '×'; box.innerHTML += `<h3>${J('開いたときに残っていた旅', 'Trip found on open')}</h3><p class="note">${J('ふつうの保存', 'Storage')} ${yn(TVDIAG.ls)} ／ ${J('予備', 'Backup')} ${yn(TVDIAG.idb)} ／ ${J('クッキー', 'Cookie')} ${yn(TVDIAG.ck)} ／ ${J('アドレス', 'Address')} ${yn(TVDIAG.hash)}${TVPERF.fps != null ? '<br>' + J('全画面のなめらかさ', 'Full screen') + `: ${J('約', '~')}${TVPERF.fps} ${J('コマ/秒', 'fps')}（${J('描く時間', 'draw')} ${TVPERF.draw}ms・${TVPERF.px}）` : ''}</p><div class="frames"><button id="tv-bm">📌 ${J('ブックマークの案内をもう一度', 'Show bookmark tip again')}</button></div>`; }
+  if (TV) { const yn = v => v == null ? '…' : v ? '○' : '×'; box.innerHTML += `<h3>${J('開いたときに残っていた旅', 'Trip found on open')}</h3><p class="note">${J('ふつうの保存', 'Storage')} ${yn(TVDIAG.ls)} ／ ${J('予備', 'Backup')} ${yn(TVDIAG.idb)} ／ ${J('クッキー', 'Cookie')} ${yn(TVDIAG.ck)} ／ ${J('アドレス', 'Address')} ${yn(TVDIAG.hash)}${TVPERF.fps != null ? '<br>' + J('全画面のなめらかさ', 'Full screen') + `: ${J('約', '~')}${TVPERF.fps} ${J('コマ/秒', 'fps')}（${J('描く時間', 'draw')} ${TVPERF.draw}ms・${TVPERF.px}）${TVPERF.n != null || TVPERF.g != null ? '<br>' + J('ふつうの全画面', 'Full screen') + ' ' + (TVPERF.n ?? '-') + ' ／ ' + J('時計が出る ながら見', 'Clock view') + ' ' + (TVPERF.g ?? '-') + J(' コマ/秒', ' fps') : ''}` : ''}</p><div class="frames"><button id="tv-bm">📌 ${J('ブックマークの案内をもう一度', 'Show bookmark tip again')}</button></div>`; }
   lang.after(box);
   const bm = box.querySelector('#tv-bm'); if (bm) bm.onclick = () => { closeModal(); tvBmTip(); };
   box.querySelectorAll('[data-tv]').forEach(b => b.onclick = () => { TVPREF = b.dataset.tv; try { localStorage.setItem('camper-tv', TVPREF); } catch (e) { } box.querySelectorAll('[data-tv]').forEach(x => x.classList.toggle('on', x === b)); setTV(TVPREF === 'on' || (TVPREF === 'auto' && tvAuto()), true); });
@@ -6884,12 +6885,13 @@ window.tvForget = function () {
 };
 
 // ----- 全画面の なめらかさを はかって、設定に出す。描くのが重すぎるときは、さらに粗くする -----
-const TVPERF = { fps: null, draw: null, px: '' };
+const TVPERF = { fps: null, draw: null, px: '', g: null, n: null };
 let tvPerfN = 0, tvPerfF = 0;
 setInterval(() => {
   if (!TV || !document.body.classList.contains('full') || document.hidden) { tvPerfN = 0; return; }
   const fps = 1000 / ivAvg / (HALF ? 2 : 1);
   tvPerfN++; tvPerfF += fps;
+  TVPERF[document.body.classList.contains('gaze') ? 'g' : 'n'] = Math.round(1000 / ivAvg);
   if (tvPerfN >= 3) { TVPERF.fps = Math.round(tvPerfF / tvPerfN); TVPERF.draw = Math.round(drawAvg); TVPERF.px = cv.width + '×' + cv.height; }
   if (tvPerfN >= 10) { tvPerfN = 0; tvPerfF = 0; }
   if (drawAvg > 26 && PXMAX > PXMIN) { PXMAX = Math.max(PXMIN, PXMAX * .85); resize(); }
