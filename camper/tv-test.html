@@ -5083,7 +5083,7 @@ function frame(ts) {
   if (S.t > S.nextEv) { spawnEvent(ctx, W8, alt); S.nextEv = S.t + 18 + Math.random() * 30; }
   S.events = S.events.filter(e => S.t - e.t0 < e.dur);
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const bump = ctx.sea || st.parked ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0) + (S.storm ? Math.sin(S.t * 17) * Math.sin(S.t * 2.3) * clamp((S.storm.w - 40) / 40) * 3 : 0);
+  const bump = ctx.sea || st.parked || S.tvLite ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0) + (S.storm ? Math.sin(S.t * 17) * Math.sin(S.t * 2.3) * clamp((S.storm.w - 40) / 40) * 3 : 0);
   c.save(); c.translate(0, bump);
   if (ctx.sea) drawSea(dt, W8, alt, ctx); else drawLand(dt, W8, alt, ctx);
   c.restore();
@@ -6613,7 +6613,8 @@ function tvZoom() { document.documentElement.style.setProperty('--tvz', Math.max
 function setTV(on, quiet) {
   TV = !!on; document.body.classList.toggle('tv', TV); if (TV) { tvZoom(); tvWake(true); } else tvWake(false);
   // テレビの機械は力が弱いので、景色は少しあらく描いて引きのばす（絵柄なので目立たない）。重ければさらに下げる
-  if (TV) { PXMAX = Math.min(PXMAX, 6e5); PXMIN = 3e5; document.body.classList.add('lite'); } else { PXMAX = 2.2e6; PXMIN = 7e5; HALF = false; }
+  // さらに、1秒30コマに決めて（ばらつくより一定のほうがなめらかに見える）、車のゆれも止める
+  if (TV) { PXMAX = Math.min(PXMAX, 3.6e5); PXMIN = 2.4e5; HALF = true; S.tvLite = true; document.body.classList.add('lite'); } else { PXMAX = 2.2e6; PXMIN = 7e5; HALF = false; S.tvLite = false; }
   setTimeout(resize, 50); if (TV && !quiet) toast(J('📺 テレビ向けの画面です。「もどる」ボタンで開いている画面をとじます', '📺 TV mode: press Back on the remote to close windows'), 5000);
 }
 window.addEventListener('resize', () => { if (TV) tvZoom(); });
@@ -6764,6 +6765,32 @@ showSettings = function () {
 };
 $('#b-set').onclick = showSettings;
 setTV(TVPREF === 'on' || (TVPREF === 'auto' && tvAuto()));
+
+// ----- 閉じても続きから：テレビのブラウザは閉じると保存を消すことがあるので、旅をアドレス（#の後ろ）にも入れておく -----
+// ブラウザが前のページを開き直したときや、ブックマークから開いたときに、そこから旅を続けられる
+async function tvCode() {
+  const data = new TextEncoder().encode(JSON.stringify({ s: st, f: lsGet('camper-frame'), p: lsGet('camper-poles'), o: OWNED, snd: lsGet('camper-sound') }));
+  if (window.CompressionStream) { try { return 'CAMPER1-' + b64(await pipe(data, CompressionStream)); } catch (e) { } }
+  return 'CAMPER0-' + b64(data);
+}
+let tvHashAt = 0;
+async function tvHash(force) {
+  if (!TV || !st || st.preview || QS.has('km')) return; if (!force && Date.now() - tvHashAt < 60e3) return; tvHashAt = Date.now();
+  try { tick(); const code = await tvCode(); history.replaceState(history.state, '', location.pathname + location.search + '#trip=' + code); } catch (e) { }
+}
+setInterval(() => tvHash(), 15e3);
+document.addEventListener('visibilitychange', () => { if (document.hidden) tvHash(true); });
+window.addEventListener('pagehide', () => tvHash(true));
+(async () => { // 開いたときに旅がなく、アドレスに旅が入っていれば、そこから続ける
+  const m = location.hash.match(/trip=(CAMPER[01]-[A-Za-z0-9_-]+)/); if (!m || !st || !st.preview) return;
+  let o; try { o = await readCode(m[1]); } catch (e) { return; }
+  if (!st.preview) return;
+  let ok = false; try { localStorage.setItem(KEY, JSON.stringify(o.s)); ok = localStorage.getItem(KEY) != null; for (const [k, v] of [['camper-frame', o.f], ['camper-poles', o.p], ['camper-sound', o.snd]]) if (v != null) localStorage.setItem(k, v); } catch (e) { }
+  if (ok) { try { if (!sessionStorage.getItem('camper-restored')) { sessionStorage.setItem('camper-restored', '1'); st = null; location.reload(); return; } } catch (e) { } }
+  closeModal(); st = o.s; P = curPos(); startTrip(); back();
+  toast(J('💾 アドレスに入っていた旅から続けます', '💾 Continuing the trip saved in the address'), 5000);
+})();
+setTimeout(() => { if (TV && st && !st.preview) { tvHash(true); toast(J('📌 ブラウザのメニューで「ブックマークに追加」しておくと、ブラウザを閉じても、そのブックマークから旅の続きを開けます', '📌 Add this page to your bookmarks from the browser menu: even after closing the browser, the bookmark reopens your trip'), 9000); } }, 20e3);
 
 </script>
 </body>
