@@ -2588,6 +2588,9 @@ const LEG = {};
 const KEY = 'camper-trip-v1';
 let OWNED = (() => { try { return JSON.parse(localStorage.getItem('camper-owned') || '[]'); } catch (e) { return []; } })();
 const QS = new URLSearchParams(location.search);
+/* ためし用：?demo=day（暖かい昼）／?demo=night（暖かい夜）。今の旅や記録にはさわらない（km を使った見本の旅になり、保存しない） */
+const DEMO = /^(day|night)$/.test(QS.get('demo') || '') ? QS.get('demo') : '';
+if (DEMO) { if (!QS.has('km')) QS.set('km', '120'); QS.set('temp', '24'); QS.set('wx', '1'); if (!QS.has('h')) { const lh = (new Date().getUTCHours() + 9) % 24, want = DEMO === 'day' ? 10 : 21; QS.set('h', String((want - lh + 24) % 24)); } }
 let st = null;
 function load() { try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { st = null; } }
 function save() { if (!st || st.preview || QS.has('km') || window.GUEST) return; /* GUEST：テレビの旅をスマホで見ているときは保存しない */ try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } mirrorSave(); }
@@ -2599,7 +2602,7 @@ function idb() { return new Promise((res, rej) => { try { const r = indexedDB.op
 async function idbSet(k, v) { const db = await idb(); return new Promise(res => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = tx.onerror = () => { db.close(); res(); }; }); }
 async function idbGet(k) { const db = await idb(); return new Promise(res => { const rq = db.transaction('kv').objectStore('kv').get(k); rq.onsuccess = () => { db.close(); res(rq.result); }; rq.onerror = () => { db.close(); res(null); }; }); }
 function mirrorSave(force) {
-  if (window.GUEST) return;
+  if (window.GUEST || QS.has('km')) return;
   if (!MIRROR_ON) return;
   if (!force && Date.now() - mirrorAt < 30e3) return; mirrorAt = Date.now();
   try {
@@ -2853,7 +2856,7 @@ function applyTest() {
   if (QS.has('wind')) wx.wind = +QS.get('wind');
 }
 function wxState() {
-  const w = wx || fakeWx(P.ll);
+  let w = wx || fakeWx(P.ll); if (DEMO) w = Object.assign({}, w, { temp: 24, code: 1, cloud: 20, wind: 6 });
   const rain = RAIN[w.code] || 0, snow = SNOW[w.code] || 0;
   return { temp: w.temp, code: w.code, cloud: Math.max(w.cloud, rain || snow ? 85 : 0), rain, snow, fog: (w.code === 45 || w.code === 48) ? 0.6 : 0, thunder: w.code >= 95, wind: w.wind,
     snowCover: (snow > 0 && w.temp < 2) || w.temp < -2, frost: w.temp < -6 };
@@ -3714,7 +3717,7 @@ function evPool(ctx, W8, alt) {
     if (b === 'desert' && (lon > 30 || (lon > -20 && lat > 10))) add('camels', 2.5);
     if (b === 'mount' || b === 'desert') add('eagle', 1.5);
     if ((b === 'farm' || b === 'steppe' || b === 'forest') && lon > -20) add('train', 1);
-    if (landFinds(ctx, W8, false).length) add('roadfind', 2); // 道ばたで光るひろいもの
+    if (landFinds(ctx, W8, false).length) add('roadfind', DEMO ? 8 : 2); // 道ばたで光るひろいもの
     if (nearLm('cappadocia', 60) || nearLm('balloons', 60)) add('balloon', alt < 35 ? 6 : 1.5);
     else add('balloon', .15);
   }
@@ -5091,7 +5094,7 @@ function frame(ts) {
   prevBiome = ctx.biome;
   const vf = st.parked ? 0 : clamp(Math.sqrt(st.speed / 60), .6, 2.2); S.vf = vf;
   S.off.cloud += dt * (5 * vf + (W8.wind || 0) * .25); S.off.far += dt * 9 * vf; S.off.hill += dt * 22 * vf; S.off.mid += dt * 75 * vf; S.off.near += dt * 480 * vf; S.off.sea += dt * 60 * vf;
-  if (S.t > S.nextEv) { spawnEvent(ctx, W8, alt); S.nextEv = S.t + 18 + Math.random() * 30; }
+  if (S.t > S.nextEv) { spawnEvent(ctx, W8, alt); S.nextEv = S.t + (DEMO ? 8 + Math.random() * 6 : 18 + Math.random() * 30); }
   S.events = S.events.filter(e => S.t - e.t0 < e.dur);
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
   const bump = ctx.sea || st.parked || S.tvLite ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0) + (S.storm ? Math.sin(S.t * 17) * Math.sin(S.t * 2.3) * clamp((S.storm.w - 40) / 40) * 3 : 0);
