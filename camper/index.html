@@ -318,6 +318,8 @@ body.tv #win>button{zoom:calc(var(--tvz,1.3) * .85)}
 body.tv #addr,body.tv .stats,body.tv #nextlm{display:none}
 body.tv #sheet{max-height:calc(92vh / var(--tvz,1.3))}
 body.tv #panel{padding-right:10px}
+body.lite *,body.tv *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.lite #win>button,body.tv #win>button{background:rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
@@ -2875,7 +2877,7 @@ if (EN) for (const k in DEX) DEX[k] = [DEX[k][0], tr(DEX[k][1]), tr(DEX[k][2])];
 const cv = $('#cv'), c = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 // 大きな画面（パソコンの全画面など）で重くなりすぎないよう、絵の細かさに上限をつける
-let PXMAX = 2.2e6, HALF = false, drawAvg = 8, perfAt = 0, fcount = 0;
+let PXMAX = 2.2e6, PXMIN = 7e5, HALF = false, drawAvg = 8, perfAt = 0, fcount = 0, ivAvg = 16;
 function resize() {
   const r = cv.getBoundingClientRect(); DPR = Math.min(2, window.devicePixelRatio || 1);
   W = Math.max(1, r.width); H = Math.max(1, r.height);
@@ -5042,6 +5044,7 @@ function back() {
 function frame(ts) {
   requestAnimationFrame(frame);
   if (!st || document.hidden) return;
+  { const iv = ts - (S.lastTs || ts); S.lastTs = ts; if (iv > 0 && iv < 200) ivAvg = ivAvg * .95 + iv * .05; } // 画面が実際に何コマ出せているか
   if (HALF && (++fcount & 1)) return; // 重い端末では1コマおきに描く
   const t0 = performance.now();
   const dt = Math.min(.1, (ts - lastFrame) / 1000 || 0); lastFrame = ts; S.t += dt; S.dt = dt;
@@ -5075,7 +5078,8 @@ function frame(ts) {
   drawAvg = drawAvg * .95 + (performance.now() - t0) * .05;
   if (ts - perfAt > 3000) {
     perfAt = ts;
-    if (drawAvg > 14) { if (PXMAX > 7e5) { PXMAX *= .7; resize(); } else HALF = true; }
+    // 描くのが重い、または画面の書きかえが追いつかない（1コマ24ms以上）なら、細かさを下げて引きのばす。ぼかし効果も止める
+    if (drawAvg > 14 || ivAvg > 24) { document.body.classList.add('lite'); if (PXMAX > PXMIN) { PXMAX = Math.max(PXMIN, PXMAX * .7); resize(); } else if (drawAvg > 14) HALF = true; }
   }
 }
 cv.addEventListener('click', e => {
@@ -6579,6 +6583,8 @@ let TV = false, tvKeyAt = Date.now();
 function tvZoom() { document.documentElement.style.setProperty('--tvz', Math.max(1.2, Math.min(3, 1.3 * innerHeight / 540)).toFixed(3)); }
 function setTV(on, quiet) {
   TV = !!on; document.body.classList.toggle('tv', TV); if (TV) { tvZoom(); kbNav(true); tvWake(true); } else tvWake(false);
+  // テレビの機械は力が弱いので、景色は少しあらく描いて引きのばす（絵柄なので目立たない）。重ければさらに下げる
+  if (TV) { PXMAX = Math.min(PXMAX, 6e5); PXMIN = 3e5; document.body.classList.add('lite'); } else { PXMAX = 2.2e6; PXMIN = 7e5; HALF = false; }
   setTimeout(resize, 50); if (TV && !quiet) toast(J('📺 テレビ向けの画面です。矢印で選んで、決定ボタンで押します。「もどる」でとじます', '📺 TV mode: use the arrows to choose, OK to press, Back to close'), 5000);
 }
 window.addEventListener('resize', () => { if (TV) tvZoom(); });
