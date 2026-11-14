@@ -2957,7 +2957,10 @@ function drawSky(hz, W8, alt) {
   c.fillStyle = g; c.fillRect(-W, -H, W * 3, hz + H + 2);
   const sa = clamp(1 - L.dl * 2.5) * clamp(1 - L.k * 1.25);
   drawMilkyWay(hz, sa, S.ctx || {}); drawConst(hz, sa);
-  if (sa > 0.02) for (const s of STARS) { c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)))})`; c.fillRect(s[0] * W, s[1] * hz * .9, s[2] > .85 ? 2 : 1.2, s[2] > .85 ? 2 : 1.2); }
+  if (sa > 0.02 && S.tvLite) { // テレビ：星は明るさを4段にまとめて描く
+    const B = [[], [], [], []]; for (const s of STARS) B[Math.min(3, Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)) * 4 | 0)].push(s);
+    B.forEach((b, k) => { if (!b.length) return; c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * (k + .5) / 4)})`; c.beginPath(); for (const s of b) { const z = s[2] > .85 ? 2 : 1.2; c.rect(s[0] * W, s[1] * hz * .9, z, z); } c.fill(); });
+  } else if (sa > 0.02) for (const s of STARS) { c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)))})`; c.fillRect(s[0] * W, s[1] * hz * .9, s[2] > .85 ? 2 : 1.2, s[2] > .85 ? 2 : 1.2); }
   // 月（本物の位置と満ち欠け。昼間の月はうすく。地平線より下なら見えない）
   const MV = moonView(P.ll[0], P.ll[1], nowMs()); S.MV = MV;
   const ma = clamp((MV.alt + 1) / 4) * (L.dl > .5 ? .38 * (1 - L.dl * .5) : clamp(1 - L.dl / .7 + .3)) * clamp(1 - L.k * 1.1) * (MV.k < .03 ? 0 : 1);
@@ -3166,10 +3169,14 @@ function drawProp(p, x, gy, sc, ctx) {
       c.fillStyle = shc(bc, .25); c.fillRect(x - w / 2, gy - h, w, h);
       const cols = Math.max(2, Math.floor(w / (7 * sc))), rows = Math.max(2, Math.floor(h / (9 * sc)));
       const cw = w / cols, rh = h / rows;
-      for (let yy = 0; yy < rows - 0.5; yy++) for (let xx = 0; xx < cols; xx++) {
-        const on = h2(p.seed * 31 + xx, yy) < (night ? .55 : 0);
-        c.fillStyle = on ? 'rgba(255,220,140,.95)' : shc(mix(bc, [60, 80, 110], .5), .25);
-        c.fillRect(x - w / 2 + xx * cw + cw * .25, gy - h + yy * rh + rh * .3, cw * .5, rh * .45);
+      for (const lit of [false, true]) { // 窓は、明かりの有り無しで2回にまとめて描く（1枚ずつ描くより ずっと軽い）
+        if (lit && !night) break;
+        c.fillStyle = lit ? 'rgba(255,220,140,.95)' : shc(mix(bc, [60, 80, 110], .5), .25); c.beginPath();
+        for (let yy = 0; yy < rows - 0.5; yy++) for (let xx = 0; xx < cols; xx++) {
+          if ((h2(p.seed * 31 + xx, yy) < (night ? .55 : 0)) !== lit) continue;
+          c.rect(x - w / 2 + xx * cw + cw * .25, gy - h + yy * rh + rh * .3, cw * .5, rh * .45);
+        }
+        c.fill();
       }
       break;
     }
@@ -6255,7 +6262,8 @@ function extraTile(out, b, i, cc, r) {
 function drawLocalProp2(p, x, gy, sc, ctx) {
   const s = sc * p.s, C = col => css(sh(col, .11)), night = L.night > .55, win = night ? 'rgba(255,214,120,.95)' : C([70, 90, 110]);
   const hr = localDate().getUTCHours(), seen = id => { if (x > W * .1 && x < W * .9) seeLocal(id); };
-  if (LOCAL[p.type]) addHit(x - 16 * s, gy - (p.type === 'koinobori' ? 62 : 46) * s, x + 16 * s, gy, 'L:' + p.type);
+  const shown = p.type === 'futon' ? !night && hr >= 9 && hr <= 15 && !W8rain() : p.type === 'laundry' ? !W8rain() : true; // 干していないときは説明も出さない
+  if (LOCAL[p.type] && shown) addHit(x - 16 * s, gy - (p.type === 'koinobori' ? 62 : 46) * s, x + 16 * s, gy, 'L:' + p.type);
   const flap = k => Math.sin(S.t * 4 + k + p.x) * (1 + (S.storm ? 2.5 : 0));
   switch (p.type) {
     case 'laundry': { const pal = [[226, 170, 120], [236, 210, 160], [200, 120, 90], [240, 230, 214], [214, 180, 140]];
@@ -6324,12 +6332,13 @@ function drawCrops(gy0, ctx) {
     const t0 = k / N, t1 = (k + 1) / N, y0 = gy0 + (yB - gy0) * t0 ** 1.25, y1 = gy0 + (yB - gy0) * t1 ** 1.25, f = .35 + 1.3 * t0, o = S.off.mid * (.3 + 1.8 * t0);
     c.fillStyle = shc(mix(bcol, k % 2 ? [255, 255, 255] : [0, 0, 0], .05), .1); c.fillRect(0, y0, W, y1 - y0 + 1);
     const gap = 9 * f * Math.max(1, H / 500), n0 = Math.floor(o / gap) - 1;
+    const batch = (crop === 'rice' && stg !== 'water') || crop === 'wheat' || (crop === 'corn' && stg !== 'bare'); if (batch) c.beginPath(); // 同じ色の線は まとめて1回で描く（テレビなどで軽くなる）
     for (let j = n0; j < n0 + W / gap + 3; j++) {
       const x = j * gap - o, yy = y1 - 1, hh = (y1 - y0), q = h2(j, k);
       switch (crop) {
-        case 'rice': if (stg === 'water') { if (q < .7) { c.fillStyle = shc([110, 170, 80], .1); c.fillRect(x, yy - 2 * f, 1.2 * f, 2 * f); } } else { c.strokeStyle = shc(stg === 'gold' ? [196, 160, 60] : stg === 'stub' ? [180, 150, 100] : [70, 140, 60], .1); c.lineWidth = 1; c.beginPath(); c.moveTo(x, yy); c.lineTo(x + (stg === 'gold' ? 2 * f : 0), yy - hh * (stg === 'stub' ? .3 : .9)); c.stroke(); } break;
-        case 'wheat': c.strokeStyle = shc(stg === 'gold' ? [236, 200, 100] : [110, 160, 70], .1); c.lineWidth = 1; c.beginPath(); c.moveTo(x, yy); c.lineTo(x + Math.sin(S.t * 2 + j * .3) * f, yy - hh * (stg === 'young' ? .3 : 1)); c.stroke(); break;
-        case 'corn': if (stg !== 'bare') { c.strokeStyle = shc(stg === 'dry' ? [180, 160, 100] : [70, 130, 50], .1); c.lineWidth = 1.4 * f; c.beginPath(); c.moveTo(x, yy); c.lineTo(x, yy - hh * (stg === 'young' ? .6 : 1.8)); c.moveTo(x, yy - hh * .8); c.lineTo(x - 3 * f, yy - hh * .5); c.stroke(); } break;
+        case 'rice': if (stg === 'water') { if (q < .7) { c.fillStyle = shc([110, 170, 80], .1); c.fillRect(x, yy - 2 * f, 1.2 * f, 2 * f); } } else { c.strokeStyle = shc(stg === 'gold' ? [196, 160, 60] : stg === 'stub' ? [180, 150, 100] : [70, 140, 60], .1); c.lineWidth = 1; c.moveTo(x, yy); c.lineTo(x + (stg === 'gold' ? 2 * f : 0), yy - hh * (stg === 'stub' ? .3 : .9)); } break;
+        case 'wheat': c.strokeStyle = shc(stg === 'gold' ? [236, 200, 100] : [110, 160, 70], .1); c.lineWidth = 1; c.moveTo(x, yy); c.lineTo(x + Math.sin(S.t * 2 + j * .3) * f, yy - hh * (stg === 'young' ? .3 : 1)); break;
+        case 'corn': if (stg !== 'bare') { c.strokeStyle = shc(stg === 'dry' ? [180, 160, 100] : [70, 130, 50], .1); c.lineWidth = 1.4 * f; c.moveTo(x, yy); c.lineTo(x, yy - hh * (stg === 'young' ? .6 : 1.8)); c.moveTo(x, yy - hh * .8); c.lineTo(x - 3 * f, yy - hh * .5); } break;
         case 'vineyard': if (j % 2 === 0) { c.fillStyle = shc([110, 90, 70], .1); c.fillRect(x, yy - hh * 1.3, 1 * f, hh * 1.3); } if (stg !== 'bare') { c.fillStyle = shc([80, 130, 60], .1); c.fillRect(x, yy - hh * 1.2, gap + .5, hh * .7); if (stg === 'grapes' && q < .5) { c.fillStyle = shc([96, 50, 110], .1); c.beginPath(); c.arc(x + gap * .5, yy - hh * .45, 1.3 * f, 0, 7); c.fill(); } } break;
         case 'sunflower': if (stg !== 'bare') { c.strokeStyle = shc([80, 130, 50], .1); c.lineWidth = 1; c.beginPath(); c.moveTo(x, yy); c.lineTo(x, yy - hh * 1.4); c.stroke(); if (stg === 'bloom' || stg === 'dry') { c.fillStyle = shc(stg === 'bloom' ? [246, 196, 30] : [140, 110, 60], .1); c.beginPath(); c.arc(x, yy - hh * 1.4, 2.4 * f, 0, 7); c.fill(); c.fillStyle = shc([90, 60, 30], .1); c.beginPath(); c.arc(x, yy - hh * 1.4, 1 * f, 0, 7); c.fill(); } } break;
         case 'lavender': case 'tea': case 'cotton': { c.fillStyle = shc(crop === 'lavender' ? (stg === 'bloom' ? [150, 110, 200] : [130, 150, 130]) : crop === 'tea' ? (stg === 'fresh' ? [130, 196, 80] : [70, 140, 60]) : (stg === 'bare' ? [140, 112, 82] : [90, 130, 70]), .1); c.beginPath(); c.ellipse(x, yy - hh * .3, gap * .48, hh * .55, 0, Math.PI, 0); c.fill();
@@ -6337,6 +6346,7 @@ function drawCrops(gy0, ctx) {
         case 'rapeseed': c.fillStyle = shc(stg === 'bloom' ? [250, 220, 60] : [110, 150, 70], .1); c.fillRect(x, yy - hh * .9, 1.6 * f, hh * .6); break;
       }
     }
+    if (batch) c.stroke();
   }
   addHit(0, gy0, W, yB, 'C:' + crop + ':' + stg);
   if (SHOWY[crop].split(' ').includes(stg)) seeLocal(crop);
