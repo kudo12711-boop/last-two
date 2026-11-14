@@ -6211,7 +6211,8 @@ function extraTile(out, b, i, cc, r) {
 function drawLocalProp2(p, x, gy, sc, ctx) {
   const s = sc * p.s, C = col => css(sh(col, .11)), night = L.night > .55, win = night ? 'rgba(255,214,120,.95)' : C([70, 90, 110]);
   const hr = localDate().getUTCHours(), seen = id => { if (x > W * .1 && x < W * .9) seeLocal(id); };
-  if (LOCAL[p.type]) addHit(x - 16 * s, gy - (p.type === 'koinobori' ? 62 : 46) * s, x + 16 * s, gy, 'L:' + p.type);
+  const shown = p.type === 'futon' ? !night && hr >= 9 && hr <= 15 && !W8rain() : p.type === 'laundry' ? !W8rain() : true; // 干していないときは説明も出さない
+  if (LOCAL[p.type] && shown) addHit(x - 16 * s, gy - (p.type === 'koinobori' ? 62 : 46) * s, x + 16 * s, gy, 'L:' + p.type);
   const flap = k => Math.sin(S.t * 4 + k + p.x) * (1 + (S.storm ? 2.5 : 0));
   switch (p.type) {
     case 'laundry': { const pal = [[226, 170, 120], [236, 210, 160], [200, 120, 90], [240, 230, 214], [214, 180, 140]];
