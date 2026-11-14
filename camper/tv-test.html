@@ -6740,7 +6740,14 @@ document.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' ||
 
 // ----- テレビの「もどる」ボタン：アプリから出てしまわないよう、ひとつ前にもどる操作を受けとめる -----
 let tvHist = false;
-function tvHistArm() { if (TV && !tvHist) { try { history.pushState({ tv: 1 }, ''); tvHist = true; } catch (e) { } } }
+// ブラウザは「操作なしで作った受け皿」を、もどるで飛ばしてしまう。もどるの直後に作りなおした受け皿は操作なしなので、
+// 次にリモコンやカーソルを押したときに、操作ありの受け皿をもう1つ作っておく
+let tvHistAct = false;
+function tvHistArm() {
+  if (!TV) return; const act = navigator.userActivation ? navigator.userActivation.isActive : true;
+  if (tvHist && (tvHistAct || !act)) return;
+  try { history.pushState({ tv: 1 }, ''); tvHist = true; tvHistAct = act; } catch (e) { }
+}
 window.addEventListener('popstate', () => { if (!tvHist) return; tvHist = false; if (Date.now() - tvBackKeyAt < 800) { tvHistArm(); return; } if (!tvBack()) history.back(); else tvHistArm(); });
 let tvBackKeyAt = 0;
 // カーソルで押したときも「もどる」の受け皿を作る（ブラウザは、押した操作のあとでないと受け皿を認めないため）
