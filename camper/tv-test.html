@@ -321,6 +321,7 @@ body.tv #tvscroll{position:fixed;right:2.5vw;top:50%;transform:translateY(-50%);
 body.tv #panel{padding-right:10px}
 body.lite *,body.tv *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 body.tv.full #fsmap svg,body.tv.full #fsmap,body.tv.full #fsinfo,body.tv.full #b-info,body.tv.full #b-snd,body.tv.full #b-full,body.tv.full #b-radio{border-radius:0!important;box-shadow:none!important;transition:none!important;text-shadow:none!important}body.tv.full #fsmap,body.tv.full #fsmap.solid{opacity:1;overflow:visible;border:1px solid #4a5568;width:clamp(90px,20vmin,140px)}body.tv.full #fsmap svg{background:#1c2636}body.tv.full #fsmap .sea{fill:#1c2636}body.tv.full #fsmap .land{fill:#33443c;stroke:none}body.tv.full #fsmap text{fill:#b8c0cc;stroke:none}body.tv.full #fsinfo{opacity:1;background:rgb(16,20,30);color:#d8dde6;font-size:80%;padding:6px 10px}body.tv.full.calm #fsinfo,body.tv.full.calm #fsmap{display:none!important}body.tv.full #b-info,body.tv.full #b-snd,body.tv.full #b-radio{background:rgb(40,40,40)}
+#tvsndhint{position:fixed;left:50%;transform:translateX(-50%);bottom:6vh;z-index:40;background:rgb(20,24,34);color:#fff;font-size:2.6vh;padding:1vh 2.2vh;border-radius:999px;pointer-events:none}#tvsndhint[hidden]{display:none}
 body.lite #win>button,body.tv #win>button{background:rgba(0,0,0,.5)}
 </style>
 </head>
@@ -5957,8 +5958,9 @@ function localizeTile(out, b, P0, i) {
 }
 function drawLocalProp(p, x, gy, sc, ctx) {
   const s = sc * p.s, d = .11, C = col => css(sh(col, d)), night = L.night > .55, win = night ? 'rgba(255,214,120,.95)' : C([70, 90, 110]);
-  if (x > W * .1 && x < W * .9 && LOCAL[p.type]) seeLocal(p.type);
-  if (LOCAL[p.type]) addHit(x - 16 * s, gy - 46 * s, x + 16 * s, gy, 'L:' + p.type);
+  const own = p.type === 'futon' || p.type === 'laundry'; // 干しているときだけ記録・説明（drawLocalProp2 で判断）
+  if (!own && x > W * .1 && x < W * .9 && LOCAL[p.type]) seeLocal(p.type);
+  if (!own && LOCAL[p.type]) addHit(x - 16 * s, gy - 46 * s, x + 16 * s, gy, 'L:' + p.type);
   switch (p.type) {
     case 'cyclades': { c.fillStyle = C([246, 246, 242]); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 16 * s); c.fillRect(x + 4 * s, gy - 24 * s, 12 * s, 8 * s); c.fillStyle = C([40, 100, 180]); c.beginPath(); c.arc(x - 4 * s, gy - 16 * s, 6.5 * s, Math.PI, 0); c.fill(); c.fillRect(x + 7 * s, gy - 9 * s, 4 * s, 9 * s); c.fillStyle = win; c.fillRect(x - 10 * s, gy - 10 * s, 4 * s, 4 * s); c.fillStyle = C([40, 100, 180]); c.fillRect(x + 9 * s, gy - 22 * s, 3 * s, 3 * s); break; }
     case 'nordichouse': { const col = [[166, 44, 38], [226, 176, 60], [70, 110, 150], [236, 232, 222]][p.c || 0]; c.fillStyle = C(col); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 16 * s); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [50, 52, 58]); c.beginPath(); c.moveTo(x - 15 * s, gy - 16 * s); c.lineTo(x, gy - 30 * s); c.lineTo(x + 15 * s, gy - 16 * s); c.fill(); c.fillStyle = C([250, 250, 248]); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 1.4 * s); c.fillRect(x - 13 * s, gy - 16 * s, 1.4 * s, 16 * s); c.fillRect(x + 11.6 * s, gy - 16 * s, 1.4 * s, 16 * s);
@@ -6936,14 +6938,14 @@ var tvVidOff = false;
 function tvBeep1() {
   try { auStart(); const ac = AU.ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state !== 'running') ac.resume();
     const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 660; g.gain.value = .5; o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + .7);
-  } catch (e) { toast('🔔 1: ' + e.message, 4000); }
+  } catch (e) { tvErr('test1: ' + e.message); }
 }
 function tvBeep2(quiet) {
   const sr = 22050, n = sr * (quiet ? .3 : .7) | 0, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
   const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
   w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
   for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.sin(i / sr * 2 * Math.PI * 880) * (quiet ? 2 : 16000) * Math.min(1, (n - i) / 2000), true);
-  const a = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))); a.play().catch(e => toast('🔔 2: ' + e.message, 4000));
+  const a = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))); a.play().catch(e => { tvErr('test2: ' + e.message); if (!quiet) toast(J('🔔 鳴らせませんでした', '🔔 Could not play'), 3000); });
 }
 
 // ----- テレビ：絵はがきはテレビのブラウザに保存できないので、スマホで同じ旅を開いて受けとる -----
@@ -6975,14 +6977,6 @@ setSound = function (on) {
   return r;
 };
 
-// Fire TV では、ふつうの音声ファイルを一度鳴らすと、アプリの音（Web Audio）も鳴るようになる。
-// そこで、最初にボタンを押したときに、聞こえないくらい小さな音を1回だけ鳴らしておく
-let tvUnlocked = false;
-['click', 'keydown', 'pointerdown'].forEach(t => document.addEventListener(t, () => {
-  if (!TV || tvUnlocked || !SOUND) return; tvUnlocked = true;
-  try { tvBeep2(true); } catch (e) { }
-  setTimeout(() => { try { if (AU.ac && AU.ac.state !== 'running') AU.ac.resume(); } catch (e) { } }, 400);
-}, { capture: true, passive: true }));
 
 // ----- テレビの「スマホで受けとる」のQRから開いたとき：スマホの旅はそのままにして、テレビの旅を見るだけにし、絵はがきを開く -----
 (async () => {
@@ -7047,6 +7041,15 @@ const _setSound2 = setSound;
 setSound = function (on) { const r = _setSound2.apply(this, arguments); for (const [n, l] of Object.entries(TVL)) { if (!on) tvEls(l).forEach(e => e.pause()); else tvPlay(l, n); } return r; };
 const _auVolume = auVolume;
 auVolume = function () { _auVolume(); if (TV && window.TVSND && AU.master) AU.master.gain.setTargetAtTime(0, AU.ac.currentTime, .05); for (const l of Object.values(TVL)) tvEls(l).forEach(e => e.volume = tvVol(l)); };
+
+// ----- テレビ：音がまだ出ていないときは「決定ボタンで音が出ます」と小さく出す -----
+const tvSH = document.createElement('div'); tvSH.id = 'tvsndhint'; tvSH.hidden = true; document.body.appendChild(tvSH);
+setInterval(() => {
+  const playing = Object.values(TVL).some(l => !l.el.paused);
+  const show = TV && SOUND && st && !st.preview && !playing && $('#modal').hidden && !document.hidden;
+  if (show) tvSH.textContent = J('🔈 リモコンの決定ボタンを押すと音が出ます', '🔈 Press OK on the remote to turn on the sound');
+  tvSH.hidden = !show;
+}, 1500);
 
 </script>
 </body>

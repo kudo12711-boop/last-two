@@ -5903,8 +5903,9 @@ function localizeTile(out, b, P0, i) {
 }
 function drawLocalProp(p, x, gy, sc, ctx) {
   const s = sc * p.s, d = .11, C = col => css(sh(col, d)), night = L.night > .55, win = night ? 'rgba(255,214,120,.95)' : C([70, 90, 110]);
-  if (x > W * .1 && x < W * .9 && LOCAL[p.type]) seeLocal(p.type);
-  if (LOCAL[p.type]) addHit(x - 16 * s, gy - 46 * s, x + 16 * s, gy, 'L:' + p.type);
+  const own = p.type === 'futon' || p.type === 'laundry'; // 干しているときだけ記録・説明（drawLocalProp2 で判断）
+  if (!own && x > W * .1 && x < W * .9 && LOCAL[p.type]) seeLocal(p.type);
+  if (!own && LOCAL[p.type]) addHit(x - 16 * s, gy - 46 * s, x + 16 * s, gy, 'L:' + p.type);
   switch (p.type) {
     case 'cyclades': { c.fillStyle = C([246, 246, 242]); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 16 * s); c.fillRect(x + 4 * s, gy - 24 * s, 12 * s, 8 * s); c.fillStyle = C([40, 100, 180]); c.beginPath(); c.arc(x - 4 * s, gy - 16 * s, 6.5 * s, Math.PI, 0); c.fill(); c.fillRect(x + 7 * s, gy - 9 * s, 4 * s, 9 * s); c.fillStyle = win; c.fillRect(x - 10 * s, gy - 10 * s, 4 * s, 4 * s); c.fillStyle = C([40, 100, 180]); c.fillRect(x + 9 * s, gy - 22 * s, 3 * s, 3 * s); break; }
     case 'nordichouse': { const col = [[166, 44, 38], [226, 176, 60], [70, 110, 150], [236, 232, 222]][p.c || 0]; c.fillStyle = C(col); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 16 * s); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [50, 52, 58]); c.beginPath(); c.moveTo(x - 15 * s, gy - 16 * s); c.lineTo(x, gy - 30 * s); c.lineTo(x + 15 * s, gy - 16 * s); c.fill(); c.fillStyle = C([250, 250, 248]); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 1.4 * s); c.fillRect(x - 13 * s, gy - 16 * s, 1.4 * s, 16 * s); c.fillRect(x + 11.6 * s, gy - 16 * s, 1.4 * s, 16 * s);
