@@ -6757,7 +6757,7 @@ let tvVid = null;
 async function tvWake(on) {
   if (!on) { if (tvVid) { tvVid.pause(); tvVid.remove(); tvVid = null; } return; }
   try { if (navigator.wakeLock && !wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { }
-  if (!tvVid && !tvVidOff && !SOUND) { // 音を鳴らすときは使わない（この動画が流れていると Fire TV ではアプリの音が止められるため） // 画面を起こしておく機能がないブラウザ用：見えない小さな動画を音なしでくり返し再生
+  if (!tvVid && !tvVidOff) { // 11/15：音を音声ファイルで鳴らすようになったので、音ありでも流す（スクリーンセーバーよけ） // 画面を起こしておく機能がないブラウザ用：見えない小さな動画を音なしでくり返し再生
     tvVid = document.createElement('video'); tvVid.muted = true; tvVid.loop = true; tvVid.playsInline = true; tvVid.setAttribute('playsinline', ''); tvVid.setAttribute('aria-hidden', 'true');
     tvVid.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:-1';
     tvVid.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMrbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAlV0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHNbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABeG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAThzdGJsAAAAuHN0c2QAAAAAAAAAAQAAAKhhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALmF2Y0MBQsAK/+EAFmdCwArZHsBEAAADAAQAAAMACDxImSABAAVoy4PLIAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAApAAAAKQAAAABhzdHRzAAAAAAAAAAEAAAACAABAAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAACAAAAAQAAABxzdHN6AAAAAAAAAAAAAAACAAAChgAAAAoAAAAUc3RjbwAAAAAAAAABAAADWwAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAAKYbWRhdAAAAnAGBf//bNxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBb///w9FAAFPf4AAAAAGQZo4CvqA';
@@ -6978,7 +6978,6 @@ $('#b-photo').onclick = postcard;
 // 音を鳴らすときは見えない動画を止め、音を消したときは画面が消えないように動画を流す
 const _setSound = setSound;
 setSound = function (on) {
-  if (TV && on && tvVid) { tvVid.pause(); tvVid.remove(); tvVid = null; }
   const r = _setSound.apply(this, arguments);
   if (TV && !on) tvWake(true);
   return r;
@@ -7016,6 +7015,7 @@ async function tvSndBuild() {
   const sr = 22050, len = 12; // 12秒のくり返しを2本、半分ずらして重ねる（つなぎ目で音が切れないように）
   for (const [name, [kind, filters, lfo]] of Object.entries(TV_LAYERS)) {
     const el = new Audio(), el2 = new Audio(); el.loop = el2.loop = true; el.volume = el2.volume = 0; TVL[name] = { el, el2, v: 0 };
+    const L0 = TVL[name]; el.addEventListener('playing', () => { L0.started = true; });
     try {
       const oc = new OfflineAudioContext(1, sr * len, sr), src = oc.createBufferSource(); src.buffer = noiseBuf(oc, kind); src.loop = true;
       let node = src; for (const [type, f, q] of filters) { const bq = oc.createBiquadFilter(); bq.type = type; bq.frequency.value = f; bq.Q.value = q || .7; node.connect(bq); node = bq; }
@@ -7100,6 +7100,14 @@ setSound = function (on) { const r = _setSound2.apply(this, arguments); for (con
 const _auVolume = auVolume;
 auVolume = function () { _auVolume(); if (TV && window.TVSND && AU.master) AU.master.gain.setTargetAtTime(0, AU.ac.currentTime, .05); for (const l of Object.values(TVL)) tvEls(l).forEach(e => e.volume = tvVol(l)); };
 
+// 見えない動画で音が止められてしまうテレビでは、動画をやめて音を優先する
+setInterval(() => {
+  if (!TV || !SOUND || document.hidden || !tvVid) return;
+  const stopped = Object.values(TVL).some(l => l.started && l.v > 0 && l.el.paused);
+  if (!stopped) return;
+  tvVidOff = true; tvVid.pause(); tvVid.remove(); tvVid = null; tvErr('video stopped sound');
+  for (const [n, l] of Object.entries(TVL)) tvPlay(l, n);
+}, 4000);
 // ----- テレビ：音がまだ出ていないときは「決定ボタンで音が出ます」と小さく出す -----
 const tvSH = document.createElement('div'); tvSH.id = 'tvsndhint'; tvSH.hidden = true; document.body.appendChild(tvSH);
 setInterval(() => {
