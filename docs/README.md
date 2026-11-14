@@ -17,7 +17,7 @@
 | ラスト・ツー | 最後の2人の表情の読み合い | v1.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
 | まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類） | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
 | 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
-| キャンピングカー世界一周 | 放置型の車窓の旅 | 予備の保存（11/14）まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
+| キャンピングカー世界一周 | 放置型の車窓の旅 | テレビ向けの画面（11/14）まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
 | ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
 | てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（31まい、点は最大60こ） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
 | ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
