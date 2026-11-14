@@ -6764,7 +6764,7 @@ showSettings = function () {
   const box = document.createElement('div');
   box.innerHTML = `<h3>${J('テレビ向けの画面', 'TV mode')}</h3><div class="frames">${[['auto', J('🤖 自動', '🤖 Auto')], ['on', J('📺 テレビ向け', '📺 TV')], ['off', J('📱 ふつう', '📱 Normal')]].map(([k, n]) => `<button data-tv="${k}" class="${TVPREF === k ? 'on' : ''}">${n}</button>`).join('')}</div>
     <p class="note">${J('テレビ（Fire TV など）で見るときの画面です。文字とボタンが大きくなり、リモコンの矢印で選んで決定ボタンで押せます。1分半ほど操作がないと、景色だけの「ながら見」になります。「自動」は、テレビのブラウザかどうかを見て切りかえます。アドレスの最後に ?tv をつけて開いても、テレビ向けになります。', 'For watching on a TV (Fire TV etc.): bigger text and buttons, choose with the remote\'s arrows and press OK. After about 90 seconds without input it switches to scenery only. "Auto" detects TV browsers. You can also open the page with ?tv at the end of the address.')}</p>`;
-  if (TV) { const yn = v => v == null ? '…' : v ? '○' : '×'; box.innerHTML += `<h3>${J('開いたときに残っていた旅', 'Trip found on open')}</h3><p class="note">${J('ふつうの保存', 'Storage')} ${yn(TVDIAG.ls)} ／ ${J('予備', 'Backup')} ${yn(TVDIAG.idb)} ／ ${J('クッキー', 'Cookie')} ${yn(TVDIAG.ck)} ／ ${J('アドレス', 'Address')} ${yn(TVDIAG.hash)}</p><div class="frames"><button id="tv-bm">📌 ${J('ブックマークの案内をもう一度', 'Show bookmark tip again')}</button></div>`; }
+  if (TV) { const yn = v => v == null ? '…' : v ? '○' : '×'; box.innerHTML += `<h3>${J('開いたときに残っていた旅', 'Trip found on open')}</h3><p class="note">${J('ふつうの保存', 'Storage')} ${yn(TVDIAG.ls)} ／ ${J('予備', 'Backup')} ${yn(TVDIAG.idb)} ／ ${J('クッキー', 'Cookie')} ${yn(TVDIAG.ck)} ／ ${J('アドレス', 'Address')} ${yn(TVDIAG.hash)}${TVPERF.fps != null ? '<br>' + J('全画面のなめらかさ', 'Full screen') + `: ${J('約', '~')}${TVPERF.fps} ${J('コマ/秒', 'fps')}（${J('描く時間', 'draw')} ${TVPERF.draw}ms・${TVPERF.px}）` : ''}</p><div class="frames"><button id="tv-bm">📌 ${J('ブックマークの案内をもう一度', 'Show bookmark tip again')}</button></div>`; }
   lang.after(box);
   const bm = box.querySelector('#tv-bm'); if (bm) bm.onclick = () => { closeModal(); tvBmTip(); };
   box.querySelectorAll('[data-tv]').forEach(b => b.onclick = () => { TVPREF = b.dataset.tv; try { localStorage.setItem('camper-tv', TVPREF); } catch (e) { } box.querySelectorAll('[data-tv]').forEach(x => x.classList.toggle('on', x === b)); setTV(TVPREF === 'on' || (TVPREF === 'auto' && tvAuto()), true); });
@@ -6870,6 +6870,18 @@ window.tvForget = function () {
   try { const o = ckGetAll(), n = Math.max(+o.camper_n || 0, 24); for (let i = 0; i < n; i++) if (o['camper_t' + i] != null) ckSet('camper_t' + i, ''); ckSet('camper_n', ''); } catch (e) { }
   try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) { }
 };
+
+// ----- 全画面の なめらかさを はかって、設定に出す。描くのが重すぎるときは、さらに粗くする -----
+const TVPERF = { fps: null, draw: null, px: '' };
+let tvPerfN = 0, tvPerfF = 0;
+setInterval(() => {
+  if (!TV || !document.body.classList.contains('full') || document.hidden) { tvPerfN = 0; return; }
+  const fps = 1000 / ivAvg / (HALF ? 2 : 1);
+  tvPerfN++; tvPerfF += fps;
+  if (tvPerfN >= 3) { TVPERF.fps = Math.round(tvPerfF / tvPerfN); TVPERF.draw = Math.round(drawAvg); TVPERF.px = cv.width + '×' + cv.height; }
+  if (tvPerfN >= 10) { tvPerfN = 0; tvPerfF = 0; }
+  if (HALF && drawAvg > 20 && PXMAX > 1.6e5) { PXMAX = Math.max(1.6e5, PXMAX * .8); PXMIN = Math.min(PXMIN, PXMAX); resize(); }
+}, 2000);
 
 </script>
 </body>
