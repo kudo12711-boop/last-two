@@ -6918,7 +6918,7 @@ setInterval(() => {
 }, 2000);
 
 // ----- テレビ：空（空の色・星・天の川・星座・月）は描き置きして、4コマに1回だけ描きなおす -----
-const _drawSky = drawSky; let skyC = null, skyX = null, skyN = 0, skyKey = '';
+const _drawSky = drawSky; let skyHits = [], skyC = null, skyX = null, skyN = 0, skyKey = '';
 drawSky = function (hz, W8, alt) {
   if (!S.tvLite) return _drawSky(hz, W8, alt);
   if (!skyC) { skyC = document.createElement('canvas'); skyX = skyC.getContext('2d'); }
@@ -6928,8 +6928,10 @@ drawSky = function (hz, W8, alt) {
     skyKey = key; skyN = 3;
     const m = c.getTransform(), main = c;
     skyX.setTransform(1, 0, 0, 1, 0, 0); skyX.globalAlpha = 1; skyX.clearRect(0, 0, skyC.width, skyC.height); skyX.setTransform(m);
+    const h0 = (S.hits = S.hits || []).length;
     c = skyX; try { _drawSky(hz, W8, alt); } finally { c = main; skyX.globalAlpha = 1; }
-  }
+    skyHits = S.hits.slice(h0); // 空の上の「さわると説明が出る場所」も覚えておく
+  } else if (skyHits.length) (S.hits = S.hits || []).push(...skyHits); // 描きなおさないコマでも同じ場所を使う（説明がチラチラしないように）
   c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.drawImage(skyC, 0, 0); c.restore();
 };
 
