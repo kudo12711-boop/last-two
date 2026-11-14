@@ -7136,6 +7136,14 @@ setInterval(() => {
   tvSH.hidden = !show;
 }, 1500);
 
+// ----- ?debug のとき：画面のすみに「画面を消さない」の状態を小さく出す（設定を開かなくても見えるように） -----
+if (TVDBG) {
+  const d = document.createElement('div'); d.id = 'tvwakeinfo';
+  d.style.cssText = 'position:fixed;left:8px;top:8px;z-index:99999;background:rgba(0,0,0,.75);color:#fff;font:14px/1.4 sans-serif;padding:4px 8px;border-radius:4px;pointer-events:none;max-width:60vw';
+  document.body.appendChild(d);
+  setInterval(() => { d.textContent = J('画面を消さない', 'Keep awake') + ': ' + (TVWAKE.lock || '-') + ' ／ ' + J('動画', 'video') + ' ' + (tvVid ? (tvVid.paused ? J('止まっている', 'paused') : J('流れている', 'playing')) : J('なし', 'none')) + ' ／ TV ' + (TV ? '○' : '×'); }, 1000);
+}
+
 </script>
 </body>
 </html>
