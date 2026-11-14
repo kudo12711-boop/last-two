@@ -2589,7 +2589,7 @@ let OWNED = (() => { try { return JSON.parse(localStorage.getItem('camper-owned'
 const QS = new URLSearchParams(location.search);
 let st = null;
 function load() { try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { st = null; } }
-function save() { if (!st || st.preview || QS.has('km')) return; try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } mirrorSave(); }
+function save() { if (!st || st.preview || QS.has('km') || window.GUEST) return; /* GUEST：テレビの旅をスマホで見ているときは保存しない */ try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } mirrorSave(); }
 // 予備の保存：ブラウザ（テレビのブラウザなど）が閉じるときに localStorage を消してしまうことがあるので、
 // 旅と設定を IndexedDB にも写しておき、localStorage が空なら そこから戻す。ブラウザにも「消さないで」とお願いする
 const MIRROR_SKIP = /^camper-(img|wx|geo)/;
@@ -2598,6 +2598,7 @@ function idb() { return new Promise((res, rej) => { try { const r = indexedDB.op
 async function idbSet(k, v) { const db = await idb(); return new Promise(res => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = tx.onerror = () => { db.close(); res(); }; }); }
 async function idbGet(k) { const db = await idb(); return new Promise(res => { const rq = db.transaction('kv').objectStore('kv').get(k); rq.onsuccess = () => { db.close(); res(rq.result); }; rq.onerror = () => { db.close(); res(null); }; }); }
 function mirrorSave(force) {
+  if (window.GUEST) return;
   if (!MIRROR_ON) return;
   if (!force && Date.now() - mirrorAt < 30e3) return; mirrorAt = Date.now();
   try {
@@ -6811,7 +6812,7 @@ setInterval(() => tvHash(), 15e3);
 document.addEventListener('visibilitychange', () => { if (document.hidden) tvHash(true); });
 window.addEventListener('pagehide', () => tvHash(true));
 (async () => { // 開いたときに旅がなく、アドレスに旅が入っていれば、そこから続ける
-  const m = location.hash.match(/trip=(CAMPER[01]-[A-Za-z0-9_-]+)/); if (!m || !st || !st.preview) return;
+  const m = location.hash.match(/trip=(CAMPER[01]-[A-Za-z0-9_-]+)/); if (!m || !st || /[&#]pc=1/.test(location.hash) || !st.preview) return;
   let o; try { o = await readCode(m[1]); } catch (e) { return; }
   if (!st.preview) return;
   let ok = false; try { localStorage.setItem(KEY, JSON.stringify(o.s)); ok = localStorage.getItem(KEY) != null; for (const [k, v] of [['camper-frame', o.f], ['camper-poles', o.p], ['camper-sound', o.snd]]) if (v != null) localStorage.setItem(k, v); } catch (e) { }
@@ -6962,7 +6963,7 @@ function tvQRLib() {
 }
 async function tvToPhone() {
   let url = location.origin + location.pathname;
-  try { tick(); url += '#trip=' + await tvCode(); } catch (e) { }
+  try { tick(); url += '#trip=' + await tvCode() + '&pc=1'; } catch (e) { }
   modal(`<h2>📱 ${J('スマホで受けとる', 'Get it on your phone')}</h2>
     <p class="note">${J('テレビのブラウザには画像を保存できません。スマホのカメラでこのコードを読みとると、スマホで同じ旅の続きが開きます。そこで「📷 絵はがき」を押すと、スマホに保存したり LINE で送ったりできます。', 'TV browsers cannot save images. Scan this code with your phone camera to open the same trip on your phone, then press "📷 Postcard" there to save or share it.')}</p>
     <div id="tv-qr" style="background:#fff;padding:12px;width:max-content;margin:8px auto"></div>
@@ -6989,6 +6990,33 @@ let tvUnlocked = false;
   try { tvBeep2(true); } catch (e) { }
   setTimeout(() => { try { if (AU.ac && AU.ac.state !== 'running') AU.ac.resume(); } catch (e) { } }, 400);
 }, { capture: true, passive: true }));
+
+// ----- テレビの「スマホで受けとる」のQRから開いたとき：スマホの旅はそのままにして、テレビの旅を見るだけにし、絵はがきを開く -----
+(async () => {
+  const m = location.hash.match(/trip=(CAMPER[01]-[A-Za-z0-9_-]+)&pc=1/); if (!m) return;
+  let o; try { o = await readCode(m[1]); } catch (e) { return; } if (!o || !o.s) return;
+  window.GUEST = true; closeModal(); st = o.s; P = curPos(); startTrip(); back();
+  toast(J('📺 テレビの旅を見ています（スマホの旅はそのまま残っています）', '📺 Viewing the TV trip (your own trip on this phone is kept)'), 6000);
+  setTimeout(() => postcard(), 2500);
+})();
+
+// ----- テレビ：アプリの音を「ふつうの音声」として流す -----
+// Fire TV では Web Audio をそのまま鳴らしても聞こえず、音声ファイル（audio 要素）なら鳴るので、
+// アプリの音をいったん音声の流れにして、audio 要素で再生する
+let tvOut = null;
+const _auBuild = auBuild;
+auBuild = function () {
+  _auBuild();
+  if (!TV || !AU.ac.createMediaStreamDestination) return;
+  try {
+    const d = AU.ac.createMediaStreamDestination();
+    AU.master.disconnect(); AU.master.connect(d);
+    tvOut = new Audio(); tvOut.srcObject = d.stream; tvOut.play().catch(() => { });
+    AU.tvDest = d;
+  } catch (e) { }
+};
+['click', 'keydown', 'pointerdown'].forEach(t => document.addEventListener(t, () => { if (tvOut && tvOut.paused && SOUND) tvOut.play().catch(() => { }); }, { capture: true, passive: true }));
+document.addEventListener('visibilitychange', () => { if (!tvOut) return; if (document.hidden) tvOut.pause(); else if (SOUND) tvOut.play().catch(() => { }); });
 
 </script>
 </body>
