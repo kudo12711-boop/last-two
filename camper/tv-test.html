@@ -5105,7 +5105,7 @@ function frame(ts) {
   if (ts - perfAt > 3000) {
     perfAt = ts;
     // 描くのが重い、または画面の書きかえが追いつかない（1コマ24ms以上）なら、細かさを下げて引きのばす。ぼかし効果も止める
-    if (drawAvg > 14 || ivAvg > 24) { document.body.classList.add('lite'); if (PXMAX > PXMIN) { PXMAX = Math.max(PXMIN, PXMAX * .7); resize(); } else if (drawAvg > 14 && drawAvg < 18) HALF = true; }
+    if (!S.tvLite && (drawAvg > 14 || ivAvg > 24)) { document.body.classList.add('lite'); if (PXMAX > PXMIN) { PXMAX = Math.max(PXMIN, PXMAX * .7); resize(); } else if (drawAvg > 14 && drawAvg < 18) HALF = true; }
     if (HALF && drawAvg > 20) HALF = false; // 1コマが重すぎるときは、1コマおきにしても遅くなるだけなのでやめる
   }
 }
@@ -6625,8 +6625,8 @@ function tvZoom() { document.documentElement.style.setProperty('--tvz', Math.max
 function setTV(on, quiet) {
   TV = !!on; document.body.classList.toggle('tv', TV); if (TV) { tvZoom(); tvWake(true); } else tvWake(false);
   // テレビの機械は力が弱いので、景色は少しあらく描いて引きのばす（絵柄なので目立たない）。重ければさらに下げる
-  // さらに、1秒30コマに決めて（ばらつくより一定のほうがなめらかに見える）、車のゆれも止める
-  if (TV) { PXMAX = Math.min(PXMAX, 3.6e5); PXMIN = 2.4e5; HALF = true; S.tvLite = true; document.body.classList.add('lite'); } else { PXMAX = 2.2e6; PXMIN = 7e5; HALF = false; S.tvLite = false; }
+  // 車のゆれも止める
+  if (TV) { PXMAX = 1.6e5; PXMIN = 1.2e5; HALF = false; drawAvg = 12; /* Fire TV で測って、最初からこの細かさ（約55コマ/秒になった） */ S.tvLite = true; document.body.classList.add('lite'); } else { PXMAX = 2.2e6; PXMIN = 7e5; HALF = false; S.tvLite = false; }
   setTimeout(resize, 50); if (TV && !quiet) toast(J('📺 テレビ向けの画面です。「もどる」ボタンで開いている画面をとじます', '📺 TV mode: press Back on the remote to close windows'), 5000);
 }
 window.addEventListener('resize', () => { if (TV) tvZoom(); });
@@ -6684,6 +6684,7 @@ function tvMove(dir) {
 }
 const TV_BACK = ['Escape', 'GoBack', 'BrowserBack', 'Back'];
 function tvBack() {
+  tvKeyAt = Date.now(); // もどるで全画面をぬけたあと、すぐ「ながら見」にもどらないように
   if (!$('#modal').hidden) { closeModal(); return true; }
   const gb = $('#gzbar'); if (gb && !gb.hidden) { gb.hidden = true; return true; }
   if (document.body.classList.contains('full')) { gzMoveT = Date.now() + 1500; setFull(false); return true; }
@@ -6732,7 +6733,7 @@ document.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' ||
 // ----- テレビの「もどる」ボタン：アプリから出てしまわないよう、ひとつ前にもどる操作を受けとめる -----
 let tvHist = false;
 function tvHistArm() { if (TV && !tvHist) { try { history.pushState({ tv: 1 }, ''); tvHist = true; } catch (e) { } } }
-window.addEventListener('popstate', () => { if (!tvHist) return; tvHist = false; if (Date.now() - tvBackKeyAt < 800) return; if (!tvBack()) history.back(); });
+window.addEventListener('popstate', () => { if (!tvHist) return; tvHist = false; if (Date.now() - tvBackKeyAt < 800) { tvHistArm(); return; } if (!tvBack()) history.back(); else tvHistArm(); });
 let tvBackKeyAt = 0;
 // カーソルで押したときも「もどる」の受け皿を作る（ブラウザは、押した操作のあとでないと受け皿を認めないため）
 ['pointerdown', 'click'].forEach(t => document.addEventListener(t, () => tvHistArm(), { capture: true, passive: true }));
@@ -6891,7 +6892,7 @@ setInterval(() => {
   tvPerfN++; tvPerfF += fps;
   if (tvPerfN >= 3) { TVPERF.fps = Math.round(tvPerfF / tvPerfN); TVPERF.draw = Math.round(drawAvg); TVPERF.px = cv.width + '×' + cv.height; }
   if (tvPerfN >= 10) { tvPerfN = 0; tvPerfF = 0; }
-  if (HALF && drawAvg > 20 && PXMAX > 1.6e5) { PXMAX = Math.max(1.6e5, PXMAX * .8); PXMIN = Math.min(PXMIN, PXMAX); resize(); }
+  if (drawAvg > 26 && PXMAX > PXMIN) { PXMAX = Math.max(PXMIN, PXMAX * .85); resize(); }
 }, 2000);
 
 // ----- テレビ：空（空の色・星・天の川・星座・月）は描き置きして、4コマに1回だけ描きなおす -----
