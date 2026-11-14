@@ -6945,6 +6945,33 @@ function tvBeep2() {
   const a = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))); a.play().catch(e => toast('🔔 2: ' + e.message, 4000));
 }
 
+// ----- テレビ：絵はがきはテレビのブラウザに保存できないので、スマホで同じ旅を開いて受けとる -----
+const _postcard = postcard;
+postcard = function (...a) {
+  const r = _postcard.apply(this, a);
+  if (!TV) return r;
+  let n = 0; const iv = setInterval(() => {
+    const b = $('#pc-send'); if (!b && ++n < 40) return; clearInterval(iv); if (!b || b.dataset.tv) return;
+    b.dataset.tv = '1'; b.textContent = J('📱 スマホで受けとる', '📱 Get it on your phone');
+    b.onclick = () => tvToPhone();
+  }, 100);
+  return r;
+};
+function tvQRLib() {
+  return window.QRCode ? Promise.resolve() : new Promise((ok, ng) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = ok; s.onerror = ng; document.head.appendChild(s); });
+}
+async function tvToPhone() {
+  let url = location.origin + location.pathname;
+  try { tick(); url += '#trip=' + await tvCode(); } catch (e) { }
+  modal(`<h2>📱 ${J('スマホで受けとる', 'Get it on your phone')}</h2>
+    <p class="note">${J('テレビのブラウザには画像を保存できません。スマホのカメラでこのコードを読みとると、スマホで同じ旅の続きが開きます。そこで「📷 絵はがき」を押すと、スマホに保存したり LINE で送ったりできます。', 'TV browsers cannot save images. Scan this code with your phone camera to open the same trip on your phone, then press "📷 Postcard" there to save or share it.')}</p>
+    <div id="tv-qr" style="background:#fff;padding:12px;width:max-content;margin:8px auto"></div>
+    <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`);
+  try { await tvQRLib(); new QRCode($("#tv-qr"), { text: url, width: 190, height: 190, correctLevel: QRCode.CorrectLevel.L }); }
+  catch (e) { $('#tv-qr').textContent = J('コードを作れませんでした（インターネットの接続を確かめてください）', 'Could not make the code (check the internet connection)'); }
+}
+$('#b-photo').onclick = postcard;
+
 </script>
 </body>
 </html>
