@@ -133,7 +133,7 @@
 
 ## 技術メモ
 
-- テレビ向け: `tools/tv.js`（見分け・リモコン操作・なめらかさ・クッキー保存・音声ファイルの音・絵はがきQR・設定の診断）。ためし用に同じものを `camper/tv-test.html` にも置いている（`python3 tools/build.py camper/tv-test.html`）。Fire TV のブラウザは、閉じると保存を消す・Web Audio が鳴らない・画像を保存できない・半透明や角丸の重ね合わせが重い、の4点に注意。
+- テレビ向け: `tools/tv.js`（見分け・リモコン操作・なめらかさ・クッキー保存・音声ファイルの音・絵はがきQR・設定の診断）。ためし用に同じものを `camper/tv-test.html` にも置いている（`python3 tools/build.py camper/tv-test.html`）。設定の「開いたときに残っていた旅」「音をためす」などの調べるための表示は、アドレスに `?debug` を付けたときだけ出る。Fire TV のブラウザは、閉じると保存を消す・Web Audio が鳴らない・画像を保存できない・半透明や角丸の重ね合わせが重い、の4点に注意。
 - 部品: `tools/data.js`（ルート・町・豆知識）、`tools/sight.js`（観光の中身: COUNTRY, CITY_C, CITY, GENERIC）、`tools/main.js`（本体）、`tools/src.html`（ひな形）、`tools/land.txt`（世界の陸地マップ）。`python3 tools/build.py <出力先>` で1つの HTML にまとめ、リポジトリの `camper/index.html` に置く。
 - 天気は Open-Meteo、地名は BigDataCloud（どちらも無料・キー不要）。
 - 写真: ja.wikipedia.org の API（prop=pageimages, pilicense=free）を画面から直接呼ぶ。まず題名で探し、なければ検索の上位。結果は localStorage `camper-img` に400件まで覚える（見つからなかったものも覚える。通信エラーは覚えない）。同時に3件まで。

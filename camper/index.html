@@ -6614,6 +6614,7 @@ function drawShip(e, p, hz, sc) {
   if (x > W * .15 && x < W * .85) seeLocal('ship_' + e.ship);
 }
 
+const TVDBG = new URLSearchParams(location.search).has('debug');
 /* ===== テレビ向けの画面（Fire TV など）=====
    ・リモコンの矢印キーで選び、決定ボタンで押す（選んでいる所が光る）
    ・文字とボタンを大きく
@@ -6781,8 +6782,9 @@ showSettings = function () {
   box.innerHTML = `<h3>${J('テレビ向けの画面', 'TV mode')}</h3><div class="frames">${[['auto', J('🤖 自動', '🤖 Auto')], ['on', J('📺 テレビ向け', '📺 TV')], ['off', J('📱 ふつう', '📱 Normal')]].map(([k, n]) => `<button data-tv="${k}" class="${TVPREF === k ? 'on' : ''}">${n}</button>`).join('')}</div>
     <p class="note">${J('テレビ（Fire TV など）で見るときの画面です。文字とボタンが大きくなり、リモコンの矢印で選んで決定ボタンで押せます。1分半ほど操作がないと、景色だけの「ながら見」になります。「自動」は、テレビのブラウザかどうかを見て切りかえます。アドレスの最後に ?tv をつけて開いても、テレビ向けになります。', 'For watching on a TV (Fire TV etc.): bigger text and buttons, choose with the remote\'s arrows and press OK. After about 90 seconds without input it switches to scenery only. "Auto" detects TV browsers. You can also open the page with ?tv at the end of the address.')}</p>`;
   if (TV) { const yn = v => v == null ? '…' : v ? '○' : '×'; box.innerHTML += `<h3>${J('開いたときに残っていた旅', 'Trip found on open')}</h3><p class="note">${J('ふつうの保存', 'Storage')} ${yn(TVDIAG.ls)} ／ ${J('予備', 'Backup')} ${yn(TVDIAG.idb)} ／ ${J('クッキー', 'Cookie')} ${yn(TVDIAG.ck)} ／ ${J('アドレス', 'Address')} ${yn(TVDIAG.hash)}${'<br>' + J('音', 'Sound') + ': ' + (SOUND ? J('鳴らす', 'on') : J('消す', 'off')) + ' ／ ' + (AU.ac ? ({ running: J('鳴っている', 'playing'), suspended: J('止まっている', 'suspended') }[AU.ac.state] || AU.ac.state) : J('まだ始まっていない', 'not started'))}${'<br>' + J('テレビ用の音', 'TV sound') + ': ' + (tvSndInfo || J('まだ', 'not yet')) + ' ／ ' + Object.entries(TVL).filter(([n, l]) => l.v > 0).map(([n, l]) => n + (l.el.paused ? '(止)' : '(▶)')).join(' ')}${TVERR.length ? '<br>' + J('エラー', 'Errors') + ': ' + TVERR.map(x => x.replace(/</g, '&lt;')).join('<br>') : ''}${TVPERF.fps != null ? '<br>' + J('全画面のなめらかさ', 'Full screen') + `: ${J('約', '~')}${TVPERF.fps} ${J('コマ/秒', 'fps')}（${J('描く時間', 'draw')} ${TVPERF.draw}ms・${TVPERF.px}）${TVPERF.n != null || TVPERF.g != null ? '<br>' + J('ふつうの全画面', 'Full screen') + ' ' + (TVPERF.n ?? '-') + ' ／ ' + J('時計が出る ながら見', 'Clock view') + ' ' + (TVPERF.g ?? '-') + J(' コマ/秒', ' fps') : ''}${TVPERF.jn != null || TVPERF.jg != null ? '<br>' + J('引っかかり（1分あたり）', 'Hitches per minute') + ': ' + J('ふつう', 'normal') + ' ' + (TVPERF.jn ?? '-') + ' ／ ' + J('ながら見', 'clock') + ' ' + (TVPERF.jg ?? '-') : ''}` : ''}</p><div class="frames"><button id="tv-bm">📌 ${J('ブックマークの案内をもう一度', 'Show bookmark tip again')}</button></div>`; }
+  if (TV && !TVDBG) { const h = [...box.querySelectorAll('h3')].find(x => x.textContent === J('開いたときに残っていた旅', 'Trip found on open')); if (h) { const n = h.nextElementSibling; if (n && n.matches('p.note')) n.remove(); h.remove(); } } // 調べるための表示は ?debug のときだけ
   lang.after(box);
-  if (TV) {
+  if (TV && TVDBG) {
     const t = document.createElement('div');
     t.innerHTML = `<h3>${J('音をためす', 'Sound test')}</h3><div class="frames"><button id="tv-b1">🔔 ${J('ためす1', 'Test 1')}</button><button id="tv-b2">🔔 ${J('ためす2', 'Test 2')}</button><button id="tv-b3">🔔 ${J('動画を止めてためす', 'Test without video')}</button></div><p class="note" id="tv-binfo"></p>`;
     box.after(t);
