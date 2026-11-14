@@ -2588,6 +2588,9 @@ const LEG = {};
 const KEY = 'camper-trip-v1';
 let OWNED = (() => { try { return JSON.parse(localStorage.getItem('camper-owned') || '[]'); } catch (e) { return []; } })();
 const QS = new URLSearchParams(location.search);
+/* ためし用：?demo=day（暖かい昼）／?demo=night（暖かい夜）。今の旅や記録にはさわらない（km を使った見本の旅になり、保存しない） */
+const DEMO = /^(day|night)$/.test(QS.get('demo') || '') ? QS.get('demo') : '';
+if (DEMO) { if (!QS.has('km')) QS.set('km', '120'); QS.set('temp', '24'); QS.set('wx', '1'); if (!QS.has('h')) { const lh = (new Date().getUTCHours() + 9) % 24, want = DEMO === 'day' ? 10 : 21; QS.set('h', String((want - lh + 24) % 24)); } }
 let st = null;
 function load() { try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { st = null; } }
 function save() { if (!st || st.preview || QS.has('km') || window.GUEST) return; /* GUEST：テレビの旅をスマホで見ているときは保存しない */ try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } mirrorSave(); }
@@ -2599,7 +2602,7 @@ function idb() { return new Promise((res, rej) => { try { const r = indexedDB.op
 async function idbSet(k, v) { const db = await idb(); return new Promise(res => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = tx.onerror = () => { db.close(); res(); }; }); }
 async function idbGet(k) { const db = await idb(); return new Promise(res => { const rq = db.transaction('kv').objectStore('kv').get(k); rq.onsuccess = () => { db.close(); res(rq.result); }; rq.onerror = () => { db.close(); res(null); }; }); }
 function mirrorSave(force) {
-  if (window.GUEST) return;
+  if (window.GUEST || QS.has('km')) return;
   if (!MIRROR_ON) return;
   if (!force && Date.now() - mirrorAt < 30e3) return; mirrorAt = Date.now();
   try {
@@ -2853,7 +2856,7 @@ function applyTest() {
   if (QS.has('wind')) wx.wind = +QS.get('wind');
 }
 function wxState() {
-  const w = wx || fakeWx(P.ll);
+  let w = wx || fakeWx(P.ll); if (DEMO) w = Object.assign({}, w, { temp: 24, code: 1, cloud: 20, wind: 6 });
   const rain = RAIN[w.code] || 0, snow = SNOW[w.code] || 0;
   return { temp: w.temp, code: w.code, cloud: Math.max(w.cloud, rain || snow ? 85 : 0), rain, snow, fog: (w.code === 45 || w.code === 48) ? 0.6 : 0, thunder: w.code >= 95, wind: w.wind,
     snowCover: (snow > 0 && w.temp < 2) || w.temp < -2, frost: w.temp < -6 };
@@ -3714,7 +3717,7 @@ function evPool(ctx, W8, alt) {
     if (b === 'desert' && (lon > 30 || (lon > -20 && lat > 10))) add('camels', 2.5);
     if (b === 'mount' || b === 'desert') add('eagle', 1.5);
     if ((b === 'farm' || b === 'steppe' || b === 'forest') && lon > -20) add('train', 1);
-    if (landFinds(ctx, W8, false).length) add('roadfind', 2); // 道ばたで光るひろいもの
+    if (landFinds(ctx, W8, false).length) add('roadfind', DEMO ? 8 : 2); // 道ばたで光るひろいもの
     if (nearLm('cappadocia', 60) || nearLm('balloons', 60)) add('balloon', alt < 35 ? 6 : 1.5);
     else add('balloon', .15);
   }
@@ -5091,7 +5094,7 @@ function frame(ts) {
   prevBiome = ctx.biome;
   const vf = st.parked ? 0 : clamp(Math.sqrt(st.speed / 60), .6, 2.2); S.vf = vf;
   S.off.cloud += dt * (5 * vf + (W8.wind || 0) * .25); S.off.far += dt * 9 * vf; S.off.hill += dt * 22 * vf; S.off.mid += dt * 75 * vf; S.off.near += dt * 480 * vf; S.off.sea += dt * 60 * vf;
-  if (S.t > S.nextEv) { spawnEvent(ctx, W8, alt); S.nextEv = S.t + 18 + Math.random() * 30; }
+  if (S.t > S.nextEv) { spawnEvent(ctx, W8, alt); S.nextEv = S.t + (DEMO ? 8 + Math.random() * 6 : 18 + Math.random() * 30); }
   S.events = S.events.filter(e => S.t - e.t0 < e.dur);
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
   const bump = ctx.sea || st.parked || S.tvLite ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0) + (S.storm ? Math.sin(S.t * 17) * Math.sin(S.t * 2.3) * clamp((S.storm.w - 40) / 40) * 3 : 0);
@@ -6011,7 +6014,7 @@ const LSFX = {
   },
 };
 function localSounds(ctx) {
-  if (!AU.ac || !SOUND || AU.ac.state !== 'running' || !P) return;
+  if (!AU.ac || !SOUND || (AU.ac.state !== 'running' && !window.TVSND) || !P) return;
   const cc = ccOf(P), ld = localDate(), hr = ld.getUTCHours(), mi = ld.getUTCMinutes(), day = ld.toISOString().slice(0, 10);
   const near = nearbyStops(P).some(n => Math.abs(n.d) < 20 && !n.port || Math.abs(n.d) < 12), town = ctx.biome === 'city' || near;
   const once = (key, fn, note) => { const k = key + ':' + day; S.lsDone = S.lsDone || {}; if (S.lsDone[k]) return; S.lsDone[k] = 1; fn(); const id = key.split(':')[0]; if (st.local && st.local[id]) { if (note) toast(note, 3500); } else seeLocal(id); };
@@ -6999,11 +7002,11 @@ const TVERR = [];
 const tvErr = m => { TVERR.push(new Date().toTimeString().slice(0, 8) + ' ' + String(m).slice(0, 140)); if (TVERR.length > 5) TVERR.shift(); };
 window.addEventListener('error', e => tvErr(e.message || 'error'));
 window.addEventListener('unhandledrejection', e => tvErr('promise: ' + ((e.reason && e.reason.message) || e.reason)));
-function tvWav(buf) {
+function tvWav(buf, plain) {
   const d = buf.getChannelData(0), sr = buf.sampleRate, n = d.length, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab);
   const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
   w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
-  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[i] * Math.sin(Math.PI * i / n))) * 32000, true); // 両はしが0の山形：もう1本と半分ずらすと、合わせた大きさが一定になる
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[i] * (plain ? 1 : Math.sin(Math.PI * i / n)))) * 32000, true); // 両はしが0の山形：もう1本と半分ずらすと、合わせた大きさが一定になる
   return URL.createObjectURL(new Blob([ab], { type: 'audio/wav' }));
 }
 const TVL = {}; let tvSndOn = false, tvSndInfo = '';
@@ -7024,6 +7027,57 @@ async function tvSndBuild() {
     } catch (e) { tvErr(name + ': ' + e.message); }
   }
   tvSndInfo = Object.keys(TVL).length + J('つの音を用意', ' sounds ready');
+  tvSfxBuild();
+}
+// 鳥・カモメ・虫・カエル・たき火・雷・クラクション・船の鐘も、それぞれ3通りずつ音声ファイルにしておき、鳴らすときは audio 要素で鳴らす
+const TVSFX = {}, TV_SFX_LEN = { bird: 1.4, gull: 1.4, cricket: 1.4, frog: 1, crackle: 1.8, thunder: 8, horn: .8, bell: 2 }, tvSfxPool = [];
+let tvSfxN = 0;
+async function tvRender(fn, len) { // Web Audio で作る音を、その場で音声ファイルにする
+  const sr = 22050, oc = new OfflineAudioContext(1, Math.ceil(sr * len), sr), m = oc.createGain(); m.gain.value = 1.4; m.connect(oc.destination);
+  const keep = [AU.ac, AU.master, AU.buf];
+  AU.ac = oc; AU.master = m; AU.buf = { white: noiseBuf(oc, 'white'), pink: noiseBuf(oc, 'pink'), brown: noiseBuf(oc, 'brown') };
+  try { fn(); } finally { [AU.ac, AU.master, AU.buf] = keep; }
+  return tvWav(await oc.startRendering(), true);
+}
+async function tvSfxBuild() {
+  for (let k = 0; k < 4; k++) tvSfxPool.push(new Audio());
+  for (const [name, len] of Object.entries(TV_SFX_LEN)) {
+    const urls = [];
+    for (let k = 0; k < 3; k++) {
+      try { urls.push(await tvRender(() => { if (name === 'thunder') { burst(4.5, .5, 'lowpass', 140, .05, 1); burst(2.2, .25, 'lowpass', 380, .15 + Math.random() * .5, 1); } else TVSFX_ORIG[name](); }, len)); }
+      catch (e) { tvErr(name + ' sfx: ' + e.message); }
+    }
+    if (urls.length) TVSFX[name] = urls;
+  }
+  tvSndInfo += J('・ちょっとした音 ', ' + short sounds ') + Object.keys(TVSFX).length;
+}
+function tvPlayUrl(url, name, own) {
+  if (!url || !SOUND || document.hidden || !tvSfxPool.length) return;
+  const el = own ? new Audio() : tvSfxPool[tvSfxN++ % tvSfxPool.length];
+  try { el.src = url; el.volume = Math.max(0, Math.min(1, SVOL * .8)); el.play().catch(e => tvErr(name + ': ' + e.message)); } catch (e) { tvErr(name + ': ' + e.message); }
+}
+function tvSfx(name) { const urls = TVSFX[name]; if (urls) tvPlayUrl(urls[Math.random() * urls.length | 0], name); }
+const TVSFX_ORIG = {};
+for (const name of Object.keys(SFX)) { TVSFX_ORIG[name] = SFX[name]; SFX[name] = function () { if (TV && window.TVSND) return tvSfx(name); return TVSFX_ORIG[name].apply(this, arguments); }; }
+// テレビでは Web Audio の時計が進まないことがあるので、「ときどき鳴らす」の時計はふつうの時計を使う
+const _auMaybe = auMaybe;
+auMaybe = function (name, every) {
+  if (!(TV && window.TVSND)) return _auMaybe(name, every);
+  const now = performance.now() / 1000, nx = tvSfxNext; if (nx[name] == null) nx[name] = now + Math.random() * every;
+  if (now >= nx[name]) { SFX[name](); nx[name] = now + every * (.4 + Math.random() * 1.2); }
+};
+const tvSfxNext = {};
+const _auThunder = auThunder;
+auThunder = function () { if (TV && window.TVSND) { if (SOUND) SFX.thunder(); return; } return _auThunder(); };
+// 教会の鐘・お寺の鐘・夕方のチャイムなど（めったに鳴らない音）は、鳴らすときにその場で音声ファイルにする
+const TV_LSFX_LEN = { churchbell: n => (n || 1) * 1.9 + 4.2, templebell: 9.5, adhan: 20, market: 5.5, shiphorn: 3.6, chime: 10 };
+for (const name of Object.keys(LSFX)) {
+  const orig = LSFX[name];
+  LSFX[name] = function (...a) {
+    if (!(TV && window.TVSND)) return orig.apply(this, a);
+    const L = TV_LSFX_LEN[name], len = typeof L === 'function' ? L(...a) : (L || 6);
+    tvRender(() => orig.apply(this, a), len).then(u => tvPlayUrl(u, name, true)).catch(e => tvErr(name + ': ' + e.message));
+  };
 }
 // アプリが音量を変えるとき、テレビでは audio 要素の音量にする（1つの音に2本ずつ）
 const tvEls = l => [l.el, l.el2];
