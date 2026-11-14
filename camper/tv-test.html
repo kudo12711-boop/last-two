@@ -6750,13 +6750,13 @@ let tvVid = null;
 async function tvWake(on) {
   if (!on) { if (tvVid) { tvVid.pause(); tvVid.remove(); tvVid = null; } return; }
   try { if (navigator.wakeLock && !wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { }
-  if (!tvVid) { // 画面を起こしておく機能がないブラウザ用：見えない小さな動画を音なしでくり返し再生
+  if (!tvVid && !tvVidOff) { // 画面を起こしておく機能がないブラウザ用：見えない小さな動画を音なしでくり返し再生
     tvVid = document.createElement('video'); tvVid.muted = true; tvVid.loop = true; tvVid.playsInline = true; tvVid.setAttribute('playsinline', ''); tvVid.setAttribute('aria-hidden', 'true');
     tvVid.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:-1';
     tvVid.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMrbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAlV0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHNbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABeG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAThzdGJsAAAAuHN0c2QAAAAAAAAAAQAAAKhhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALmF2Y0MBQsAK/+EAFmdCwArZHsBEAAADAAQAAAMACDxImSABAAVoy4PLIAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAApAAAAKQAAAABhzdHRzAAAAAAAAAAEAAAACAABAAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAACAAAAAQAAABxzdHN6AAAAAAAAAAAAAAACAAAChgAAAAoAAAAUc3RjbwAAAAAAAAABAAADWwAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAAKYbWRhdAAAAnAGBf//bNxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBb///w9FAAFPf4AAAAAGQZo4CvqA';
     document.body.appendChild(tvVid);
   }
-  tvVid.play().catch(() => { });
+  if (tvVid) tvVid.play().catch(() => { });
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && TV) { wakeLock = null; tvWake(true); } });
 document.addEventListener('keydown', () => { if (TV && tvVid && tvVid.paused) tvVid.play().catch(() => { }); tvHistArm(); }, { passive: true });
@@ -6779,6 +6779,16 @@ showSettings = function () {
     <p class="note">${J('テレビ（Fire TV など）で見るときの画面です。文字とボタンが大きくなり、リモコンの矢印で選んで決定ボタンで押せます。1分半ほど操作がないと、景色だけの「ながら見」になります。「自動」は、テレビのブラウザかどうかを見て切りかえます。アドレスの最後に ?tv をつけて開いても、テレビ向けになります。', 'For watching on a TV (Fire TV etc.): bigger text and buttons, choose with the remote\'s arrows and press OK. After about 90 seconds without input it switches to scenery only. "Auto" detects TV browsers. You can also open the page with ?tv at the end of the address.')}</p>`;
   if (TV) { const yn = v => v == null ? '…' : v ? '○' : '×'; box.innerHTML += `<h3>${J('開いたときに残っていた旅', 'Trip found on open')}</h3><p class="note">${J('ふつうの保存', 'Storage')} ${yn(TVDIAG.ls)} ／ ${J('予備', 'Backup')} ${yn(TVDIAG.idb)} ／ ${J('クッキー', 'Cookie')} ${yn(TVDIAG.ck)} ／ ${J('アドレス', 'Address')} ${yn(TVDIAG.hash)}${'<br>' + J('音', 'Sound') + ': ' + (SOUND ? J('鳴らす', 'on') : J('消す', 'off')) + ' ／ ' + (AU.ac ? ({ running: J('鳴っている', 'playing'), suspended: J('止まっている', 'suspended') }[AU.ac.state] || AU.ac.state) : J('まだ始まっていない', 'not started'))}${TVPERF.fps != null ? '<br>' + J('全画面のなめらかさ', 'Full screen') + `: ${J('約', '~')}${TVPERF.fps} ${J('コマ/秒', 'fps')}（${J('描く時間', 'draw')} ${TVPERF.draw}ms・${TVPERF.px}）${TVPERF.n != null || TVPERF.g != null ? '<br>' + J('ふつうの全画面', 'Full screen') + ' ' + (TVPERF.n ?? '-') + ' ／ ' + J('時計が出る ながら見', 'Clock view') + ' ' + (TVPERF.g ?? '-') + J(' コマ/秒', ' fps') : ''}${TVPERF.jn != null || TVPERF.jg != null ? '<br>' + J('引っかかり（1分あたり）', 'Hitches per minute') + ': ' + J('ふつう', 'normal') + ' ' + (TVPERF.jn ?? '-') + ' ／ ' + J('ながら見', 'clock') + ' ' + (TVPERF.jg ?? '-') : ''}` : ''}</p><div class="frames"><button id="tv-bm">📌 ${J('ブックマークの案内をもう一度', 'Show bookmark tip again')}</button></div>`; }
   lang.after(box);
+  if (TV) {
+    const t = document.createElement('div');
+    t.innerHTML = `<h3>${J('音をためす', 'Sound test')}</h3><div class="frames"><button id="tv-b1">🔔 ${J('ためす1', 'Test 1')}</button><button id="tv-b2">🔔 ${J('ためす2', 'Test 2')}</button><button id="tv-b3">🔔 ${J('動画を止めてためす', 'Test without video')}</button></div><p class="note" id="tv-binfo"></p>`;
+    box.after(t);
+    const info = () => { const a = AU.ac; t.querySelector('#tv-binfo').textContent = `${a ? a.state + ' ' + a.sampleRate + 'Hz' : '-'} ／ vol ${SVOL} ／ master ${AU.master ? AU.master.gain.value.toFixed(2) : '-'} ／ video ${tvVid ? (tvVid.paused ? 'stop' : 'play') : '-'}`; };
+    t.querySelector('#tv-b1').onclick = () => { tvBeep1(); setTimeout(info, 300); };
+    t.querySelector('#tv-b2').onclick = () => { tvBeep2(); setTimeout(info, 300); };
+    t.querySelector('#tv-b3').onclick = () => { tvVidOff = true; if (tvVid) { tvVid.pause(); tvVid.remove(); tvVid = null; } tvBeep1(); setTimeout(tvBeep2, 900); setTimeout(info, 300); };
+    info();
+  }
   const bm = box.querySelector('#tv-bm'); if (bm) bm.onclick = () => { closeModal(); tvBmTip(); };
   box.querySelectorAll('[data-tv]').forEach(b => b.onclick = () => { TVPREF = b.dataset.tv; try { localStorage.setItem('camper-tv', TVPREF); } catch (e) { } box.querySelectorAll('[data-tv]').forEach(x => x.classList.toggle('on', x === b)); setTV(TVPREF === 'on' || (TVPREF === 'auto' && tvAuto()), true); });
 };
@@ -6919,6 +6929,21 @@ drawSky = function (hz, W8, alt) {
   }
   c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.drawImage(skyC, 0, 0); c.restore();
 };
+
+// ----- 音のテスト：1＝アプリと同じしくみ（Web Audio）、2＝ふつうの音声ファイル -----
+var tvVidOff = false;
+function tvBeep1() {
+  try { auStart(); const ac = AU.ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state !== 'running') ac.resume();
+    const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 660; g.gain.value = .5; o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + .7);
+  } catch (e) { toast('🔔 1: ' + e.message, 4000); }
+}
+function tvBeep2() {
+  const sr = 22050, n = sr * .7 | 0, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.sin(i / sr * 2 * Math.PI * 880) * 16000 * Math.min(1, (n - i) / 2000), true);
+  const a = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))); a.play().catch(e => toast('🔔 2: ' + e.message, 4000));
+}
 
 </script>
 </body>
