@@ -506,7 +506,10 @@ function speak(txt){
 /* AI の こえ: 日本語は voice/<キー>.mp3、英語は voice/en/<キー>.mp3 を WebAudio で ならす。ないときは ブラウザの よみあげ */
 var AC=null, VBUF={}, VSRC=null, VSEQ=0;
 function actx(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state==="suspended") AC.resume(); return AC; }
-function stopVoice(){ VSEQ++; if(VSRC){ try{ VSRC.stop(); }catch(e){} VSRC=null; } if(window.speechSynthesis) try{ speechSynthesis.cancel(); }catch(e){} }
+/* こえは「じゅんばんまち」。どの こえも さいごまで よむ。止めるのは もどる・おわる・アプリを とじたとき だけ */
+var VQ=[], VBUSY=false, VCUR=null;
+function stopVoice(){ VSEQ++; VQ=[]; VBUSY=false; VCUR=null; if(VSRC){ try{ VSRC.stop(); }catch(e){} VSRC=null; } if(window.speechSynthesis) try{ speechSynthesis.cancel(); }catch(e){} }
+function voiceBusy(){ return VBUSY || VQ.length>0; }
 function vbuf(key){
   key=(LANG==="ja"?"":"en/")+key;
   if(!VBUF[key]) VBUF[key]=fetch("voice/"+key+".mp3?v=1").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
@@ -514,13 +517,36 @@ function vbuf(key){
     .catch(function(e){ delete VBUF[key]; throw e; });
   return VBUF[key];
 }
-function voice(key, text){
+// mode: なし＝じゅんばんまち / "idle"＝ほかの こえが なっていなければ だけ / "num"＝かぞえる こえ（まえの かずだけ とめて すぐ）
+function voice(key, text, mode){
   if(!S || !S.voice) return;
-  stopVoice();
-  if(!actx()){ speak(text); return; }
-  var my=VSEQ;
-  vbuf(key).then(function(b){ if(my!==VSEQ) return; var src=AC.createBufferSource(); src.buffer=b; src.connect(AC.destination); src.start(); VSRC=src; })
-    .catch(function(){ if(my===VSEQ) speak(text); });
+  if(mode==="idle" && voiceBusy()) return;
+  if(mode==="num"){
+    VQ=VQ.filter(function(x){ return !x.num; });
+    if(VBUSY && VCUR && VCUR.num){ VSEQ++; if(VSRC){ try{ VSRC.stop(); }catch(e){} VSRC=null; } if(window.speechSynthesis) try{ speechSynthesis.cancel(); }catch(e){} VBUSY=false; VCUR=null; }
+  }
+  VQ.push({key:key, text:text, num:mode==="num"});
+  if(!VBUSY) nextVoice();
+}
+function nextVoice(){
+  var it=VQ.shift(); if(!it){ VBUSY=false; VCUR=null; return; }
+  VBUSY=true; VCUR=it; var my=++VSEQ, fin=false, safety=null;
+  function done(){ if(fin) return; fin=true; clearTimeout(safety); if(my!==VSEQ) return; VSRC=null; nextVoice(); }
+  function tts(){
+    if(!window.speechSynthesis){ done(); return; }
+    try{
+      var u=new SpeechSynthesisUtterance(it.text.replace(/[\u{1F000}-\u{1FFFF}\u2600-\u27BF\uFE0F]/gu,"").replace(/\n/g," "));
+      u.lang = LANG==="ja"?"ja-JP":"en-US"; u.rate = LANG==="ja"?1.0:0.95; u.pitch=1.15;
+      u.onend=done; u.onerror=done; speechSynthesis.speak(u);
+      safety=setTimeout(done, 2500+it.text.length*220);
+    }catch(e){ done(); }
+  }
+  if(!actx()){ tts(); return; }
+  vbuf(it.key).then(function(b){
+    if(my!==VSEQ) return;
+    var src=AC.createBufferSource(); src.buffer=b; src.connect(AC.destination); src.onended=done; src.start(); VSRC=src;
+    safety=setTimeout(done, b.duration*1000+1500);
+  }).catch(function(){ if(my===VSEQ) tts(); });
 }
 function tone(f,d,type,when,vol){
   try{
@@ -652,7 +678,6 @@ function avatarSVG(look, role, opt){
 /* ---------- がめん きりかえ ---------- */
 function show(id){
   document.querySelectorAll(".screen").forEach(function(s){ s.classList.toggle("on", s.id===id); });
-  stopVoice();
 }
 function $(s){ return document.querySelector(s); }
 function el(tag,cls,html){ var e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; }
@@ -869,7 +894,7 @@ function renderKingdom(){
   var sc=$("#scene"); sc.innerHTML=sceneSVG(); sc.parentNode.classList.toggle("night", has("fireworks")); sc.parentNode.classList.toggle("st1", stageNo()===1); sc.parentNode.classList.toggle("st2", stageNo()===2);
   $("#stageChip").textContent=T().stages[stageNo()];
   sc.querySelectorAll("[data-res]").forEach(function(g){ g.addEventListener("click",function(){ openRequest(g.getAttribute("data-res")); }); });
-  var me=sc.querySelector("#me"); me.addEventListener("click",function(){ sfx("ok"); me.classList.remove("shake"); void me.getBBox(); me.classList.add("shake"); voice("role_"+S.role, titleOf()); });
+  var me=sc.querySelector("#me"); me.addEventListener("click",function(){ sfx("ok"); me.classList.remove("shake"); void me.getBBox(); me.classList.add("shake"); voice("role_"+S.role, titleOf(), "idle"); });
   $("#hc").textContent=S.hearts;
   var next=null, prev=0; for(var i=0;i<DECOS.length;i++){ if(S.hearts<DECOS[i][1]){ next=DECOS[i]; break; } prev=DECOS[i][1]; }
   if(next){ $("#pf").style.width=Math.round((S.hearts-prev)/(next[1]-prev)*100)+"%"; $("#pn").textContent=fmt(T().nextDeco,{d:T().decos[next[0]], n:next[1]-S.hearts}); }
@@ -891,7 +916,7 @@ $("#btnEnd").onclick=function(){
   sfx("tap");
   var c=dialog('<div class="who">🌙</div><p class="say" style="font-size:18px">'+esc(T().endAsk).replace(/\n/g,"<br>")+'</p><div class="btns"><button class="big sub" id="eN">'+esc(T().endNo)+'</button><button class="big" id="eY">🚪 '+esc(T().endYes)+'</button></div>');
   c.querySelector("#eN").onclick=closeDialog;
-  c.querySelector("#eY").onclick=function(){ closeDialog(); save(); renderTitle(); show("title"); toast("👋 "+T().bye); };
+  c.querySelector("#eY").onclick=function(){ stopVoice(); closeDialog(); save(); renderTitle(); show("title"); toast("👋 "+T().bye); };
 };
 $("#btnCloset").onclick=function(){ sfx("tap"); openCloset(false); };
 $("#btnGallery").onclick=function(){ sfx("tap"); renderGallery(); show("gallery"); };
@@ -904,7 +929,7 @@ $("#btnMenu").onclick=function(){
   c.querySelector("#mK").appendChild(Kakin.parentButton());
   c.querySelector("#mV").onclick=function(){ S.voice=!S.voice; save(); this.textContent=S.voice?T().voiceOn:T().voiceOff; };
   c.querySelectorAll("[data-l]").forEach(function(b){ b.onclick=function(){ LANG=b.dataset.l; lsSet("oukoku-lang",LANG); closeDialog(); applyText(); renderKingdom(); }; });
-  c.querySelector("#mT").onclick=function(){ closeDialog(); renderTitle(); show("title"); };
+  c.querySelector("#mT").onclick=function(){ stopVoice(); closeDialog(); renderTitle(); show("title"); };
 };
 
 /* ---------- おてがみ（1日1かい） ---------- */
@@ -945,7 +970,7 @@ function resOf(id){ var R=stageRes(); for(var i=0;i<R.length;i++) if(R[i].id===i
 function openRequest(id){
   var r=resOf(id), G=T().games[id], act=!cleared() && S.active.indexOf(id)>=0;
   sfx("tap");
-  if(!act){ var msg=fmt(T().thanks,{t:titleOf()}); toast(r.emo+" "+msg); voice("thanks_"+id+"_"+S.role, msg); return; }
+  if(!act){ var msg=fmt(T().thanks,{t:titleOf()}); toast(r.emo+" "+msg); voice("thanks_"+id+"_"+S.role, msg, "idle"); return; }
   var ctx={}; if(id==="lost"){ ctx.thing=pick(["glasses","key","hat","yarn"]); }
   var ask=fmt(G.ask,{x:ctx.thing?G.things[ctx.thing]:""});
   var c=dialog('<button class="x">×</button><div class="who">'+r.emo+'</div><p class="note" style="margin:6px 0 0">'+esc(G.who)+'</p><p class="say">'+esc(ask)+'</p>'+
@@ -963,7 +988,7 @@ function startGame(id, ctx, ask){
   GAMES[id](a, G, ctx);
 }
 function later(fn,ms){ var t=setTimeout(function(){ if(CUR && !CUR.over) fn(); }, ms); if(CUR) CUR.timers.push(t); return t; }
-function quitGame(){ if(CUR){ CUR.over=true; CUR.timers.forEach(clearTimeout); } CUR=null; enterKingdom(); }
+function quitGame(){ stopVoice(); if(CUR){ CUR.over=true; CUR.timers.forEach(clearTimeout); } CUR=null; enterKingdom(); }
 $("#gQuit").onclick=function(){
   if(!CUR || CUR.over){ return; }
   sfx("tap");
@@ -971,7 +996,7 @@ $("#gQuit").onclick=function(){
   c.querySelector("#qN").onclick=closeDialog;
   c.querySelector("#qY").onclick=function(){ closeDialog(); quitGame(); };
 };
-function say(t,k){ $("#gSay").textContent=t; voice(k||(CUR?CUR.id:"")+"_wrong", t); }
+function say(t,k){ $("#gSay").textContent=t; voice(k||(CUR?CUR.id:"")+"_wrong", t, k?"":"idle"); }
 function finishGame(){
   if(!CUR || CUR.over) return; CUR.over=true;
   var id=CUR.id, r=resOf(id), G=T().games[id];
@@ -1101,7 +1126,7 @@ var GAMES = {
       cnt=0; bk.querySelector(".num").textContent="0"; bk.querySelector(".in").textContent=""; tree.innerHTML="";
       for(var k=0;k<8;k++){ (function(){ var b=el("button","acorn","🌰"); b.onclick=function(){
         if(b.dataset.used) return; b.dataset.used=1; b.style.visibility="hidden"; cnt++;
-        bk.querySelector(".num").textContent=cnt; bk.querySelector(".in").textContent+="🌰"; sfx("tap"); voice("num"+cnt, String(cnt)); };
+        bk.querySelector(".num").textContent=cnt; bk.querySelector(".in").textContent+="🌰"; sfx("tap"); voice("num"+cnt, String(cnt), "num"); };
         tree.appendChild(b); })(); }
     }
     function round(){ var n=rounds[ri]; setup(); say(fmt(G.askN,{n:n}), "counting_n"+n); }
@@ -1292,7 +1317,7 @@ function viewPortrait(idx){
     c2.querySelector("#dY").onclick=function(){ var a=getPorts(); a.splice(idx,1); setPorts(a); if(!a.length) lsDel(PORT_KEY); closeDialog(); renderGallery(); };
   };
 }
-$("#galBack").onclick=function(){ sfx("tap"); enterKingdom(); };
+$("#galBack").onclick=function(){ stopVoice(); sfx("tap"); enterKingdom(); };
 var BGS=[["#ffd6e7","#ff9ec6"],["#d6ecff","#7cc4f2"],["#e7ffd6","#8fd38a"],["#efe1ff","#b48cf0"],["#fff1c9","#f5c142"],["#2d2b4a","#7b6bd6"]];
 $("#galNew").onclick=function(){
   sfx("tap"); var sel=0;
@@ -1341,6 +1366,7 @@ function paintPortrait(bg, cb){
 function roundRect(x,a,b,w,h,r){ x.beginPath(); x.moveTo(a+r,b); x.arcTo(a+w,b,a+w,b+h,r); x.arcTo(a+w,b+h,a,b+h,r); x.arcTo(a,b+h,a,b,r); x.arcTo(a,b,a+w,b,r); x.closePath(); }
 
 /* ---------- はじまり ---------- */
+document.addEventListener("visibilitychange",function(){ if(document.hidden) stopVoice(); });
 S=load(); if(S && S.hearts>MAXH) S.hearts=MAXH;
 if(S && S.role){ if(!S.stage || !stageOpen(S.stage)) S.stage=0; var ids=STAGES[stageNo()]; S.active=(S.active||[]).filter(function(x){ return ids.indexOf(x)>=0; }); while(S.active.length<3){ var rest=ids.filter(function(x){ return S.active.indexOf(x)<0; }); S.active.push(pick(rest)); } }
 renderTitle();
