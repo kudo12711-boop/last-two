@@ -15,15 +15,15 @@
 | ゆきどけ | 「あと一枚」の運だめし | v0.1（止まっている） | [Claude のページ](https://claude.ai/artifact/34nWk73xRYmMimZZe7sWKW) | [yukidoke.md](yukidoke.md) |
 | ぬけぬけリング | 1人用の連鎖パズル | v0.7 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
 | ラスト・ツー | 最後の2人の表情の読み合い | v1.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
-| まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類） | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
-| 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
+| まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類） | v0.7 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
+| 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | テレビ（Fire TV）向けの画面（11/15）まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
-| ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
-| てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（31まい、点は最大60こ） | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
-| ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
-| もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
+| ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
+| てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（31まい、点は最大60こ） | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
+| ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
+| もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
 | ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、3つのステージ、着せかえと肖像画つき | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
-| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
+| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 | ふしぎな いきもの ずかん | プログラムで描いた生きものと なかよくなって集め、2ひきから子どもを生む | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/ikimono/) | [ikimono.md](ikimono.md) |
 | ひらがな あそび | 幼児が字を読めるようになる（しゃぼんだま・なまえ・どうぶつ・かるた）。ひらがな・ABC（日本語の案内）・ABC（英語）の3コース | v0.2 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/)（いりぐちには載せない） | [hiragana.md](hiragana.md) |
 
@@ -57,6 +57,7 @@
 20. **2026-11-12** 「キャンピングカーのように プログラムで描く しくみを生かした新しいゲーム」の相談から3案を提案。くどうさん「1と2に興味があります」「将来的には1と2を合わせたものを作るとして、まずは1から試してもらえますか」→「ふしぎな いきもの ずかん」v0.1 を作成し、くどうさんの「公開する」で公開（[ikimono.md](ikimono.md)）。
 21. **2026-11-16** くどうさん「幼児が平仮名を読めるようになるゲームを考案したいです」→ 4案を提案し、「４つともモックを作れますか？」で4案のおためし版を作成。LINE の人に試してもらうため「かくしURL」で公開（くどうさん「今後この開発の公開はこの方針で」）。同日「全部進めてください」で v0.1（4つの遊びを1つに、声が途中で切れる不具合を修正、AIの声・英語・課金）。つづけて「日本人がアルファベットを覚える方向」「英語圏の人にも」を「1つのアプリで」→ v0.2 で3コースに。[hiragana.md](hiragana.md)
 22. **2026-11-16** くどうさん「声が途切れる現象は…お姫様が街づくりするゲームでも…確認の上…修正してください」→「ちいさな おうこく」にも同じ不具合があったので v0.5 で直して公開（声は順番待ちで最後まで読む）。[oukoku.md](oukoku.md)
+23. **2026-11-16** くどうさん「他のゲームでも意図せず声が遮られてしまっているという現象は起きていないか確認して…修正して公開してください」→ 声のあるゲームをすべて確認。まちがいさがし（v0.7）・都道府県パズル（v0.4）・めいろ（v0.4）・てんつなぎ（v0.3）・ふくわらい（v0.4）・かくれんぼ（v0.3）・けずって なにかな？（v0.4）の7本で、声が次の声で途中で切れることがあったので、ひらがな あそび・ちいさな おうこくと同じ「順番待ち」に直して公開。キャンピングカー（🔊ボタンを押したときだけ読む）は問題なし。ぬけぬけリング・ラスト・ツー・ふしぎな いきもの ずかんは しゃべる声がない（効果音だけ）。
 
 ## お金の方針（2026-10-23 決定）
 

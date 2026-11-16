@@ -310,15 +310,56 @@ function aiLoad(id) {
       .then(buf => { aiBuf[k] = buf; }).catch(() => { delete aiBuf[k]; });
   }
 }
-function aiPlay(id, cat) {
+/* ---------- こえの じゅんばんまち（2026-11-16）: どの こえも さいごまで よむ。とめるのは がめんを でるとき（hush）だけ ----------
+   mode: なし＝じゅんばんに まつ / 'idle'＝ほかの こえが なっていなければ だけ（おしゃべり）/ 'swap'＝'swap' どうしだけ いれかわる（かぞえる こえ・タップで なまえ） */
+const VQ = { q: [], cur: null, seq: 0 };
+function vqBusy() { return !!VQ.cur || VQ.q.length > 0; }
+function vqHas(tag) { return (VQ.cur && VQ.cur.tag === tag) || VQ.q.some(x => x.tag === tag); }
+function vqAdd(it, mode) {
+  if (mode === 'idle' && vqBusy()) return false;
+  it.swap = mode === 'swap';
+  if (it.swap) { VQ.q = VQ.q.filter(x => !x.swap); if (VQ.cur && VQ.cur.swap) vqCut(); }
+  VQ.q.push(it); vqNext(); return true;
+}
+function vqCut() { const c = VQ.cur; VQ.cur = null; VQ.seq++; if (c && c.stop) try { c.stop(); } catch (e) {} }
+function vqNext() {
+  if (VQ.cur) return;
+  const it = VQ.q.shift(); if (!it) return;
+  VQ.cur = it; const my = ++VQ.seq; let fin = false, safety = 0;
+  const done = () => { if (fin) return; fin = true; clearTimeout(safety); if (my !== VQ.seq) return; VQ.cur = null; if (it.onend) try { it.onend(); } catch (e) {} vqNext(); };
+  safety = setTimeout(done, (it.max || 8) * 1000);
+  try { it.stop = it.play(done) || null; } catch (e) { done(); }
+}
+function hush() { VQ.q = []; vqCut(); try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+// AudioBuffer を ならす（おわったら done）
+function vqBuf(a, b, off, dur, gain) {
+  return done => {
+    const s = a.createBufferSource(); s.buffer = b; let out = a.destination;
+    if (gain) { const g = a.createGain(); g.gain.value = gain; g.connect(a.destination); out = g; }
+    s.connect(out); s.onended = done; s.start(0, off || 0, dur || b.duration);
+    return () => s.stop();
+  };
+}
+// 端末の よみあげ（u は SpeechSynthesisUtterance）
+function vqTts(u) {
+  return done => { u.onend = done; u.onerror = done; speechSynthesis.cancel(); speechSynthesis.speak(u); return () => speechSynthesis.cancel(); };
+}
+// おうちの人の 録音（Blob）を ならす
+function vqBlob(b) {
+  return done => {
+    const au = new Audio(URL.createObjectURL(b)), end = () => { URL.revokeObjectURL(au.src); done(); };
+    au.onended = end; au.onerror = end; au.play().catch(end);
+    return () => { au.pause(); URL.revokeObjectURL(au.src); };
+  };
+}
+function aiPlay(id, cat, mode) {
   const a = audio(); if (!a) return;
   aiLoad(id);
   const ready = [];
   for (let i = 0; i < aiCount(cat); i++) { const b = aiBuf[`${id}/${cat}${i}`]; if (b && b !== 'loading') ready.push(`${id}/${cat}${i}`); }
   if (!ready.length) return;
-  try { if (aiSrc) aiSrc.stop(); } catch (e) {}
-  const src = a.createBufferSource(); src.buffer = aiBuf[pickTake('ai-' + cat, ready)];
-  src.connect(a.destination); src.start(); aiSrc = src;
+  const b = aiBuf[pickTake('ai-' + cat, ready)];
+  vqAdd({ play: vqBuf(a, b), max: b.duration + 2 }, mode);
 }
 const VOICE_CATS = ['ok', 'miss', 'hint', 'clear'];
 const MAX_TAKES = 8;
@@ -348,19 +389,15 @@ function loadVoice() {
   } catch (e) {}
 }
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
-function tts(text) {
+function tts(text, mode) {
   if (!('speechSynthesis' in window)) return;
   try {
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = LANG === 'ja' ? 'ja-JP' : 'en-US'; u.pitch = 1.15; u.rate = LANG === 'ja' ? .95 : .9; u.volume = 1; if (devVoice) u.voice = devVoice;
-    speechSynthesis.speak(u);
+    vqAdd({ play: vqTts(u), max: 3 + text.length * .25 }, mode);
   } catch (e) {}
 }
-let recAudio = null;
-function playBlob(b) {
-  try { if (recAudio) { recAudio.pause(); URL.revokeObjectURL(recAudio.src); } recAudio = new Audio(URL.createObjectURL(b)); recAudio.play().catch(() => {}); } catch (e) {}
-}
+function playBlob(b, mode) { vqAdd({ play: vqBlob(b), max: 20 }, mode); }
 const lastTake = {};
 function pickTake(cat, list) { // おなじ声が つづかないように
   const c = list.length > 1 ? list.filter(k => k !== lastTake[cat]) : list;
@@ -371,18 +408,20 @@ let voiceMode = store.get('machigai-voice3', 'ai:1');
 if (store.get('machigai-voicemode', '') === 'off' && store.get('machigai-voice3', null) == null) voiceMode = 'off';
 { const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => AI_VOICES[LANG][(+voiceMode.slice(3) || 1) - 1] || AI_VOICES[LANG][0];
-function speak(cat) {
+// mode 'idle'＝おしゃべり（ほかの こえが なっていなければ だけ）。なし＝まえの こえが おわるまで まつ
+function speak(cat, mode) {
   if (!soundOn) return;
+  if (mode === 'idle' && vqBusy()) return;
   const mine = takesOf(cat);
-  if (mine.length) return playBlob(recs[pickTake(cat, mine)]);
+  if (mine.length) return playBlob(recs[pickTake(cat, mine)], mode);
   // ひとつでも録音があれば、機械の声は まぜない（ぜんぶ・ヒントは「あたり」の録音でかわりにほめる）
   if (Object.keys(recs).length) {
     const alt = takesOf('ok');
-    if ((cat === 'clear' || cat === 'hint') && alt.length) playBlob(recs[pickTake('ok', alt)]);
+    if ((cat === 'clear' || cat === 'hint') && alt.length) playBlob(recs[pickTake('ok', alt)], mode);
     return;
   }
-  if (voiceMode.startsWith('ai:')) aiPlay(aiId(), cat);
-  else if (voiceMode === 'dev' && T().say[cat]) tts(pick(T().say[cat]));
+  if (voiceMode.startsWith('ai:')) aiPlay(aiId(), cat, mode);
+  else if (voiceMode === 'dev' && T().say[cat]) tts(pick(T().say[cat]), mode);
 }
 
 /* 録音は この端末の中(IndexedDB)にだけ保存 */
@@ -408,7 +447,7 @@ async function toggleRec(cat) {
   mr.onstop = async () => {
     stream.getTracks().forEach(t => t.stop()); clearTimeout(timer); recording = null;
     const blob = new Blob(chunks, { type: mr.mimeType || 'audio/mp4' });
-    if (blob.size > 800) { const k = cat + ':' + Date.now(); recs[k] = blob; try { await vdb.put(k, blob); } catch (e) {} playBlob(blob); }
+    if (blob.size > 800) { const k = cat + ':' + Date.now(); recs[k] = blob; try { await vdb.put(k, blob); } catch (e) {} hush(); playBlob(blob); }
     renderRecs();
   };
   const timer = setTimeout(() => mr.state !== 'inactive' && mr.stop(), 5000);
@@ -430,7 +469,7 @@ function renderRecs() {
 document.addEventListener('click', async e => {
   const t = e.target.closest('[data-rec],[data-play],[data-del]'); if (!t) return;
   if (t.dataset.rec) toggleRec(t.dataset.rec);
-  else if (t.dataset.play) recs[t.dataset.play] && playBlob(recs[t.dataset.play]);
+  else if (t.dataset.play && recs[t.dataset.play]) { hush(); playBlob(recs[t.dataset.play]); }
   else if (t.dataset.del) { delete recs[t.dataset.del]; try { await vdb.del(t.dataset.del); } catch (err) {} renderRecs(); }
 });
 function renderVoiceSel() {
@@ -448,7 +487,7 @@ function initVoiceUI() {
     if (voiceMode.startsWith('ai:')) aiLoad(aiId());
   };
   $('#voiceTest').onclick = async () => {
-    audio();
+    audio(); hush();
     if (voiceMode.startsWith('ai:')) { const id = aiId(); aiLoad(id); for (let i = 0; i < 20 && !(aiBuf[`${id}/ok1`] instanceof AudioBuffer); i++) await new Promise(r => setTimeout(r, 100)); aiPlay(id, 'ok'); }
     else if (voiceMode === 'dev') tts(T().devTest);
   };
@@ -456,7 +495,7 @@ function initVoiceUI() {
 function updSndBtn() { $('#btnSnd').textContent = soundOn ? T().sndOn : T().sndOff; $('#btnLang').textContent = T().lang; }
 $('#btnLang').onclick = () => { sfx.tap(); setLang(LANG === 'ja' ? 'en' : 'ja'); };
 $('#optLang').onclick = e => { const b = e.target.closest('button'); if (b) { setLang(b.dataset.v); renderVoiceSel(); } };
-$('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('machigai-sound', soundOn); updSndBtn(); if (soundOn) sfx.tap(); };
+$('#btnSnd').onclick = () => { soundOn = !soundOn; if (!soundOn) hush(); store.set('machigai-sound', soundOn); updSndBtn(); if (soundOn) sfx.tap(); };
 updSndBtn();
 
 /* ---------- 用意した絵 ---------- */
@@ -1064,14 +1103,14 @@ function miss(pic, px, py) {
   m.style.left = px * 100 + '%'; m.style.top = py * 100 + '%';
   pic.appendChild(m); setTimeout(() => m.remove(), 1000);
   pic.classList.remove('shake'); void pic.offsetWidth; pic.classList.add('shake');
-  sfx.miss(); speak('miss');
+  sfx.miss(); speak('miss', 'idle');
 }
 function sayText(t) { const s = $('#say'); s.textContent = t; s.classList.remove('go'); void s.offsetWidth; s.classList.add('go'); }
 
 $('#btnHint').onclick = () => {
   if (!cur) return;
   const i = cur.found.findIndex(f => !f); if (i < 0) return;
-  sfx.tap(); speak('hint');
+  sfx.tap(); speak('hint', 'idle');
   const d = cur.diffs[i], ox = rnd(-.5, .5) * d.r, oy = rnd(-.5, .5) * d.r * cur.w / cur.h;
   for (const p of [picA, picB]) {
     const rc = p.getBoundingClientRect(), size = d.r * 5 * rc.width;
@@ -1111,7 +1150,7 @@ function confetti() {
   })(t0);
 }
 $('#btnNext').onclick = () => { sfx.tap(); newRound(); };
-$('#btnBack').onclick = $('#btnHome').onclick = () => { sfx.tap(); $('#clear').classList.remove('on'); show('title'); renderBook(); };
+$('#btnBack').onclick = $('#btnHome').onclick = () => { sfx.tap(); hush(); $('#clear').classList.remove('on'); show('title'); renderBook(); };
 $('#btnHelp').onclick = () => { $('#help').classList.add('on'); initVoiceUI(); };
 $('#btnHelpClose').onclick = () => { if (recording) recording.stop(); $('#help').classList.remove('on'); };
 

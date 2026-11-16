@@ -516,15 +516,50 @@ function loadDevVoice() {
   try { devVoice = speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith(lang)).sort((a, b) => voiceScore(b) - voiceScore(a))[0] || null; } catch (e) {}
 }
 if ('speechSynthesis' in window) { loadDevVoice(); speechSynthesis.onvoiceschanged = loadDevVoice; }
-function tts(text) {
+/* ---------- こえの じゅんばんまち（2026-11-16）: どの こえも さいごまで よむ。とめるのは がめんを でるとき（hush）だけ ----------
+   mode: なし＝じゅんばんに まつ / 'idle'＝ほかの こえが なっていなければ だけ（おしゃべり）/ 'swap'＝'swap' どうしだけ いれかわる（かぞえる こえ・タップで なまえ） */
+const VQ = { q: [], cur: null, seq: 0 };
+function vqBusy() { return !!VQ.cur || VQ.q.length > 0; }
+function vqHas(tag) { return (VQ.cur && VQ.cur.tag === tag) || VQ.q.some(x => x.tag === tag); }
+function vqAdd(it, mode) {
+  if (mode === 'idle' && vqBusy()) return false;
+  it.swap = mode === 'swap';
+  if (it.swap) { VQ.q = VQ.q.filter(x => !x.swap); if (VQ.cur && VQ.cur.swap) vqCut(); }
+  VQ.q.push(it); vqNext(); return true;
+}
+function vqCut() { const c = VQ.cur; VQ.cur = null; VQ.seq++; if (c && c.stop) try { c.stop(); } catch (e) {} }
+function vqNext() {
+  if (VQ.cur) return;
+  const it = VQ.q.shift(); if (!it) return;
+  VQ.cur = it; const my = ++VQ.seq; let fin = false, safety = 0;
+  const done = () => { if (fin) return; fin = true; clearTimeout(safety); if (my !== VQ.seq) return; VQ.cur = null; if (it.onend) try { it.onend(); } catch (e) {} vqNext(); };
+  safety = setTimeout(done, (it.max || 8) * 1000);
+  try { it.stop = it.play(done) || null; } catch (e) { done(); }
+}
+function hush() { VQ.q = []; vqCut(); try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+// AudioBuffer を ならす（おわったら done）
+function vqBuf(a, b, off, dur, gain) {
+  return done => {
+    const s = a.createBufferSource(); s.buffer = b; let out = a.destination;
+    if (gain) { const g = a.createGain(); g.gain.value = gain; g.connect(a.destination); out = g; }
+    s.connect(out); s.onended = done; s.start(0, off || 0, dur || b.duration);
+    return () => s.stop();
+  };
+}
+// 端末の よみあげ（u は SpeechSynthesisUtterance）
+function vqTts(u) {
+  return done => { u.onend = done; u.onerror = done; speechSynthesis.cancel(); speechSynthesis.speak(u); return () => speechSynthesis.cancel(); };
+}
+function tts(text, mode) {
   if (!('speechSynthesis' in window)) return;
   try {
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang === 'ja' ? 'ja-JP' : 'en-US'; u.pitch = 1.15; u.rate = .95; if (devVoice) u.voice = devVoice;
-    speechSynthesis.speak(u);
+    vqAdd({ play: vqTts(u), max: 3 + text.length * .25 }, mode);
   } catch (e) {}
 }
+// ms まって、こえが よみおわるのも まつ（おはなしの じゅんばんが こえと ずれないように）
+async function talk(ms) { await wait(ms); while (vqBusy()) await wait(60); }
 const lastTake = {};
 function pickIdx(cat, n) {
   const all = [...Array(n).keys()];
@@ -535,22 +570,23 @@ function pickIdx(cat, n) {
 let voiceMode = store.get('kakurenbo-voice', 'ai:1'); // 'ai:1'〜'ai:4' / 'dev' / 'off'。むかしの 'ai:jf_alpha' なども よめる
 { const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => (AI_VOICES[lang] || AI_VOICES.ja)[(+voiceMode.slice(3) || 1) - 1] || AI_VOICES.ja[0];
-function playBuf(buf) {
+function playBuf(buf, mode) {
   const a = audio(); if (!a) return;
-  try { if (curSrc) curSrc.stop(); } catch (e) {}
-  const src = a.createBufferSource(); src.buffer = buf; src.connect(a.destination); src.start(); curSrc = src;
+  vqAdd({ play: vqBuf(a, buf), max: buf.duration + 2 }, mode);
 }
-function speak(cat, idx) {
+// mode 'idle'＝おしゃべり（ほかの こえが なっていなければ だけ）。なし＝まえの こえが おわるまで まつ
+function speak(cat, idx, mode) {
   if (!soundOn || voiceMode === 'off') return;
-  if (recBuf[cat]) { playBuf(recBuf[cat]); return; }
+  if (mode === 'idle' && vqBusy()) return;
+  if (recBuf[cat]) { playBuf(recBuf[cat], mode); return; }
   const lines = (VOICE_TEXT[lang] || VOICE_TEXT.ja)[cat]; if (!lines) return;
   const i = idx ?? pickIdx(cat, lines.length);
   if (voiceMode.startsWith('ai:')) {
     const id = aiId(); aiLoad(id);
     const b = aiBuf[`${id}/${cat}${i}`];
-    if (b && typeof b !== 'string') { playBuf(b); return; }
+    if (b && typeof b !== 'string') { playBuf(b, mode); return; }
   }
-  tts(lines[i]);
+  tts(lines[i], mode);
 }
 function prepVoice() { if (voiceMode.startsWith('ai:')) aiLoad(aiId()); }
 
@@ -640,7 +676,7 @@ function renderTitle() {
   $('#book').innerHTML = ALL_FRIENDS.map(e => `<span class="${book[e] ? '' : 'no'}">${e}</span>`).join('');
   $('#btnSnd').textContent = soundOn ? T('soundOn') : T('soundOff');
 }
-function goTitle() { runId++; stopIdle(); show('title'); setTheme('#d9f2c4'); renderTitle(); }
+function goTitle() { hush(); runId++; stopIdle(); show('title'); setTheme('#d9f2c4'); renderTitle(); }
 function setTheme(c) { document.querySelector('meta[name=theme-color]').content = c; }
 
 let mode = 'A', sceneId = 'mori', curRoom = null;
@@ -744,7 +780,7 @@ async function hideSequence() {
   intro.innerHTML = hs.map(h => `<span>${hiderHTML(h)}</span>`).join('');
   stage.appendChild(intro);
   speak('intro', 0);
-  await wait(1900);
+  await talk(1900);
   // めを つぶって かぞえる
   const eyes = $('#eyes'); eyes.classList.remove('fade'); eyes.classList.add('on');
   $('#eyesMsg').textContent = T('eyesMsg'); $('#eyesNum').textContent = ''; $('#eyesReply').textContent = ''; $('#btnAsk').style.visibility = 'hidden';
@@ -757,21 +793,21 @@ async function hideSequence() {
   for (let i = 0; i < 5; i++) {
     $('#eyesNum').textContent = lang === 'ja' ? '12345'[i] : String(i + 1);
     $('#eyesNum').classList.remove('pop'); void $('#eyesNum').offsetWidth; $('#eyesNum').classList.add('pop');
-    sfx.tick(); speak('num', i); await wait(950);
+    sfx.tick(); speak('num', i); await talk(950);
   }
   let madaDone = Math.random() < .55;
   for (;;) {
     $('#btnAsk').style.visibility = 'visible';
     await new Promise(res => { $('#btnAsk').onclick = () => { $('#btnAsk').onclick = null; res(); }; });
     $('#btnAsk').style.visibility = 'hidden'; $('#eyesReply').textContent = '';
-    audio(); speak('ask'); await wait(1300);
+    audio(); speak('ask'); await talk(1300);
     if (!madaDone) {
-      madaDone = true; $('#eyesReply').textContent = T('mada'); speak('mada'); await wait(1500);
+      madaDone = true; $('#eyesReply').textContent = T('mada'); speak('mada'); await talk(1500);
       $('#eyesReply').textContent = '';
       for (let i = 0; i < 3; i++) { $('#eyesNum').textContent = lang === 'ja' ? '678'[i] : String(i + 6); sfx.tick(); await wait(650); }
       continue;
     }
-    $('#eyesReply').textContent = T('ready'); speak('ready'); await wait(1300);
+    $('#eyesReply').textContent = T('ready'); speak('ready'); await talk(1300);
     break;
   }
   eyes.classList.add('fade'); await wait(450); eyes.classList.remove('on', 'fade');
@@ -798,7 +834,7 @@ function startIdle() {
     if (now - G.lastAct > G.L.idle) {
       const h = pick(G.hs.filter(h => !h.found)); if (!h) return;
       h.el.classList.remove('peek'); void h.el.offsetWidth; h.el.classList.add('peek'); kusu(h.el);
-      if (Math.random() < .5) speak('hint');
+      if (Math.random() < .5) speak('hint', undefined, 'idle');
       G.lastAct = now - G.L.idle * .4;
     }
   }, 500);
@@ -837,7 +873,7 @@ function missCover(c) {
     k.style.cssText = `left:${c.x}%;top:${c.y}%;font-size:calc(var(--u)*${c.S * .35})`; k.textContent = pick(['🦋', '🐞', '🐛', '🐝', '🍂', '🌸', '🐌']);
     stage.appendChild(k); setTimeout(() => k.remove(), 1700); setTimeout(sfx.crit, 150);
   }
-  if (Math.random() < .5) speak('miss');
+  if (Math.random() < .5) speak('miss', undefined, 'idle');
 }
 function finishSeek() {
   stopIdle(); G.busy = true;
@@ -874,7 +910,7 @@ $('#btnHint').onclick = () => {
   const el = h.spot ? h.spot.el : (h.box || h.el);
   el.classList.remove('glow'); void el.offsetWidth; el.classList.add('glow'); setTimeout(() => el.classList.remove('glow'), 2600);
   h.el.classList.remove('peek'); void h.el.offsetWidth; h.el.classList.add('peek');
-  speak('hint', 0); G.lastAct = performance.now();
+  speak('hint', 0, 'idle'); G.lastAct = performance.now();
 };
 
 /* ---------- おうちで かくれんぼ（しゃしん） ---------- */
@@ -1042,7 +1078,7 @@ function onPhotoTap(e) {
   let best = null, bd = 1e9;
   for (const h of G.hs) if (!h.found) { const d = Math.hypot(h.cx - x, h.cy - y); if (d < bd) { bd = d; best = h; } }
   if (best && bd < Math.max(48, best.size * .85)) foundPhoto(best);
-  else { sfx.wob(); if (Math.random() < .35) speak('miss'); }
+  else { sfx.wob(); if (Math.random() < .35) speak('miss', undefined, 'idle'); }
 }
 function foundPhoto(h) {
   h.found = true; G.busy = true;
@@ -1124,14 +1160,14 @@ function onCTap(e) {
 }
 async function oniCount(n) {
   $('#barMsg').textContent = T('counting');
-  for (let i = 0; i < n; i++) { oniSay(lang === 'ja' ? ['いーち', 'にーい', 'さーん', 'しーい', 'ごー'][i] : ['One', 'Two', 'Three', 'Four', 'Five'][i], 900); sfx.tick(); speak('num', i); await wait(1000); }
+  for (let i = 0; i < n; i++) { oniSay(lang === 'ja' ? ['いーち', 'にーい', 'さーん', 'しーい', 'ごー'][i] : ['One', 'Two', 'Three', 'Four', 'Five'][i], 900); sfx.tick(); speak('num', i); await talk(1000); }
   G.phase = 'ask'; oniSay(T('ask'), 0); speak('ask');
   $('#barMsg').textContent = '';
   const btns = $('#cbtns'); btns.classList.add('on');
   const r = await new Promise(res => { btns.querySelector('.mada').onclick = () => res('mada'); btns.querySelector('.ready').onclick = () => res('ready'); });
   btns.classList.remove('on'); audio();
-  if (r === 'mada') { speak('mada'); await wait(1300); return oniCount(3); }
-  speak('ready'); G.phase = 'seek'; await wait(1300); await oniSeek();
+  if (r === 'mada') { speak('mada'); await talk(1300); return oniCount(3); }
+  speak('ready'); G.phase = 'seek'; await talk(1300); await oniSeek();
 }
 async function oniSeek() {
   $('#barMsg').textContent = T('seeking');
@@ -1148,16 +1184,16 @@ async function oniSeek() {
     if (mine || Math.hypot(c.x - G.mySpot.x, c.y - G.mySpot.y) < 30) { $('#doki').classList.add('on'); sfx.heart(); setTimeout(sfx.heart, 600); }
     for (let k = 0; k < 3; k++) { sfx.step(); await wait(330); }
     o.classList.remove('walk');
-    oniSay(T('koko'), 0); speak('koko'); await wait(1100);
+    oniSay(T('koko'), 0); speak('koko'); await talk(1100);
     if (mine) {
       $('#doki').classList.remove('on');
       c.el.classList.add('found'); sfx.found(); sayBig(T('found')); speak('found', 0); oniSay('😆', 0);
-      await wait(1600); speak('lose'); await wait(500);
+      await talk(1600); speak('lose'); await talk(500);
       return cEnd(false);
     }
     c.el.querySelector('.cov').classList.remove('wob'); void c.el.offsetWidth; c.el.querySelector('.cov').classList.add('wob'); sfx.wob();
     await wait(500);
-    oniSay(T('inai'), 0); speak('inai'); await wait(1200);
+    oniSay(T('inai'), 0); speak('inai'); await talk(1200);
     $('#doki').classList.remove('on');
   }
   // みつからなかった
@@ -1173,7 +1209,7 @@ async function cWin() {
   const c = G.mySpot; c.el.classList.remove('glow');
   c.el.classList.add('found'); sfx.found(); sayBig(T('here')); speak('here');
   oniSay('😲', 0);
-  await wait(1500); speak('win'); medals++; store.set('kakurenbo-medal', medals);
+  await talk(1500); speak('win'); medals++; store.set('kakurenbo-medal', medals);
   confetti(); sfx.clear();
   await wait(800); cEnd(true);
 }
@@ -1205,10 +1241,10 @@ $('#btnAgain').onclick = () => {
   if (mode === 'A') startA(sceneId); else if (mode === 'B') startB(curRoom.key, curRoom.room); else startC(sceneId);
 };
 $('#btnOther').onclick = () => {
-  sfx.tap(); runId++; stopIdle();
+  sfx.tap(); hush(); runId++; stopIdle();
   if (mode === 'B') { show('photo'); renderPhotoScreen(); } else { renderWhere(); show('where'); }
 };
-$('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('kakurenbo-sound', soundOn); if (soundOn) { audio(); sfx.tap(); } renderTitle(); };
+$('#btnSnd').onclick = () => { soundOn = !soundOn; if (!soundOn) hush(); store.set('kakurenbo-sound', soundOn); if (soundOn) { audio(); sfx.tap(); } renderTitle(); };
 $('#btnLang').onclick = () => { lang = lang === 'ja' ? 'en' : 'ja'; store.set('kakurenbo-lang', lang); loadDevVoice(); renderTitle(); prepVoice(); };
 $('#btnGames').onclick = () => { location.href = '../games/' + (lang === 'ja' ? '' : '?lang=' + lang); };
 
@@ -1229,7 +1265,7 @@ function renderKk() {
 }
 $('#btnHelpClose').onclick = () => { stopRec(); $('#help').classList.remove('on'); };
 $('#voiceSel').onchange = e => { voiceMode = e.target.value; store.set('kakurenbo-voice', voiceMode); prepVoice(); };
-$('#voiceTest').onclick = () => { audio(); prepVoice(); setTimeout(() => speak('found', 0), voiceMode.startsWith('ai:') ? 500 : 0); };
+$('#voiceTest').onclick = () => { audio(); hush(); prepVoice(); setTimeout(() => speak('found', 0), voiceMode.startsWith('ai:') ? 500 : 0); };
 let recState = null;
 async function startRec(k, btn) {
   try {
@@ -1240,7 +1276,7 @@ async function startRec(k, btn) {
       stream.getTracks().forEach(t => t.stop());
       const blob = new Blob(chunks, { type: mr.mimeType }); const ab = await blob.arrayBuffer();
       try { await dbPut('voice', k, ab.slice(0)); } catch (e) {}
-      try { const a = audio(); recBuf[k] = await new Promise((res, rej) => a.decodeAudioData(ab, res, rej)); playBuf(recBuf[k]); } catch (e) {}
+      try { const a = audio(); recBuf[k] = await new Promise((res, rej) => a.decodeAudioData(ab, res, rej)); hush(); playBuf(recBuf[k]); } catch (e) {}
       recState = null; renderHelp();
     };
     mr.start(); recState = { mr, k, t: setTimeout(stopRec, 3000) };
@@ -1251,7 +1287,7 @@ function stopRec() { if (recState) { clearTimeout(recState.t); try { recState.mr
 $('#recList').onclick = async e => {
   const b = e.target.closest('button'); if (!b) return; const k = b.closest('.recrow').dataset.k; audio();
   if (b.dataset.a === 'rec') { if (recState) stopRec(); else startRec(k, b); }
-  else if (b.dataset.a === 'play' && recBuf[k]) playBuf(recBuf[k]);
+  else if (b.dataset.a === 'play' && recBuf[k]) { hush(); playBuf(recBuf[k]); }
   else if (b.dataset.a === 'del') { delete recBuf[k]; try { await dbDel('voice', k); } catch (e) {} renderHelp(); }
 };
 
