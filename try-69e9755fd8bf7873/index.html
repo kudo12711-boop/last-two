@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>結末のためし動画</title>
+<style>
+/* ためし：キャンピングカー世界一周「蜃気楼の都」の結末 B・C・D2 の場面。本物のゲームとは別のページ */
+:root{--bg:#f3ece0;--ink:#3b2f25;--muted:#7a6a5a;--accent:#d9653b;--card:#fffaf2;--line:#e2d6c4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1915;--ink:#efe6da;--muted:#b5a693;--card:#2a241e;--line:#3e352c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Maru Gothic ProN","Yu Gothic",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:4px 0 6px}
+p.note{color:var(--muted);font-size:14px;margin:0 0 12px;line-height:1.6}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.tabs button{font:inherit;font-size:15px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.stage{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
+canvas{width:100%;height:100%;display:block}
+.ctl{display:flex;gap:8px;align-items:center;margin-top:10px}
+.ctl button{font:inherit;font-size:15px;padding:8px 16px;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+.bar{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent)}
+body.rec main>*:not(.stage){display:none} body.rec main{padding:0;max-width:none} body.rec .stage{border-radius:0;width:100vw;height:100vh;aspect-ratio:auto}
+</style>
+</head>
+<body>
+<main>
+<h1>「蜃気楼の都」の結末 ためし動画</h1>
+<p class="note">キャンピングカー世界一周の、まだ作っていないお話の場面のためしです（B・C・D2）。本物のゲームには入っていません。</p>
+<div class="tabs" id="tabs">
+  <button data-s="b" class="on">B 蜃気楼ごしの出会い</button>
+  <button data-s="c">C 砂時計の出会い</button>
+  <button data-s="d">D2 窓に映る自分</button>
+</div>
+<div class="stage"><canvas id="cv" width="1280" height="720"></canvas></div>
+<div class="ctl"><button id="play">▶ もう一度</button><div class="bar"><i id="bar"></i></div></div>
+</main>
+<script>
+const cv = document.getElementById('cv'), c = cv.getContext('2d'), W = 1280, H = 720;
+const QS = new URLSearchParams(location.search);
+if (QS.has('rec')) document.body.classList.add('rec');
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = t => t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+const seg = (t, a, b) => clamp((t - a) / (b - a)); // a〜b秒で 0→1
+const mix = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
+const rgb = (a, al = 1) => `rgba(${a.map(Math.round).join(',')},${al})`;
+let scene = QS.get('scene') || 'b', t0 = performance.now();
+
+/* ---------- 窓わくとカーテン（ゲームと同じ雰囲気） ---------- */
+// 窓の内側（景色が見える所）
+const WX = 110, WY = 70, WW = W - 220, WH = H - 150;
+function frame(glass) {
+  // 車内のかべ
+  c.fillStyle = '#efe2cc'; c.beginPath(); c.rect(0, 0, W, H); c.roundRect(WX, WY, WW, WH, 44); c.fill('evenodd');
+  // 木のわく
+  c.lineWidth = 22; c.strokeStyle = '#8a5a34'; c.beginPath(); c.roundRect(WX - 8, WY - 8, WW + 16, WH + 16, 50); c.stroke();
+  c.lineWidth = 4; c.strokeStyle = '#5e3a1f'; c.beginPath(); c.roundRect(WX + 3, WY + 3, WW - 6, WH - 6, 40); c.stroke();
+  // ガラスのつや
+  if (glass !== false) { const g = c.createLinearGradient(WX, WY, WX + WW, WY + WH); g.addColorStop(0, 'rgba(255,255,255,.10)'); g.addColorStop(.35, 'rgba(255,255,255,0)'); g.addColorStop(.6, 'rgba(255,255,255,.05)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.beginPath(); c.roundRect(WX, WY, WW, WH, 40); c.fill(); }
+  // カーテン
+  for (const side of [0, 1]) {
+    const x0 = side ? W - 150 : 0;
+    const g = c.createLinearGradient(x0, 0, x0 + 150, 0);
+    g.addColorStop(0, '#b8402c'); g.addColorStop(.5, '#d45a3f'); g.addColorStop(1, '#a8382a');
+    c.fillStyle = g; c.beginPath();
+    if (!side) { c.moveTo(0, 0); c.lineTo(150, 0); c.quadraticCurveTo(70, H * .45, 120, H); c.lineTo(0, H); }
+    else { c.moveTo(W, 0); c.lineTo(W - 150, 0); c.quadraticCurveTo(W - 70, H * .45, W - 120, H); c.lineTo(W, H); }
+    c.fill();
+    c.strokeStyle = 'rgba(0,0,0,.12)'; c.lineWidth = 3;
+    for (let k = 1; k < 4; k++) { c.beginPath(); const xx = side ? W - k * 34 : k * 34; c.moveTo(xx, 0); c.quadraticCurveTo(xx + (side ? 20 : -20), H * .5, xx, H); c.stroke(); }
+    c.fillStyle = '#e8c070'; c.fillRect(side ? W - 150 : 0, H * .52, 150, 14);
+  }
+  // 窓辺の棚
+  c.fillStyle = '#7a4e2c'; c.fillRect(WX - 30, WY + WH + 6, WW + 60, 18);
+  c.fillStyle = '#5e3a1f'; c.fillRect(WX - 30, WY + WH + 24, WW + 60, 6);
+}
+// 窓辺の飾り（D2 で「自分の物」として使う）
+function sill(alpha = 1) {
+  c.save(); c.globalAlpha = alpha; c.font = '44px serif'; c.textAlign = 'center'; c.textBaseline = 'bottom';
+  const y = WY + WH + 8; c.fillText('🐚', WX + 120, y); c.fillText('⏳', WX + WW - 140, y); c.fillText('🧸', WX + WW / 2 + 260, y);
+  c.restore();
+}
+function clipWin(fn) { c.save(); c.beginPath(); c.roundRect(WX, WY, WW, WH, 40); c.clip(); fn(); c.restore(); }
+
+/* ---------- 字幕 ---------- */
+function caption(lines, t) {
+  for (const [a, b, txt, kind] of lines) {
+    if (t < a || t > b) continue;
+    const al = Math.min(seg(t, a, a + .6), 1 - seg(t, b - .6, b));
+    c.save(); c.globalAlpha = al; c.textAlign = 'center'; c.textBaseline = 'middle';
+    if (kind === 'wave') { // 蜃気楼ごしの、ゆらゆらした文字
+      c.font = '700 38px "Hiragino Maru Gothic ProN",sans-serif';
+      txt.split('|').forEach((line, li) => { const chars = [...line], w = chars.length * 38; let x = W / 2 - w / 2 + 19;
+        for (let i = 0; i < chars.length; i++) { const y = WY + 100 + li * 56 + Math.sin(t * 3 + i * .6) * 7, xx = x + Math.sin(t * 2 + i) * 2; c.fillStyle = 'rgba(255,244,210,.97)'; c.strokeStyle = 'rgba(120,70,20,.65)'; c.lineWidth = 6; c.strokeText(chars[i], xx, y); c.fillText(chars[i], xx, y); x += 38; } });
+    } else {
+      c.font = '700 30px "Hiragino Maru Gothic ProN",sans-serif'; const w = c.measureText(txt).width + 48;
+      c.fillStyle = 'rgba(30,22,16,.72)'; c.beginPath(); c.roundRect(W / 2 - w / 2, H - 66, w, 50, 25); c.fill();
+      c.fillStyle = '#fff'; c.fillText(txt, W / 2, H - 41);
+    }
+    c.restore();
+  }
+}
+
+/* ---------- 砂漠の景色 ---------- */
+function desert(t, o) {
+  const hz = WY + WH * .58, sun = o.sun ?? 0; // sun 0=昼すぎ 1=夕日
+  const top = mix([92, 160, 222], [70, 70, 130], sun), mid = mix([190, 220, 240], [250, 150, 90], sun), low = mix([250, 236, 205], [255, 205, 140], sun);
+  const g = c.createLinearGradient(0, WY, 0, hz); g.addColorStop(0, rgb(top)); g.addColorStop(.7, rgb(mid)); g.addColorStop(1, rgb(low));
+  c.fillStyle = g; c.fillRect(WX, WY, WW, hz - WY);
+  // 太陽
+  const sx = WX + WW * (.78 - sun * .2), sy = WY + 90 + sun * (hz - WY - 110), sr = 46 + sun * 14;
+  const sg = c.createRadialGradient(sx, sy, 0, sx, sy, sr * 4); sg.addColorStop(0, rgb(mix([255, 250, 220], [255, 190, 110], sun), .9)); sg.addColorStop(1, 'rgba(255,240,200,0)');
+  c.fillStyle = sg; c.fillRect(sx - sr * 4, sy - sr * 4, sr * 8, sr * 8);
+  c.fillStyle = rgb(mix([255, 252, 235], [255, 170, 90], sun)); c.beginPath(); c.arc(sx, sy, sr, 0, 7); c.fill();
+  // 遠い砂山（地平線がゆれる）
+  const sh = o.shimmer || 0;
+  for (const [k, col, amp, sp, base] of [[0, mix([224, 190, 140], [200, 120, 90], sun), 26, 6, 0], [1, mix([214, 170, 112], [180, 100, 70], sun), 40, 14, 18]]) {
+    c.fillStyle = rgb(col); c.beginPath(); c.moveTo(WX, hz + base);
+    for (let x = WX; x <= WX + WW; x += 8) { const u = x + t * sp * 10; c.lineTo(x, hz + base - amp * (.5 + .5 * Math.sin(u * .006 + k * 2)) * (.6 + .4 * Math.sin(u * .017)) + Math.sin(x * .05 + t * 6) * sh * 3); }
+    c.lineTo(WX + WW, WY + WH); c.lineTo(WX, WY + WH); c.fill();
+  }
+  // 近い砂地
+  const ng = c.createLinearGradient(0, hz + 30, 0, WY + WH); ng.addColorStop(0, rgb(mix([236, 200, 140], [210, 130, 90], sun))); ng.addColorStop(1, rgb(mix([214, 168, 104], [150, 80, 60], sun)));
+  c.fillStyle = ng; c.fillRect(WX, hz + 34, WW, WY + WH - hz - 34);
+  // 道ばたの石が流れる
+  c.fillStyle = rgb(mix([170, 130, 90], [110, 60, 50], sun));
+  for (let k = 0; k < 14; k++) { const x = WX + ((k * 173 - t * 260) % (WW + 200) + WW + 200) % (WW + 200) - 100, y = WY + WH - 40 - (k % 3) * 14; c.beginPath(); c.ellipse(x, y, 14 + (k % 4) * 5, 6, 0, 0, 7); c.fill(); }
+  // 道路のふち（くるまの下）
+  c.fillStyle = rgb(mix([120, 110, 100], [70, 55, 55], sun)); c.fillRect(WX, WY + WH - 22, WW, 22);
+  c.fillStyle = 'rgba(255,240,180,.9)'; for (let k = 0; k < 8; k++) { const x = WX + ((k * 180 - t * 700) % (WW + 180) + WW + 180) % (WW + 180) - 90; c.fillRect(x, WY + WH - 13, 70, 5); }
+  return hz;
+}
+// 熱でゆらゆら（地平線の帯）
+function heat(hz, k, t) {
+  if (k <= 0) return;
+  const img = c.getImageData(WX, hz - 160, WW, 200), out = c.createImageData(WW, 200);
+  for (let y = 0; y < 200; y++) { const dx = Math.round(Math.sin(y * .18 + t * 7) * 6 * k); for (let x = 0; x < WW; x++) { const sx = Math.min(WW - 1, Math.max(0, x + dx)), si = (y * WW + sx) * 4, di = (y * WW + x) * 4; out.data[di] = img.data[si]; out.data[di + 1] = img.data[si + 1]; out.data[di + 2] = img.data[si + 2]; out.data[di + 3] = 255; } }
+  c.putImageData(out, WX, hz - 160);
+}
+// 金色の塔の都
+function city(x, base, s, al, t) {
+  c.save(); c.globalAlpha = al; c.translate(x, base);
+  const gold = c.createLinearGradient(0, -180 * s, 0, 0); gold.addColorStop(0, 'rgba(255,225,140,.95)'); gold.addColorStop(1, 'rgba(230,170,80,.85)'); c.fillStyle = gold;
+  const parts = [[-160, 60, 70], [-110, 40, 130], [-60, 70, 90], [0, 50, 180], [55, 60, 110], [110, 40, 150], [150, 60, 70]];
+  for (const [px, w, h] of parts) { c.fillRect((px - w / 2) * s, -h * s, w * s, h * s); c.beginPath(); c.arc(px * s, -h * s, w * s / 2, Math.PI, 0); c.fill(); c.fillRect((px - 3) * s, (-h - w / 2 - 22) * s, 6 * s, 22 * s); }
+  c.restore();
+}
+// キャンピングカー（横から見た小さな絵）
+function van(x, y, s, flip, col = '#f4efe6') {
+  c.save(); c.translate(x, y); c.scale(s, flip ? -s : s);
+  c.fillStyle = col; c.beginPath(); c.roundRect(-70, -60, 140, 50, 10); c.fill(); c.beginPath(); c.roundRect(40, -44, 44, 34, 8); c.fill();
+  c.fillStyle = '#d9653b'; c.fillRect(-70, -26, 154, 6);
+  c.fillStyle = '#7fb4d6'; c.fillRect(-56, -52, 30, 18); c.fillRect(-18, -52, 30, 18); c.fillRect(52, -40, 24, 16);
+  c.fillStyle = '#333'; c.beginPath(); c.arc(-40, -8, 12, 0, 7); c.arc(52, -8, 12, 0, 7); c.fill();
+  c.restore();
+}
+// リュックの旅人（影）
+function traveler(x, y, s, col, wave = 0, back = true) {
+  c.save(); c.translate(x, y); c.scale(s, s); c.fillStyle = col;
+  c.beginPath(); c.arc(0, -86, 13, 0, 7); c.fill(); // 頭
+  c.beginPath(); c.roundRect(-12, -72, 24, 44, 8); c.fill(); // からだ
+  c.beginPath(); c.roundRect(back ? 6 : -30, -76, 24, 38, 8); c.fill(); // リュック
+  c.fillRect(-10, -30, 8, 30); c.fillRect(2, -30, 8, 30); // 足
+  c.save(); c.translate(-10, -66); c.rotate(-.3 - wave); c.fillRect(-4, 0, 7, 34); c.restore(); // 手
+  if (wave) { c.save(); c.translate(10, -66); c.rotate(Math.PI + .5 + Math.sin(wave * 20) * .4); c.fillRect(-4, 0, 7, 36); c.restore(); }
+  c.restore();
+}
+
+/* ---------- B：蜃気楼ごしの出会い ---------- */
+const B = { len: 30, cap: [
+  [1, 6, '暑い昼すぎ。地平線がゆらゆら ゆれはじめた'],
+  [7, 12, '金色の塔の都が、うかび上がる……'],
+  [12.5, 17, 'あれ？ 都の手前に、もう1台のキャンピングカー'],
+  [17.5, 21.5, 'さかさまに映った車の窓から、だれかが手をふっている'],
+  [21.5, 25.5, 'ぼくも ずっと|きみの手紙を おいかけていたんだ 🐾', 'wave'],
+  [26, 30, '風がふくと、もう姿はなかった'],
+], draw(t) {
+  let hz;
+  clipWin(() => {
+    const k = seg(t, 1, 6) * (1 - seg(t, 25.5, 28));
+    hz = desert(t, { shimmer: k });
+    city(WX + WW * .55, hz - 6, 1.1, .85 * ease(seg(t, 6, 11)) * (1 - seg(t, 25.5, 28.5)), t);
+    // さかさのもう1台：地平線の上を、こちらと同じ速さで並んで走る
+    const va = ease(seg(t, 12, 15)) * (1 - seg(t, 25.5, 28)), vx = WX + WW * .3 + Math.sin(t * .8) * 10;
+    if (va > 0) { const vy = hz - 100, S = 1.6; c.save(); c.globalAlpha = va * .85; van(vx, vy, S, true, '#fbe9cf');
+      // さかさの窓の中の人（頭が下）と、窓からふる手
+      if (t > 16.5) { const wx = vx - 41 * S, wy = vy + 43 * S; c.fillStyle = 'rgba(70,40,25,.95)'; c.beginPath(); c.arc(wx, wy + 4, 9, 0, 7); c.fill();
+        c.save(); c.translate(wx + 8, wy + 6); c.rotate(Math.PI * .75 + Math.sin(t * 9) * .55); c.fillRect(-3, 0, 6, 30); c.restore(); }
+      c.restore(); }
+    heat(hz, Math.max(k, va) * 1.2, t);
+  });
+  frame(); sill(); caption(this.cap, t);
+} };
+
+/* ---------- C：砂時計の出会い ---------- */
+function plaza(t, sepia) {
+  const hz = WY + WH * .55;
+  const g = c.createLinearGradient(0, WY, 0, hz); g.addColorStop(0, '#6aa6dc'); g.addColorStop(1, '#f4e3c0'); c.fillStyle = g; c.fillRect(WX, WY, WW, hz - WY);
+  // 金色の建物
+  city(WX + WW * .5, hz + 10, 1.5, 1, t);
+  // 広場の石だたみ
+  c.fillStyle = '#e8cf9e'; c.fillRect(WX, hz, WW, WY + WH - hz);
+  c.strokeStyle = 'rgba(160,120,70,.35)'; c.lineWidth = 2; for (let k = 0; k < 9; k++) { const y = hz + 12 + k * k * 4; c.beginPath(); c.moveTo(WX, y); c.lineTo(WX + WW, y); c.stroke(); }
+  // 噴水
+  const fx = WX + WW * .5, fy = WY + WH - 70;
+  c.fillStyle = '#cdb38a'; c.beginPath(); c.ellipse(fx, fy, 170, 34, 0, 0, 7); c.fill();
+  c.fillStyle = '#7ec4d8'; c.beginPath(); c.ellipse(fx, fy - 6, 150, 24, 0, 0, 7); c.fill();
+  c.fillStyle = '#cdb38a'; c.fillRect(fx - 12, fy - 90, 24, 84);
+  // 水しぶき（巻きもどし中は上から下へ逆に）
+  const dir = sepia > .5 ? -1 : 1;
+  c.fillStyle = 'rgba(220,245,255,.9)';
+  for (let k = 0; k < 26; k++) { const p = ((k / 26 + t * .7 * dir) % 1 + 1) % 1, a = k * 2.4, r = p * 90; c.beginPath(); c.arc(fx + Math.cos(a) * r, fy - 92 - Math.sin(p * Math.PI) * 60 + p * 80, 4, 0, 7); c.fill(); }
+  // セピア
+  if (sepia > 0) { c.fillStyle = `rgba(150,105,50,${.38 * sepia})`; c.fillRect(WX, WY, WW, WH); }
+  return { fx, fy };
+}
+function hourglass(x, y, s, rot, k) { // k=上の砂の量 0〜1
+  c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s);
+  c.fillStyle = '#8a5a34'; c.fillRect(-46, -74, 92, 12); c.fillRect(-46, 62, 92, 12);
+  c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 4; c.fillStyle = 'rgba(220,240,255,.35)';
+  c.beginPath(); c.moveTo(-36, -62); c.quadraticCurveTo(-36, -10, -4, 0); c.quadraticCurveTo(-36, 10, -36, 62); c.lineTo(36, 62); c.quadraticCurveTo(36, 10, 4, 0); c.quadraticCurveTo(36, -10, 36, -62); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle = '#e8b85c';
+  const top = 56 * k, bot = 56 * (1 - k);
+  if (top > 1) { c.beginPath(); c.moveTo(-30 * (top / 56), -6 - top * .95); c.lineTo(30 * (top / 56), -6 - top * .95); c.lineTo(0, -4); c.fill(); }
+  if (bot > 1) { c.beginPath(); c.moveTo(-32, 60); c.lineTo(32, 60); c.lineTo(0, 60 - bot); c.fill(); }
+  if (k > .02 && k < .98) c.fillRect(-1.5, -2, 3, 60);
+  c.restore();
+}
+const C = { len: 30, cap: [
+  [1, 5.5, '蜃気楼の都の広場。噴水のふちに、砂時計が光っていた'],
+  [6, 10, '砂時計を、さかさにしてみる……'],
+  [10.5, 15, '時間が、少しだけ巻きもどっていく'],
+  [15.5, 20.5, '噴水のそばに、リュックを背負った旅人がいた'],
+  [21, 25, '旅人はこちらに気づいて、うしろを向いたまま手をあげた'],
+  [25.5, 30, '砂が落ちきると、広場にはだれもいなかった'],
+], draw(t) {
+  const sep = ease(seg(t, 10, 12)) * (1 - ease(seg(t, 25, 27)));
+  clipWin(() => {
+    const { fx, fy } = plaza(t, sep);
+    // 旅人：巻きもどし中だけ
+    const ta = ease(seg(t, 14.5, 16.5)) * (1 - ease(seg(t, 24.5, 26)));
+    if (ta > 0) { c.save(); c.globalAlpha = ta; traveler(fx + 230, fy + 20, 1.5, 'rgba(70,45,25,.95)', t > 21 && t < 25 ? (t - 21) / 4 + .2 : 0, true); c.restore(); }
+    // 巻きもどしの線（時計の針のような光）
+    if (sep > 0 && t < 15) { c.save(); c.globalAlpha = sep * (1 - seg(t, 13, 15)); c.strokeStyle = 'rgba(255,240,200,.8)'; c.lineWidth = 3; for (let k = 0; k < 12; k++) { const a = -t * 6 + k * .52; c.beginPath(); c.arc(W / 2, WY + WH / 2, 200 + k * 18, a, a + .4); c.stroke(); } c.restore(); }
+  });
+  frame(); sill();
+  // 手前の砂時計（窓辺の前、大きく）
+  const flipped = t >= 8.5, rot = flipped ? 0 : Math.PI * ease(seg(t, 6.5, 8.5)), hx = W / 2 + 330, hy = WY + WH - 40;
+  hourglass(hx, hy, 1.1, rot, flipped ? 1 - seg(t, 9, 26) : 0); // さかさにする前は砂が下、さかさにしたら上から落ちる
+  caption(this.cap, t);
+} };
+
+/* ---------- D2：窓に映る自分 ---------- */
+const D = { len: 34, cap: [
+  [1, 6, 'お話のあいだ、ずっと先を歩いていた リュックの影'],
+  [6.5, 11, 'きょうも、あの影が 道の先に見える'],
+  [11.5, 16, '夕日がさして、窓が 鏡のようになってきた'],
+  [16.5, 21.5, '影が、窓の中で こちらに重なっていく……'],
+  [22, 27, 'ずっと追いかけていた影は、窓に映った 自分だった'],
+  [27.5, 34, 'くもった窓に、指で 🐾 をかいてみた'],
+], draw(t) {
+  const sun = ease(seg(t, 8, 18));
+  const refl = ease(seg(t, 11, 20)); // 窓の映りこみ
+  clipWin(() => {
+    const hz = desert(t, { sun });
+    // 道の先を歩く影（だんだん近く、大きく、窓の中央へ）
+    const m = ease(seg(t, 14, 22));
+    const tx = WX + WW * (.7 - m * .2), ty = hz + 40 + m * 220, ts = .55 + m * 2.3;
+    const shadowA = 1 - ease(seg(t, 20, 23));
+    if (shadowA > 0) { c.save(); c.globalAlpha = shadowA; traveler(tx, ty, ts, 'rgba(40,24,30,.85)', 0, true); c.restore(); }
+    // 映りこみ：車の中（自分の座席・窓辺の飾り・リュックを背負った自分）
+    if (refl > 0) {
+      c.save(); c.globalAlpha = refl * .55;
+      c.fillStyle = 'rgba(40,30,30,.9)'; c.fillRect(WX, WY, WW, WH);
+      c.restore();
+      c.save(); c.globalAlpha = refl * .75;
+      // 鏡に映った窓辺の飾り（左右さかさ）
+      c.font = '64px serif'; c.textAlign = 'center'; c.textBaseline = 'bottom';
+      c.fillText('🐚', WX + WW - 120, WY + WH - 20); c.fillText('⏳', WX + 140, WY + WH - 20); c.fillText('🧸', WX + WW / 2 - 260, WY + WH - 20);
+      c.restore();
+      // 自分の姿（映りこみ）：影と同じ形
+      const ya = ease(seg(t, 19, 23));
+      if (ya > 0) { c.save(); c.globalAlpha = ya * refl * .9; traveler(WX + WW * .5, WY + WH - 10, 2.85, 'rgba(255,200,150,.55)', 0, true); c.restore(); }
+    }
+    // くもり ＋ 指でかいた足あと
+    const fog = ease(seg(t, 26.5, 29));
+    if (fog > 0) {
+      c.fillStyle = `rgba(235,235,240,${.35 * fog})`; c.fillRect(WX, WY, WW, WH);
+      const draw = seg(t, 28.5, 32);
+      if (draw > 0) {
+        c.save(); c.globalCompositeOperation = 'destination-out'; c.restore();
+        c.save(); c.strokeStyle = `rgba(255,255,255,${.9})`; c.lineWidth = 16; c.lineCap = 'round';
+        const cx = WX + WW * .5, cy = WY + WH * .42;
+        const toes = [[-48, -60], [-16, -80], [18, -80], [50, -60]];
+        const n = draw * 5;
+        c.fillStyle = 'rgba(255,255,255,.85)';
+        if (n > 0) { c.beginPath(); c.ellipse(cx, cy, 52 * Math.min(1, n), 44 * Math.min(1, n), 0, 0, 7); c.fill(); }
+        toes.forEach(([dx, dy], i) => { if (n > i + 1) { c.beginPath(); c.ellipse(cx + dx, cy + dy, 18, 22, 0, 0, 7); c.fill(); } });
+        c.restore();
+      }
+    }
+  });
+  frame(); sill(1 - refl * .3); caption(this.cap, t);
+} };
+
+const SC = { b: B, c: C, d: D };
+const bar = document.getElementById('bar');
+function loop(now) {
+  const s = SC[scene], t = (now - t0) / 1000;
+  c.clearRect(0, 0, W, H); s.draw(Math.min(t, s.len));
+  bar.style.width = Math.min(100, t / s.len * 100) + '%';
+  if (t > s.len + .5) { document.title = 'done'; window.__done = true; }
+  requestAnimationFrame(loop);
+}
+function start(s) { scene = s; t0 = performance.now(); window.__done = false; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.s === s)); }
+document.getElementById('tabs').onclick = e => { const b = e.target.closest('button'); if (b) start(b.dataset.s); };
+document.getElementById('play').onclick = () => start(scene);
+start(scene); requestAnimationFrame(loop);
+</script>
+</body>
+</html>
