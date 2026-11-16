@@ -360,15 +360,47 @@ function voiceScore(v) {
 }
 function loadVoices() { try { devVoices = speechSynthesis.getVoices(); } catch (e) {} }
 if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-function tts(text, onend) {
-  if (!('speechSynthesis' in window)) { if (onend) setTimeout(onend, 700); return; }
+/* ---------- こえの じゅんばんまち（2026-11-16）: どの こえも さいごまで よむ。とめるのは がめんを でるとき（hush）だけ ----------
+   mode: なし＝じゅんばんに まつ / 'idle'＝ほかの こえが なっていなければ だけ（おしゃべり）/ 'swap'＝'swap' どうしだけ いれかわる（かぞえる こえ・タップで なまえ） */
+const VQ = { q: [], cur: null, seq: 0 };
+function vqBusy() { return !!VQ.cur || VQ.q.length > 0; }
+function vqHas(tag) { return (VQ.cur && VQ.cur.tag === tag) || VQ.q.some(x => x.tag === tag); }
+function vqAdd(it, mode) {
+  if (mode === 'idle' && vqBusy()) return false;
+  it.swap = mode === 'swap';
+  if (it.swap) { VQ.q = VQ.q.filter(x => !x.swap); if (VQ.cur && VQ.cur.swap) vqCut(); }
+  VQ.q.push(it); vqNext(); return true;
+}
+function vqCut() { const c = VQ.cur; VQ.cur = null; VQ.seq++; if (c && c.stop) try { c.stop(); } catch (e) {} }
+function vqNext() {
+  if (VQ.cur) return;
+  const it = VQ.q.shift(); if (!it) return;
+  VQ.cur = it; const my = ++VQ.seq; let fin = false, safety = 0;
+  const done = () => { if (fin) return; fin = true; clearTimeout(safety); if (my !== VQ.seq) return; VQ.cur = null; if (it.onend) try { it.onend(); } catch (e) {} vqNext(); };
+  safety = setTimeout(done, (it.max || 8) * 1000);
+  try { it.stop = it.play(done) || null; } catch (e) { done(); }
+}
+function hush() { VQ.q = []; vqCut(); try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+// AudioBuffer を ならす（おわったら done）
+function vqBuf(a, b, off, dur, gain) {
+  return done => {
+    const s = a.createBufferSource(); s.buffer = b; let out = a.destination;
+    if (gain) { const g = a.createGain(); g.gain.value = gain; g.connect(a.destination); out = g; }
+    s.connect(out); s.onended = done; s.start(0, off || 0, dur || b.duration);
+    return () => s.stop();
+  };
+}
+// 端末の よみあげ（u は SpeechSynthesisUtterance）
+function vqTts(u) {
+  return done => { u.onend = done; u.onerror = done; speechSynthesis.cancel(); speechSynthesis.speak(u); return () => speechSynthesis.cancel(); };
+}
+function tts(text, item, mode) {
+  if (!('speechSynthesis' in window) || !text) { if (item.onend) setTimeout(item.onend, 600); return; }
   try {
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text), code = L === 'ja' ? 'ja-JP' : 'en-US';
     const vs = devVoices.filter(v => v.lang.replace('_', '-').toLowerCase().startsWith(L)).sort((a, b) => voiceScore(b) - voiceScore(a));
     u.lang = code; u.pitch = 1.15; u.rate = L === 'ja' ? .95 : .9; if (vs[0]) u.voice = vs[0];
-    if (onend) { let done = false; const f = () => { if (!done) { done = true; onend(); } }; u.onend = f; setTimeout(f, 2600); }
-    speechSynthesis.speak(u);
+    item.play = vqTts(u); item.max = 3 + text.length * .25; vqAdd(item, mode);
   } catch (e) {}
 }
 // 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
@@ -376,22 +408,17 @@ let voiceMode = store.get('kezuri-voice', 'ai:1');
 { const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => (AI_VOICES[L] || AI_VOICES.ja)[(+voiceMode.slice(3) || 1) - 1] || AI_VOICES.ja[0];
 const useAI = () => voiceMode.startsWith('ai:');
-function playBuf(b, off = 0, dur) {
-  const a = audio(); if (!a) return;
-  try { if (aiSrc) aiSrc.stop(); } catch (e) {}
-  try { speechSynthesis.cancel(); } catch (e) {}
-  const src = a.createBufferSource(); src.buffer = b; src.connect(a.destination); src.start(0, off, dur || b.duration); aiSrc = src;
-}
-let speakTok = 0;
-// key: 'ok0' など、または 'it_dog'（なまえ）。しゃべりおわったら onend
-function say(key, onend) {
-  const tok = ++speakTok, fin = () => { if (onend && tok === speakTok) onend(); };
-  if (!soundOn || voiceMode === 'off') { if (onend) setTimeout(fin, 350); return; }
+// key: 'ok0' など、または 'it_dog'（なまえ）。さいごまで よみおわったら onend
+// mode: なし＝まえの こえが おわるまで まつ / 'swap'＝タップで なまえ（まえの タップの なまえだけ とめる）/ tag: おなじ tag が まっていたら いれない
+function say(key, onend, mode, tag) {
+  if (!soundOn || voiceMode === 'off') { if (onend) setTimeout(onend, 350); return; }
+  if (tag && vqHas(tag)) return;
+  const item = { onend, tag };
   let text, ph = null;
   if (key.startsWith('it_')) {
     const id = key.slice(3); ph = photos.find(p => p.id === id);
     if (ph) {
-      if (ph.recBuf && audio()) { playBuf(ph.recBuf.buf, ph.recBuf.off, ph.recBuf.dur); if (onend) setTimeout(fin, ph.recBuf.dur * 1000 + 150); return; }
+      if (ph.recBuf && audio()) { item.play = vqBuf(audio(), ph.recBuf.buf, ph.recBuf.off, ph.recBuf.dur); item.max = ph.recBuf.dur + 2; vqAdd(item, mode); return; }
       text = ph.name;
     } else text = ITEM_BY[id] ? nameOf(ITEM_BY[id]) : '';
   } else text = T().say[key] || '';
@@ -400,13 +427,13 @@ function say(key, onend) {
     if (a) {
       aiLoad(id, [key]);
       const b = aiBuf[`${id}/${key}`];
-      if (b && typeof b !== 'string') { playBuf(b); if (onend) setTimeout(fin, b.duration * 1000 + 150); return; }
+      if (b && typeof b !== 'string') { item.play = vqBuf(a, b); item.max = b.duration + 2; vqAdd(item, mode); return; }
     }
   }
-  tts(text, onend ? fin : null);
+  tts(text, item, mode);
 }
 function sayCat(cat, onend) { say(cat + Math.floor(Math.random() * Object.keys(T().say).filter(k => k.replace(/\d+$/, '') === cat).length), onend); }
-function sayChain(keys) { if (keys.length) say(keys[0], () => setTimeout(() => sayChain(keys.slice(1)), 120)); }
+function sayChain(keys, tag) { if (tag && vqHas(tag)) return; keys.forEach(k => say(k, null, '', tag)); }
 function prepVoice(keys) { if (useAI()) aiLoad(aiId(), keys); }
 const PHRASES = Object.keys(TEXT.ja.say);
 
@@ -481,7 +508,7 @@ function renderPhotos() {
     const rb = row.querySelector('.r');
     if (p.rec) rb.classList.add('has');
     rb.onclick = () => recordFor(p, rb);
-    row.querySelector('.pl').onclick = () => { audio(); say('it_' + p.id); };
+    row.querySelector('.pl').onclick = () => { audio(); hush(); say('it_' + p.id); };
     row.querySelector('.d').onclick = () => {
       if (!confirm(T().phDel)) return;
       photos = photos.filter(x => x !== p); pdb.del(p.id); URL.revokeObjectURL(p.url);
@@ -500,7 +527,7 @@ async function recordFor(p, btn) {
     mr.onstop = () => {
       stream.getTracks().forEach(t => t.stop()); recState = null; btn.classList.remove('rec');
       const b = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
-      if (b.size > 800) { p.rec = b; p.recBuf = null; photoSave(p); decodeRec(p); btn.classList.add('has'); setTimeout(() => say('it_' + p.id), 400); }
+      if (b.size > 800) { p.rec = b; p.recBuf = null; photoSave(p); decodeRec(p); btn.classList.add('has'); setTimeout(() => { hush(); say('it_' + p.id); }, 400); }
     };
     mr.start(); btn.classList.add('rec');
     recState = { stop() { try { mr.stop(); } catch (e) {} } };
@@ -594,8 +621,8 @@ function renderSettings() {
   const vl = [1, 2, 3, 4].map(n => ['ai:' + n, t.ai(n)]);
   vl.push(['dev', t.dev], ['off', t.off]);
   const curV = voiceMode;
-  opt($('#voiceOpt'), vl, curV, v => { voiceMode = v; store.set('kezuri-voice', v); audio(); prepVoice(['ok0']); setTimeout(() => say('ok0'), 300); });
-  opt($('#soundOpt'), [[true, t.on], [false, t.off]], soundOn, v => { soundOn = v; store.set('kezuri-sound', v); if (!v && scr) scr.g.gain.value = 0; });
+  opt($('#voiceOpt'), vl, curV, v => { voiceMode = v; store.set('kezuri-voice', v); audio(); hush(); prepVoice(['ok0']); setTimeout(() => say('ok0'), 300); });
+  opt($('#soundOpt'), [[true, t.on], [false, t.off]], soundOn, v => { soundOn = v; store.set('kezuri-sound', v); if (!v) hush(); if (!v && scr) scr.g.gain.value = 0; });
   opt($('#langOpt'), [['ja', '日本語'], ['en', 'English']], L, v => setLang(v));
 }
 $('#setB').onclick = () => { renderSettings(); $('#setM').classList.add('on'); };
@@ -752,7 +779,7 @@ cv.addEventListener('pointerdown', e => {
   if (!st) return;
   const p = toCard(e);
   if (st.state === 'open') { // ひらいた えを さわると なまえを もういちど
-    if (p.x > 0 && p.y > 0 && p.x < lay.S && p.y < lay.S) { st.bounce = performance.now(); say('it_' + st.it.id); }
+    if (p.x > 0 && p.y > 0 && p.x < lay.S && p.y < lay.S) { st.bounce = performance.now(); say('it_' + st.it.id, null, 'swap'); }
     return;
   }
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
@@ -798,7 +825,7 @@ function answer(c, b) {
   if (!st || st.state !== 'quiz') return;
   audio();
   if (c === st.it) { b.classList.add('yes'); reveal(false); }
-  else { b.classList.add('no'); sfx.wrong(); sayChain(['miss0', 'miss1']); }
+  else { b.classList.add('no'); sfx.wrong(); sayChain(['miss0', 'miss1'], 'miss'); }
 }
 function reveal(auto) {
   st.state = 'open'; st.openT = performance.now(); st.bounce = st.openT + 500;
@@ -828,8 +855,8 @@ function reveal(auto) {
   }, 1300);
 }
 $('#nextB').onclick = () => { sfx.tap(); newCard(false); };
-$('#backB').onclick = () => { st = null; scratchSound(0); try { speechSynthesis.cancel(); } catch (e) {} renderTitle(); show('title'); };
-$('#gBookB').onclick = () => { scratchSound(0); openBook('game'); };
+$('#backB').onclick = () => { st = null; scratchSound(0); hush(); renderTitle(); show('title'); };
+$('#gBookB').onclick = () => { scratchSound(0); hush(); openBook('game'); };
 $('#hintB').onclick = () => { if (st && st.state !== 'open') { audio(); giveHint(true); } };
 function giveHint(force) {
   // まだ けずっていない、えの ところを ひからせる
@@ -837,7 +864,7 @@ function giveHint(force) {
   if (!left.length) return;
   const i = pick(left);
   st.hintAt = { x: (i % GRID + .5) / GRID, y: (Math.floor(i / GRID) + .5) / GRID, t: performance.now() };
-  if (force || !st.hinted) say('hint0');
+  if (force || !st.hinted) say('hint0', null, '', 'hint');
   st.hinted = true;
 }
 
@@ -1008,7 +1035,7 @@ function renderBook() {
     else if (!it.photo) b.querySelector('span').textContent = '？';
     b.onclick = () => {
       if (!r) { sfx.tap(); return; }
-      b.classList.remove('hop'); void b.offsetWidth; b.classList.add('hop'); say('it_' + it.id);
+      b.classList.remove('hop'); void b.offsetWidth; b.classList.add('hop'); say('it_' + it.id, null, 'swap');
     };
     grid.appendChild(b);
   }
