@@ -1,10 +1,10 @@
 # ひらがな あそび（幼児がひらがなを読めるようになるゲーム）
 
-最終更新: 2026-11-16 ／ いまの段階: v0.1（4つの遊びを1つのゲームにまとめた。かくしURLで試してもらっているところ）
+最終更新: 2026-11-16 ／ いまの段階: v0.2（ひらがな・ABC にほんご・ABC English の3コースを1つのアプリに。かくしURLで試してもらっているところ）
 
 ## 遊ぶ場所
 
-- v0.1（かくしURL）: https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/ （英語は `?lang=en`）
+- かくしURL: https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/ （コースを決めて開く: `?course=hira` / `?course=abcja` / `?course=abcen`。むかしの `?lang=en` は abcen）
 - はじめの 4案モック（Claude のページ、ログインが必要。いまは古い）: https://claude.ai/artifact/TAFNWLnUHy5AFAeMm3SZRA
 
 ## 公開の方針（2026-11-16 くどうさん決定）
@@ -37,18 +37,24 @@ LINE でつながっている人に試してもらうため、「かくしURL」
    - ④ かるた: よみふだ24まい（スマホは9まい・大きい画面は12まい、似ている字は同じ回に出さない）。「おうちの人と」（むりょう）と「ロボと」（ぜんぶ版）。
    - もじずかん: 同じ字に3回あたると ⭐⭐⭐（「おぼえた」）。タッチすると読む。どうぶつ図鑑つき。
    - AI の声（4種類）、英語版（ABC Play、`?lang=en` か ホームの English）、課金のしくみ（おためし版）。
+5. **2026-11-16** くどうさん「ひらがな遊びを日本人がアルファベットを覚える方向にも横展開してください。またアルファベットを学ぶのを、英語圏の人にも使えるようにさらに横展開してください。」→ つづけて「できるだけ1つのアプリでその2つの横展開を盛り込んでください。」→ v0.2。
+   - 1つのアプリに3つの コース。ホームの上で切りかえる（あいう／ABC にほんご／ABC English）。おぼえた字・ずかん・名前は コースごとに べつ。
+   - **ABC にほんご**（日本の子どもが ABC）: 案内は日本語の声（「○は どれかな？」）、アルファベットと ことばは 英語の発音。どうぶつ（DOG など27）・かぞく（MOM など）・かるた（A is for apple）は英語で、日本語の いみ（いぬ・りんご など）も表示。名前は ローマ字（YUTO）。
+   - **ABC English**（英語圏の子ども）: v0.1 の英語版。すべて英語。
+   - 課金: ひらがな と ABC は べつの「ぜんぶ版」（ABC は 2コース共通）。ファミリーパスなら ぜんぶ。
 
 ## 今後の予定
 
 - 試してもらった人の感想で直す（どの遊びが人気か、むずかしさ、声の聞きやすさ）。
-- 濁点（が・ざ…）と小さい字（ゃ・ゅ・ょ）の段階、カタカナ。
+- 濁点（が・ざ…）と小さい字（ゃ・ゅ・ょ）の段階、カタカナ。ABC は 小文字（a b c）の段階。
 - 子どもの名前を AI では読めないので、おうちの人の声の録音（[tentsunagi.md](tentsunagi.md) と同じしくみ）を入れるか検討。
 - 正式に公開するときは、いりぐちへの追加をくどうさんに確認する。
 
 ## 技術メモ
 
 - ファイル: `try-c73775bbf6bb9c41/index.html`（1ファイル）＋ `voice/<声>/<key>.mp3`。`../common/kakin.js` を読む（game: `hiragana`）。コピーは `/mnt/project-files/hiragana/`。
-- 記録: localStorage `hiragana-v1`（lang, voice, snd, name{ja,en}, got{ja,en}＝字ごとの正解数, zukan{ja,en}, unlock{ja,en}＝①で出す字の数）。
+- コース: `COURSES`（hira = ui ja・scr ja / abcja = ui ja・scr en / abcen = ui en・scr en、game は kakin の id: hiragana / abc）。UI の文字は `TEXT[ui]`（abcja は `TEXT.abcja`）、字・どうぶつ・かぞく・よみふだ は `[scr]`。声は `keyLang(key)`: 文字（k#/a#）・an_・f_・y# は scr の声、ほかは ui の声。abcja の 日本語の いみは `JA_MEAN`。
+- 記録: localStorage `hiragana-v1`（course, voice, snd, name / got（字ごとの正解数）/ zukan / unlock（①で出す字の数）は どれも コースごと）。v0.1 の ja / en は hira / abcen に うつす。
 - 声のしくみ: `say(...keys)` は Promise のくさり（chain）に つないで順番に読む。`hush()` は「もどる」・画面を閉じたとき だけ（gen を進めて、待っている声を捨てる）。`run` は遊びを始める／やめるたびに増え、古いタイマーを無視する。
 - 字の順番は `SCRIPT[lang].order`、似ている字は `similar`。① は order の先頭 `unlock` 文字から、正解の少ない字ほど出やすく選ぶ。
 - 声: 1文字（`k0`〜`k45`＝あ〜ん、`a0`〜`a25`＝A〜Z）は てんつなぎ の声をコピー。それ以外のセリフは `LINES`（index.html の `//@@LINES-BEGIN`〜`END`）から `/mnt/project-files/hiragana/tools/make_voice.py` で作る（Kokoro-82M v1.0 onnx、日本語は misaki の G2P。助詞の「は」は わ に直す）。セリフを取り出す: index.html の data〜LINES-END を node で評価して JSON に（`tools/lines.json`）。huggingface は つながらないので、聞き取りでの選びなおしは していない。
