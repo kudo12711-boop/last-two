@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>おひっこし</title>
+<style>body{margin:0;font:16px/1.6 sans-serif;background:#fff4dc;color:#4a3b2a;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:16px;box-sizing:border-box}</style>
+</head>
+<body>
+<p id="m">🚚 記録を うつしています…<br><small>Moving your saved games…</small></p>
+<script>
+/*
+ * 記録の おひっこしページ（リポジトリ kudo12711-boop/hikkoshi の index.html。もとは last-two の tools/hikkoshi-bridge/）
+ * ここは前のアドレス（kudo12711-boop.github.io）にあるので、前の記録を読める。
+ * ?back=<新しいページ>         … localStorage を # に入れて もどる（写真・録音があれば hkidb=1 も付ける）
+ * ?mode=idb&to=<新しいサイト>  … 開いた元の窓へ IndexedDB（写真・録音など）を わたして閉じる
+ * わたす先は 決まったサイトだけ（ほかのサイトには 記録を出さない）。
+ */
+(function () {
+  var OK = /^https:\/\/([a-z0-9-]+\.)*hajimaruyo\.com$|^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+  var q = new URLSearchParams(location.search);
+  var msg = document.getElementById('m');
+  function fail(t) { msg.textContent = t; }
+
+  function dbNames() {
+    var known = ['camper', 'kakurenbo', 'tentsunagi', 'kezuri', 'machigai', 'fukuwarai', 'oukoku', 'ikimono', 'todofuken', 'hiragana'];
+    if (indexedDB.databases) return indexedDB.databases().then(function (l) { return l.map(function (d) { return d.name; }); }).catch(function () { return known; });
+    return Promise.resolve(known);
+  }
+  // 名前が あるか分からない DB を開くと 空の DB ができてしまうので、databases() が使えないときは 作られたら消す
+  function readDb(name) {
+    return new Promise(function (res) {
+      var created = false;
+      var r = indexedDB.open(name);
+      r.onupgradeneeded = function () { created = true; };
+      r.onerror = function () { res(null); };
+      r.onsuccess = function () {
+        var d = r.result;
+        if (created || !d.objectStoreNames.length) { d.close(); if (created) indexedDB.deleteDatabase(name); return res(null); }
+        var names = [].slice.call(d.objectStoreNames), out = { name: name, version: d.version, stores: [] };
+        var tx = d.transaction(names, 'readonly'), count = 0;
+        names.forEach(function (n) {
+          var os = tx.objectStore(n), st = { name: n, keyPath: os.keyPath, autoIncrement: os.autoIncrement, indexes: [], keys: [], values: [] };
+          [].slice.call(os.indexNames).forEach(function (ix) { var I = os.index(ix); st.indexes.push({ name: ix, keyPath: I.keyPath, unique: I.unique, multiEntry: I.multiEntry }); });
+          os.getAllKeys().onsuccess = function (e) { st.keys = e.target.result; };
+          os.getAll().onsuccess = function (e) { st.values = e.target.result; count += st.values.length; };
+          out.stores.push(st);
+        });
+        tx.oncomplete = function () { d.close(); res(count ? out : null); };
+        tx.onerror = function () { d.close(); res(null); };
+      };
+    });
+  }
+  function readAll() {
+    return dbNames().then(function (names) { return Promise.all(names.map(readDb)); }).then(function (l) { return l.filter(Boolean); });
+  }
+
+  var back = q.get('back');
+  if (back) {
+    var u; try { u = new URL(back); } catch (e) { return fail('?'); }
+    if (!OK.test(u.origin)) return fail('?');
+    var data = {}, n = 0;
+    try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); data[k] = localStorage.getItem(k); n++; } } catch (e) { }
+    readAll().then(function (dbs) {
+      location.replace(u.href.replace(/#.*$/, '') + '#hk=' + (n ? encodeURIComponent(JSON.stringify(data)) : '0') + (dbs.length ? '&hkidb=1' : ''));
+    });
+    return;
+  }
+
+  if (q.get('mode') === 'idb') {
+    var to = q.get('to');
+    if (!to || !OK.test(to) || !window.opener) return fail('?');
+    readAll().then(function (dbs) {
+      window.opener.postMessage({ type: 'hikkoshi-idb', dbs: dbs }, to);
+      msg.textContent = '✅ うつしました / Done';
+      setTimeout(function () { window.close(); }, 600);
+    }).catch(function () { fail('うつせませんでした / Could not move'); });
+    return;
+  }
+  msg.textContent = 'おひっこし用のページです / Moving page';
+})();
+</script>
+</body>
+</html>

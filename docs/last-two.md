@@ -1,6 +1,6 @@
 # ラスト・ツー
 
-最終更新: 2026-11-11 ／ いまの版: v1.4（英語対応、2026-11-11 公開）
+最終更新: 2026-11-19 ／ いまの版: v1.4（英語対応、2026-11-11 公開）
 
 ## ひとことで
 
@@ -78,3 +78,5 @@
 - QR コードは cdnjs の qrcodejs。心臓の音は WebAudio で合成（スマホで聞こえる中くらいの高さ）。
 - 英語対応（v1.4）: `LANG`（`?lang=` → localStorage `lasttwo-lang` → `games-lang` → ブラウザの言語）と `E`（英語なら true）。HTML は日本語のまま書き、英語のときだけ最初に `if (E){…}` で文字を差しかえる。動くセリフは `E ? 英語 : 日本語` で書いている。表情の名前（`moodOf`）は内部では日本語のまま使い、表示のときだけ `moodTxt()` で英語にする（友だち対戦で送る `mood` も日本語のまま）。
 - Claude は GitHub でリポジトリを新しく作ったり、Pages をオンにしたりはできません（くどうさんの操作が必要）。
+
+- アプリの準備（2026-11-19）: `manifest.webmanifest`（アプリの名札）、`app/` の仮アイコン、`app-files.json`（アプリとして開いたときに まとめて保存するファイルの一覧）、`<head>` に `common/app.js`（オフライン）と `common/hikkoshi.js`（games.hajimaruyo.com への記録の引っ越し）。ファイルを足したり変えたりしたら `node tools/make_app.cjs --no-icons` で一覧を作りなおす。くわしくは [app-plan.md](app-plan.md)。

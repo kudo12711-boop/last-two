@@ -1,6 +1,6 @@
 # 都道府県パズル
 
-最終更新: 2026-11-16 ／ いまの版: v0.4（課金のしくみ入り）
+最終更新: 2026-11-19 ／ いまの版: v0.4（課金のしくみ入り）
 
 ## ひとことで
 
@@ -71,3 +71,5 @@
 - 保存: localStorage `todofuken-best`（タイム・星）、`todofuken-stickers`（シールの県番号）、`todofuken-kid`（クリアしたステージ）。v0.1 の src は `tools/src-v0.1.html`。読み上げはブラウザの speechSynthesis。
 - 課金: `<script src="../common/kakin.js">` を ゲームの script の前に読み、`Kakin.setup({game: 'todofuken', ...})`。🔒は `.kk-lock` クラス、さわったら `Kakin.ask()`、ぜんぶ版かどうかは `Kakin.full()`。むりょうの範囲は `FREE_MODES`（`s1`〜`s4` `hk` `kt`）。`startGame` の はじめで止めるので、地図のタップや「つぎの ステージへ」も 同じように🔒になる。お店のボタンはホームの下の `#kkSlot`。
 - 声の順番待ち（2026-11-16）: 声はすべて `vqAdd()` の順番待ち（`VQ`）を通す。前の声を止めずに、終わったら次を鳴らす（AudioBuffer の `onended`、読み上げの `onend`、念のための時間切れ `max`）。`mode` なし＝待つ、`'idle'`＝ほかの声が鳴っていなければだけ（おしゃべり）、`'swap'`＝`'swap'` どうしだけ入れかわる（数を数える声・タップで名前）。`tag` で同じ種類の声が積み重ならないようにする（`vqHas()`）。止めるのは `hush()` だけ（画面を出るとき・音を消すとき・声のためし・録音の再生）。同じしくみは [ひらがな あそび](hiragana.md)・[ちいさな おうこく](oukoku.md) でも使っている。
+
+- アプリの準備（2026-11-19）: `manifest.webmanifest`（アプリの名札）、`app/` の仮アイコン、`app-files.json`（アプリとして開いたときに まとめて保存するファイルの一覧）、`<head>` に `common/app.js`（オフライン）と `common/hikkoshi.js`（games.hajimaruyo.com への記録の引っ越し）。ファイルを足したり変えたりしたら `node tools/make_app.cjs --no-icons` で一覧を作りなおす。くわしくは [app-plan.md](app-plan.md)。
