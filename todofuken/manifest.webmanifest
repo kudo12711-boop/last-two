@@ -1,0 +1,30 @@
+{
+  "name": "都道府県パズル",
+  "short_name": "都道府県",
+  "description": "47都道府県の かたちを はめる パズル",
+  "lang": "ja",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e8f6f0",
+  "theme_color": "#e8f6f0",
+  "icons": [
+    {
+      "src": "app/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "app/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "app/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

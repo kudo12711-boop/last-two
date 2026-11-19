@@ -1,6 +1,6 @@
 # ひらがな あそび（幼児がひらがなを読めるようになるゲーム）
 
-最終更新: 2026-11-16 ／ いまの段階: v0.2（ひらがな・ABC にほんご・ABC English の3コースを1つのアプリに。かくしURLで試してもらっているところ）
+最終更新: 2026-11-19 ／ いまの段階: v0.2（ひらがな・ABC にほんご・ABC English の3コースを1つのアプリに。かくしURLで試してもらっているところ）
 
 ## 遊ぶ場所
 
@@ -59,3 +59,5 @@ LINE でつながっている人に試してもらうため、「かくしURL」
 - 字の順番は `SCRIPT[lang].order`、似ている字は `similar`。① は order の先頭 `unlock` 文字から、正解の少ない字ほど出やすく選ぶ。
 - 声: 1文字（`k0`〜`k45`＝あ〜ん、`a0`〜`a25`＝A〜Z）は てんつなぎ の声をコピー。それ以外のセリフは `LINES`（index.html の `//@@LINES-BEGIN`〜`END`）から `/mnt/project-files/hiragana/tools/make_voice.py` で作る（Kokoro-82M v1.0 onnx、日本語は misaki の G2P。助詞の「は」は わ に直す）。セリフを取り出す: index.html の data〜LINES-END を node で評価して JSON に（`tools/lines.json`）。huggingface は つながらないので、聞き取りでの選びなおしは していない。
 - ④「ロボと」: よみふだを読み終えてから 1.2秒後に、ロボの手が 6.5〜9秒かけて正解の札へ動く。
+
+- アプリの準備（2026-11-19）: `manifest.webmanifest`（アプリの名札）、`app/` の仮アイコン、`app-files.json`（アプリとして開いたときに まとめて保存するファイルの一覧）、`<head>` に `common/app.js`（オフライン）と `common/hikkoshi.js`（games.hajimaruyo.com への記録の引っ越し）。ファイルを足したり変えたりしたら `node tools/make_app.cjs --no-icons` で一覧を作りなおす。くわしくは [app-plan.md](app-plan.md)。

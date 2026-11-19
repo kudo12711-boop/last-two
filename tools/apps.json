@@ -1,0 +1,19 @@
+{
+  "_note": "アプリ用の名札（manifest）とアイコンの設定。python3 tools/make_app.py で作りなおす。アイコンは仮（絵文字）。",
+  "apps": [
+    {"dir": "games", "name": "あそびのいりぐち", "short": "あそび", "emoji": "🎈", "bg": ["#ffd27a", "#ff9f6b"], "theme": "#fff4dc", "scope": "../", "desc": "子ども向けのゲームを えらんで あそべる いりぐち"},
+    {"dir": "machigai", "name": "まちがいさがし", "short": "まちがい", "emoji": "🔍", "bg": ["#ffe27a", "#ffb84d"], "theme": "#ffe9a8", "desc": "幼児向け まちがいさがし。写真でも あそべる"},
+    {"dir": "meiro", "name": "ゆびで めいろ", "short": "めいろ", "emoji": "🐶", "bg": ["#a8e6a1", "#4fb874"], "theme": "#ffe9a8", "desc": "幼児向け、ゆびで なぞる めいろ"},
+    {"dir": "tentsunagi", "name": "てんつなぎ", "short": "てんつなぎ", "emoji": "✏️", "bg": ["#ffd1a1", "#ff8f6b"], "theme": "#ffe9a8", "desc": "幼児向け、ばんごうの じゅんに 点を つなぐ"},
+    {"dir": "fukuwarai", "name": "ふくわらい", "short": "ふくわらい", "emoji": "😆", "bg": ["#ffc8dc", "#ff8fb1"], "theme": "#ffe4ec", "desc": "幼児向け ふくわらい。写真の顔でも あそべる"},
+    {"dir": "kakurenbo", "name": "もういいかい？ かくれんぼ", "short": "かくれんぼ", "emoji": "🙈", "bg": ["#c9f0a8", "#7cc95a"], "theme": "#d9f2c4", "desc": "幼児向け かくれんぼ"},
+    {"dir": "kezuri", "name": "けずって なにかな？", "short": "けずって", "emoji": "🪙", "bg": ["#bfe0ff", "#6aa8f0"], "theme": "#e8f3ff", "desc": "幼児向け、けずって あてる スクラッチ"},
+    {"dir": "oukoku", "name": "ちいさな おうこく", "short": "おうこく", "emoji": "👑", "bg": ["#ffd6e8", "#c99bff"], "theme": "#ffe9f2", "desc": "プリンセス・王子・騎士・侍になって 村の おねがいを かなえる"},
+    {"dir": "ikimono", "name": "ふしぎな いきもの ずかん", "short": "いきもの", "emoji": "🥚", "bg": ["#a8e4ff", "#5fb3e8"], "theme": "#bfe9ff", "desc": "ふしぎな いきものと なかよくなって あつめる"},
+    {"dir": "todofuken", "name": "都道府県パズル", "short": "都道府県", "emoji": "🗾", "bg": ["#b8e8d4", "#4fb39a"], "theme": "#e8f6f0", "desc": "47都道府県の かたちを はめる パズル"},
+    {"dir": "try-c73775bbf6bb9c41", "name": "ひらがな あそび", "short": "ひらがな", "text": "あ", "bg": ["#ffe08a", "#ffa94d"], "theme": "#fff4dc", "desc": "幼児が ひらがなを よめるようになる あそび"},
+    {"dir": "nukenuke-ring", "name": "ぬけぬけリング", "short": "ぬけぬけ", "emoji": "💫", "bg": ["#3a3480", "#1a1838"], "theme": "#1a1838", "desc": "輪になった5つの手札で ペアをそろえる 1人用パズル"},
+    {"dir": "camper", "name": "キャンピングカー世界一周", "short": "キャンピング", "emoji": "🚐", "bg": ["#9fd3ff", "#6b4a33"], "theme": "#6b4a33", "desc": "放っておくと進む、車窓の 世界一周", "noOffline": true},
+    {"dir": ".", "name": "ラスト・ツー", "short": "ラスト・ツー", "emoji": "🃏", "bg": ["#6e3240", "#2c0d14"], "theme": "#2c0d14", "desc": "最後の2人で 表情を 読み合う ババ抜き"}
+  ]
+}

@@ -1,6 +1,6 @@
 # ふしぎな いきもの ずかん（英語名 Curious Critters・仮）
 
-最終更新: 2026-11-12 ／ いまの版: v0.2（場所ごとの音、2026-11-12）
+最終更新: 2026-11-19 ／ いまの版: v0.2（場所ごとの音、2026-11-12）
 
 ## ひとことで
 
@@ -93,3 +93,5 @@
 - 言語は ほかのゲームと同じ決め方（`?lang=` → 前回 → 入口ページ → ブラウザ）。文字は `TEXT`（ja / en）。
 - 効果音は WebAudio で その場で作る（`sfx`）。最初のタップで音が出るようになる。
 - まわりの音: `ambStart(id, vol)` が ずっと鳴る音（ノイズにフィルターとゆらぎ、`ambBed`）を用意し、`AMBEV[id]` の ときどき鳴る音を `ambTick()`（毎フレーム）が ランダムな間かくで鳴らす。場面が変わると `showScene` → `sceneAmb()` で切りかえ（フェード）。ゆれる音は `habRustle()`（やわらかい音は `softNoise`）、あしおとは `habStep()`（景色が120px動くごと）。画面が かくれると AudioContext を止める。
+
+- アプリの準備（2026-11-19）: `manifest.webmanifest`（アプリの名札）、`app/` の仮アイコン、`app-files.json`（アプリとして開いたときに まとめて保存するファイルの一覧）、`<head>` に `common/app.js`（オフライン）と `common/hikkoshi.js`（games.hajimaruyo.com への記録の引っ越し）。ファイルを足したり変えたりしたら `node tools/make_app.cjs --no-icons` で一覧を作りなおす。くわしくは [app-plan.md](app-plan.md)。

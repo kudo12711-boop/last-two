@@ -32,6 +32,7 @@
 海外展開（英語など）の準備: [i18n.md](i18n.md)
 
 有料化とアプリ化（Google Play）の進め方: [app-plan.md](app-plan.md)
+25. **2026-11-19** 屋号「はじまるよ」・ゲームは games.hajimaruyo.com に決定。アカウントの要らない準備として、全ゲームに アプリの名札・仮アイコン・オフラインのしくみ、新しいアドレスへの記録の引っ越し（くどうさん「引っ越してください」）、プライバシーポリシーとストアの説明文の下書き。[app-plan.md](app-plan.md)
 
 「Claude のページ」は、くどうさんが claude.ai にログインしたときだけ開けます。「公開ページ」は誰でもログインなしで開けます。
 
@@ -73,7 +74,7 @@
 ## くどうさんにしかできないこと
 
 - GitHub でリポジトリを新しく作る、GitHub Pages をオンにする（Claude からはできません）。
-- スマホアプリにするときの開発者登録（Apple は年1万2千円ほど、Google は最初に約4千円。個人の Google 登録は 12人で14日のテストが必要）。順番と中身は [app-plan.md](app-plan.md)。
+- スマホアプリにするときの開発者登録（Google Play は組織アカウントで、開業届 → D-U-N-S 番号のあと。Apple は年1万2千円ほど。Amazon は Fire TV 版が出せそうになったとき）。games.hajimaruyo.com への切りかえ（DNS と GitHub の設定）。順番と中身は [app-plan.md](app-plan.md)。
 - オンライン対戦を本格化するときの Firebase のアカウント。
 
 ## 次にやるとよいこと
@@ -90,6 +91,7 @@
   - `/machigai/`、`/todofuken/`、`/camper/`、`/meiro/`、`/tentsunagi/`、`/fukuwarai/`、`/kezuri/`、`/nukenuke-ring/`、`/kakurenbo/`、`/oukoku/`、`/ikimono/`… それぞれ別のゲーム。ほかのゲームには影響しません。
   - `/games/` … 入口ページ（ゲームを公開したらここにもカードを足す）
   - `/common/kakin.js` … 全ゲーム共通の課金のしくみ（新しいゲームにも入れる。[kakin.md](kakin.md)）
+  - `/common/app.js`・`/sw.js` … オフライン、`/common/hikkoshi.js` … 新しいアドレスへの記録の引っ越し、`tools/make_app.cjs` … 名札・アイコン・ファイル一覧を作る（新しいゲームは `tools/apps.json` に足して実行。[app-plan.md](app-plan.md)）
   - `/docs/` … この記録
 - 変更は作業ブランチ → PR → マージ の順。マージすると1〜2分で公開ページに反映されます。
 - **プロジェクトの共有フォルダ** `/mnt/project-files/` に、各ゲームの HTML と作るための道具（`tools/`）があります。ゲームによっては、リポジトリの HTML がこの道具で作られたものなので、直すときはもと（src や tools）を直してから作り直します。各ゲームの技術メモを参照してください。

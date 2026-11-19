@@ -1,6 +1,6 @@
 # あそびのいりぐち（ゲームの入口ページ）
 
-最終更新: 2026-11-11 ／ いまの版: v0.2（ファミリーパスの案内つき）
+最終更新: 2026-11-19 ／ いまの版: v0.2（ファミリーパスの案内つき）
 
 ## ひとことで
 
@@ -53,3 +53,5 @@
 - 言語の決め方: URL の `?lang=ja|en` → 前回選んだもの（localStorage `games-lang`）→ ブラウザの言語（日本語以外は英語）。
 - リンクは相対パス（`../machigai/` など）なので、リポジトリ名が変わっても動きます。
 - 課金: `../common/kakin.js` を読み、`Kakin.setup({game: 'games', noFull: true})` でパスだけを案内。文字は TEXT の `pass` `passBtn` `passOn`。
+
+- アプリの準備（2026-11-19）: `manifest.webmanifest`（アプリの名札）、`app/` の仮アイコン、`app-files.json`（アプリとして開いたときに まとめて保存するファイルの一覧）、`<head>` に `common/app.js`（オフライン）と `common/hikkoshi.js`（games.hajimaruyo.com への記録の引っ越し）。ファイルを足したり変えたりしたら `node tools/make_app.cjs --no-icons` で一覧を作りなおす。くわしくは [app-plan.md](app-plan.md)。

@@ -1,6 +1,6 @@
 # ちいさな おうこく（プリンセスになれるゲーム）
 
-最終更新: 2026-11-16 ／ いまの版: v0.5
+最終更新: 2026-11-19 ／ いまの版: v0.5
 
 ## ひとことで
 
@@ -103,3 +103,5 @@ Claude が3案を出しました。
 - お城の絵は viewBox 400×600 を横幅に合わせて下寄せ（`xMidYMax meet`）、あまった所は空と草の色でうめる。
 - 課金: `<script src="../common/kakin.js">` を ゲームの script の前に読み、`Kakin.setup({game: 'oukoku', ...})`。🔒は `.kk-lock` クラス、さわったら `Kakin.ask()`、ぜんぶ版かどうかは `Kakin.full()`。むりょうの範囲は `FREE_RES`。🔒の村人は うすく表示して 🔒をつけ、おねがい（S.active）には入れない（前の保存で入っていたら renderKingdom で 入れかえる）。お店のボタンは ⚙️ せってい の中（`#mK`）。
 - 英語の AI の声（2026-11-11）: `oukoku/voice/en/<キー>.mp3`（日本語と同じキー144こ、プレイヤーの名前は入れない）。`vbuf()` が 英語のときは `en/` を つけて読む。作り方は `/mnt/project-files/i18n/tools/en_voice.py`（`{キー: [声, 文]}` の形）。
+
+- アプリの準備（2026-11-19）: `manifest.webmanifest`（アプリの名札）、`app/` の仮アイコン、`app-files.json`（アプリとして開いたときに まとめて保存するファイルの一覧）、`<head>` に `common/app.js`（オフライン）と `common/hikkoshi.js`（games.hajimaruyo.com への記録の引っ越し）。ファイルを足したり変えたりしたら `node tools/make_app.cjs --no-icons` で一覧を作りなおす。くわしくは [app-plan.md](app-plan.md)。

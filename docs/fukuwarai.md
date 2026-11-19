@@ -1,6 +1,6 @@
 # ふくわらい（幼児向け）
 
-最終更新: 2026-11-16 ／ いまの版: v0.4（公開済み）
+最終更新: 2026-11-19 ／ いまの版: v0.4（公開済み）
 
 ## ひとことで
 
@@ -72,3 +72,5 @@
 - 課金: `<script src="../common/kakin.js">` を ゲームの script の前に読み、`Kakin.setup({game: 'fukuwarai', ...})`。🔒は `.kk-lock` クラス、さわったら `Kakin.ask()`、ぜんぶ版かどうかは `Kakin.full()`。むりょうの範囲は `FREE_FACES` `FREE_PHOTO_FACES`。お店のボタンは「おうちの かたへ」画面（renderHelp の `#kkSlot`）。
 - 英語の AI の声（2026-11-11）: `voice/<af_heart|af_bella|bf_emma|am_michael>/<場面><番号>.mp3`（`LINES.<場面>.en`）。声の設定は `ai:1`〜`ai:4`。作り方は `/mnt/project-files/i18n/tools/en_voice.py`。
 - 声の順番待ち（2026-11-16）: 声はすべて `vqAdd()` の順番待ち（`VQ`）を通す。前の声を止めずに、終わったら次を鳴らす（AudioBuffer の `onended`、読み上げの `onend`、念のための時間切れ `max`）。`mode` なし＝待つ、`'idle'`＝ほかの声が鳴っていなければだけ（おしゃべり）、`'swap'`＝`'swap'` どうしだけ入れかわる（数を数える声・タップで名前）。`tag` で同じ種類の声が積み重ならないようにする（`vqHas()`）。止めるのは `hush()` だけ（画面を出るとき・音を消すとき・声のためし・録音の再生）。同じしくみは [ひらがな あそび](hiragana.md)・[ちいさな おうこく](oukoku.md) でも使っている。
+
+- アプリの準備（2026-11-19）: `manifest.webmanifest`（アプリの名札）、`app/` の仮アイコン、`app-files.json`（アプリとして開いたときに まとめて保存するファイルの一覧）、`<head>` に `common/app.js`（オフライン）と `common/hikkoshi.js`（games.hajimaruyo.com への記録の引っ越し）。ファイルを足したり変えたりしたら `node tools/make_app.cjs --no-icons` で一覧を作りなおす。くわしくは [app-plan.md](app-plan.md)。
