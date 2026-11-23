@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>どうぶつ あみだくじ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+/* Layout: home = 3 big play cards. Each play = top bar + question line + one canvas (the ladder) + a row of big buttons. */
+:root{
+  --bg:#fff6e6; --card:#ffffff; --ink:#3a2e24; --muted:#7c6a58; --line:#ecdcc4;
+  --accent:#ff7a59; --leaf:#4cb38a; --sun:#ffc93c; --sky:#cfeaf6; --plum:#9b7ae0;
+  --pole:#8a5a3b; --wood:#b98656; --paper:#fdf3dc; --paperline:#e7d5b0;
+  --font:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#211a14; --card:#2d241c; --ink:#f4ebdf; --muted:#bfae98; --line:#433628;
+  --accent:#ff8d70; --leaf:#5cc79c; --sun:#ffd25e; --sky:#23414f; --plum:#ad93f0;
+  --pole:#d6a77e; --wood:#e0b07c; --paper:#3a3024; --paperline:#54452f; color-scheme:dark}}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;
+  padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(14px,env(safe-area-inset-left,0px));
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.screen{max-width:760px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:8px;padding-block:10px 14px}
+.top{display:flex;align-items:center;gap:8px}
+.top .grow{flex:1;text-align:center;font-weight:900;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rb{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.pill{background:var(--card);border-radius:999px;padding:5px 12px;font-weight:700;font-variant-numeric:tabular-nums;border:2px solid var(--line);white-space:nowrap}
+.btn{border:0;border-radius:999px;padding:11px 18px;background:var(--leaf);color:#fff;font-weight:900;cursor:pointer;font-size:1.1rem;box-shadow:0 4px 0 rgba(0,0,0,.14)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.14)}
+.btn.sub{background:var(--card);color:var(--ink);border:2px solid var(--line);box-shadow:none}
+.btn.go{background:var(--accent)}
+.btn:disabled{opacity:.45}
+/* home */
+.logo{text-align:center;font-weight:900;font-size:2rem;letter-spacing:.04em;margin:8px 0 0;line-height:1.2}
+.logo .s{display:block;font-size:.95rem;color:var(--muted);font-weight:700;letter-spacing:0;margin-top:4px}
+.logo span.b{display:inline-block;animation:bob 2.4s ease-in-out infinite}
+.logo span.b:nth-child(2n){animation-delay:.3s;color:var(--accent)}
+.logo span.b:nth-child(3n){color:var(--leaf)}
+@keyframes bob{50%{transform:translateY(-5px)}}
+.modes{display:grid;grid-template-columns:1fr;gap:12px}
+.mode{position:relative;border:0;border-radius:24px;padding:14px 16px;cursor:pointer;color:#fff;font-weight:900;font-size:1.3rem;line-height:1.25;
+  display:flex;align-items:center;gap:14px;text-align:left;box-shadow:0 6px 0 rgba(0,0,0,.13);min-height:96px}
+.mode:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.13)}
+.mode .ic{font-size:2.6rem;line-height:1;flex:none}
+.mode small{display:block;font-weight:700;font-size:.82rem;opacity:.95;margin-top:3px}
+.m1{background:#ef8a5c}.m2{background:#4aa8d8}.m3{background:#9b7ad6}
+.homebar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.what{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:10px 14px;font-size:.9rem;line-height:1.6;color:var(--muted)}
+/* play */
+.ask{font-size:1.08rem;font-weight:700;text-align:center;min-height:2.7em;display:flex;align-items:center;justify-content:center;line-height:1.35;padding:0 4px}
+.wrap{position:relative;flex:1;min-height:340px;background:var(--card);border-radius:24px;border:2px solid var(--line);overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.ctl{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;min-height:50px;align-items:center}
+.cheer{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-size:2.2rem;font-weight:900;color:var(--accent);
+  background:var(--card);border-radius:20px;padding:10px 22px;box-shadow:0 6px 20px rgba(0,0,0,.18);animation:pop .4s ease-out;pointer-events:none;white-space:nowrap}
+@keyframes pop{from{transform:translate(-50%,-50%) scale(.4);opacity:0}}
+/* stage picker */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:4px 0}
+.st{position:relative;border:2px solid var(--line);background:var(--card);border-radius:18px;padding:12px 4px;font-weight:900;font-size:1.4rem;cursor:pointer;min-height:76px}
+.st small{display:block;font-size:.72rem;color:var(--muted);font-weight:700;margin-top:2px}
+.st.done{border-color:var(--leaf)}
+.st .lk{position:absolute;top:4px;right:6px;font-size:.95rem}
+.sec{font-weight:900;margin:8px 0 2px;color:var(--muted)}
+/* lottery setup */
+.panel{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.num{font-size:1.6rem;font-weight:900;min-width:2ch;text-align:center}
+.inp{width:100%;font:inherit;font-size:1rem;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);-webkit-user-select:text;user-select:text}
+.labs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* parent */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.sheet{background:var(--card);border-radius:22px;padding:16px;max-width:460px;width:100%;max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font-size:1.2rem}
+.sheet label{font-weight:700}
+.sheet select{font:inherit;padding:8px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.note{font-size:.85rem;color:var(--muted);line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
+</head>
+<body>
+<div class="screen" id="home">
+  <h1 class="logo" id="logo"></h1>
+  <div class="modes">
+    <button class="mode m1" id="go1"><span class="ic">🦴</span><span><span id="m1t"></span><small id="m1s"></small></span></button>
+    <button class="mode m2" id="go2"><span class="ic">👀</span><span><span id="m2t"></span><small id="m2s"></small></span></button>
+    <button class="mode m3" id="go3"><span class="ic">🎁</span><span><span id="m3t"></span><small id="m3s"></small></span></button>
+  </div>
+  <div class="what" id="what"></div>
+  <div class="homebar">
+    <button class="rb" id="hRule"></button>
+    <button class="rb" id="hLang"></button>
+    <button class="rb" id="hParent"></button>
+  </div>
+</div>
+
+<div class="screen" id="pick" hidden>
+  <div class="top"><button class="rb" id="pkBack"></button><div class="grow" id="pkTitle"></div></div>
+  <div id="pkBody" style="overflow:auto"></div>
+</div>
+
+<div class="screen" id="play" hidden>
+  <div class="top"><button class="rb" id="plBack"></button><div class="grow" id="plTitle"></div><span class="pill" id="plInfo"></span></div>
+  <div class="ask" id="ask"></div>
+  <div class="wrap" id="wrap"><canvas id="cv"></canvas></div>
+  <div class="ctl" id="ctl"></div>
+</div>
+
+<div class="ov" id="parent" hidden><div class="sheet">
+  <h2 id="pTitle"></h2>
+  <label for="pLang" id="pLangL"></label>
+  <select id="pLang"><option value="ja">日本語</option><option value="en">English</option></select>
+  <label for="pVoice" id="pVoiceL"></label>
+  <select id="pVoice"></select>
+  <div class="row"><button class="chip" id="pSnd"></button><button class="chip" id="pVoiceTest"></button></div>
+  <div id="kkSlot"></div>
+  <div class="note" id="pAbout"></div>
+  <div class="row"><button class="chip" id="pReset"></button><span class="note" id="pResetMsg"></span></div>
+  <button class="btn" id="pClose"></button>
+</div></div>
+
+<script src="../common/kakin.js"></script>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ================= data =================
+// 6 animals: id, emoji, food emoji, trail color
+const ANIMALS=[['dog','🐶','🦴','#e8743b'],['cat','🐱','🐟','#3c8fd6'],['rabbit','🐰','🥕','#e0559a'],['monkey','🐵','🍌','#d4a20f'],['bear','🐻','🍯','#3fa66b'],['mouse','🐭','🧀','#8b6fd8']];
+const FOODS=['🍎','🍓','🍩','🍪','🍙','🍰','🍦','🍇'];
+// ごはんを とどけて: n=lines, k=player bridges in the hidden solution, f=fixed (wooden) bridges
+const STAGES=[[2,1,0],[2,1,1],[3,1,0],[3,2,0],[3,3,0],[3,2,1],[4,2,0],[4,3,1],[4,4,0],[4,4,2],[5,4,1],[5,5,2]];
+const FREE_STAGES=6;
+const PRESETS=['order','win','snack','chore'];  // + 'custom' (full)
+const FREE_PRESETS=['order','win','snack'];
+
+//@@LINES-BEGIN
+const LINES={
+ja:{
+hello:'あみだくじで あそぼう！',
+rule1:'どうぶつは せんの うえを、まっすぐ したへ すすむよ。',
+rule2:'よこの はしが あったら、かならず わたるよ。',
+rule3:'いちばん したに ついた ところが、こたえだよ。',
+b_ask:'どうぶつを ごはんまで とどけよう。せんの あいだを タッチして、はしを かけてね。',
+go:'いってみよう！',
+yum0:'おいしい！',yum1:'やったね！',yum2:'ぴったり！',
+miss:'あれれ？ ちがう ところに ついちゃった。はしを かえてみよう。',
+clear:'ぜんぶ とどいたね！ すごい！',
+hint:'ここに はしを かけてみて。',hint2:'この はしを とってみて。',
+p_dog:'いぬさんは、どれに つくかな？',p_cat:'ねこさんは、どれに つくかな？',p_rabbit:'うさぎさんは、どれに つくかな？',
+p_monkey:'おさるさんは、どれに つくかな？',p_bear:'くまさんは、どれに つくかな？',p_mouse:'ねずみさんは、どれに つくかな？',
+p_ok0:'あたり！',p_ok1:'よく みてたね！',p_ng:'おしい！ こっちだったね。',
+p_done:'ごもん おわり！ よく がんばったね。',
+l_ask:'すきな ところに、はしを たしても いいよ。できたら、あける を おしてね。',
+l_open:'さあ、あけるよ！',
+l_what:'なにが でるかな？',
+},
+en:{
+hello:"Let's play Amidakuji!",
+rule1:'The animal walks straight down the line.',
+rule2:'When it reaches a bridge, it always crosses!',
+rule3:'Where it stops at the bottom is the answer.',
+b_ask:'Help each animal reach its food! Tap between the lines to build bridges.',
+go:"Let's go!",
+yum0:'Yum!',yum1:'You did it!',yum2:'Perfect!',
+miss:'Oops! Someone went the wrong way. Try changing the bridges.',
+clear:'Everyone got their food! Amazing!',
+hint:'Try a bridge here.',hint2:'Try taking this bridge away.',
+p_dog:'Where will the dog go?',p_cat:'Where will the cat go?',p_rabbit:'Where will the bunny go?',
+p_monkey:'Where will the monkey go?',p_bear:'Where will the bear go?',p_mouse:'Where will the mouse go?',
+p_ok0:'Correct!',p_ok1:'Great watching!',p_ng:'So close! It was this one.',
+p_done:'All done! Great job!',
+l_ask:'You can add your own bridges. When you are ready, press Open!',
+l_open:'Here we go!',
+l_what:'What will it be?',
+}};
+//@@LINES-END
+
+const TEXT={
+ja:{
+  title:'どうぶつ あみだくじ',sub:'せんを たどって、どこに つくかな？',
+  m1:'ごはんを とどけて',m1s:'はしを かけて、どうぶつを ごはんまで',
+  m2:'どれに つくかな？',m2s:'どうぶつが どこに つくか あてよう',
+  m3:'みんなで くじびき',m3s:'じゅんばん・あたり・おやつ を きめよう',
+  what:'<b>あみだくじ</b>は、日本で むかしから ある くじびきです。たての せんを 上から 下へ たどり、よこの せん（はし）に 来たら かならず わたります。下に ついた ところが こたえです。',
+  rule:'❓ あみだくじって？',lang:'🌐 English',parent:'おうちのかた',back:'もどる',
+  stages:'ステージを えらんでね',free:'むりょう',fullOnly:'ぜんぶ版',endless:'∞',endlessS:'どんどん',
+  b_ask:'せんの あいだを タッチして はしを かけよう',go:'いってみよう！',hint:'💡 ヒント',clearBtn:'🧽 けす',next:'つぎへ ▶',again:'もういちど',
+  st:n=>'ステージ '+n,endlessT:'どんどん',
+  miss:'あれれ？ はしを かえてみよう',clear:'ぜんぶ とどいた！',
+  p_ask:a=>a+' は どれに つくかな？',ptap:'したの ものを タッチしてね',
+  p_ok:'あたり！',p_ng:'おしい！',p_done:s=>'⭐ '+s+' / 5',
+  easy:'やさしい',hard:'むずかしい',pq:(i)=>(i+1)+' / 5',
+  l_setup:'みんなで くじびき',l_n:'なんにん？',l_kind:'なにを きめる？',
+  l_kinds:{order:'🔢 じゅんばん',win:'⭐ あたり',snack:'🍪 おやつ',chore:'🧹 おてつだい',custom:'✏️ じぶんで かく'},
+  l_start:'はじめる',l_ask:'すきな ところに はしを たしてね',l_open:'あける！',l_tap:'どうぶつを タッチすると すすむよ',l_all:'▶ みんな すすむ',l_new:'あたらしい くじ',l_set:'せってい',
+  l_custom:'下の ことばを かいてね（ぜんぶ版）',l_ph:n=>(n+1)+' ばんめ',
+  order:i=>(i+1)+' ばん',win:'⭐ あたり',lose:'はずれ',
+  snack:['🍪 クッキー','🍓 いちご','🍩 ドーナツ','🍫 チョコ','🍮 プリン'],
+  chore:['🧹 おそうじ','🍽️ おさら はこび','👕 せんたくもの','🌱 おみずやり','🎉 おやすみ'],
+  names:{dog:'いぬさん',cat:'ねこさん',rabbit:'うさぎさん',monkey:'おさるさん',bear:'くまさん',mouse:'ねずみさん'},
+  demoT:'あみだくじって？',demo1:'まっすぐ したへ すすむよ',demo2:'よこの はしが あったら かならず わたるよ',demo3:'したに ついた ところが こたえ！',demoEnd:'わかった！',
+  pTitle:'おうちのかたへ',pLang:'ことば',pVoice:'こえ',sndOn:'🔊 おと あり',sndOff:'🔇 おと なし',vTest:'こえを きく',
+  voices:['AIの こえ 1','AIの こえ 2','AIの こえ 3','AIの こえ 4','この 端末の こえ','こえ なし'],
+  about:'あみだくじで「たどる」「先を よむ」「じゅんばんに 考える」力を あそびながら そだてます。「ごはんを とどけて」は ステージ1〜6、「どれに つくかな？」は やさしい、「くじびき」は じゅんばん・あたり・おやつ が むりょうです。',
+  reset:'きろくを けす',resetSure:'もういちど おすと けします',resetDone:'けしました',close:'とじる',
+  kkFree:'ごはんを とどけて ステージ1〜6／どれに つくかな？（やさしい）／くじびき（じゅんばん・あたり・おやつ）',
+  kkFull:'ステージ7〜12 と どんどんモード（5ほんまで・木の はし）／どれに つくかな？（むずかしい）／くじびき（おてつだい・じぶんで かく）',
+},
+en:{
+  title:'Animal Amidakuji',sub:'Follow the lines. Where will they go?',
+  m1:'Feed the animals',m1s:'Build bridges to lead each animal to its food',
+  m2:'Where will it go?',m2s:'Guess where the animal ends up',
+  m3:'Family lottery',m3s:'Pick turns, a winner, snacks or chores',
+  what:'<b>Amidakuji</b> ("ladder lottery", also called Ghost Leg) is a classic Japanese way to draw lots. Follow a vertical line from top to bottom, and whenever you meet a horizontal line (a bridge), you must cross it. Where you land at the bottom is your result.',
+  rule:'❓ How it works',lang:'🌐 日本語',parent:'For grown-ups',back:'Back',
+  stages:'Pick a stage',free:'Free',fullOnly:'Full',endless:'∞',endlessS:'Endless',
+  b_ask:'Tap between the lines to build bridges',go:"Let's go!",hint:'💡 Hint',clearBtn:'🧽 Clear',next:'Next ▶',again:'Again',
+  st:n=>'Stage '+n,endlessT:'Endless',
+  miss:'Oops! Try changing the bridges',clear:'Everyone is fed!',
+  p_ask:a=>'Where will the '+a+' go?',ptap:'Tap a picture at the bottom',
+  p_ok:'Correct!',p_ng:'So close!',p_done:s=>'⭐ '+s+' / 5',
+  easy:'Easy',hard:'Hard',pq:(i)=>(i+1)+' / 5',
+  l_setup:'Family lottery',l_n:'How many players?',l_kind:'What are we deciding?',
+  l_kinds:{order:'🔢 Turn order',win:'⭐ One winner',snack:'🍪 Snacks',chore:'🧹 Chores',custom:'✏️ Write your own'},
+  l_start:'Start',l_ask:'Add bridges anywhere you like',l_open:'Open!',l_tap:'Tap an animal to send it down',l_all:'▶ Everyone go',l_new:'New ladder',l_set:'Settings',
+  l_custom:'Write the results (full version)',l_ph:n=>'#'+(n+1),
+  order:i=>['1st','2nd','3rd','4th','5th'][i],win:'⭐ Winner!',lose:'Not this time',
+  snack:['🍪 Cookie','🍓 Strawberry','🍩 Donut','🍫 Chocolate','🍮 Pudding'],
+  chore:['🧹 Tidy up','🍽️ Set the table','👕 Fold laundry','🌱 Water plants','🎉 Day off'],
+  names:{dog:'dog',cat:'cat',rabbit:'bunny',monkey:'monkey',bear:'bear',mouse:'mouse'},
+  demoT:'How it works',demo1:'Walk straight down',demo2:'Always cross a bridge',demo3:'The bottom is the answer!',demoEnd:'Got it!',
+  pTitle:'For grown-ups',pLang:'Language',pVoice:'Voice',sndOn:'🔊 Sound on',sndOff:'🔇 Sound off',vTest:'Test voice',
+  voices:['AI voice 1','AI voice 2','AI voice 3','AI voice 4','Device voice','No voice'],
+  about:'Amidakuji builds tracing, thinking ahead and step-by-step reasoning through play. Free: "Feed the animals" stages 1–6, "Where will it go?" (Easy), and the lottery with turn order, one winner and snacks.',
+  reset:'Clear progress',resetSure:'Press again to clear',resetDone:'Cleared',close:'Close',
+  kkFree:'Feed the animals: stages 1–6 / Where will it go? (Easy) / Lottery: turn order, winner, snacks',
+  kkFull:'Stages 7–12 and Endless mode (up to 5 lines, wooden bridges) / Where will it go? (Hard) / Lottery: chores and write-your-own',
+}};
+
+// ================= state =================
+const KEY='amida-v1';
+const S=Object.assign({lang:null,voice:'ai:1',snd:true,cleared:0,best:{},seen:false,lot:{n:3,kind:'order',custom:[]}},(()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}})());
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const qs=new URLSearchParams(location.search);
+let LANG=qs.get('lang')==='en'?'en':qs.get('lang')==='ja'?'ja':(S.lang||((navigator.language||'ja').slice(0,2)==='ja'?'ja':'en'));
+const T=()=>TEXT[LANG];
+function setLang(l){LANG=l;S.lang=l;save();document.documentElement.lang=l;document.title=T().title}
+setLang(LANG);
+
+// ================= sound =================
+let ac=null;
+function audio(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(ac.state==='suspended')ac.resume().catch(()=>{});return ac}
+function tone(f,d=.12,type='sine',when=0,vol=.13){if(!S.snd)return;const a=audio();if(!a)return;try{const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;o.connect(g);g.connect(a.destination);const t=a.currentTime+when;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.start(t);o.stop(t+d+.02)}catch(e){}}
+const sfx={pop:()=>{tone(880,.08,'triangle');tone(1320,.1,'triangle',.05)},ok:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.18,'triangle',i*.09)),
+  ng:()=>tone(220,.18,'square',0,.05),tap:()=>tone(660,.05,'triangle',0,.08),off:()=>tone(440,.06,'triangle',0,.07),
+  step:()=>tone(980,.03,'sine',0,.04),turn:()=>tone(740,.05,'triangle',0,.06),fan:()=>[392,523,659,784,1047,1319].forEach((f,i)=>tone(f,.22,'triangle',i*.08)),
+  reveal:()=>{tone(523,.1,'triangle');tone(784,.16,'triangle',.08)}};
+
+// ---- voice: a queue. Every line plays to the end; a new line waits for the one before it.
+const AI_VOICES={ja:['jf_alpha','jf_gongitsune','jf_nezumi','jf_tebukuro'],en:['af_heart','af_bella','bf_emma','am_michael']};
+const aiId=()=>AI_VOICES[LANG][(+S.voice.slice(3)||1)-1]||AI_VOICES[LANG][0];
+const buf={};
+function load(k){const a=audio();const id=aiId()+'/'+k;if(!a)return Promise.resolve(null);
+  if(!buf[id])buf[id]=fetch(`voice/${id}.mp3?v=1`).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(b=>new Promise((res,rej)=>a.decodeAudioData(b,res,rej))).catch(()=>null);
+  return buf[id]}
+const devV={};function pickV(){try{const v=speechSynthesis.getVoices();for(const want of ['ja','en'])devV[want]=v.find(x=>x.lang.toLowerCase().startsWith(want)&&/Kyoko|O-ren|Samantha|Google/i.test(x.name))||v.find(x=>x.lang.toLowerCase().startsWith(want))||null}catch(e){}}
+try{pickV();speechSynthesis.onvoiceschanged=pickV}catch(e){}
+function ttsPlay(text,L){return new Promise(res=>{try{const u=new SpeechSynthesisUtterance(text);u.lang=L==='ja'?'ja-JP':'en-US';if(devV[L])u.voice=devV[L];u.rate=L==='ja'?.95:.9;u.pitch=1.15;
+  let done=false;const fin=()=>{if(!done){done=true;res()}};u.onend=fin;u.onerror=fin;setTimeout(fin,800+text.length*(L==='ja'?260:90));speechSynthesis.speak(u)}catch(e){res()}})}
+let curSrc=null,gen=0;
+async function playOne(k,g){
+  if(!S.snd||S.voice==='off'){await wait(200);return}
+  if(S.voice.startsWith('ai:')){const b=await load(k);if(g!==gen)return;if(b){const a=audio();await new Promise(res=>{try{const s=a.createBufferSource();s.buffer=b;s.connect(a.destination);curSrc=s;let done=false;const fin=()=>{if(!done){done=true;curSrc=null;res()}};s.onended=fin;setTimeout(fin,b.duration*1000+400);s.start()}catch(e){res()}});return}}
+  if(g!==gen)return;await ttsPlay(LINES[LANG][k]||'',LANG);
+}
+let chain=Promise.resolve(),pending=0;
+// say(...keys): queue the lines; resolves after all of them were spoken. Never stops the line before.
+function say(...keys){const g=gen;pending++;if(S.voice.startsWith('ai:'))keys.forEach(k=>k&&load(k));
+  const p=chain.then(async()=>{for(const k of keys){if(g!==gen)break;if(k)await playOne(k,g)}}).finally(()=>{pending--});chain=p.catch(()=>{});return p}
+const speaking=()=>pending>0;
+// stop everything — only when leaving a screen on purpose (back button, closing the app)
+function hush(){gen++;try{curSrc&&curSrc.stop()}catch(e){}curSrc=null;try{speechSynthesis.cancel()}catch(e){}}
+
+// ================= ladder engine =================
+// G[r][i]: bridge between line i and i+1 at row r. 0 none, 1 fixed (wood), 2 player, 3 hidden (lottery), 4 pencil (lottery, added by players)
+const L={n:3,R:6,G:[],tops:[],bots:[],trails:[],walkers:[],cover:0,coverOn:false,ghost:null,hl:-1,done:{},slots:false,bump:{}};
+function emptyGrid(n,R){return Array.from({length:R},()=>Array(n-1).fill(0))}
+const canPut=(G,r,i)=>!G[r][i]&&!(i>0&&G[r][i-1])&&!(i<G[r].length-1&&G[r][i+1]);
+function trace(G,start){let p=start;const steps=[{t:'v',p}];
+  for(let r=0;r<G.length;r++){if(p<G[r].length&&G[r][p]){steps.push({t:'h',r,from:p,to:p+1});p++}else if(p>0&&G[r][p-1]){steps.push({t:'h',r,from:p,to:p-1});p--}}
+  return{end:p,steps}}
+const ends=G=>Array.from({length:G[0].length+1},(_,i)=>trace(G,i).end);
+function randomBars(G,count,type){let tries=0,put=0;const n1=G[0].length;
+  while(put<count&&tries<500){tries++;const r=rnd(G.length),i=rnd(n1);if(canPut(G,r,i)){G[r][i]=type;put++}}return put}
+
+// ---- canvas
+const cv=$('cv'),cx=cv.getContext('2d');let W=0,H=0,DPR=1;
+function resize(){const r=$('wrap').getBoundingClientRect();DPR=Math.min(2.5,window.devicePixelRatio||1);W=r.width;H=r.height;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);cx.setTransform(DPR,0,0,DPR,0,0)}
+window.addEventListener('resize',()=>{if(!$('play').hidden){resize()}});
+function geo(){const n=L.n,col=W/n,ts=Math.min(64,col*.82,H*.15);
+  const yA=12+ts/2,yB=H-12-ts/2,y1=yA+ts/2+14,y2=yB-ts/2-14;
+  return{col,ts,yA,yB,y1,y2,x:i=>col*(i+.5),y:r=>y1+(r+.5)*(y2-y1)/L.R}}
+function pathPoints(start){const g=geo(),tr=trace(L.G,start),pts=[[g.x(start),g.yA]];
+  for(const s of tr.steps){if(s.t==='h'){pts.push([g.x(s.from),g.y(s.r)],[g.x(s.to),g.y(s.r)])}}
+  pts.push([g.x(tr.end),g.yB]);return{pts,end:tr.end}}
+function polyLen(pts){let d=0;for(let i=1;i<pts.length;i++)d+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);return d}
+function pointAt(pts,dist){for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],l=Math.hypot(b[0]-a[0],b[1]-a[1]);if(dist<=l){const t=l?dist/l:0;return{x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,seg:i}}dist-=l}const e=pts[pts.length-1];return{x:e[0],y:e[1],seg:pts.length-1}}
+// walk one animal down; resolves with its end line
+function walk(start,color,emoji,speedMul=1){return new Promise(res=>{const{pts,end}=pathPoints(start);const len=polyLen(pts);const sp=Math.max(150,H*.6)*speedMul;
+  const w={start,color,emoji,pts,len,d:0,seg:1,t0:performance.now(),sp,res,end};L.walkers.push(w);L.done[start]=false})}
+function drawRound(x,y,s,fill,stroke){cx.beginPath();cx.arc(x,y,s/2,0,Math.PI*2);cx.fillStyle=fill;cx.fill();if(stroke){cx.lineWidth=3;cx.strokeStyle=stroke;cx.stroke()}}
+function emo(e,x,y,size){cx.font=`${Math.round(size)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText(e,x,y+size*.05)}
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function wrapText(t,x,y,maxW,size){cx.font=`900 ${size}px ${css('--font')}`;cx.textAlign='center';cx.textBaseline='middle';
+  const words=[...t];let lines=[''];for(const ch of words){const tryL=lines[lines.length-1]+ch;if(cx.measureText(tryL).width>maxW&&lines[lines.length-1]){lines.push(ch)}else lines[lines.length-1]=tryL}
+  lines=lines.map(s=>s.trim()).slice(0,3);lines.forEach((s,i)=>cx.fillText(s,x,y+(i-(lines.length-1)/2)*size*1.1))}
+let raf=0,lastT=0;
+function frame(t){raf=requestAnimationFrame(frame);const dt=Math.min(.05,(t-(lastT||t))/1000);lastT=t;if(!W)return;
+  // move walkers
+  for(const w of L.walkers){const prev=pointAt(w.pts,w.d).seg;w.d+=w.sp*dt;const now=pointAt(w.pts,w.d).seg;if(now!==prev&&w.d<w.len)sfx.turn();
+    if(w.d>=w.len&&!w.fin){w.fin=true;L.trails.push({color:w.color,pts:w.pts});L.done[w.start]=true;L.at[w.end]=w;w.res(w.end)}}
+  L.walkers=L.walkers.filter(w=>!w.fin);
+  draw(t)}
+function draw(t){const g=geo();cx.clearRect(0,0,W,H);
+  const pole=css('--pole'),wood=css('--wood'),ink=css('--ink'),card=css('--card'),line=css('--line'),accent=css('--accent'),paper=css('--paper'),pl=css('--paperline');
+  // poles
+  cx.lineCap='round';
+  for(let i=0;i<L.n;i++){cx.strokeStyle=pole;cx.lineWidth=6;cx.beginPath();cx.moveTo(g.x(i),g.y1-10);cx.lineTo(g.x(i),g.y2+10);cx.stroke()}
+  // empty slot hints (build mode)
+  if(L.slots&&!L.walkers.length){cx.setLineDash([3,7]);cx.lineWidth=3;cx.strokeStyle=line;
+    for(let r=0;r<L.R;r++)for(let i=0;i<L.n-1;i++)if(!L.G[r][i]){cx.beginPath();cx.moveTo(g.x(i)+10,g.y(r));cx.lineTo(g.x(i+1)-10,g.y(r));cx.stroke()}
+    cx.setLineDash([])}
+  // bridges
+  for(let r=0;r<L.R;r++)for(let i=0;i<L.n-1;i++){const v=L.G[r][i];if(!v||v===3)continue;
+    const bump=L.bump[r+','+i];let yy=g.y(r);if(bump){const k=(t-bump)/300;if(k<1)yy-=Math.sin(k*Math.PI)*5;else delete L.bump[r+','+i]}
+    if(v===1){cx.strokeStyle=wood;cx.lineWidth=10;cx.beginPath();cx.moveTo(g.x(i),yy);cx.lineTo(g.x(i+1),yy);cx.stroke();
+      cx.strokeStyle='rgba(0,0,0,.18)';cx.lineWidth=2;for(let k=1;k<4;k++){const xx=g.x(i)+(g.x(i+1)-g.x(i))*k/4;cx.beginPath();cx.moveTo(xx,yy-4);cx.lineTo(xx,yy+4);cx.stroke()}}
+    else if(v===2){cx.strokeStyle=accent;cx.lineWidth=9;cx.beginPath();cx.moveTo(g.x(i),yy);cx.lineTo(g.x(i+1),yy);cx.stroke()}}
+  // hidden bridges (lottery, after opening)
+  if(L.coverOn||L.cover>0){for(let r=0;r<L.R;r++)for(let i=0;i<L.n-1;i++)if(L.G[r][i]===3){cx.strokeStyle=pole;cx.lineWidth=6;cx.beginPath();cx.moveTo(g.x(i),g.y(r));cx.lineTo(g.x(i+1),g.y(r));cx.stroke()}}
+  // trails
+  for(const tr of L.trails){cx.strokeStyle=tr.color;cx.globalAlpha=.55;cx.lineWidth=10;cx.lineJoin='round';cx.beginPath();tr.pts.forEach((p,i)=>i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.stroke();cx.globalAlpha=1}
+  for(const w of L.walkers){cx.strokeStyle=w.color;cx.globalAlpha=.75;cx.lineWidth=10;cx.lineJoin='round';cx.beginPath();cx.moveTo(w.pts[0][0],w.pts[0][1]);
+    let d=w.d;for(let i=1;i<w.pts.length;i++){const a=w.pts[i-1],b=w.pts[i],l=Math.hypot(b[0]-a[0],b[1]-a[1]);if(d>=l){cx.lineTo(b[0],b[1]);d-=l}else{const k=l?d/l:0;cx.lineTo(a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k);break}}
+    cx.stroke();cx.globalAlpha=1}
+  // lottery paper cover
+  if(L.cover>0){const top=g.y1-6,bot=g.y2+6,hgt=(bot-top)*L.cover;cx.save();cx.beginPath();cx.rect(0,top,W,hgt);cx.clip();
+    cx.fillStyle=paper;cx.fillRect(0,top,W,bot-top);cx.strokeStyle=pl;cx.lineWidth=1;for(let y=top+14;y<bot;y+=22){cx.beginPath();cx.moveTo(8,y);cx.lineTo(W-8,y);cx.stroke()}
+    cx.fillStyle=pl;cx.font=`900 ${Math.min(90,W*.22)}px ${css('--font')}`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText('？',W/2,(top+bot)/2);
+    // poles peek out at the top & bottom edge
+    for(let i=0;i<L.n;i++){cx.strokeStyle=pole;cx.lineWidth=6;cx.globalAlpha=.25;cx.beginPath();cx.moveTo(g.x(i),top);cx.lineTo(g.x(i),bot);cx.stroke();cx.globalAlpha=1}
+    cx.restore()}
+  // pencil bridges (lottery) — drawn above the cover
+  for(let r=0;r<L.R;r++)for(let i=0;i<L.n-1;i++)if(L.G[r][i]===4){cx.strokeStyle=accent;cx.lineWidth=7;cx.setLineDash(L.cover>0?[10,5]:[]);cx.beginPath();cx.moveTo(g.x(i),g.y(r));cx.lineTo(g.x(i+1),g.y(r));cx.stroke();cx.setLineDash([])}
+  // hint ghost
+  if(L.ghost&&t<L.ghost.until){const{r,i,bad}=L.ghost;const a=.35+.35*Math.sin(t/120);cx.globalAlpha=a;cx.strokeStyle=bad?'#e04040':css('--leaf');cx.lineWidth=12;cx.beginPath();cx.moveTo(g.x(i),g.y(r));cx.lineTo(g.x(i+1),g.y(r));cx.stroke();cx.globalAlpha=1;
+    emo('👆',(g.x(i)+g.x(i+1))/2,g.y(r)+22,26)}
+  // bottoms
+  for(let i=0;i<L.n;i++){const b=L.bots[i];if(!b)continue;const x=g.x(i),y=g.yB;
+    const hit=L.at[i];const glow=L.hl===i;
+    if(b.hidden&&!b.open){cx.fillStyle=card;cx.strokeStyle=line;cx.lineWidth=3;rr(x-g.col*.42,y-g.ts/2,g.col*.84,g.ts,14);cx.fill();cx.stroke();cx.fillStyle=css('--muted');cx.font=`900 ${g.ts*.5}px ${css('--font')}`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText('？',x,y)}
+    else if(b.label!=null){const fl=b.flip?Math.min(1,(t-b.flip)/300):1;cx.save();cx.translate(x,y);cx.scale(fl,1);cx.fillStyle=b.win?'#ffe08a':card;cx.strokeStyle=hit?hit.color:line;cx.lineWidth=hit?4:3;rr(-g.col*.45,-g.ts/2,g.col*.9,g.ts,14);cx.fill();cx.stroke();
+      cx.fillStyle='#3a2e24';if(!b.win)cx.fillStyle=ink;wrapText(b.label,0,0,g.col*.84,Math.max(11,Math.min(17,g.col*.17)));cx.restore()}
+    else{drawRound(x,y,g.ts,glow?'#fff3c4':card,hit?hit.color:(glow?css('--sun'):line));let s=g.ts*.6;if(b.yum){const k=(t-b.yum)/500;if(k<1)s*=1+.35*Math.sin(k*Math.PI)}emo(b.e,x,y,s)}
+    if(b.mark){emo(b.mark,x+g.ts*.36,y-g.ts*.36,g.ts*.36)}}
+  // tops
+  for(let i=0;i<L.n;i++){const a=L.tops[i];if(!a)continue;const x=g.x(i),y=g.yA;const moving=L.walkers.some(w=>w.start===i)||L.done[i];
+    cx.globalAlpha=moving?.35:1;drawRound(x,y,g.ts,card,L.hl===100+i?css('--sun'):a.color);emo(a.e,x,y,g.ts*.62);cx.globalAlpha=1;
+    if(L.hl===100+i){const k=(Math.sin(t/180)+1)/2;emo('⬇️',x,y+g.ts*.62+k*4,g.ts*.32)}}
+  // walking animals
+  for(const w of L.walkers){const p=pointAt(w.pts,w.d);drawRound(p.x,p.y,g.ts*.86,card,w.color);emo(w.emoji,p.x,p.y,g.ts*.56)}
+  for(const k in L.at){const w=L.at[k];if(!w)continue;const x=g.x(+k),y=g.yB;if(L.bots[k]&&L.bots[k].label!=null){emo(w.emoji,x-g.col*.38,y-g.ts*.48,g.ts*.42)}else{emo(w.emoji,x-g.ts*.38,y-g.ts*.42,g.ts*.46)}}
+  // demo captions
+  if(L.caption){cx.font=`900 ${Math.min(22,W*.055)}px ${css('--font')}`;cx.textAlign='center';cx.textBaseline='middle';const tw=cx.measureText(L.caption).width+28;
+    cx.fillStyle=card;cx.strokeStyle=accent;cx.lineWidth=3;rr(W/2-tw/2,H/2-24,tw,48,24);cx.fill();cx.stroke();cx.fillStyle=ink;cx.fillText(L.caption,W/2,H/2)}
+}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function setLadder(n,R){L.n=n;L.R=R;L.G=emptyGrid(n,R);L.tops=[];L.bots=[];resetRun()}
+function resetRun(){L.trails=[];L.walkers=[];L.at={};L.done={};L.hl=-1;L.ghost=null;for(const b of L.bots)if(b){b.mark=null;b.yum=0}}
+// tap → which slot / column
+function hitSlot(px,py){const g=geo();if(py<g.y1-20||py>g.y2+20)return null;const r=Math.max(0,Math.min(L.R-1,Math.floor((py-g.y1)/((g.y2-g.y1)/L.R))));
+  const i=Math.floor(px/g.col-.5);if(i<0||i>L.n-2)return null;return{r,i}}
+function hitCol(px,py,band){const g=geo();const i=Math.max(0,Math.min(L.n-1,Math.floor(px/g.col)));const y=band==='top'?g.yA:g.yB;if(Math.abs(py-y)>g.ts*.9)return -1;return i}
+
+// ================= screens =================
+let mode=null,run=0;
+function show(id){for(const s of ['home','pick','play'])$(s).hidden=s!==id;if(id==='play'){resize();if(!raf)raf=requestAnimationFrame(frame)}else{cancelAnimationFrame(raf);raf=0}}
+function cheer(text){const c=document.createElement('div');c.className='cheer';c.textContent=text;$('wrap').appendChild(c);setTimeout(()=>c.remove(),1600)}
+function ctl(...btns){const c=$('ctl');c.innerHTML='';for(const[b,cls,fn,dis]of btns){const e=document.createElement('button');e.className='btn '+(cls||'');e.textContent=b;e.onclick=()=>{audio();fn()};if(dis)e.disabled=true;c.appendChild(e)}}
+function renderHome(){mode=null;run++;hush();show('home');const t=T();
+  $('logo').innerHTML=[...t.title].map(c=>c===' '?' ':`<span class="b">${c}</span>`).join('')+`<span class="s">${t.sub}</span>`;
+  $('m1t').textContent=t.m1;$('m1s').textContent=t.m1s;$('m2t').textContent=t.m2;$('m2s').textContent=t.m2s;$('m3t').textContent=t.m3;$('m3s').textContent=t.m3s;
+  $('what').innerHTML=t.what;$('hRule').textContent=t.rule;$('hLang').textContent=t.lang;$('hParent').textContent=t.parent}
+$('go1').onclick=()=>{audio();sfx.tap();if(!S.seen){demo(()=>pickStage())}else pickStage()};
+$('go2').onclick=()=>{audio();sfx.tap();if(!S.seen){demo(()=>pickPredict())}else pickPredict()};
+$('go3').onclick=()=>{audio();sfx.tap();lotSetup()};
+$('hRule').onclick=()=>{audio();demo(renderHome)};
+$('hLang').onclick=()=>{audio();setLang(LANG==='ja'?'en':'ja');setupKakin();renderHome()};
+$('hParent').onclick=()=>{audio();openParent()};
+$('pkBack').onclick=()=>{sfx.tap();renderHome()};
+$('plBack').onclick=()=>{sfx.tap();const m=mode;if(m==='build')pickStage();else if(m==='pred')pickPredict();else if(m==='lot')lotSetup();else renderHome()};
+
+// ---------- demo: what is amidakuji ----------
+async function demo(after){const my=++run;mode='demo';hush();show('play');const t=T();$('plBack').textContent=t.back;$('plTitle').textContent=t.demoT;$('plInfo').textContent='❓';$('ask').textContent='';
+  setLadder(3,4);L.slots=false;L.G[1][0]=2;L.G[2][1]=2;const a=ANIMALS[0];L.tops=[{e:a[1],color:a[3]},null,null];L.bots=[{e:'🍎'},{e:'🍓'},{e:a[2]}];
+  ctl([t.demoEnd,'sub',()=>{run++;hush();S.seen=true;save();after()}]);
+  const step=async(cap,key)=>{if(my!==run)return;$("ask").textContent=cap;await say(key)};
+  await wait(300);await step(t.demo1,'rule1');if(my!==run)return;L.caption='';L.hl=100;
+  await wait(400);if(my!==run)return;
+  // walk slowly, pausing at the bridge to say rule 2
+  const pp=pathPoints(0);const w={start:0,color:a[3],emoji:a[1],pts:pp.pts,len:polyLen(pp.pts),d:0,sp:Math.max(70,H*.2),res:()=>{},end:pp.end};
+  const stopAt=polyLen(pp.pts.slice(0,2))-2;
+  L.walkers.push(w);L.hl=-1;
+  while(w.d<stopAt&&my===run)await wait(30);if(my!==run)return;const sp=w.sp;w.sp=0;await step(t.demo2,'rule2');L.caption='';w.sp=sp;
+  await new Promise(r=>{const iv=setInterval(()=>{if(w.fin||my!==run){clearInterval(iv);r()}},50)});if(my!==run)return;
+  L.bots[2].yum=performance.now();sfx.ok();await step(t.demo3,'rule3');if(my!==run)return;
+  ctl([t.again,'sub',()=>demo(after)],[t.demoEnd,'go',()=>{run++;hush();S.seen=true;save();after()}])}
+
+// ---------- mode 1: feed the animals (build bridges) ----------
+function pickStage(){mode='pickB';run++;hush();show('pick');const t=T();$('pkBack').textContent=t.back;$('pkTitle').textContent=t.m1;
+  let h=`<div class="sec">${t.stages}</div><div class="grid">`;
+  STAGES.forEach((s,i)=>{const lock=i>=FREE_STAGES&&!Kakin.full();h+=`<button class="st ${S.cleared>i?'done':''}" data-i="${i}">${i+1}${lock?'<span class="lk">🔒</span>':(S.cleared>i?'<span class="lk">⭐</span>':'')}<small>${'❘'.repeat(s[0])}</small></button>`});
+  h+=`<button class="st" data-i="99">${t.endless}${Kakin.full()?'':'<span class="lk">🔒</span>'}<small>${t.endlessS}</small></button></div>`;
+  $('pkBody').innerHTML=h;
+  $('pkBody').onclick=e=>{const b=e.target.closest('.st');if(!b)return;audio();const i=+b.dataset.i;if((i>=FREE_STAGES)&&!Kakin.full()){Kakin.ask();return}sfx.tap();startBuild(i)}}
+let B=null;
+function genBuild(n,k,f){const R=Math.max(4,Math.min(7,k+f+2+(n>3?1:0)));
+  for(let tries=0;tries<300;tries++){const G=emptyGrid(n,R);randomBars(G,f,1);const fixedEnds=ends(G);if(randomBars(G,k,2)<k)continue;
+    const all=ends(G);if(k>0&&all.every((e,i)=>e===fixedEnds[i]))continue;if(k===0&&f===0)continue;
+    if(all.every((e,i)=>e===i)&&f===0)continue;
+    const sol=[];for(let r=0;r<R;r++)for(let i=0;i<n-1;i++)if(G[r][i]===2){sol.push([r,i]);G[r][i]=0}
+    // the starting ladder (only wood) must not already be solved
+    return{R,G,sol,target:all}}
+  return null}
+function startBuild(si){const my=++run;mode='build';hush();show('play');const t=T();
+  const endless=si===99;const s=endless?[4+rnd(2),3+rnd(3),rnd(3)]:STAGES[si];
+  let g=null;while(!g)g=genBuild(...s);
+  B={si,endless,sol:g.sol,target:g.target,hinted:0};
+  setLadder(s[0],g.R);L.G=g.G;L.slots=true;
+  const pick=shuffle(ANIMALS.slice()).slice(0,s[0]);
+  L.tops=pick.map(a=>({id:a[0],e:a[1],food:a[2],color:a[3]}));
+  L.bots=Array(s[0]).fill(null);pick.forEach((a,i)=>{L.bots[g.target[i]]={e:a[2],owner:i}});
+  $('plBack').textContent=t.back;$('plTitle').textContent=endless?t.endlessT:t.st(si+1);$('plInfo').textContent=endless?'∞':'⭐'.repeat(Math.min(3,1+Math.floor(si/4)));
+  $('ask').textContent=t.b_ask;buildCtl();
+  if(si<2)say('b_ask')}
+function buildCtl(){const t=T();ctl([t.hint,'sub',hint],[t.clearBtn,'sub',clearBars],[t.go,'go',goBuild])}
+function clearBars(){if(L.walkers.length)return;sfx.off();resetRun();for(const r of L.G)for(let i=0;i<r.length;i++)if(r[i]===2)r[i]=0}
+function hint(){if(L.walkers.length)return;resetRun();
+  const cost=G=>ends(G).reduce((a,e,i)=>a+Math.abs(e-B.target[i]),0);const now=cost(L.G);
+  if(!now){cheer('👍');say('go');return}
+  const mine=[];for(let r=0;r<L.R;r++)for(let i=0;i<L.n-1;i++)if(L.G[r][i]===2)mine.push([r,i]);
+  const inSol=([r,i])=>B.sol.some(s=>s[0]===r&&s[1]===i);
+  let gh=null;
+  if(mine.every(inSol)){const miss=B.sol.filter(s=>L.G[s[0]][s[1]]!==2&&canPut(L.G,s[0],s[1]));if(miss.length){const m=miss[rnd(miss.length)];gh={r:m[0],i:m[1]}}}
+  if(!gh){// the child took a different road: find the one change (add or take away) that helps most
+    let best=now,cand=null;
+    for(let r=0;r<L.R;r++)for(let i=0;i<L.n-1;i++){const v=L.G[r][i];if(v===1)continue;if(v===0&&!canPut(L.G,r,i))continue;
+      L.G[r][i]=v?0:2;const c=cost(L.G);L.G[r][i]=v;if(c<best){best=c;cand={r,i,bad:v===2}}}
+    gh=cand||(()=>{const b=mine.find(m=>!inSol(m));return b?{r:b[0],i:b[1],bad:true}:null})()}
+  if(!gh)return;L.ghost={...gh,until:performance.now()+3500};say(gh.bad?'hint2':'hint')}
+async function goBuild(){if(L.walkers.length||mode!=='build')return;const my=run;resetRun();L.slots=false;$('ctl').querySelectorAll('button').forEach(b=>b.disabled=true);
+  say('go');let ok=0;
+  for(let i=0;i<L.n;i++){if(my!==run)return;const a=L.tops[i];const end=await walk(i,a.color,a.e);if(my!==run)return;
+    const b=L.bots[end];if(b.owner===i){ok++;b.mark='💕';b.yum=performance.now();sfx.pop()}else{b.mark='❓';sfx.ng()}
+    await wait(250)}
+  if(my!==run)return;
+  if(ok===L.n){sfx.fan();cheer(T().clear);$('ask').textContent=T().clear+' 🎉';say('clear');if(!B.endless&&S.cleared<B.si+1){S.cleared=B.si+1;save()}
+    const t=T();const nextI=B.endless?99:B.si+1;const canNext=B.endless||nextI<STAGES.length;
+    ctl([t.again,'sub',()=>startBuild(B.si)],...(canNext?[[t.next,'go',()=>{if((nextI>=FREE_STAGES)&&!Kakin.full()){Kakin.ask();return}startBuild(nextI)}]]:[]))}
+  else{cheer('🤔');say('miss');$('ask').textContent=T().miss;L.slots=true;buildCtl()}}
+
+// ---------- mode 2: where will it go? (predict) ----------
+let P=null;
+function pickPredict(){mode='pickP';run++;hush();show('pick');const t=T();$('pkBack').textContent=t.back;$('pkTitle').textContent=t.m2;
+  const best=S.best||{};
+  $('pkBody').innerHTML=`<div class="grid" style="grid-template-columns:1fr 1fr">
+    <button class="st" data-d="easy">${t.easy}<small>❘❘❘ ${best.easy!=null?'⭐'+best.easy+'/5':''}</small></button>
+    <button class="st" data-d="hard">${t.hard}${Kakin.full()?'':'<span class="lk">🔒</span>'}<small>❘❘❘❘❘ ${best.hard!=null?'⭐'+best.hard+'/5':''}</small></button></div>`;
+  $('pkBody').onclick=e=>{const b=e.target.closest('.st');if(!b)return;audio();const d=b.dataset.d;if(d==='hard'&&!Kakin.full()){Kakin.ask();return}sfx.tap();startPredict(d)}}
+function startPredict(d){run++;hush();mode='pred';show('play');P={d,q:0,score:0};const t=T();$('plBack').textContent=t.back;$('plTitle').textContent=t.m2+'（'+t[d]+'）';nextQ()}
+function nextQ(){const my=run;const t=T();const n=P.d==='easy'?3:4+rnd(2);const R=P.d==='easy'?5:6;
+  setLadder(n,R);L.slots=false;randomBars(L.G,P.d==='easy'?2+rnd(2):4+rnd(3),1);
+  const pick=shuffle(ANIMALS.slice()).slice(0,n);L.tops=pick.map(a=>({id:a[0],e:a[1],color:a[3]}));
+  L.bots=shuffle(FOODS.slice()).slice(0,n).map(e=>({e}));
+  // ask about one animal; avoid the case where it just goes straight down too often
+  let who=rnd(n);for(let k=0;k<4&&trace(L.G,who).end===who;k++)who=rnd(n);P.who=who;P.lock=false;
+  L.hl=100+who;$('plInfo').textContent=t.pq(P.q);$('ask').textContent=t.p_ask(t.names[L.tops[who].id]);
+  ctl();say('p_'+L.tops[who].id)}
+async function answerPredict(i){if(P.lock)return;P.lock=true;const my=run;const t=T();sfx.tap();L.hl=i;
+  const a=L.tops[P.who];const end=await walk(P.who,a.color,a.e,1.1);if(my!==run)return;
+  if(end===i){P.score++;L.bots[end].mark='⭕';L.bots[end].yum=performance.now();sfx.ok();cheer(t.p_ok);say('p_ok'+rnd(2))}
+  else{L.bots[i].mark='✖️';L.bots[end].mark='⭕';L.bots[end].yum=performance.now();sfx.ng();cheer(t.p_ng);say('p_ng')}
+  P.q++;await wait(1700);if(my!==run)return;
+  if(P.q<5){await chainIdle(my);if(my!==run)return;nextQ()}
+  else{const best=S.best||(S.best={});if(best[P.d]==null||P.score>best[P.d]){best[P.d]=P.score;save()}
+    $('ask').textContent=t.p_done(P.score);$('plInfo').textContent='🏁';sfx.fan();say('p_done');ctl([t.again,'go',()=>startPredict(P.d)])}}
+// wait until queued voice lines are finished (so the next question never talks over praise)
+async function chainIdle(my){while(speaking()&&my===run)await wait(100)}
+
+// ---------- mode 3: family lottery ----------
+function lotItems(n){const t=T(),k=S.lot.kind;
+  if(k==='order')return Array.from({length:n},(_,i)=>({label:t.order(i)}));
+  if(k==='win'){const w=rnd(n);return Array.from({length:n},(_,i)=>i===w?{label:t.win,win:true}:{label:t.lose})}
+  if(k==='snack')return t.snack.slice(0,n).map(label=>({label}));
+  if(k==='chore')return t.chore.slice(0,n).map(label=>({label}));
+  return Array.from({length:n},(_,i)=>({label:(S.lot.custom[i]||'').trim()||t.l_ph(i)}))}
+function lotSetup(){mode='lotSet';run++;hush();show('pick');const t=T();$('pkBack').textContent=t.back;$('pkTitle').textContent=t.l_setup;
+  const lk=k=>!FREE_PRESETS.includes(k)&&!Kakin.full();
+  if(lk(S.lot.kind))S.lot.kind='order';
+  const kinds=[...PRESETS,'custom'];
+  let h=`<div class="panel"><div class="sec">${t.l_n}</div><div class="row"><button class="chip" id="lMinus">−</button><span class="num" id="lN">${S.lot.n}</span><button class="chip" id="lPlus">＋</button>
+    <span style="font-size:1.6rem">${ANIMALS.slice(0,S.lot.n).map(a=>a[1]).join('')}</span></div>
+    <div class="sec">${t.l_kind}</div><div class="row">${kinds.map(k=>`<button class="chip ${S.lot.kind===k?'on':''}" data-k="${k}">${t.l_kinds[k]}${lk(k)?' 🔒':''}</button>`).join('')}</div>`;
+  if(S.lot.kind==='custom'){h+=`<div class="note">${t.l_custom}</div><div class="labs">${Array.from({length:S.lot.n},(_,i)=>`<input class="inp" maxlength="14" data-c="${i}" placeholder="${t.l_ph(i)}" value="${(S.lot.custom[i]||'').replace(/"/g,'&quot;')}">`).join('')}</div>`}
+  h+=`<button class="btn go" id="lStart">${t.l_start}</button></div>`;
+  $('pkBody').innerHTML=h;
+  $('pkBody').onclick=e=>{const b=e.target.closest('button');if(!b)return;audio();
+    if(b.id==='lMinus'||b.id==='lPlus'){S.lot.n=Math.max(2,Math.min(5,S.lot.n+(b.id==='lPlus'?1:-1)));save();sfx.tap();lotSetup();return}
+    if(b.dataset.k){if(lk(b.dataset.k)){Kakin.ask();return}S.lot.kind=b.dataset.k;save();sfx.tap();lotSetup();return}
+    if(b.id==='lStart'){sfx.tap();startLot()}};
+  $('pkBody').oninput=e=>{const i=e.target.dataset.c;if(i!=null){S.lot.custom[+i]=e.target.value;save()}}}
+function startLot(){run++;hush();mode='lot';show('play');const t=T();const n=S.lot.n;
+  setLadder(n,Math.max(6,n+3));L.slots=false;
+  // a hidden ladder that really mixes things up: retry until most people move
+  for(let k=0;k<40;k++){L.G=emptyGrid(n,L.R);randomBars(L.G,Math.round(n*1.8)+rnd(2),3);const e=ends(L.G);if(e.filter((v,i)=>v!==i).length>=Math.min(n,3)-(n===2?1:0))break}
+  L.tops=ANIMALS.slice(0,n).map(a=>({id:a[0],e:a[1],color:a[3]}));
+  L.bots=shuffle(lotItems(n)).map(it=>({...it,hidden:true,open:false}));
+  L.cover=1;L.coverOn=false;L.phase='add';
+  $('plBack').textContent=t.back;$('plTitle').textContent=t.m3;$('plInfo').textContent='🎁';$('ask').textContent=t.l_ask;
+  ctl([t.l_set,'sub',lotSetup],[t.l_open,'go',openLot]);say('l_ask')}
+async function openLot(){if(L.phase!=='add')return;const my=run;L.phase='open';ctl();sfx.reveal();say('l_open');
+  const t0=performance.now();await new Promise(r=>{const f=()=>{const k=(performance.now()-t0)/700;L.cover=Math.max(0,1-k);if(k<1&&my===run)requestAnimationFrame(f);else r()};f()});
+  if(my!==run)return;L.coverOn=true;L.phase='run';L.hl=-1;$('ask').textContent=T().l_tap;lotCtl();say('l_what')}
+function lotCtl(){const t=T();const left=L.tops.some((a,i)=>!(i in L.done));
+  ctl(...(left?[[t.l_all,'go',lotAll]]:[[t.l_set,'sub',lotSetup],[t.l_new,'go',startLot]]))}
+async function lotRun(i){if(i in L.done)return;const my=run;const a=L.tops[i];sfx.tap();const end=await walk(i,a.color,a.e);if(my!==run)return;
+  const b=L.bots[end];b.open=true;b.flip=performance.now();if(b.win)sfx.fan();else sfx.reveal();lotCtl()}
+async function lotAll(){const my=run;ctl();for(let i=0;i<L.n;i++){if(my!==run)return;if(i in L.done)continue;await lotRun(i);await wait(300)}lotCtl()}
+
+// ---------- input on the ladder ----------
+cv.addEventListener('pointerdown',e=>{audio();const r=cv.getBoundingClientRect();const px=e.clientX-r.left,py=e.clientY-r.top;
+  if(mode==='build'){if(L.walkers.length)return;const s=hitSlot(px,py);if(!s)return;
+    if(L.trails.length){resetRun();L.slots=true;$('ask').textContent=T().b_ask}
+    const v=L.G[s.r][s.i];if(v===1){sfx.ng();L.bump[s.r+','+s.i]=performance.now();return}
+    if(v===2){L.G[s.r][s.i]=0;sfx.off();return}
+    // a new bridge pushes away the player's bridges right next to it (two bridges cannot touch)
+    const nb=[s.i-1,s.i+1].filter(j=>j>=0&&j<L.n-1);if(nb.some(j=>L.G[s.r][j]===1)){sfx.ng();return}
+    nb.forEach(j=>{if(L.G[s.r][j]===2)L.G[s.r][j]=0});L.G[s.r][s.i]=2;L.bump[s.r+','+s.i]=performance.now();sfx.pop();L.ghost=null;return}
+  if(mode==='pred'){if(P.lock)return;const i=hitCol(px,py,'bot');if(i<0){const g=geo();if(py>g.y2)return;return}answerPredict(i);return}
+  if(mode==='lot'){
+    if(L.phase==='add'){const s=hitSlot(px,py);if(!s)return;const v=L.G[s.r][s.i];if(v===4){L.G[s.r][s.i]=0;sfx.off();return}
+      // pencil bridges may sit on top of hidden ones' rows: replace hidden neighbours so the ladder stays valid
+      if(v===3)return void(L.G[s.r][s.i]=4,sfx.pop());
+      [s.i-1,s.i+1].forEach(j=>{if(j>=0&&j<L.n-1&&L.G[s.r][j])L.G[s.r][j]=0});L.G[s.r][s.i]=4;sfx.pop();return}
+    if(L.phase==='run'){const i=hitCol(px,py,'top');if(i>=0)lotRun(i)}}
+});
+
+// ================= parent =================
+function openParent(){const t=T();$('parent').hidden=false;$('pTitle').textContent=t.pTitle;$('pLangL').textContent=t.pLang;$('pVoiceL').textContent=t.pVoice;
+  $('pLang').value=LANG;const vals=['ai:1','ai:2','ai:3','ai:4','dev','off'];$('pVoice').innerHTML=vals.map((v,i)=>`<option value="${v}">${t.voices[i]}</option>`).join('');$('pVoice').value=S.voice;
+  $('pSnd').textContent=S.snd?t.sndOn:t.sndOff;$('pVoiceTest').textContent=t.vTest;$('pAbout').textContent=t.about;$('pReset').textContent=t.reset;$('pResetMsg').textContent='';$('pClose').textContent=t.close;resetArm=false}
+let resetArm=false;
+$('pLang').onchange=()=>{setLang($('pLang').value);setupKakin();openParent();renderHome()};
+$('pVoice').onchange=()=>{S.voice=$('pVoice').value;save()};
+$('pSnd').onclick=()=>{S.snd=!S.snd;save();openParent()};
+$('pVoiceTest').onclick=()=>{audio();hush();say('hello')};
+$('pReset').onclick=()=>{if(!resetArm){resetArm=true;$('pResetMsg').textContent=T().resetSure;return}S.cleared=0;S.best={};S.seen=false;save();resetArm=false;$('pResetMsg').textContent=T().resetDone};
+$('pClose').onclick=()=>{$('parent').hidden=true;if(mode==='pickB')pickStage();if(mode==='pickP')pickPredict();if(mode==='lotSet')lotSetup()};
+
+// ================= 課金（おためし版） =================
+function setupKakin(){if(!window.Kakin||!Kakin.setup)return;
+  Kakin.setup({game:'amida',lang:()=>LANG,onChange:()=>{if(!$('parent').hidden)openParent();if(mode==='pickB')pickStage();if(mode==='pickP')pickPredict();if(mode==='lotSet')lotSetup()},
+    name:{ja:TEXT.ja.title,en:TEXT.en.title},free:{ja:TEXT.ja.kkFree,en:TEXT.en.kkFree},full:{ja:TEXT.ja.kkFull,en:TEXT.en.kkFull}});
+  $('kkSlot').innerHTML='';$('kkSlot').appendChild(Kakin.parentButton())}
+if(window.Kakin)setupKakin();else window.Kakin={full:()=>false,ask:()=>{},open:()=>{}};
+
+document.addEventListener('visibilitychange',()=>{if(document.hidden)hush()});
+if(qs.get('test')==='1')window.__amida={L,S,ends,trace,genBuild,get B(){return B},get P(){return P},startBuild,startPredict,startLot,openLot,goBuild};
+renderHome();
+})();
+</script>
+</body>
+</html>
