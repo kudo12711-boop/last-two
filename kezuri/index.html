@@ -40,6 +40,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 .row button small{display:block;font-size:11px;font-weight:400;opacity:.8}
 .row button.sel{background:var(--accent);color:#fff}
 #fats button{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0}
+#backs{display:grid;grid-template-columns:1fr 1fr}
 #fats button i{display:block;border-radius:50%;background:currentColor;opacity:.75}
 .foot{display:flex;gap:10px;font-size:14px;flex-wrap:wrap;justify-content:center}
 .foot button{background:none;text-decoration:underline;opacity:.7;padding:6px}
@@ -209,7 +210,7 @@ const TEXT = {
   ja: {
     title: 'けずって なにかな？', sub: 'ゆびで ごしごし。なにが でてくるかな？', start: 'はじめる',
     cats: 'どれで あそぶ？', lv: 'むずかしさ', fat: 'けずる ふとさ（うえの「？」で ためせます）', fatName: ['ほそい', 'ふつう', 'ふとい', 'とても ふとい'],
-    back: 'けずった ところが また かくれる', backName: ['かくれない', 'ゆっくり', 'はやい'], backSub: ['', 'じっくり', 'いそいで！'], book: 'ずかん', photos: 'おうちの しゃしん',
+    back: 'けずった ところが また かくれる', backName: ['かくれない', 'ゆっくり', 'はやい', 'すぐ'], backSub: ['', 'じっくり', 'いそいで！', 'あっというま'], book: 'ずかん', photos: 'おうちの しゃしん',
     photosSub: 'かぞくや ペットの しゃしんを かくして あそべます', settings: '⚙️ おうちの人の せってい',
     scratch: 'ゆびで けずってね', next: 'つぎへ ▶', found: n => `ずかん ${n}`, newMark: 'NEW!',
     bookN: (a, b) => `${a} / ${b} こ みつけたよ`, bookSum: (a, b) => `${a} / ${b} こ　（✨は きらきら）`,
@@ -232,7 +233,7 @@ const TEXT = {
   en: {
     title: 'Scratch & Guess', sub: 'Rub with your finger. What will appear?', start: 'Play',
     cats: 'Pick a theme', lv: 'Level', fat: 'Scratch size (try it on the "?" card above)', fatName: ['Thin', 'Normal', 'Thick', 'Extra thick'],
-    back: 'Scratched spots cover up again', backName: ['Off', 'Slow', 'Fast'], backSub: ['', 'take your time', 'hurry!'], book: 'Picture book', photos: 'Family photos',
+    back: 'Scratched spots cover up again', backName: ['Off', 'Slow', 'Fast', 'Instant'], backSub: ['', 'take your time', 'hurry!', 'in a flash'], book: 'Picture book', photos: 'Family photos',
     photosSub: 'Hide photos of family or pets and play', settings: '⚙️ Settings for grown-ups',
     scratch: 'Scratch with your finger', next: 'Next ▶', found: n => `Book ${n}`, newMark: 'NEW!',
     bookN: (a, b) => `Found ${a} of ${b}`, bookSum: (a, b) => `${a} / ${b} found  (✨ = sparkly)`,
@@ -559,7 +560,12 @@ const LV = [ // ちょいす: えらぶ数、th: どのくらい けずったら
 let lv = store.get('kezuri-lv', 1), cat = store.get('kezuri-cat', 'all');
 const FAT = [.045, .075, .11, .16]; // けずる ふとさ（カードの はばに たいする 半径）
 let fat = clamp(store.get('kezuri-fat', 1), 0, FAT.length - 1);
-const BACK = [0, .5, 1.2]; // けずった ところが もどる はやさ（1びょうあたり。0=もどらない）
+const BACK = [0, .5, 1.2, 4]; // けずった ところが もどる はやさ（1びょうあたり。0=もどらない）
+// 「すぐ」は けずった そばから もどるので、いま 見えている りょうでは こたえまで とどかない。
+// そこで BACK_SEEN いじょうでは「いちどでも けずった ところ」（st.seen）で こたえを きめる。
+const BACK_SEEN = 3;
+const backStep = () => BACK[back] >= BACK_SEEN ? .05 : .15; // まくを かさねる 間かく（はやい ほど こまかく）
+const doneArr = () => BACK[back] >= BACK_SEEN ? st.seen : st.grid;
 let back = clamp(store.get('kezuri-back', 0), 0, BACK.length - 1);
 let book = store.get('kezuri-book', {}); // id -> { n, s(きらきらの数) }
 function catList() { const l = ['all', ...Object.keys(CATS)]; if (photos.length) l.push('home'); return l; }
@@ -600,7 +606,7 @@ function renderTitle() {
   $('#tBack').textContent = t.back; $('#backs').innerHTML = '';
   BACK.forEach((v, i) => {
     const b = document.createElement('button');
-    b.innerHTML = `${['🚫', '🐢', '🐇'][i]} ${t.backName[i]}${t.backSub[i] ? `<small>${t.backSub[i]}</small>` : ''}`;
+    b.innerHTML = `${['🚫', '🐢', '🐇', '⚡'][i]} ${t.backName[i]}${t.backSub[i] ? `<small>${t.backSub[i]}</small>` : ''}`;
     if (i === back) b.className = 'sel';
     b.onclick = () => { back = i; store.set('kezuri-back', i); sfx.tap(); demoInit(); renderTitle(); };
     $('#backs').appendChild(b);
@@ -695,7 +701,7 @@ function newCard(first) {
   const shiny = !it.photo && Math.random() < 1 / 8;
   st = {
     it, shiny, state: 'scratch', t0: performance.now(), lastScratch: performance.now(), hinted: false,
-    grid: new Float32Array(GRID * GRID), cov: COVERS[Math.floor(Math.random() * COVERS.length)],
+    grid: new Float32Array(GRID * GRID), seen: new Float32Array(GRID * GRID), cov: COVERS[Math.floor(Math.random() * COVERS.length)],
     // えの いち（すこし ずらして、どこに いるか さがす たのしさ）
     px: it.photo ? .5 : rnd(.38, .62), py: it.photo ? .5 : rnd(.38, .6), ps: it.photo ? 1 : rnd(.56, .68), rot: it.photo ? 0 : rnd(-.18, .18),
     choices: makeChoices(it, LV[lv].choices), openT: 0, flakes: [], hintAt: null
@@ -770,12 +776,12 @@ function scratchSeg(x0, y0, x1, y1) {
     const ga = Math.max(0, Math.floor((x - r) / cs)), gb = Math.min(GRID - 1, Math.floor((x + r) / cs));
     const ha = Math.max(0, Math.floor((y - r) / cs)), hb = Math.min(GRID - 1, Math.floor((y + r) / cs));
     for (let gy = ha; gy <= hb; gy++) for (let gx = ga; gx <= gb; gx++)
-      if (Math.hypot((gx + .5) * cs - x, (gy + .5) * cs - y) < r * .9) st.grid[gy * GRID + gx] = 1;
+      if (Math.hypot((gx + .5) * cs - x, (gy + .5) * cs - y) < r * .9) st.grid[gy * GRID + gx] = st.seen[gy * GRID + gx] = 1;
   }
   // けずりカス
   if (st.flakes.length < 80) for (let i = 0; i < 2; i++) st.flakes.push({ x: x1 + rnd(-r, r) * .6, y: y1 + rnd(-r, r) * .6, vx: rnd(-40, 40), vy: rnd(-60, 10), life: 1, s: rnd(2, 4.5), c: st.cov[i % 2 ? 0 : 2] });
 }
-function picFrac() { let n = 0; for (const i of st.picCells) n += st.grid[i]; return n / st.picCells.length; }
+function picFrac() { const a = doneArr(); let n = 0; for (const i of st.picCells) n += a[i]; return n / st.picCells.length; }
 function allFrac() { let n = 0; for (const v of st.grid) n += v; return n / st.grid.length; }
 
 const ptrs = new Map();
@@ -867,7 +873,7 @@ $('#gBookB').onclick = () => { scratchSound(0); hush(); openBook('game'); };
 $('#hintB').onclick = () => { if (st && st.state !== 'open') { audio(); giveHint(true); } };
 function giveHint(force) {
   // まだ けずっていない、えの ところを ひからせる
-  const left = st.picCells.filter(i => st.grid[i] < .5);
+  const a = doneArr(), left = st.picCells.filter(i => a[i] < .5);
   if (!left.length) return;
   const i = pick(left);
   st.hintAt = { x: (i % GRID + .5) / GRID, y: (Math.floor(i / GRID) + .5) / GRID, t: performance.now() };
@@ -920,8 +926,8 @@ function frame(now) {
   // けずる おと
   if (st.state !== 'open') { scratchSound(ptrs.size ? speed : 0); speed *= .8; }
   // また かくれる モード: けずる まえの まくを うすく かさねて、すこしずつ もどす
-  // （まいフレームだと うすすぎて いろが のこるので、0.15びょうごとに まとめて かさねる）
-  if (BACK[back] && st.state !== 'open' && (st.backT = (st.backT || 0) + dt) >= .15) {
+  // （まいフレームだと うすすぎて いろが のこるので、0.15びょうごと〔すぐ は 0.05びょうごと〕に まとめて かさねる）
+  if (BACK[back] && st.state !== 'open' && (st.backT = (st.backT || 0) + dt) >= backStep()) {
     const k = 1 - Math.exp(-BACK[back] * st.backT); st.backT = 0;
     covG.save(); covG.setTransform(1, 0, 0, 1, 0, 0); covG.globalCompositeOperation = 'source-over'; covG.globalAlpha = k;
     covG.drawImage(covBase, 0, 0); covG.restore();
@@ -991,7 +997,7 @@ function drawDemo(now) {
   if (!$('#title').classList.contains('on')) return;
   if (!dm || demo.width === 0) demoInit();
   const { S, dpr } = dm, ddt = Math.min(.05, (now - dm.last) / 1000); dm.last = now;
-  if (BACK[back] && (dm.backT = (dm.backT || 0) + ddt) >= .15) { const x = dm.x; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1 - Math.exp(-BACK[back] * dm.backT); dm.backT = 0; x.drawImage(dm.base, 0, 0); x.restore(); }
+  if (BACK[back] && (dm.backT = (dm.backT || 0) + ddt) >= backStep()) { const x = dm.x; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1 - Math.exp(-BACK[back] * dm.backT); dm.backT = 0; x.drawImage(dm.base, 0, 0); x.restore(); }
   dg.setTransform(dpr, 0, 0, dpr, 0, 0);
   dg.fillStyle = '#fff3c9'; dg.fillRect(0, 0, S, S);
   dg.font = `${S * .62}px ${EMOJI_FONT}`; dg.textAlign = 'center'; dg.textBaseline = 'middle';
