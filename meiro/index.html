@@ -168,7 +168,7 @@ const TEXT = {
     parents: 'おうちのかたへ',
     howto: '・キャラクターに指をあてて、道をなぞるとキャラクターがついてきます。かべは通りぬけられないので、まちがえても「ぽよん」と止まるだけです。<br>・指をはなしても大丈夫。キャラクターか、通ってきた線のどこからでも続きをなぞれます。もどりたいときは線を逆になぞります。<br>・とちゅうの くだものや ほしを集めながらゴールを目指します。<br>・こまったら 💡 で、ゴールまでの道がしばらく光ります。<br>・むずかしさは タイトル画面の「★」で選べます（2さい向け〜5さい以上向け）。毎回ちがう迷路が自動でできます。',
     guideH: '🧭 みちしるべ', guideNote: 'はじめての子には「いつも」がおすすめです。ゴールまでの道に うすい点が出ます。', always: 'いつも だす', onHint: '💡のときだけ',
-    voiceH: '🗣️ こえ', test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です（Kokoro-82M／Apache-2.0）。',
+    voiceH: '🗣️ こえ', test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。',
     aiVoice: n => `AIのこえ ${n}`, devVoice: 'スマホの よみあげ', noVoice: 'こえ なし',
     fullH: '🔓 ぜんぶ版', fullNote: 'むりょうでは 🐶 わんちゃん と 🐰 うさぎさん で あそべます。ぜんぶ版（買い切り）か ファミリーパスで、🐧🐝🚀🚗 の めいろも あそべます。広告は出しません。',
     close: 'とじる', ages: ['2さい〜', '3さい〜', '4さい〜', '5さい〜'],
@@ -187,7 +187,7 @@ const TEXT = {
     parents: 'For grown-ups',
     howto: '• Put a finger on the character and trace the path; the character follows. Walls can’t be crossed, so a wrong move just makes a soft “boing”.<br>• It’s fine to lift the finger. Continue from the character or anywhere on the line already drawn. To go back, trace the line backwards.<br>• Collect the fruit and stars on the way to the goal.<br>• Stuck? Tap 💡 and the path to the goal lights up for a while.<br>• Choose the difficulty with the “★” buttons on the title screen (age 2 to 5+). A new maze is made every time.',
     guideH: '🧭 Path guide', guideNote: '“Always” is best for first-timers: faint dots show the way to the goal.', always: 'Always', onHint: 'Only with 💡',
-    voiceH: '🗣️ Voice', test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI (Kokoro-82M / Apache-2.0).',
+    voiceH: '🗣️ Voice', test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).',
     aiVoice: n => `AI voice ${n}`, devVoice: 'Device voice', noVoice: 'No voice',
     fullH: '🔓 Full version', fullNote: 'Free: the 🐶 Dog and 🐰 Bunny mazes. With the full version (one-time purchase) or the Family Pass, the 🐧🐝🚀🚗 mazes open too. No ads.',
     close: 'Close', ages: ['Age 2+', 'Age 3+', 'Age 4+', 'Age 5+'],
@@ -246,7 +246,7 @@ const sfx = {
 };
 /* こえ：AIで作っておいた声（voice/フォルダ）→ なければ 端末の読み上げ */
 // AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<場面><番号>.mp3）
-const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const AI_VOICES = { ja: ['vv_himari', 'vv_metan', 'vv_zunda', 'vv_hau'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const aiCount = cat => T().say[cat].length;
 const aiBuf = {}; // 'jf_alpha/goal0' -> AudioBuffer
 let aiSrc = null;
@@ -330,7 +330,7 @@ function pickTake(cat, list) { // おなじ声が つづかないように
 }
 // 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
 let voiceMode = store.get('meiro-voice', 'ai:1');
-{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+{ const i = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'].indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => AI_VOICES[L][(+voiceMode.slice(3) || 1) - 1] || AI_VOICES[L][0];
 let lastSpeak = 0;
 // force＝たいせつな こえ（まえの こえが おわるまで まつ）。それ以外は おしゃべり（ほかの こえが なっていなければ だけ）

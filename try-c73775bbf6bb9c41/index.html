@@ -304,7 +304,7 @@ const TEXT={
     oya:'👪 おうちの人と',robo:'🤖 ロボと',kid:'👶 こども',opp:'🧑 おとな',oppR:'🤖 ロボ',kidGot:'👶 こどもが とった',parGot:'🧑 おとなが とった',
     win:{kid:'こどもの かち！',par:'おとなの かち！',robo:'ロボの かち！',draw:'ひきわけ！'},
     pName:'おこさんの なまえ',pNameNote:'ひらがなで いれてください（「なまえの もじ」で つかいます）。この端末にだけ ほぞんされます。',save:'ほぞん',saved:'ほぞんしました',
-    pVoice:'こえ',test:'▶ ためす',pVoiceNote:'「AIのこえ」は AI で あらかじめ作った声です（Kokoro-82M／Apache-2.0）。声は とちゅうで きれずに、さいごまで よみあげます。',
+    pVoice:'こえ',test:'▶ ためす',pVoiceNote:'「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。声は とちゅうで きれずに、さいごまで よみあげます。',
     aiVoice:n=>'AIのこえ '+n,devVoice:'端末の よみあげ',noVoice:'こえ なし',
     pHow:'このゲームについて',
     how:'声で きいた ひらがなを さがして タッチする あそびです。形が わかりやすい字から はじめ、「ぬ・め」「わ・れ・ね」のように 似ている字は あとから でてきます。おなじ字に 3かい あたると「もじ ずかん」に ⭐⭐⭐ が つきます。まちがえても しかられず、字の 名前を おしえてくれます。',
@@ -320,7 +320,7 @@ const TEXT={
     oya:'👪 With a grown-up',robo:'🤖 With the robot',kid:'👶 Child',opp:'🧑 Grown-up',oppR:'🤖 Robot',kidGot:'👶 Child got it',parGot:'🧑 Grown-up got it',
     win:{kid:'The child wins!',par:'The grown-up wins!',robo:'The robot wins!',draw:"It's a tie!"},
     pName:"Child's name",pNameNote:'Letters A–Z (used in My Name). Saved only on this device.',save:'Save',saved:'Saved',
-    pVoice:'Voice',test:'▶ Try',pVoiceNote:'“AI voices” were made in advance with AI (Kokoro-82M / Apache-2.0). Voices always finish speaking and are never cut off.',
+    pVoice:'Voice',test:'▶ Try',pVoiceNote:'“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0). Voices always finish speaking and are never cut off.',
     aiVoice:n=>'AI voice '+n,devVoice:'Device voice',noVoice:'No voice',
     pHow:'About this game',
     how:'Children hear a letter and find it. Easy shapes come first, and look-alikes (M/W, E/F, P/R/B) come later. Three right answers on a letter give it ⭐⭐⭐ in the letter book. Wrong answers are never scolded; the game just names the letter that was tapped.',
@@ -371,7 +371,7 @@ function tone(f,d=.12,type='sine',when=0,vol=.13){if(!S.snd)return;const a=audio
 const sfx={pop:()=>{tone(880,.08,'triangle');tone(1320,.1,'triangle',.05)},ok:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.18,'triangle',i*.09)),ng:()=>tone(220,.16,'square',0,.05),tap:()=>tone(660,.05,'triangle',0,.08)};
 
 // ---- voice: a queue. Lines always play to the end; a tap never cuts the voice off.
-const AI_VOICES={ja:['jf_alpha','jf_gongitsune','jf_nezumi','jf_tebukuro'],en:['af_heart','af_bella','bf_emma','am_michael']};
+const AI_VOICES={ja:['vv_himari','vv_metan','vv_zunda','vv_hau'],en:['af_heart','af_bella','bf_emma','am_michael']};
 // 文字・どうぶつ・かぞく・よみふだ は おぼえる ことばの 声、ほかは 案内の 声
 const keyLang=k=>/^(k\d+|a\d+|an_|f_|y\d+)/.test(k)?SCR:UI;
 const aiId=L=>AI_VOICES[L][(+S.voice.slice(3)||1)-1]||AI_VOICES[L][0];

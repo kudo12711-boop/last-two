@@ -1,6 +1,6 @@
 # おなじ？ ちがう？（お手本と同じ絵・違う絵・違う動きを選ぶ 幼児向けゲーム）
 
-最終更新: 2026-11-23 ／ いまの段階: v0.1（かくしURLで公開、試してもらう前の段階）
+最終更新: 2026-11-23 ／ いまの段階: v0.2（日本語の声を作りなおし、まだ公開していない）。v0.1（かくしURLで公開、試してもらう前の段階）
 
 ## 遊ぶ場所
 
@@ -55,6 +55,7 @@
 | 日付 | くどうさんの声 | やったこと |
 |---|---|---|
 | 11/23 | 上の「きっかけ」の2つ | v0.1 を作成。おなじ／ちがう／うごき の3つの遊び、6しゅるいの絵、★3段階、まちがいの赤まると声、シールちょう、日本語・英語の AI の声、課金、アプリの準備（名札・アイコン・オフライン）。かくしURLで公開 |
+| 11/23 | 「全てのゲームで日本語が不自然なところが結構たくさんあるので…特に数字の読み上げはひどいです」（全ゲームの声の作りなおし） | v0.2。日本語の AI の声を VOICEVOX で作りなおした（冥鳴ひまり・四国めたん・ずんだもん・雨晴はう）。台本の ぶつぎりの「、」をやめた。「おうちのかたへ」の説明に 声のクレジット。[voice-ja.md](voice-ja.md) |
 
 ## 今後の予定
 
@@ -73,3 +74,5 @@
 - 声: hiragana と同じ「順番待ち」（`say` は Promise のくさり、`hush` は もどる・画面を閉じたときだけ）。セリフは index.html の `//@@LINES-BEGIN`〜`END`。日本語は漢字まじりで書き、助詞の「は」は「わ」と書く。作り方: LINES を node で取り出して `/mnt/project-files/onaji/tools/lines.json` にし、`KOKORO_DIR=<モデル> python /mnt/project-files/onaji/tools/make_voice.py lines.json voice`（Kokoro-82M v1.0 onnx、モデルは github.com/thewh1teagle/kokoro-onnx の releases、venv に `pip install kokoro-onnx soundfile lameenc "misaki[ja]"`）。
 - アプリの準備: `tools/apps.json` に登録済み。ファイルを変えたら `node tools/make_app.cjs --no-icons` で `app-files.json` を作りなおす。
 - 動作確認（2026-11-23）: 6テーマ×★3段階×3つの遊び で 各300問を作り、「正解が1つだけ」「候補の数が正しい」ことを確認。スマホ縦（390×780）とタブレット横（1024×700）の画面で、正解・まちがい・シール画面を確認。
+
+- 日本語の声（2026-11-23〜）: VOICEVOX。台本は `/mnt/project-files/voice-ja/build_lines.py`、作るのは `make_voicevox.py onaji`。フォルダは `voice/vv_himari|vv_metan|vv_zunda|vv_hau/`（AIのこえ 1〜4。前の Kokoro の jf_* は消した）。英語の声は `/mnt/project-files/onaji/tools/make_voice.py`（Kokoro）のまま。[voice-ja.md](voice-ja.md)
