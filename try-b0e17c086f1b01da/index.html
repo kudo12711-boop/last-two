@@ -222,7 +222,7 @@ ja:{
   demoT:'あみだくじって？',demo1:'まっすぐ したへ すすむよ',demo2:'よこの はしが あったら かならず わたるよ',demo3:'したに ついた ところが こたえ！',demoEnd:'わかった！',
   pTitle:'おうちのかたへ',pLang:'ことば',pVoice:'こえ',sndOn:'🔊 おと あり',sndOff:'🔇 おと なし',vTest:'こえを きく',
   voices:['AIの こえ 1','AIの こえ 2','AIの こえ 3','AIの こえ 4','この 端末の こえ','こえ なし'],
-  about:'あみだくじで「たどる」「先を よむ」「じゅんばんに 考える」力を あそびながら そだてます。「ごはんを とどけて」は ステージ1〜6、「どれに つくかな？」は やさしい、「くじびき」は じゅんばん・あたり・おやつ が むりょうです。',
+  about:'あみだくじで「たどる」「先を よむ」「じゅんばんに 考える」力を あそびながら そだてます。「ごはんを とどけて」は ステージ1〜6、「どれに つくかな？」は やさしい、「くじびき」は じゅんばん・あたり・おやつ が むりょうです。 声：VOICEVOX:冥鳴ひまり、VOICEVOX:四国めたん、VOICEVOX:ずんだもん、VOICEVOX:雨晴はう（日本語、AIのこえ 1〜4）、Kokoro-82M（英語、Apache-2.0）。',
   reset:'きろくを けす',resetSure:'もういちど おすと けします',resetDone:'けしました',close:'とじる',
   kkFree:'ごはんを とどけて ステージ1〜6／どれに つくかな？（やさしい）／くじびき（じゅんばん・あたり・おやつ）',
   kkFull:'ステージ7〜12 と どんどんモード（5ほんまで・木の はし）／どれに つくかな？（むずかしい）／くじびき（おてつだい・じぶんで かく）',
@@ -252,7 +252,7 @@ en:{
   demoT:'How it works',demo1:'Walk straight down',demo2:'Always cross a bridge',demo3:'The bottom is the answer!',demoEnd:'Got it!',
   pTitle:'For grown-ups',pLang:'Language',pVoice:'Voice',sndOn:'🔊 Sound on',sndOff:'🔇 Sound off',vTest:'Test voice',
   voices:['AI voice 1','AI voice 2','AI voice 3','AI voice 4','Device voice','No voice'],
-  about:'Amidakuji builds tracing, thinking ahead and step-by-step reasoning through play. Free: "Feed the animals" stages 1–6, "Where will it go?" (Easy), and the lottery with turn order, one winner and snacks.',
+  about:'Amidakuji builds tracing, thinking ahead and step-by-step reasoning through play. Free: "Feed the animals" stages 1–6, "Where will it go?" (Easy), and the lottery with turn order, one winner and snacks. Voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう (Japanese); Kokoro-82M (English, Apache-2.0).',
   reset:'Clear progress',resetSure:'Press again to clear',resetDone:'Cleared',close:'Close',
   kkFree:'Feed the animals: stages 1–6 / Where will it go? (Easy) / Lottery: turn order, winner, snacks',
   kkFull:'Stages 7–12 and Endless mode (up to 5 lines, wooden bridges) / Where will it go? (Hard) / Lottery: chores and write-your-own',
@@ -278,7 +278,7 @@ const sfx={pop:()=>{tone(880,.08,'triangle');tone(1320,.1,'triangle',.05)},ok:()
   reveal:()=>{tone(523,.1,'triangle');tone(784,.16,'triangle',.08)}};
 
 // ---- voice: a queue. Every line plays to the end; a new line waits for the one before it.
-const AI_VOICES={ja:['jf_alpha','jf_gongitsune','jf_nezumi','jf_tebukuro'],en:['af_heart','af_bella','bf_emma','am_michael']};
+const AI_VOICES={ja:['vv_himari','vv_metan','vv_zunda','vv_hau'],en:['af_heart','af_bella','bf_emma','am_michael']};
 const aiId=()=>AI_VOICES[LANG][(+S.voice.slice(3)||1)-1]||AI_VOICES[LANG][0];
 const buf={};
 function load(k){const a=audio();const id=aiId()+'/'+k;if(!a)return Promise.resolve(null);

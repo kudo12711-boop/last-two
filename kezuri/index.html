@@ -178,7 +178,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 
 <div class="modal" id="setM"><div class="panel">
   <h2 id="tSet"></h2>
-  <h3 id="tVoice"></h3><div class="opt" id="voiceOpt"></div>
+  <h3 id="tVoice"></h3><div class="opt" id="voiceOpt"></div><p class="note" id="tVoiceNote"></p>
   <h3 id="tSound"></h3><div class="opt" id="soundOpt"></div>
   <h3>Language / ことば</h3><div class="opt" id="langOpt"></div>
   <h3 id="tKk"></h3><p class="note" id="tKkNote"></p><div id="kkSlot"></div>
@@ -216,7 +216,7 @@ const TEXT = {
     bookN: (a, b) => `${a} / ${b} こ みつけたよ`, bookSum: (a, b) => `${a} / ${b} こ　（✨は きらきら）`,
     ph: '📷 おうちの しゃしん', phNote: 'しゃしんを えらぶと「おうち」で あそべます。なまえを いれて、🎙️で おうちの人の こえを ろくおんすると、あたったときに その こえで よびます。しゃしんと こえは この たんまつの なかにだけ ほぞんされます。',
     phAdd: 'しゃしんを えらぶ', phName: 'なまえ', close: 'とじる', phDel: 'この しゃしんを けしますか？',
-    set: '⚙️ せってい', voice: 'こえ', sound: 'おと', on: 'あり', off: 'なし', dev: 'たんまつの こえ',
+    set: '⚙️ せってい', voice: 'こえ', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。', sound: 'おと', on: 'あり', off: 'なし', dev: 'たんまつの こえ',
     reset: 'ずかんを リセット', resetNote: 'みつけた ものの きろくを ぜんぶ けします。', resetB: 'リセットする', resetQ: 'ずかんを ぜんぶ けしますか？',
     ai: n => `AIのこえ ${n}`, noPhoto: 'まだ しゃしんが ありません',
     catName: { all: 'ぜんぶ', ani: 'どうぶつ', car: 'のりもの', food: 'たべもの', sea: 'うみ', nat: 'しぜん', home: 'おうち' },
@@ -239,7 +239,7 @@ const TEXT = {
     bookN: (a, b) => `Found ${a} of ${b}`, bookSum: (a, b) => `${a} / ${b} found  (✨ = sparkly)`,
     ph: '📷 Family photos', phNote: 'Pick photos to play the "Home" theme. Type a name and tap 🎙️ to record your own voice saying it. Photos and voices stay on this device only.',
     phAdd: 'Choose photos', phName: 'Name', close: 'Close', phDel: 'Delete this photo?',
-    set: '⚙️ Settings', voice: 'Voice', sound: 'Sound', on: 'On', off: 'Off', dev: 'Device voice',
+    set: '⚙️ Settings', voice: 'Voice', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).', sound: 'Sound', on: 'On', off: 'Off', dev: 'Device voice',
     reset: 'Reset picture book', resetNote: 'Erases everything found so far.', resetB: 'Reset', resetQ: 'Erase the whole picture book?',
     ai: n => `AI voice ${n}`, noPhoto: 'No photos yet',
     catName: { all: 'All', ani: 'Animals', car: 'Vehicles', food: 'Food', sea: 'Sea', nat: 'Nature', home: 'Home' },
@@ -343,7 +343,7 @@ function scratchSound(level) {
 
 /* ---------- こえ ---------- */
 // AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<key>.mp3）
-const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const AI_VOICES = { ja: ['vv_himari', 'vv_metan', 'vv_zunda', 'vv_hau'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const aiBuf = {}; let aiSrc = null;
 function aiLoad(id, keys) {
   const a = audio(); if (!a) return;
@@ -413,7 +413,7 @@ function tts(text, item, mode) {
 }
 // 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
 let voiceMode = store.get('kezuri-voice', 'ai:1');
-{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+{ const i = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'].indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => (AI_VOICES[L] || AI_VOICES.ja)[(+voiceMode.slice(3) || 1) - 1] || AI_VOICES.ja[0];
 const useAI = () => voiceMode.startsWith('ai:');
 // key: 'ok0' など、または 'it_dog'（なまえ）。さいごまで よみおわったら onend
@@ -625,7 +625,7 @@ $('#phClose').onclick = () => { $('#photoM').classList.remove('on'); renderTitle
 /* ---------- せってい ---------- */
 function renderSettings() {
   const t = T();
-  $('#tSet').textContent = t.set; $('#tVoice').textContent = t.voice; $('#tSound').textContent = t.sound;
+  $('#tSet').textContent = t.set; $('#tVoice').textContent = t.voice; $('#tVoiceNote').textContent = t.voiceNote; $('#tSound').textContent = t.sound;
   $('#tKk').textContent = L === 'ja' ? '🔓 ぜんぶ版' : '🔓 Full version';
   $('#tKkNote').textContent = L === 'ja' ? 'むりょうでは どうぶつ・たべもの・おうちの しゃしんで あそべます。ぜんぶ版（買い切り）か ファミリーパスで、のりもの・うみ・しぜんも あそべます。広告は出しません。' : 'Free: animals, food and family photos. The full version (one-time) or the Family Pass adds vehicles, sea and nature. No ads.';
   if (!$('#kkSlot').firstChild) $('#kkSlot').appendChild(Kakin.parentButton()); else $('#kkSlot').firstChild._kkUpdate();

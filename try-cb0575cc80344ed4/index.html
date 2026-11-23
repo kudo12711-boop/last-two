@@ -204,7 +204,7 @@ ja:{logo:['おなじ','？ ','ちがう','？'],same:'おなじ を さがそう
   bookT:'シールちょう',close:'とじる',pT:'おうちのかたへ',pLang:'ことば',pVoice:'こえ',pSnd:'おと',on:'あり',off:'なし',pTest:'こえの ためし',
   pReset:'シールを けす',reset:'けす',resetSure:'ほんとうに けす',resetDone:'けしました',
   voices:['AIのこえ 1','AIのこえ 2','AIのこえ 3','AIのこえ 4','たんまつの こえ','こえ なし'],
-  pNote:'むずかしさ ★ は2か所ちがう・えらぶ数3つ、★★ は1か所・4つ、★★★ は小さな ちがい・6つ。「うごき」は え は同じで、うごきかた（はねる・まわる・ゆれる・はやさ・むき）だけが ちがいます。まちがえると、ちがう ところに あかい まるが 出ます。',
+  pNote:'むずかしさ ★ は2か所ちがう・えらぶ数3つ、★★ は1か所・4つ、★★★ は小さな ちがい・6つ。「うごき」は え は同じで、うごきかた（はねる・まわる・ゆれる・はやさ・むき）だけが ちがいます。まちがえると、ちがう ところに あかい まるが 出ます。 声：VOICEVOX:冥鳴ひまり、VOICEVOX:四国めたん、VOICEVOX:ずんだもん、VOICEVOX:雨晴はう（日本語、AIのこえ 1〜4）、Kokoro-82M（英語、Apache-2.0）。',
   kkFree:'どうぶつ・アイス の え（おなじ／ちがう／うごき、むずかしさ ぜんぶ）',kkFull:'のりもの・おうち・ロボット・かたち の え'},
 en:{logo:['Same','? ','Different','?'],same:'Find the SAME',sameS:'Same as the picture',diff:'Find the DIFFERENT',diffS:'Only one is different',
   move:'Watch them MOVE',moveS:'Same move? Different move?',theme:'Pictures',level:'Level',any:'Mix',
@@ -213,7 +213,7 @@ en:{logo:['Same','? ','Different','?'],same:'Find the SAME',sameS:'Same as the p
   bookT:'Sticker book',close:'Close',pT:'For parents',pLang:'Language',pVoice:'Voice',pSnd:'Sound',on:'On',off:'Off',pTest:'Test voice',
   pReset:'Clear stickers',reset:'Clear',resetSure:'Really clear',resetDone:'Cleared',
   voices:['AI voice 1','AI voice 2','AI voice 3','AI voice 4','Device voice','No voice'],
-  pNote:'Level ★: two things differ, 3 choices. ★★: one thing, 4 choices. ★★★: small details, 6 choices. In "Move", the pictures are the same and only the movement differs (jump, spin, sway, speed, direction). After a wrong tap, a red circle shows what is different.',
+  pNote:'Level ★: two things differ, 3 choices. ★★: one thing, 4 choices. ★★★: small details, 6 choices. In "Move", the pictures are the same and only the movement differs (jump, spin, sway, speed, direction). After a wrong tap, a red circle shows what is different. Voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう (Japanese); Kokoro-82M (English, Apache-2.0).',
   kkFree:'Animals and Ice cream pictures (Same / Different / Move, every level)',kkFull:'Vehicles, Houses, Robots and Shapes pictures'}
 };
 const T=()=>TEXT[S.lang];
@@ -248,7 +248,7 @@ const sfx={pop:()=>{tone(880,.08,'triangle');tone(1320,.1,'triangle',.05)},ok:()
   fan:()=>[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.22,'triangle',i*.1))};
 
 // 声は「順番待ち」。前の声を止めずに、最後まで読んでから次を読む。止めるのは もどる と 画面を閉じたときだけ。
-const AI_VOICES={ja:['jf_alpha','jf_gongitsune','jf_nezumi','jf_tebukuro'],en:['af_heart','af_bella','bf_emma','am_michael']};
+const AI_VOICES={ja:['vv_himari','vv_metan','vv_zunda','vv_hau'],en:['af_heart','af_bella','bf_emma','am_michael']};
 const aiId=()=>AI_VOICES[S.lang][(+S.voice.slice(3)||1)-1]||AI_VOICES[S.lang][0];
 const buf={};
 function load(k){const a=audio();const id=aiId()+'/'+k;if(!a)return Promise.resolve(null);

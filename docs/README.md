@@ -15,23 +15,25 @@
 | ゆきどけ | 「あと一枚」の運だめし | v0.1（止まっている） | [Claude のページ](https://claude.ai/artifact/34nWk73xRYmMimZZe7sWKW) | [yukidoke.md](yukidoke.md) |
 | ぬけぬけリング | 1人用の連鎖パズル | v0.7 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
 | ラスト・ツー | 最後の2人の表情の読み合い | v1.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
-| まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類） | v0.7 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
-| 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
+| まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類） | v0.8（声の作りなおしは未公開） | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
+| 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.5（読み上げの直しは未公開） | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | テレビ（Fire TV）向けの画面（11/15）まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
-| ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
-| てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（31まい、点は最大60こ） | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
-| ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
-| もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
-| ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、3つのステージ、着せかえと肖像画つき | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
-| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
+| ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.5（声の作りなおしは未公開） | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
+| てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（31まい、点は最大60こ） | v0.4（声の作りなおしは未公開） | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
+| ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.5（声の作りなおしは未公開） | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
+| もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.4（声の作りなおしは未公開） | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
+| ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、3つのステージ、着せかえと肖像画つき | v0.6（声の作りなおしは未公開） | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
+| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.6（声の作りなおしは未公開） | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 | ふしぎな いきもの ずかん | プログラムで描いた生きものと なかよくなって集め、2ひきから子どもを生む | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/ikimono/) | [ikimono.md](ikimono.md) |
-| ひらがな あそび | 幼児が字を読めるようになる（しゃぼんだま・なまえ・どうぶつ・かるた）。ひらがな・ABC（日本語の案内）・ABC（英語）の3コース | v0.2 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/)（いりぐちには載せない） | [hiragana.md](hiragana.md) |
-| どうぶつ あみだくじ | 幼児〜小学生向け、あみだくじで遊ぶ（はしを かけて ごはんを とどける・どこに つくか あてる・家族の くじびき） | v0.1 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-b0e17c086f1b01da/)（いりぐちには載せない） | [amida.md](amida.md) |
-| おなじ？ ちがう？ | 幼児向け、お手本と同じ絵・違う絵・違う動きを えらぶ（どうぶつ・アイス・のりもの・おうち・ロボット・かたち、★3段階） | v0.1 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-cb0575cc80344ed4/)（いりぐちには載せない） | [onaji.md](onaji.md) |
+| ひらがな あそび | 幼児が字を読めるようになる（しゃぼんだま・なまえ・どうぶつ・かるた）。ひらがな・ABC（日本語の案内）・ABC（英語）の3コース | v0.3（声の作りなおしは未公開） | [かくしURL](https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/)（いりぐちには載せない） | [hiragana.md](hiragana.md) |
+| どうぶつ あみだくじ | 幼児〜小学生向け、あみだくじで遊ぶ（はしを かけて ごはんを とどける・どこに つくか あてる・家族の くじびき） | v0.2（声の作りなおしは未公開） | [かくしURL](https://kudo12711-boop.github.io/last-two/try-b0e17c086f1b01da/)（いりぐちには載せない） | [amida.md](amida.md) |
+| おなじ？ ちがう？ | 幼児向け、お手本と同じ絵・違う絵・違う動きを えらぶ（どうぶつ・アイス・のりもの・おうち・ロボット・かたち、★3段階） | v0.2（声の作りなおしは未公開） | [かくしURL](https://kudo12711-boop.github.io/last-two/try-cb0575cc80344ed4/)（いりぐちには載せない） | [onaji.md](onaji.md) |
 
 全ゲーム共通の課金のしくみ: [kakin.md](kakin.md)
 
 海外展開（英語など）の準備: [i18n.md](i18n.md)
+
+日本語の読み上げ（AI の声）の作り方・VOICEVOX の利用のきまり・クレジット: [voice-ja.md](voice-ja.md)
 
 有料化とアプリ化（Google Play）の進め方: [app-plan.md](app-plan.md)
 25. **2026-11-19** 屋号「はじまるよ」・ゲームは games.hajimaruyo.com に決定。アカウントの要らない準備として、全ゲームに アプリの名札・仮アイコン・オフラインのしくみ、新しいアドレスへの記録の引っ越し（くどうさん「引っ越してください」）、プライバシーポリシーとストアの説明文の下書き。[app-plan.md](app-plan.md)
@@ -66,6 +68,7 @@
 24. **2026-11-19** 有料化とアプリ化の整理（くどうさんの別の会話からのメモ「まず無料、あとで有料。有料化のときに Google Play アプリにするか決めたい」、「2段階にするかもお任せ」）。実物を確かめ、二段構えは ラスト・ツーだけにし、ほかは はじめから無料と有料を分けて Google Play のアプリで売る案をまとめた。[app-plan.md](app-plan.md)
 25. **2026-11-23** くどうさん「お手本の絵と同じ絵を複数の候補から一つ選んで…またはお手本の絵と違う絵を…選んで正解にするゲームを作ってください」、つづけて「動作の違いを違いとしてもいいかもしれません」→ 幼児向け「おなじ？ ちがう？」v0.1（おなじ／ちがう／うごき の3つの遊び、プログラムで描いた絵6しゅるい、★3段階、まちがえると赤まると声で教える、シールちょう、日本語・英語の声、課金）を作り、かくしURLで公開。[onaji.md](onaji.md)
 26. **2026-11-23** くどうさん「もう一つ別の子供向けのゲームとしてあみだくじを使ったゲームを作ってください」→「どうぶつ あみだくじ」v0.1 をかくしURLで公開。[amida.md](amida.md)
+27. **2026-11-23** くどうさん「全てのゲームで日本語が不自然なところが結構たくさんあるので、可能な限り直してください。…特に数字の読み上げはひどいです」→ 日本語の AI の声を Kokoro から VOICEVOX（日本語専用、有料アプリOK・クレジット表記が条件）に かえて 10ゲーム分 作りなおし、台本も 自然な日本語に（ぶつぎりの「、」をやめ、漢字で読みを決め、数字はアクセントを指定）。都道府県パズルは 県名を 漢字で読ませる。[voice-ja.md](voice-ja.md)
 
 ## お金の方針（2026-10-23 決定）
 

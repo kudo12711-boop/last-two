@@ -338,7 +338,7 @@ var TEXT = {
     galleryTitle:"しょうぞうがの へや", galleryEmpty:"まだ しょうぞうがが ないよ。\n「かいてもらう」で つくろう！",
     paintTitle:"どんな はいけいに する？", paintGo:"かいてもらう！", saveImg:"ほぞんする", del:"けす", delAsk:"この しょうぞうがを けしますか？", yes:"はい", no:"いいえ",
     saveNote:"ほぞんできない ときは、えを ながおしして ほぞんしてね",
-    menuTitle:"せってい", voiceOn:"🔊 こえ あり", voiceOff:"🔇 こえ なし", toTitle:"タイトルへ", theme:"🌙 あかるさ",
+    menuTitle:"せってい", voiceCredit:"こえ：VOICEVOX:冥鳴ひまり、VOICEVOX:四国めたん、VOICEVOX:ずんだもん、VOICEVOX:雨晴はう、VOICEVOX:九州そら（日本語）、Kokoro-82M（英語・Apache-2.0）", voiceOn:"🔊 こえ あり", voiceOff:"🔇 こえ なし", toTitle:"タイトルへ", theme:"🌙 あかるさ",
     storeFull:"スマホの おきばが いっぱいで ほぞん できませんでした",
     resetAsk:"いまの おうこくを けして、さいしょから はじめますか？（しょうぞうがは のこります）",
     decos:{flags:"はた", flowers:"おはなばたけ", fountain:"ふんすい", lanterns:"ちょうちん", tower:"たかい とう", rainbow:"にじ", balloon:"ききゅう", gate:"ひがしの もん", pond:"はくちょうの いけ", fireworks:"はなび"},
@@ -396,7 +396,7 @@ var TEXT = {
     galleryTitle:"Portrait Room", galleryEmpty:"No portraits yet.\nTap \"Paint me\" to make one!",
     paintTitle:"Pick a background", paintGo:"Paint me!", saveImg:"Save", del:"Delete", delAsk:"Delete this portrait?", yes:"Yes", no:"No",
     saveNote:"If saving doesn't work, press and hold the picture to save it",
-    menuTitle:"Settings", voiceOn:"🔊 Voice on", voiceOff:"🔇 Voice off", toTitle:"Title screen", theme:"🌙 Light/Dark",
+    menuTitle:"Settings", voiceCredit:"Voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう, VOICEVOX:九州そら (Japanese); Kokoro-82M (English, Apache-2.0)", voiceOn:"🔊 Voice on", voiceOff:"🔇 Voice off", toTitle:"Title screen", theme:"🌙 Light/Dark",
     storeFull:"Couldn't save: the device storage is full",
     resetAsk:"Erase this kingdom and start over? (Portraits are kept.)",
     decos:{flags:"flags", flowers:"flower garden", fountain:"fountain", lanterns:"lanterns", tower:"tall tower", rainbow:"rainbow", balloon:"hot-air balloon", gate:"Eastern gate", pond:"swan pond", fireworks:"fireworks"},
@@ -510,7 +510,7 @@ function speak(txt){
     speechSynthesis.speak(u);
   }catch(e){}
 }
-/* AI の こえ: 日本語は voice/<キー>.mp3、英語は voice/en/<キー>.mp3 を WebAudio で ならす。ないときは ブラウザの よみあげ */
+/* AI の こえ: 日本語は voice/ja/<キー>.mp3（VOICEVOX、2026-11-23〜）、英語は voice/en/<キー>.mp3 を WebAudio で ならす。ないときは ブラウザの よみあげ */
 var AC=null, VBUF={}, VSRC=null, VSEQ=0;
 function actx(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state==="suspended") AC.resume(); return AC; }
 /* こえは「じゅんばんまち」。どの こえも さいごまで よむ。止めるのは もどる・おわる・アプリを とじたとき だけ */
@@ -518,8 +518,8 @@ var VQ=[], VBUSY=false, VCUR=null;
 function stopVoice(){ VSEQ++; VQ=[]; VBUSY=false; VCUR=null; if(VSRC){ try{ VSRC.stop(); }catch(e){} VSRC=null; } if(window.speechSynthesis) try{ speechSynthesis.cancel(); }catch(e){} }
 function voiceBusy(){ return VBUSY || VQ.length>0; }
 function vbuf(key){
-  key=(LANG==="ja"?"":"en/")+key;
-  if(!VBUF[key]) VBUF[key]=fetch("voice/"+key+".mp3?v=1").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
+  key=(LANG==="ja"?"ja/":"en/")+key;
+  if(!VBUF[key]) VBUF[key]=fetch("voice/"+key+".mp3?v=2").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
     .then(function(b){ return new Promise(function(res,rej){ actx().decodeAudioData(b,res,rej); }); })
     .catch(function(e){ delete VBUF[key]; throw e; });
   return VBUF[key];
@@ -932,7 +932,7 @@ $("#btnMenu").onclick=function(){
   var c=dialog('<button class="x">×</button><p class="say">'+esc(T().menuTitle)+'</p><div class="btns" style="flex-direction:column;align-items:center">'+
     '<button class="big sub" id="mV">'+(S.voice?T().voiceOn:T().voiceOff)+'</button>'+
     '<div class="langs"><button data-l="ja" aria-pressed="'+(LANG==="ja")+'">にほんご</button><button data-l="en" aria-pressed="'+(LANG==="en")+'">English</button></div>'+
-    '<button class="big sub" id="mT">'+esc(T().toTitle)+'</button><div id="mK"></div></div>');
+    '<button class="big sub" id="mT">'+esc(T().toTitle)+'</button><div id="mK"></div><p style="font-size:11px;opacity:.7;max-width:320px;text-align:center">'+esc(T().voiceCredit)+'</p></div>');
   c.querySelector("#mK").appendChild(Kakin.parentButton());
   c.querySelector("#mV").onclick=function(){ S.voice=!S.voice; save(); this.textContent=S.voice?T().voiceOn:T().voiceOff; };
   c.querySelectorAll("[data-l]").forEach(function(b){ b.onclick=function(){ LANG=b.dataset.l; lsSet("oukoku-lang",LANG); closeDialog(); applyText(); renderKingdom(); }; });

@@ -1,6 +1,6 @@
 # どうぶつ あみだくじ（子ども向け、あみだくじで遊ぶゲーム）
 
-最終更新: 2026-11-23 ／ いまの段階: v0.1（かくしURLで試せる）
+最終更新: 2026-11-23 ／ いまの段階: v0.2（日本語の声を作りなおし、まだ公開していない）。v0.1（かくしURLで試せる）
 
 ## 遊ぶ場所
 
@@ -12,6 +12,7 @@
 
 1. **2026-11-23** くどうさん「他の子供向けのゲームを作ります。…もう一つ別の子供向けのゲームとしてあみだくじを使ったゲームを作ってください」（同じ依頼の「お手本と同じ絵／違う絵をえらぶゲーム」は別のスレッドで作っている）。
    - 遊び方は Claude が考えた。v0.1 を作り、かくしURLで公開。
+2. **2026-11-23** くどうさん「全てのゲームで日本語が不自然なところが結構たくさんあるので…特に数字の読み上げはひどいです」（全ゲームの声の作りなおし） → v0.2。日本語の AI の声を VOICEVOX で作りなおした（冥鳴ひまり・四国めたん・ずんだもん・雨晴はう）。「ごもん」→「5問」、「あける を おしてね」→「あけるボタンを 押してね」など 読みにくい ところを直し、「、」の ぶつぎりを やめた。「おうちのかた」の説明に 声のクレジット。[voice-ja.md](voice-ja.md)
 
 ## v0.1 の中身
 
@@ -60,3 +61,5 @@
 - テスト用: `?test=1` で `window.__amida` が使える（自動テストで答えを入れるため）。
 - 声の作り方: index.html の `//@@LINES-BEGIN`〜`END` を node で JSON にして（`/mnt/project-files/amida/tools/lines.json`）、`/mnt/project-files/amida/tools/make_voice.py` で作る（Kokoro-82M v1.0 onnx。モデルは github.com/thewh1teagle/kokoro-onnx の releases、venv に `kokoro-onnx lameenc misaki fugashi unidic-lite`）。日本語は 助詞の「は」を わ に直す（「はし」は そのまま）。
 - アプリの準備: `tools/apps.json` に 追加済み。ファイルを変えたら `node tools/make_app.cjs --no-icons` で `app-files.json` を作りなおす。
+
+- 日本語の声（2026-11-23〜）: VOICEVOX。台本は `/mnt/project-files/voice-ja/build_lines.py`、作るのは `make_voicevox.py amida`。フォルダは `voice/vv_himari|vv_metan|vv_zunda|vv_hau/`（AIのこえ 1〜4。前の Kokoro の jf_* は消した）。英語の声は `/mnt/project-files/amida/tools/make_voice.py`（Kokoro）のまま。[voice-ja.md](voice-ja.md)
