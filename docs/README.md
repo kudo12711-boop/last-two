@@ -1,6 +1,6 @@
 # ゲーム開発の記録（目次）
 
-最終更新: 2026-11-19
+最終更新: 2026-11-23
 
 くどうさんと Claude が「ゲーム開発」プロジェクトで作ってきたゲームの記録です。ゲームごとに、生まれたきっかけ、くどうさんの声と直したこと、遊ぶ場所、これからやることをまとめています。各ファイルの下のほうにある「技術メモ」は、次に作業する Claude（や開発者）向けの作り方の説明です。
 
@@ -23,7 +23,7 @@
 | ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
 | もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.3 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
 | ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、3つのステージ、着せかえと肖像画つき | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
-| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
+| けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 | ふしぎな いきもの ずかん | プログラムで描いた生きものと なかよくなって集め、2ひきから子どもを生む | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/ikimono/) | [ikimono.md](ikimono.md) |
 | ひらがな あそび | 幼児が字を読めるようになる（しゃぼんだま・なまえ・どうぶつ・かるた）。ひらがな・ABC（日本語の案内）・ABC（英語）の3コース | v0.2 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/)（いりぐちには載せない） | [hiragana.md](hiragana.md) |
 
