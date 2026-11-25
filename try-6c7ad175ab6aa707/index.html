@@ -218,7 +218,7 @@ ja:{
   undo:'↩ もどす',rand:'🎲 おまかせ',fin:'⭐ できた！',
   doneT:'できあがり！',doneAsk:n=>'ゆきだるま '+n+'ごう が できたよ！',
   fullAsk:(m)=>'ずかんは '+m+'こ まで。ぜんぶ版なら 60こ まで しまえるよ',swap:'いちばん ふるいのと いれかえる',swapped:'いれかえたよ！',unlock:'🔓 ぜんぶ版',
-  toNight:'🌙 よるの ダンス',toZukan:'📖 ずかん',again:'⛄ もう1つ',make:'⛄ つくる',
+  toNight:'🌙 よるの ダンス',home:'🏠 メニュー',toZukan:'📖 ずかん',again:'⛄ もう1つ',make:'⛄ つくる',
   zTitle:'ゆきだるま ずかん',zEmpty:'まだ ゆきだるまが いないよ。<br>つくってみよう！',
   no:n=>n+'ごう',viewAsk:'タッチすると てを ふるよ',del:'🗑 けす',delSure:'もういちど おすと けします',
   danceT:'よるの ダンス',danceAsk:'ゆきだるまを タッチしてみてね',sample:'（おてほん。つくると ここに ならぶよ）',musicOn:'🎵 おんがく',musicOff:'🔇 おんがく',
@@ -243,7 +243,7 @@ en:{
   undo:'↩ Undo',rand:'🎲 Surprise me',fin:'⭐ Done!',
   doneT:'All done!',doneAsk:n=>'Snowman No. '+n+' is ready!',
   fullAsk:(m)=>'The book holds '+m+'. The full version holds 60',swap:'Replace the oldest one',swapped:'Replaced!',unlock:'🔓 Full version',
-  toNight:'🌙 Night dance',toZukan:'📖 Book',again:'⛄ Make another',make:'⛄ Make one',
+  toNight:'🌙 Night dance',home:'🏠 Menu',toZukan:'📖 Book',again:'⛄ Make another',make:'⛄ Make one',
   zTitle:'Snowman book',zEmpty:'No snowmen yet.<br>Let\'s make one!',
   no:n=>'No. '+n,viewAsk:'Tap it to wave hello',del:'🗑 Delete',delSure:'Press again to delete',
   danceT:'Night dance',danceAsk:'Tap a snowman!',sample:'(Samples. Your snowmen will dance here)',musicOn:'🎵 Music',musicOff:'🔇 Music',
@@ -729,7 +729,7 @@ function startDance(focus,fromZ){run++;hush();mode='dance';if(!fromZ)danceFrom='
   DN=[];backRow.forEach((m,i)=>DN.push({m:Object.assign({lb:lumps(),lh:lumps()},m),row:0,i,n:backRow.length,seed:Math.random()*8,tap:-9}));front.forEach((m,i)=>DN.push({m:Object.assign({lb:lumps(),lh:lumps()},m),row:1,i,n:front.length,seed:Math.random()*8,tap:-9}));
   STARS=[];for(let i=0;i<70;i++)STARS.push({x:Math.random(),y:Math.random()*.6,r:Math.random()*1.4+.4,p:Math.random()*TAU});flakes(40);
   ask(t.danceAsk+(sample?' '+t.sample:''));beat0=performance.now();musicStart();danceCtl();say('night')}
-function danceCtl(){const t=T();ctl([t.make,'sub',startRoll],[S.music?t.musicOn:t.musicOff,'sub',()=>{S.music=!S.music;save();if(S.music)musicStart();else musicStop();danceCtl()}])}
+function danceCtl(){const t=T();ctl([t.home,'go',renderHome],[t.make,'sub',startRoll],[S.music?t.musicOn:t.musicOff,'sub',()=>{S.music=!S.music;save();if(S.music)musicStart();else musicStop();danceCtl()}])}
 function danceLayout(d){const gy0=H*.93;const rowH=d.row?H*.62:H*.42;const gy=d.row?gy0:H*.74;const slot=W/d.n;const U=Math.min(fitU(d.m,slot*.95,rowH),fitU({rb:1,rh:.7},W*.3,rowH));return{x:slot*(d.i+.5)+(d.row?0:slot*.0),gy,U}}
 const MOVES=['bounce','sway','wave','hop','spin','bob'];
 function dancePose(d,b){const mi=(Math.floor(b/8)+Math.floor(d.seed))%MOVES.length;const mv=MOVES[mi];const ph=b+d.seed*.0;const L=danceLayout(d);const hgt=L.U*d.m.rb;let p={};
