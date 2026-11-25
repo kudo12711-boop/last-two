@@ -84,6 +84,13 @@ Google Play では、日本の値段に消費税（10%）が ふくまれ、そ�
 | Sago Mini World だけ | 会員数・売上は 公表なし | [Wikipedia](https://en.wikipedia.org/wiki/Sago_Mini) |
 | Pok Pok | 会員数は 公表なし。2024年6月時点で 月の定期購入の売上が「6けた（月10万ドル以上）」、1年で 会員数9倍・売上5倍、100万ダウンロード以上。社員10人（2022年）、資金 300万ドル（2022）＋600万ドル（2024） | [TechCrunch 2024](https://techcrunch.com/2024/06/18/now-a-series-a-startup-kids-app-and-digital-toy-pok-pok-is-coming-to-android)、[プレスリリース](https://playpokpok.com/res/downloads/pdfs/press-release-series-A.pdf)、[TechCrunch 2022](https://techcrunch.com/2022/06/15/edtech-company-pok-pok-raises-3m-expand-digital-play-experiences-kids) |
 
+## うちのサービスは どんな種類か（2026-11-25）
+
+- **Sago Mini World・Pok Pok と同じ種類**（幼児向けの小さなゲームを たくさん まとめて、パス1つで遊べる）と考えてよい。
+- 日本で似たもの: ワオっち!ランド（31本 むりょう・広告）、ごっこランド（むりょう・企業の広告）、シンクシンク（考える力、月450円〜）、学研（年れいごとの買い切り）、Amazon Kids+（本・動画もまとめた月額）。Sago Mini・Dr. Panda は日本語でも売っている。**日本の会社が「広告なしの幼児ゲーム集を パスで売る」形は少ない**（見つけたのは上のとおり。すべてを調べきれてはいない）。
+- うちの強み: 自分の写真で遊べる（まちがいさがし・ふくわらい・かくれんぼ・けずって）、親の声を録音できる、ひらがな・都道府県など日本語の学び、広告なし。
+- うちの弱み: 絵が 絵文字のままのゲームがある、名前が知られていない、まだ子どもに遊んでもらったテストがない、最初は Android だけ。
+
 ## これから
 
 - 値段は アプリを出す直前まで変えられます。決めるのは くどうさん。
