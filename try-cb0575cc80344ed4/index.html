@@ -81,7 +81,9 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 @keyframes win{40%{transform:scale(1.1)}}
 .pic.no{animation:no .45s}
 @keyframes no{20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
-.pic.gone{opacity:.25;filter:grayscale(1);pointer-events:none}
+.pic.gone{pointer-events:none}
+.pic.gone>.mv{opacity:.25;filter:grayscale(1)}
+.batsu{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:min(22vw,120px);font-weight:900;color:#5b7fa6;line-height:1;pointer-events:none;z-index:3;animation:popin .3s both}
 .pic.dim{opacity:.55}
 .ring{position:absolute;border:5px solid var(--ng);border-radius:50%;pointer-events:none;animation:ring 1.1s ease both;z-index:3}
 @keyframes ring{0%{transform:scale(1.8);opacity:0}40%{transform:scale(1);opacity:1}}
@@ -506,6 +508,8 @@ function ringOn(el,th,c,base){const ks=c.keys||[];if(!ks.length)return;
   for(const k of ks){const [x,y,r]=th.params[k].at(c.p,base);add(x,y,Math.max(r,9))}}
 function sparks(el){const R=el.clientWidth*.55;for(let i=0;i<8;i++){const s=document.createElement('div');s.className='spark';s.textContent=['⭐','✨','🌟'][i%3];const a=i/8*Math.PI*2;
   s.style.setProperty('--dx',Math.cos(a)*R+'px');s.style.setProperty('--dy',Math.sin(a)*R+'px');el.appendChild(s);setTimeout(()=>s.remove(),950)}}
+// まちがいの しるしは ✕（赤い まるは 正解に みえるので、まちがいの絵には ぜったいに 出さない）
+function batsu(el){if(el.querySelector('.batsu'))return;const b=document.createElement('div');b.className='batsu';b.textContent='✕';el.appendChild(b)}
 const catKey=(th,c)=>c.cat?'d'+c.cat:'d'+th.params[c.keys[0]].cat;
 
 async function tapCand(i,el,my){const Q=G.Q;if(Q.done||my!==run)return;audio();
@@ -519,8 +523,9 @@ async function tapCand(i,el,my){const Q=G.Q;if(Q.done||my!==run)return;audio();
     if(G.qi>=ROUND)finish();else nextQ();return}
   // まちがい
   Q.miss++;sfx.ng();el.classList.remove('no');void el.offsetWidth;el.classList.add('no');
-  if(Q.sub==='same'||Q.sub==='mvsame'){ringOn(el,Q.th,c,Q.base);el.classList.add('gone');if(!speaking())say(catKey(Q.th,c))}
-  else{el.classList.add('gone');if(!speaking())say('same')}
+  batsu(el);el.classList.add('gone');
+  if(Q.sub==='same'||Q.sub==='mvsame'){if(!speaking())say(catKey(Q.th,c))}
+  else{if(!speaking())say('same')}
   if(Q.miss===2)hint()}
 
 function hint(){const Q=G.Q;if(!Q||Q.done)return;const els=[...$('grid').children];
