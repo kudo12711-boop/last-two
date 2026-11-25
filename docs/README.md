@@ -28,7 +28,7 @@
 | ひらがな あそび | 幼児が字を読めるようになる（しゃぼんだま・なまえ・どうぶつ・かるた）。ひらがな・ABC（日本語の案内）・ABC（英語）の3コース | v0.3 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/)（いりぐちにも ためし版として のせている） | [hiragana.md](hiragana.md) |
 | どうぶつ あみだくじ | 幼児〜小学生向け、あみだくじで遊ぶ（はしを かけて ごはんを とどける・どこに つくか あてる・家族の くじびき。おやつ・おてつだいは リストから えらべる、同じものを なんかいでも） | v0.4 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-b0e17c086f1b01da/)（いりぐちにも ためし版として のせている） | [amida.md](amida.md) |
 | おなじ？ ちがう？ | 幼児向け、お手本と同じ絵・違う絵・違う動きを えらぶ（どうぶつ・アイス・のりもの・おうち・ロボット・かたち、★3段階） | v0.4 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-cb0575cc80344ed4/)（いりぐちにも ためし版として のせている） | [onaji.md](onaji.md) |
-| ころころ ゆきだま | 幼児向け、雪の玉を ころがして 大きくし、かさねて かざる。ずかんに しまい、夜は みんなで ダンス | v0.3 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-6c7ad175ab6aa707/)（いりぐちにも ためし版として のせている） | [yukidama.md](yukidama.md) |
+| ころころ ゆきだま | 幼児向け、雪の玉を ころがして 大きくし、かさねて かざる。ずかんに しまい、夜は みんなで ダンス | v0.4 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-6c7ad175ab6aa707/)（いりぐちにも ためし版として のせている） | [yukidama.md](yukidama.md) |
 | ぽーん！ ボールなげ | 幼児向け、指で シュッと ボールを なげる。つみき たおし・ぱくぱく どうぶつ・ふうせん わり の 3つ | v0.1 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-ed3c16d137084dd7/) | [pon.md](pon.md) |
 
 全ゲーム共通の課金のしくみ: [kakin.md](kakin.md)

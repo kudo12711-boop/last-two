@@ -218,7 +218,7 @@ ja:{
   undo:'↩ もどす',rand:'🎲 おまかせ',fin:'⭐ できた！',
   doneT:'できあがり！',doneAsk:n=>'ゆきだるま '+n+'ごう が できたよ！',
   fullAsk:(m)=>'ずかんは '+m+'こ まで。ぜんぶ版なら 60こ まで しまえるよ',swap:'いちばん ふるいのと いれかえる',swapped:'いれかえたよ！',unlock:'🔓 ぜんぶ版',
-  toNight:'🌙 よるの ダンス',toZukan:'📖 ずかん',again:'⛄ もう1つ',make:'⛄ つくる',
+  toNight:'🌙 よるの ダンス',redeco:'🎨 きせかえ',saved:'きせかえ できたよ！',home:'🏠 メニュー',toZukan:'📖 ずかん',again:'⛄ もう1つ',make:'⛄ つくる',
   zTitle:'ゆきだるま ずかん',zEmpty:'まだ ゆきだるまが いないよ。<br>つくってみよう！',
   no:n=>n+'ごう',viewAsk:'タッチすると てを ふるよ',del:'🗑 けす',delSure:'もういちど おすと けします',
   danceT:'よるの ダンス',danceAsk:'ゆきだるまを タッチしてみてね',sample:'（おてほん。つくると ここに ならぶよ）',musicOn:'🎵 おんがく',musicOff:'🔇 おんがく',
@@ -243,7 +243,7 @@ en:{
   undo:'↩ Undo',rand:'🎲 Surprise me',fin:'⭐ Done!',
   doneT:'All done!',doneAsk:n=>'Snowman No. '+n+' is ready!',
   fullAsk:(m)=>'The book holds '+m+'. The full version holds 60',swap:'Replace the oldest one',swapped:'Replaced!',unlock:'🔓 Full version',
-  toNight:'🌙 Night dance',toZukan:'📖 Book',again:'⛄ Make another',make:'⛄ Make one',
+  toNight:'🌙 Night dance',redeco:'🎨 Dress up',saved:'All dressed up!',home:'🏠 Menu',toZukan:'📖 Book',again:'⛄ Make another',make:'⛄ Make one',
   zTitle:'Snowman book',zEmpty:'No snowmen yet.<br>Let\'s make one!',
   no:n=>'No. '+n,viewAsk:'Tap it to wave hello',del:'🗑 Delete',delSure:'Press again to delete',
   danceT:'Night dance',danceAsk:'Tap a snowman!',sample:'(Samples. Your snowmen will dance here)',musicOn:'🎵 Music',musicOff:'🔇 Music',
@@ -528,7 +528,7 @@ $('go2').onclick=()=>{audio();sfx.tap();openZukan(true)};
 $('go3').onclick=()=>{audio();sfx.tap();startDance()};
 $('hLang').onclick=()=>{audio();setLang(LANG==='ja'?'en':'ja');setupKakin();renderHome()};
 $('hParent').onclick=()=>{audio();openParent()};
-$('plBack').onclick=()=>{audio();if(mode==='view'){openZukan(false);return}if(mode==='dance'&&danceFrom==='zukan'){openZukan(false);return}renderHome()};
+$('plBack').onclick=()=>{audio();if(mode==='view'||(mode==='deco'&&D.editId)){openZukan(false);return}if(mode==='dance'&&danceFrom==='zukan'){openZukan(false);return}renderHome()};
 $('zBack').onclick=()=>{audio();renderHome()};
 // falling flakes on the home screen
 for(let i=0;i<14;i++){const f=document.createElement('div');f.className='flake';f.textContent=i%3?'•':'❄';f.style.left=(Math.random()*100)+'vw';f.style.animationDuration=(7+Math.random()*8)+'s';f.style.animationDelay=(-Math.random()*12)+'s';f.style.fontSize=(10+Math.random()*12)+'px';$('home').appendChild(f)}
@@ -546,7 +546,7 @@ function fieldInit(keep){const cs=22;F.cs=cs;F.cols=Math.ceil(W/cs);F.rows=Math.
   const ts=Math.min(W,H)*.1;[[.06,.12],[.94,.1],[.05,.92],[.95,.94],[.5,.04]].forEach(([a,c])=>tree(a*W,c*H+ts*.4,ts*(.8+Math.random()*.3)));
   if(!keep||!R.x){R.x=W/2;R.y=H*.55}R.x=clamp(R.x,R.r+4,W-R.r-4);R.y=clamp(R.y,R.r+4,H-R.r-4)}
 const R={stage:1,x:0,y:0,r:10,rMin:0,rMax:0,tx:null,ty:null,moved:0,crunchAt:0,okSaid:false,maxed:false,lowT:0,snowySaid:false,idle:0,hintAt:0,body:null,pts:null};
-function startRoll(){const my=++run;mode='roll';hush();playScreen(T().rollT);R.body=null;R.x=0;F.unit=0;fieldInit(false);flakes(30);newBall(1);ask(T().roll1);say('roll1')}
+function startRoll(){D.editId=null;const my=++run;mode='roll';hush();playScreen(T().rollT);R.body=null;R.x=0;F.unit=0;fieldInit(false);flakes(30);newBall(1);ask(T().roll1);say('roll1')}
 function newBall(stage){const m=Math.min(W,H);R.stage=stage;F.unit=F.unit||m*.2;const U=F.unit;
   if(stage===1){R.rMax=U*1.0;R.rMin=U*.62;R.r=U*.22;R.x=W/2;R.y=H*.55}
   else{R.rMax=Math.min(U*.78,R.body.r*.86);R.rMin=R.rMax*.62;R.r=U*.18;
@@ -698,6 +698,7 @@ cv.addEventListener('pointerup',endPointer);cv.addEventListener('pointercancel',
 let lastSaved=null;
 function packMan(m){return{rb:m.rb,rh:m.rh,col:m.col,parts:m.parts.map(p=>({k:p.k,v:p.v,x:+p.x.toFixed(3),y:+p.y.toFixed(3)}))}}
 function finishMan(){if(mode!=='deco')return;mode='done';const t=T();$('pal').hidden=true;resize();sfx.fan();const L=manLayout();sparkle(W/2,H*.35,24);
+  if(D.editId){const i=S.men.findIndex(x=>x.id===D.editId);D.editId=null;if(i>=0){const rec=Object.assign({},S.men[i],packMan(MAN));S.men[i]=rec;save();lastSaved=rec;$('plTitle').textContent=t.no(rec.no);ask(t.saved);say('nice0');doneCtl();return}}
   const rec=Object.assign({id:Date.now(),no:S.no,d:Date.now()},packMan(MAN));
   if(S.men.length<cap()){S.men.push(rec);S.no++;save();lastSaved=rec;$('plTitle').textContent=t.doneT;ask(t.doneAsk(rec.no));say('done');doneCtl()}
   else{lastSaved=null;MAN.pending=rec;$('plTitle').textContent=t.doneT;ask(t.fullAsk(cap()));say('full');
@@ -715,7 +716,7 @@ function openZukan(voice){mode='zukan';run++;hush();musicStop();show('zukan');co
   if(voice)say('zukan')}
 const fmtD=ms=>{const d=new Date(ms);return LANG==='ja'?(d.getMonth()+1)+'/'+d.getDate():d.toLocaleDateString('en',{month:'short',day:'numeric'})};
 function openView(m){run++;hush();mode='view';const t=T();MAN=JSON.parse(JSON.stringify(m));MAN.lb=lumps();MAN.lh=lumps();playScreen(t.no(m.no),fmtD(m.d));flakes(26);ask(t.viewAsk);say('view');
-  let arm=false;ctl([t.del,'sub',(e)=>{if(!arm){arm=true;e.textContent=t.delSure;return}S.men=S.men.filter(x=>x.id!==m.id);save();sfx.poof();openZukan(false)}],[t.toNight,'night',()=>{danceFrom='zukan';startDance(m,true)}])}
+  let arm=false;ctl([t.del,'sub',(e)=>{if(!arm){arm=true;e.textContent=t.delSure;return}S.men=S.men.filter(x=>x.id!==m.id);save();sfx.poof();openZukan(false)}],[t.redeco,'go',()=>{run++;hush();D.editId=m.id;startDeco()}],[t.toNight,'night',()=>{danceFrom='zukan';startDance(m,true)}])}
 
 // ================= 5) night dance =================
 let DN=[],danceFrom='home',STARS=[];
@@ -729,7 +730,7 @@ function startDance(focus,fromZ){run++;hush();mode='dance';if(!fromZ)danceFrom='
   DN=[];backRow.forEach((m,i)=>DN.push({m:Object.assign({lb:lumps(),lh:lumps()},m),row:0,i,n:backRow.length,seed:Math.random()*8,tap:-9}));front.forEach((m,i)=>DN.push({m:Object.assign({lb:lumps(),lh:lumps()},m),row:1,i,n:front.length,seed:Math.random()*8,tap:-9}));
   STARS=[];for(let i=0;i<70;i++)STARS.push({x:Math.random(),y:Math.random()*.6,r:Math.random()*1.4+.4,p:Math.random()*TAU});flakes(40);
   ask(t.danceAsk+(sample?' '+t.sample:''));beat0=performance.now();musicStart();danceCtl();say('night')}
-function danceCtl(){const t=T();ctl([t.make,'sub',startRoll],[S.music?t.musicOn:t.musicOff,'sub',()=>{S.music=!S.music;save();if(S.music)musicStart();else musicStop();danceCtl()}])}
+function danceCtl(){const t=T();ctl([t.home,'go',renderHome],[t.make,'sub',startRoll],[S.music?t.musicOn:t.musicOff,'sub',()=>{S.music=!S.music;save();if(S.music)musicStart();else musicStop();danceCtl()}])}
 function danceLayout(d){const gy0=H*.93;const rowH=d.row?H*.62:H*.42;const gy=d.row?gy0:H*.74;const slot=W/d.n;const U=Math.min(fitU(d.m,slot*.95,rowH),fitU({rb:1,rh:.7},W*.3,rowH));return{x:slot*(d.i+.5)+(d.row?0:slot*.0),gy,U}}
 const MOVES=['bounce','sway','wave','hop','spin','bob'];
 function dancePose(d,b){const mi=(Math.floor(b/8)+Math.floor(d.seed))%MOVES.length;const mv=MOVES[mi];const ph=b+d.seed*.0;const L=danceLayout(d);const hgt=L.U*d.m.rb;let p={};
