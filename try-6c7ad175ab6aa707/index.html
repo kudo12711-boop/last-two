@@ -354,9 +354,9 @@ const locked=v=>{for(const s in ITEMS)for(const[i,l]of ITEMS[s])if(i===v)return 
 function geom(m,x,gy,U,pose={}){const rb=m.rb*U,rh=m.rh*U;const by=gy-rb;const hx=x+(pose.hdx||0)*rh,hy=gy-2*rb-.72*rh+(pose.hdy||0)*rh;return{rb,rh,bx:x,by,hx,hy}}
 function fitU(m,w,h){const hu=2*m.rb+1.72*m.rh+1.1*m.rh,wu=Math.max(2*m.rb*2.0,2*m.rh*1.6);return Math.min(h/hu,w/wu)}
 
-function ball(c,x,y,r,col,lumps){const[cA,cB]=COLS[col]||COLS.w;const g=c.createRadialGradient(x-r*.35,y-r*.4,r*.1,x,y,r*1.05);g.addColorStop(0,cA);g.addColorStop(.6,cA);g.addColorStop(1,cB);
+function ball(c,x,y,r,col,lumps,yaw){const[cA,cB]=COLS[col]||COLS.w;const g=c.createRadialGradient(x-r*.35,y-r*.4,r*.1,x,y,r*1.05);g.addColorStop(0,cA);g.addColorStop(.6,cA);g.addColorStop(1,cB);
   c.beginPath();c.arc(x,y,r,0,TAU);c.fillStyle=g;c.fill();c.lineWidth=Math.max(1,r*.025);c.strokeStyle='rgba(110,140,175,.35)';c.stroke();
-  if(lumps){c.fillStyle='rgba(150,175,205,.28)';for(const p of lumps)if(p.z>.12){c.beginPath();c.arc(x+p.x*r*.88,y+p.y*r*.88,r*(.05+.04*p.z)*p.s,0,TAU);c.fill()}}}
+  if(lumps){const cy=Math.cos(yaw||0),sy=Math.sin(yaw||0);c.fillStyle='rgba(150,175,205,.28)';for(const p of lumps){const px=p.x*cy+p.z*sy,pz=p.z*cy-p.x*sy;if(pz>.12){c.beginPath();c.arc(x+px*r*.88,y+p.y*r*.88,r*(.05+.04*pz)*p.s,0,TAU);c.fill()}}}}
 
 function star(c,x,y,r,n=5,ir=.45){c.beginPath();for(let i=0;i<n*2;i++){const a=-Math.PI/2+i*Math.PI/n,rr=i%2?r*ir:r;c.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr)}c.closePath()}
 function heart(c,x,y,r){c.beginPath();c.moveTo(x,y+r*.9);c.bezierCurveTo(x-r*1.4,y-r*.1,x-r*.6,y-r*1.1,x,y-r*.35);c.bezierCurveTo(x+r*.6,y-r*1.1,x+r*1.4,y-r*.1,x,y+r*.9);c.closePath()}
@@ -397,10 +397,13 @@ function drawPart(c,k,v,R,rh,pose,side){c.lineCap='round';c.lineJoin='round';con
     c.restore();return}
   if(k==='scarf'){const w=rh*1.05,h=rh*.3;const cols=v==='s1'?['#e2504a','#c23a35']:v==='s2'?['#3c8fd6','#2a6fb0']:['#4cb38a','#f4f4f4'];
     c.fillStyle=cols[0];c.beginPath();c.ellipse(0,0,w,h,0,0,TAU);c.fill();
-    c.save();c.translate(w*.45,h*.3);c.rotate(.15);c.fillStyle=cols[0];c.fillRect(-rh*.16,0,rh*.32,rh*.95);
-    if(v==='s3'){c.fillStyle=cols[1];for(let i=0;i<3;i++)c.fillRect(-rh*.16,rh*(.12+i*.28),rh*.32,rh*.12);c.restore();c.save();c.beginPath();c.ellipse(0,0,w,h,0,0,TAU);c.clip();for(let i=-6;i<6;i++){c.fillStyle=cols[1];c.fillRect(i*rh*.32,-h,rh*.14,h*2)}}
-    else{c.fillStyle=cols[1];c.fillRect(-rh*.16,rh*.8,rh*.32,rh*.08)}
-    c.restore();c.strokeStyle='rgba(0,0,0,.12)';c.lineWidth=rh*.03;c.beginPath();c.ellipse(0,0,w,h,0,0,TAU);c.stroke();return}
+    if(v==='s3'){c.save();c.beginPath();c.ellipse(0,0,w,h,0,0,TAU);c.clip();const off=((pose.yaw||0)/TAU*rh*3.2)%(rh*.32);for(let i=-7;i<7;i++){c.fillStyle=cols[1];c.fillRect(i*rh*.32+off,-h,rh*.14,h*2)}c.restore()}
+    c.strokeStyle='rgba(0,0,0,.12)';c.lineWidth=rh*.03;c.beginPath();c.ellipse(0,0,w,h,0,0,TAU);c.stroke();
+    // the hanging end travels around the neck when the snowman turns
+    const ta=Math.asin(.45)+(pose.yaw||0),tz=Math.cos(ta);
+    if(tz>0){c.save();c.translate(w*Math.sin(ta),h*.3);c.scale(Math.max(.25,tz),1);c.rotate(.15);c.fillStyle=cols[0];c.fillRect(-rh*.16,0,rh*.32,rh*.95);
+      c.fillStyle=cols[1];if(v==='s3'){for(let i=0;i<3;i++)c.fillRect(-rh*.16,rh*(.12+i*.28),rh*.32,rh*.12)}else c.fillRect(-rh*.16,rh*.8,rh*.32,rh*.08);c.restore()}
+    return}
   if(k==='arms'){const up=(pose.arm||0)*(side||1)*0;c.save();c.rotate(-(pose.arm||0));
     const tip=v==='a2'?[R*.62,-R*.82]:[R*.9,-R*.32];c.strokeStyle='#6b4a2b';c.lineWidth=Math.max(2,R*.055);c.beginPath();c.moveTo(0,0);c.lineTo(tip[0],tip[1]);c.stroke();
     const mx=tip[0]*.62,my=tip[1]*.62;c.lineWidth=Math.max(1.5,R*.04);c.beginPath();c.moveTo(mx,my);c.lineTo(mx+R*.14,my-R*.2);c.moveTo(mx+tip[0]*.18,my+tip[1]*.18);c.lineTo(mx+tip[0]*.18+R*.2,my+tip[1]*.18+R*.06);c.stroke();
@@ -423,22 +426,30 @@ function partSpots(m,g,p){const h=HEAD[p.k];const R=h?g.rh:g.rb,cx0=h?g.hx:g.bx,
     out.push({x,y,r,side:s})}
   return out}
 
-// draw a whole snowman. pose: dy (px up/down), tilt (rad), sx (spin scale), sq (squash), hdx/hdy (head shift, head radii), ht (head tilt), arm (rad), blink, back
+// draw a whole snowman. pose: dy (px up/down), tilt (rad), yaw (turn around, rad), sq (squash), hdx/hdy (head shift, head radii), ht (head tilt), arm (rad), blink, back
 function drawMan(c,m,x,gy,U,pose={},shadow=true){const g=geom(m,0,0,U,pose);
   if(shadow){const k=clamp(1-(-(pose.dy||0))/(g.rb*3),.4,1);c.fillStyle='rgba(60,80,120,.16)';c.beginPath();c.ellipse(x,gy,g.rb*1.05*k,g.rb*.18*k,0,0,TAU);c.fill()}
-  c.save();c.translate(x,gy+(pose.dy||0));c.rotate(pose.tilt||0);const sq=pose.sq||0;c.scale((pose.sx==null?1:pose.sx)*(1+sq*.5),1-sq);
-  const parts=m.parts||[];const back=pose.sx!=null&&pose.sx<0;
-  const draw=(p)=>{const h=HEAD[p.k];const R=h?g.rh:g.rb;const ox=h?g.hx:g.bx,oy=h?g.hy:g.by;
+  c.save();c.translate(x,gy+(pose.dy||0));c.rotate(pose.tilt||0);const sq=pose.sq||0;c.scale(1+sq*.5,1-sq);
+  // turning (yaw): the snow balls stay round; only the things on them travel around the ball and hide behind it
+  const parts=m.parts||[];const yaw=pose.yaw||0;
+  const place=(p,s)=>{let x=s*p.x;if(!yaw)return{nx:x,z:1,a:null};const r=Math.max(1,Math.abs(x));const ph=Math.asin(clamp(x/r,-1,1))+(p.k==='arms'&&Math.abs(x)<1?0:0);const a=ph+yaw;return{nx:r*Math.sin(a),z:Math.cos(a),a}};
+  const draw=(p,layer)=>{const h=HEAD[p.k];const R=h?g.rh:g.rb;const ox=h?g.hx:g.bx,oy=h?g.hy:g.by;
     const sides=PAIR[p.k]?[1,-1]:[1];
-    for(const s of sides){c.save();c.translate(ox,oy);if(h)c.rotate(pose.ht||0);c.translate(s*p.x*R,p.y*R);
+    for(const s of sides){const q=p.k==='hat'||p.k==='scarf'?{nx:s*p.x,z:1,a:null}:place(p,s);
+      if(p.k==='arms'){const front=q.z>=0;if(layer!==(front?'front':'back'))continue}
+      else if(q.z<.05)continue;
+      c.save();c.translate(ox,oy);if(h)c.rotate(pose.ht||0);c.translate(q.nx*R,p.y*R);
       const pp=p.pop?Math.max(0,1-(performance.now()-p.pop)/350):0;if(pp)c.scale(1+Math.sin(pp*Math.PI)*.35,1+Math.sin(pp*Math.PI)*.35);
+      if(p.k==='arms'&&q.a!=null)c.scale(Math.sin(q.a)*s>=0?Math.max(.12,Math.abs(Math.sin(q.a))):-Math.max(.12,Math.abs(Math.sin(q.a))),1);
+      else if(q.a!=null)c.scale(Math.max(.15,q.z),1);
       if(s<0)c.scale(-1,1);drawPart(c,p.k,p.v,R,g.rh,pose,s);c.restore()}};
-  for(const p of parts)if(p.k==='arms')draw(p);
-  ball(c,g.bx,g.by,g.rb,m.col,m.lb);
-  if(!back)for(const p of parts)if(p.k==='btn')draw(p);
-  c.save();c.translate(g.hx,g.hy);c.rotate(pose.ht||0);ball(c,0,0,g.rh,m.col,m.lh);c.restore();
+  for(const p of parts)if(p.k==='arms')draw(p,'back');
+  ball(c,g.bx,g.by,g.rb,m.col,m.lb,yaw);
+  for(const p of parts)if(p.k==='btn')draw(p);
+  for(const p of parts)if(p.k==='arms')draw(p,'front');
+  c.save();c.translate(g.hx,g.hy);c.rotate(pose.ht||0);ball(c,0,0,g.rh,m.col,m.lh,yaw);c.restore();
   for(const p of parts)if(p.k==='scarf')draw(p);
-  if(!back)for(const k of ['cheek','eyes','nose','mouth'])for(const p of parts)if(p.k===k)draw(p);
+  for(const k of ['cheek','eyes','nose','mouth'])for(const p of parts)if(p.k===k)draw(p);
   for(const p of parts)if(p.k==='hat')draw(p);
   c.restore()}
 
@@ -698,9 +709,9 @@ function dancePose(d,b){const mi=(Math.floor(b/8)+Math.floor(d.seed))%MOVES.leng
   if(mv==='sway'){p.tilt=s1*.16;p.arm=-s1*.4;p.ht=-s1*.1}
   if(mv==='wave'){p.arm=.5+Math.sin(ph*TAU)*.5;p.ht=Math.sin(ph*Math.PI/2)*.12;p.dy=-Math.abs(Math.sin(ph*TAU))*hgt*.05}
   if(mv==='hop'){const k=(ph%2)/2;p.dy=-Math.max(0,Math.sin(k*TAU))*hgt*.55;p.sq=k>.48&&k<.6?.1:0;p.arm=.8;p.tilt=Math.sin(k*TAU)*.05}
-  if(mv==='spin'){p.sx=Math.cos(ph*Math.PI/4*2);if(Math.abs(p.sx)<.08)p.sx=p.sx<0?-.08:.08;p.arm=.4;p.dy=-Math.abs(s1)*hgt*.08}
+  if(mv==='spin'){p.yaw=(ph%8)/8*TAU;p.arm=.4;p.dy=-Math.abs(s1)*hgt*.08}
   if(mv==='bob'){p.hdx=Math.sin(ph*Math.PI)*.28;p.arm=.2+Math.abs(c1)*.4;p.tilt=-s1*.04}
-  const tk=(b-d.tap)/2;if(tk>=0&&tk<1){p.dy=(p.dy||0)-Math.sin(tk*Math.PI)*hgt*1.1;p.sx=Math.cos(tk*TAU);if(Math.abs(p.sx)<.08)p.sx=p.sx<0?-.08:.08;p.arm=1}
+  const tk=(b-d.tap)/2;if(tk>=0&&tk<1){p.dy=(p.dy||0)-Math.sin(tk*Math.PI)*hgt*1.1;p.yaw=(p.yaw||0)+tk*TAU;p.arm=1}
   return p}
 function danceDraw(dt,t){const now=t/1000;const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b1634');g.addColorStop(.7,'#2a3f7a');g.addColorStop(1,'#3d5596');cx.fillStyle=g;cx.fillRect(0,0,W,H);
   for(const s of STARS){cx.globalAlpha=.4+.6*Math.abs(Math.sin(now*1.5+s.p));cx.fillStyle='#fff';cx.beginPath();cx.arc(s.x*W,s.y*H,s.r,0,TAU);cx.fill()}cx.globalAlpha=1;
@@ -748,7 +759,7 @@ function setupKakin(){if(!window.Kakin||!Kakin.setup)return;
 if(window.Kakin)setupKakin();else window.Kakin={full:()=>false,ask:()=>{},open:()=>{}};
 
 document.addEventListener('visibilitychange',()=>{if(document.hidden){hush();musicStop()}else if(mode==='dance')musicStart()});
-if(qs.get('test')==='1')window.__yuki={S,R,SK,D,get MAN(){return MAN},get mode(){return mode},startRoll,startStack,startDeco,finishMan,startDance,openZukan,useItem,randomDeco,rollDone,landHead,spots:()=>{const L=manLayout();const g=geom(MAN,L.x,L.gy,L.U);return MAN.parts.map(p=>({k:p.k,s:partSpots(MAN,g,p)}))}};
+if(qs.get('test')==='1')window.__yuki={S,R,SK,D,get MAN(){return MAN},get mode(){return mode},startRoll,startStack,startDeco,finishMan,startDance,openZukan,useItem,randomDeco,rollDone,landHead,drawMan,lumps,spots:()=>{const L=manLayout();const g=geom(MAN,L.x,L.gy,L.U);return MAN.parts.map(p=>({k:p.k,s:partSpots(MAN,g,p)}))}};
 renderHome();
 })();
 </script>
