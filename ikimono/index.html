@@ -54,6 +54,8 @@ button{font:inherit;color:inherit}
 .tray button{border:0;background:#fff4e2;border-radius:14px;width:48px;height:48px;font-size:28px;padding:0;cursor:pointer}
 .tray button:active{transform:scale(.9)}
 #meet .hint{bottom:calc(84px + env(safe-area-inset-bottom))}
+#meet .choice{position:absolute;left:0;right:0;bottom:calc(136px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;pointer-events:none}
+#meet .choice .btn{font-size:17px;padding:12px 18px}
 
 /* もーだる */
 .modal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(40,20,60,.35);pointer-events:auto;padding:16px;box-sizing:border-box}
@@ -149,6 +151,7 @@ button{font:inherit;color:inherit}
       <span></span>
     </div>
     <div class="hint" id="mHint"><span class="pill"></span></div>
+    <div class="choice" id="mChoice" style="display:none"><button class="btn pink" id="mYes"></button><button class="btn" id="mNo"></button></div>
     <div class="tray" id="tray"></div>
   </div>
 
@@ -204,7 +207,7 @@ button{font:inherit;color:inherit}
 <script>
 'use strict';
 /* =========================================================
-   ふしぎな いきもの ずかん v0.3（v0.3: ごはんで みためが かわる）
+   ふしぎな いきもの ずかん v0.4（v0.3: ごはんで みためが かわる／v0.4: であったときの ごはんは おおきく かわり、なかよしに なるか えらべる）
    - 絵は1枚も使わず、生きもの・景色をすべてプログラムで描く
    - 生きもの = 8つの部品（からだ・もよう・め・くち・あたま・しっぽ・あし・はね）＋ 色
    - 2匹から 部品と色を受けつぐ子どもが 生まれる（ときどき めずらしい部品に かわる）
@@ -263,6 +266,15 @@ const DIET = [
   { h: 340, s: 80, l: 76 }, // いちご: ピンク、つぶつぶ
   { h: 24, s: 90, l: 63 },  // にんじん: オレンジ、せが たかく
 ];
+// たくさん たべると ぶひんも かわる（v0.4）。きき目 .35 で 1つめ、.65 で 2つめ
+const DIET_PARTS = [
+  [['body', 'round'], ['mouth', 'tongue']],  // りんご: まんまる、ぺろり
+  [['tail', 'fin'], ['wings', 'fins']],      // さかな: さかなの しっぽ、ひれ
+  [['tail', 'fluffy'], ['top', 'bear']],     // どんぐり: ふわふわしっぽ、くまみみ
+  [['top', 'antenna'], ['wings', 'fairy']],  // はちみつ: しょっかく、ようせいの はね
+  [['body', 'drop'], ['top', 'sprout']],     // いちご: しずくがた、ふたば
+  [['top', 'bunny'], ['tail', 'nub']],       // にんじん: うさみみ、ちょこん しっぽ
+];
 const DIET_K = 15, DIET_STEPS = [3, 8, 15, 25, 40];
 const FULL_MAX = 6, FULL_MS = 10 * 60 * 1000; // おなかは 6かいで いっぱい。10ぷんで 1つ へる
 const dietAmt = n => 1 - Math.exp(-(n || 0) / DIET_K);
@@ -277,10 +289,15 @@ function lookG(g, fd) {
   const d = ((th - g.h1 + 540) % 360) - 180, k2 = clamp(sa * .7, 0, .7);
   const o = Object.assign({}, g);
   o.h1 = (g.h1 + d * k + 360) % 360; o.s = lerp(g.s, ss / sa, k2); o.l = lerp(g.l, sl / sa, k2 * .7);
+  const best = {};
+  a.forEach((w, i) => DIET_PARTS[i].forEach(([cat, k], j) => { if (w >= (j ? .65 : .35) && (!best[cat] || best[cat] < w)) { best[cat] = w; o[cat] = k; } }));
   o.dz = { blush: a[0], shine: a[1], plump: a[2], big: a[3], seeds: a[4], tall: a[5] };
   lookCache.set(g, { key, g: o }); return o;
 }
-const lookOf = e => lookG(e.g, e.fd);
+// であったとき（なかよしの まえ）の ごはんは 1かいで MEET_W かいぶん きく（v0.4）。e.fm に のこす
+const MEET_W = 8;
+const effFd = e => !e.fm ? e.fd : FOODS.map((_, i) => ((e.fd && e.fd[i]) || 0) + (e.fm[i] || 0) * MEET_W);
+const lookOf = e => lookG(e.g, effFd(e));
 function tummy(e) { // いまの おなか（0〜FULL_MAX）。じかんで へる
   const f = e.ful; if (!f || !f.n) return 0;
   const k = Math.floor((Date.now() - f.t) / FULL_MS); if (k > 0) { f.n = Math.max(0, f.n - k); f.t += k * FULL_MS; }
@@ -313,7 +330,8 @@ const TEXT = {
     hab: { meadow: 'のはら', sea: 'うみ', forest: 'もり', snow: 'ゆきやま', volcano: 'かざん', night: 'よるのもり' },
     exHint: 'ゆびで よこに うごかしてね。ゆれている ところを タップ！',
     exHint2: 'ゆれている ところを さがそう',
-    meetHint: 'たべものを あげたり、ゆびで なでたり してね',
+    meetHint: 'ごはんを あげると みためが かわるよ。ゆびで なでても なかよく なれる',
+    choose: 'なかよしに なる？ ごはんで まだ かえられるよ', beFriend: '💞 なかよしに なる', notNow: '👋 またね',
     bye: '← またね', love: 'だいすき！', yum: 'もぐもぐ', purr: 'すりすり',
     friends: 'なかよしに なった！', newPart: p => '✨ あたらしい ぶひん: ' + p, sep: '・', backEx: 'さがしに もどる', toBook: 'ずかんを みる',
     bkTitle: '📖 ずかん', tabC: n => 'いきもの ' + n, tabP: (a, b) => 'ぶひん ' + a + '/' + b,
@@ -342,7 +360,7 @@ const TEXT = {
     feedHead: '🍽 ごはんを あげる', tummy: 'おなか', full: 'おなか いっぱい！ また あとで あげてね',
     fed: 'たべたもの: ', dietHint: 'あげた ごはんで、すこしずつ みためが かわるよ',
     dietNow: 'かわってきた: ', dietLv: ['ほんのり', 'だいぶ', 'すっかり'],
-    dietFx: ['あかく、ほっぺが まっかに', 'あおく、つやつやに', 'ちゃいろく、まるまるに', 'きんいろに、おおきく', 'ピンクで つぶつぶに', 'オレンジいろで、せが たかく'],
+    dietFx: ['あかく まんまる、ほっぺ まっか', 'あおく つやつや、ひれと さかなの しっぽ', 'ちゃいろく まるまる、ふわふわしっぽと くまみみ', 'きんいろで おおきく、しょっかくと はね', 'ピンクの しずくがた、ふたばと つぶつぶ', 'オレンジで せが たかく、うさみみ'],
     changed: '✨ すこし かわった！', favAte: 'だいすきな ごはん！',
   },
   en: {
@@ -352,7 +370,8 @@ const TEXT = {
     hab: { meadow: 'Meadow', sea: 'Sea', forest: 'Forest', snow: 'Snowy Peaks', volcano: 'Volcano', night: 'Night Woods' },
     exHint: 'Swipe sideways to walk. Tap whatever is shaking!',
     exHint2: 'Look for something shaking',
-    meetHint: 'Give it food or pet it with your finger',
+    meetHint: 'Food changes how it looks. Petting with your finger works too',
+    choose: 'Be friends? You can still feed it to change its look', beFriend: '💞 Be friends', notNow: '👋 Bye',
     bye: '← Bye', love: 'Yummy!', yum: 'Munch', purr: 'Purr',
     friends: 'New friend!', newPart: p => '✨ New parts: ' + p, sep: ', ', backEx: 'Keep exploring', toBook: 'Open the book',
     bkTitle: '📖 Critter Book', tabC: n => 'Critters ' + n, tabP: (a, b) => 'Parts ' + a + '/' + b,
@@ -381,7 +400,7 @@ const TEXT = {
     feedHead: '🍽 Feed it', tummy: 'Tummy', full: 'All full! Feed it again a bit later',
     fed: 'Has eaten: ', dietHint: 'What it eats slowly changes how it looks',
     dietNow: 'Changing: ', dietLv: ['a little', 'quite', 'very'],
-    dietFx: ['redder, rosy cheeks', 'bluer and shiny', 'browner and rounder', 'golden and bigger', 'pink and seedy', 'orange and taller'],
+    dietFx: ['red and round, rosy cheeks', 'blue and shiny, fins and a fish tail', 'brown and chubby, fluffy tail and bear ears', 'golden and bigger, antennae and wings', 'a pink drop shape, sprout and seeds', 'orange and tall, bunny ears'],
     changed: '✨ It changed a little!', favAte: 'Its favorite!',
   }
 };
@@ -542,7 +561,7 @@ function fillStroke(c, fill, line, lw) { c.fillStyle = fill; c.fill(); c.strokeS
 function drawCreature(c, g, x, y, R, st = {}) {
   const t = st.t || 0, P = pal(g), I = bodyInfo(g.body, R), float = g.legs === 'none', z = g.dz;
   const lw = Math.max(1.4, R * .055);
-  const zs = z ? 1 + .16 * z.big : 1, zx = z ? zs * (1 + .16 * z.plump - .06 * z.tall) : 1, zy = z ? zs * (1 + .17 * z.tall - .06 * z.plump) : 1;
+  const zs = z ? 1 + .22 * z.big : 1, zx = z ? zs * (1 + .26 * z.plump - .08 * z.tall) : 1, zy = z ? zs * (1 + .26 * z.tall - .08 * z.plump) : 1;
   const bob = float ? Math.sin(t * 2 + g.seed % 5) * R * .08 - R * .22 : 0;
   if (!st.noShadow) {
     c.fillStyle = 'rgba(30,20,40,.18)'; c.beginPath();
@@ -1366,10 +1385,11 @@ let meet = null;
 function meetR() { return clamp(Math.min(W, H * .9) * .2, 50, 130); }
 function meetPos() { const R = meetR(); return { x: W / 2, y: GY() + H * .04 - bodyInfo(meet.g.body, R).bot, R }; }
 function enterMeet(g, fromX) {
-  meet = { g, fd: [0, 0, 0, 0, 0, 0], hearts: 0, rub: 0, mood: 'shy', moodUntil: 0, food: null, eatUntil: 0, done: false, fk: false, fromX, t0: now, lastPurr: 0 };
+  meet = { g, fd: [0, 0, 0, 0, 0, 0], fv: [0, 0, 0, 0, 0, 0], hearts: 0, rub: 0, mood: 'shy', moodUntil: 0, food: null, eatUntil: 0, done: false, fk: false, fromX, t0: now, lastPurr: 0 };
   pop = null; showScene('meet');
   $('#mBye').textContent = T().bye;
-  $('#mHint .pill').textContent = T().meetHint;
+  $('#mHint .pill').textContent = T().meetHint; $('#mHint').style.display = '';
+  $('#mChoice').style.display = 'none'; $('#mYes').textContent = T().beFriend; $('#mNo').textContent = T().notNow;
   const tr = $('#tray'); tr.innerHTML = '';
   FOODS.forEach((f, i) => {
     const b = document.createElement('button'); b.textContent = f; b.title = T().food[i];
@@ -1377,9 +1397,11 @@ function enterMeet(g, fromX) {
   });
 }
 $('#mBye').onclick = () => { sfx.tap(); meet = null; showScene('explore'); nextShake = now + 1500; };
+$('#mNo').onclick = () => $('#mBye').click();
+$('#mYes').onclick = () => { if (!meet || !meet.done || meet.food || meet.going) return; meet.going = true; sfx.tap(); const mp = meetPos(); burstHearts(mp.x, mp.y - mp.R * .4, 16); burstSparkle(mp.x, mp.y - mp.R, 16); sfx.love(); $('#mChoice').style.display = 'none'; setTimeout(befriend, 700); };
 function setMood(m, ms) { meet.mood = m; meet.moodUntil = now + ms; }
 function feed(i, btn) {
-  if (!meet || meet.food || meet.done) return;
+  if (!meet || meet.food || meet.going) return;
   ac(); sfx.tap();
   const r = btn.getBoundingClientRect();
   meet.food = { i, t0: now, fx: r.left + r.width / 2, fy: r.top + r.height / 2 };
@@ -1390,9 +1412,9 @@ function addHearts(n, txt) {
   burstHearts(mp.x, mp.y - mp.R * .6, 4 + n * 2); sfx.heart();
   if (txt) floatText(mp.x, mp.y - mp.R * 1.6, txt);
   if (meet.hearts >= 5 && !meet.done) {
-    meet.done = true; setMood('happy', 99999); sfx.love();
-    setTimeout(() => { burstHearts(mp.x, mp.y - mp.R * .4, 16); burstSparkle(mp.x, mp.y - mp.R, 16); }, 300);
-    setTimeout(befriend, 1400);
+    // すぐ なかよしに せず、みためを みてから えらべる（v0.4）
+    meet.done = true; setMood('happy', 1500); sfx.heart();
+    $('#mHint .pill').textContent = T().choose; $('#mChoice').style.display = '';
   }
 }
 function updateMeet(dt) {
@@ -1404,6 +1426,8 @@ function updateMeet(dt) {
   if (f && !f.arrived && now - f.t0 > 550) { f.arrived = true; meet.eatUntil = now + 900; setMood('eat', 900); sfx.munch(); }
   if (f && f.arrived && now > meet.eatUntil) {
     meet.food = null; meet.fd[f.i]++;
+    { const mp = meetPos(); burstSparkle(mp.x, mp.y - mp.R * .3, 14); sfx.hatch(); }
+    if (meet.done) { setMood(f.i === meet.g.food ? 'happy' : 'idle', 900); if (f.i === meet.g.food) meet.fk = true; floatText(meetPos().x, meetPos().y - meetPos().R * 1.6, f.i === meet.g.food ? T().love : T().yum); return; }
     if (f.i === meet.g.food) { meet.fk = true; setMood('happy', 1500); addHearts(2, T().love); }
     else { setMood('idle', 600); addHearts(1, T().yum); }
   }
@@ -1417,7 +1441,8 @@ function drawMeet(dt) {
   const lift = meet.mood === 'happy' ? Math.abs(Math.sin(TS * 7)) * mp.R * .18 : e < 1 ? Math.sin(e * Math.PI) * mp.R * .5 : 0;
   const dx = meet.mood === 'shy' ? Math.sin(TS * 30) * 1.2 : 0;
   const look = P.down ? clamp((P.x - x) / (W / 2), -1, 1) : 0;
-  drawCreature(ctx, lookG(meet.g, meet.fd), x, mp.y, mp.R, { t: TS, mood: meet.mood, lift, dx, look, walk: e < 1 });
+  for (let i = 0; i < 6; i++) meet.fv[i] += (meet.fd[i] * MEET_W - meet.fv[i]) * Math.min(1, dt / 220); // ふわっと かわる
+  drawCreature(ctx, lookG(meet.g, meet.fv.map(v => Math.round(v * 10) / 10)), x, mp.y, mp.R, { t: TS, mood: meet.mood, lift, dx, look, walk: e < 1 });
   // たべもの が とんでいく
   const f = meet.food;
   if (f && !f.arrived) {
@@ -1448,10 +1473,10 @@ function rubMeet(dx, dy) {
   if (meet.rub > 650) { meet.rub = 0; setMood('happy', 900); addHearts(1, T().purr); }
 }
 function befriend() {
-  if (!meet) return;
+  if (!meet || meet.chosen) return; meet.chosen = true;
   const { e, newParts } = addToBook(meet.g, hab.id, null);
   if (meet.fk) e.fk = true;
-  if (meet.fd.some(n => n > 0)) e.fd = meet.fd.slice();
+  if (meet.fd.some(n => n > 0)) e.fm = meet.fd.slice();
   saveBook();
   sfx.fan();
   showResult({ head: T().friends, e, newParts, a: T().backEx, b: T().toBook,
@@ -1561,7 +1586,8 @@ function openDetail(e) {
   $('#dName').textContent = dispName(e); $('#rename').style.display = 'none';
   openDetailMeta(e);
   const ch = $('#dParts'); ch.innerHTML = '';
-  for (const c of CATS) { if (c !== 'body' && (e.g[c] === 'none')) continue; const s = document.createElement('span'); s.className = 'chip' + (isRare(c, e.g[c]) ? ' rare' : ''); s.textContent = (isRare(c, e.g[c]) ? '★ ' : '') + partName(c, e.g[c]); ch.appendChild(s); }
+  const lg = lookOf(e);
+  for (const c of CATS) { if (c !== 'body' && (lg[c] === 'none')) continue; const s = document.createElement('span'); s.className = 'chip' + (isRare(c, lg[c]) ? ' rare' : ''); s.textContent = (isRare(c, lg[c]) ? '★ ' : '') + partName(c, lg[c]); ch.appendChild(s); }
   $('#dRen').textContent = t.rename; $('#dEgg').textContent = t.useEgg; $('#dClose').textContent = t.close;
   $('#dEgg').style.display = book.list.length >= 2 ? '' : 'none';
   $('#dFeedHead').textContent = t.feedHead;
@@ -1572,17 +1598,17 @@ function openDetail(e) {
   $('#detail').classList.add('on');
 }
 function renderDiet() {
-  const e = detailE, t = T(), fd = e.fd || [], n = tummy(e), full = n >= FULL_MAX;
+  const e = detailE, t = T(), fd = FOODS.map((_, i) => ((e.fd && e.fd[i]) || 0) + ((e.fm && e.fm[i]) || 0)), ef = effFd(e) || [], n = tummy(e), full = n >= FULL_MAX;
   $('#dTummy').innerHTML = t.tummy + ' ' + '<b>' + '●'.repeat(n) + '</b>' + '○'.repeat(FULL_MAX - n);
   $('#dTray').querySelectorAll('button').forEach(b => b.disabled = full);
   const lines = [];
   if (full) lines.push(t.full);
-  const eaten = FOODS.map((f, i) => ({ f, i, n: fd[i] || 0 })).filter(o => o.n > 0);
+  const eaten = FOODS.map((f, i) => ({ f, i, n: fd[i] || 0, x: ef[i] || 0 })).filter(o => o.n > 0);
   if (!eaten.length) lines.push(t.dietHint);
   else {
     lines.push(t.fed + eaten.map(o => o.f + o.n).join(' '));
-    const ch = eaten.filter(o => o.n >= 3).sort((a, b) => b.n - a.n).slice(0, 2);
-    if (ch.length) lines.push(t.dietNow + ch.map(o => { const a = dietAmt(o.n); return o.f + ' ' + t.dietLv[a < .4 ? 0 : a < .75 ? 1 : 2] + ' ' + t.dietFx[o.i]; }).join(t.sep));
+    const ch = eaten.filter(o => o.x >= 3).sort((a, b) => b.x - a.x).slice(0, 2);
+    if (ch.length) lines.push(t.dietNow + ch.map(o => { const a = dietAmt(o.x); return o.f + ' ' + t.dietLv[a < .4 ? 0 : a < .75 ? 1 : 2] + ' ' + t.dietFx[o.i]; }).join(t.sep));
     else lines.push(t.dietHint);
   }
   const d = $('#dDiet'); d.innerHTML = lines.map(() => '<div></div>').join('');
