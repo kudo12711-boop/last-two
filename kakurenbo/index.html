@@ -80,6 +80,13 @@ h1 .q{color:var(--accent);display:inline-block;animation:bob 2.2s ease-in-out in
 .spot.found .hid{z-index:3;transform:translateY(calc(var(--u)*var(--h)*-.55)) scale(1.3)}
 .spot.glow .cov{filter:drop-shadow(0 0 10px #fff36b) drop-shadow(0 0 18px #ffd23f);animation:wob .6s 2}
 .spot.me .cov{filter:drop-shadow(0 0 8px rgba(255,255,255,.95))}
+.runner{position:absolute;z-index:7;transform:translate(-50%,-50%);font-size:calc(var(--u)*var(--h));width:calc(var(--u)*var(--h));height:calc(var(--u)*var(--h));
+  display:grid;place-items:center;transition:left var(--t,1s) ease-in-out,top var(--t,1s) ease-in-out;cursor:pointer}
+.runner .in{display:block;animation:runhop .22s ease-in-out infinite alternate}
+.runner.l .in{transform:scaleX(-1)}
+@keyframes runhop{to{translate:0 calc(var(--u)*-3);rotate:9deg}}
+.dust{position:absolute;pointer-events:none;z-index:6;transform:translate(-50%,-50%);font-size:calc(var(--u)*5);animation:dust .7s ease-out forwards}
+@keyframes dust{from{opacity:.9}to{opacity:0;transform:translate(-50%,-90%) scale(1.6)}}
 .crit{position:absolute;pointer-events:none;z-index:5;transform:translate(-50%,-50%);animation:fly 1.6s ease-out forwards}
 @keyframes fly{0%{transform:translate(-50%,-30%) scale(.4);opacity:0}20%{opacity:1;transform:translate(-50%,-90%) scale(1)}100%{transform:translate(-10%,-320%) scale(.9);opacity:0}}
 .kusu{position:absolute;pointer-events:none;z-index:5;font-weight:900;color:#fff;-webkit-text-stroke:1.5px #c46a1b;font-size:calc(var(--u)*4.5);
@@ -316,6 +323,9 @@ input[type=file]{display:none}
   <h3 data-t="recH"></h3>
   <div class="note" data-t="recNote"></div>
   <div id="recList"></div>
+  <h3 data-t="sneakH"></h3>
+  <div class="note" data-t="sneakNote"></div>
+  <div class="opt" id="optSneak"><button data-v="1" data-t="on"></button><button data-v="0" data-t="offOpt"></button></div>
   <h3 id="kkH"></h3><div class="note" id="kkNote"></div><div id="kkSlot"></div>
   <button class="big" id="btnHelpClose" style="margin-top:16px;justify-content:center"><span data-t="close"></span></button>
 </div></div>
@@ -374,13 +384,15 @@ const TEXT = {
     helpTitle: 'おうちのかたへ',
     helpBody: `<p>ことばを はなしはじめた ころから あそべる かくれんぼです。</p>
 <h3>あそびかた</h3>
-<p><b>みんなを さがそう</b>: どうぶつたちが かくれたら、「もういいかい？」の ボタンを おして さがします。みみや しっぽが すこし みえています。こまったら 💡 か、しばらく まつと 「くすくす」と うごいて おしえてくれます。</p>
+<p><b>みんなを さがそう</b>: どうぶつたちが かくれたら、「もういいかい？」の ボタンを おして さがします。みみや しっぽが すこし みえています。こまったら 💡 か、しばらく まつと 「くすくす」と うごいて おしえてくれます。ときどき べつの ものかげへ こっそり おひっこし するので、よく みていてね。</p>
 <p><b>おうちで かくれんぼ</b>: おうちの へやの しゃしんを とると、その しゃしんの なかに かくれます。かぞくの かおを いれると、かぞくも かくれます。</p>
 <p><b>きみが かくれる ばん</b>: こどもが かくれる ばしょを えらび、おにさんが さがします。みつからなければ メダルが もらえます。</p>
 <p>みつけた なかまは「なかよし ずかん」に あつまります。ときどき ひみつの おともだちも かくれています。</p>`,
     voiceH: 'こえ', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。', test: '▶ ためす', voices: ['AIのこえ 1', 'AIのこえ 2', 'AIのこえ 3', 'AIのこえ 4'], dev: 'スマホの よみあげ', off: 'こえ なし',
     recH: 'おうちの ひとの こえを ろくおん', recNote: 'ろくおんすると、その ばめんでは AI の こえの かわりに ながれます（3びょうまで）。',
     rec: '● ろくおん', stop: '■ とめる', play1: '▶', del: '✕', close: 'とじる',
+    sneakH: 'こっそり おひっこし', sneakNote: '「みんなを さがそう」で さがしている あいだに、かくれている どうぶつが ときどき べつの ものかげへ はしって いどうします。はしっている ところを タッチすると「つかまえた！」。',
+    on: 'あり', offOpt: 'なし', caught: 'つかまえた！', toko: 'とことこ',
     recCats: { ready: '「もういいよー！」', mada: '「まあだだよ！」', found: '「みーつけた！」', miss: '「ここじゃないね」', clear: '「ぜんぶ みつけたね！」', here: '「ここだよー！」' },
   },
   en: {
@@ -414,13 +426,15 @@ const TEXT = {
     helpTitle: 'For parents',
     helpBody: `<p>A hide-and-seek game for little ones who are just starting to talk.</p>
 <h3>How to play</h3>
-<p><b>Find everyone</b>: once the animals hide, press "Ready or not?" and look for them. An ear or a tail is always peeking out. Press 💡, or wait a bit and they giggle and wiggle.</p>
+<p><b>Find everyone</b>: once the animals hide, press "Ready or not?" and look for them. An ear or a tail is always peeking out. Press 💡, or wait a bit and they giggle and wiggle. Now and then one sneaks off to another hiding spot, so keep watching!</p>
 <p><b>Hide & seek at home</b>: take a photo of a room and everyone hides inside it. Add family faces and the family hides too.</p>
 <p><b>Your turn to hide</b>: the child picks a hiding place and the seeker looks for them. Stay hidden to win a medal.</p>
 <p>Friends you find go into the friend book. Sometimes a secret friend is hiding too.</p>`,
     voiceH: 'Voice', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).', test: '▶ Test', voices: ['AI voice 1', 'AI voice 2', 'AI voice 3', 'AI voice 4'], dev: 'Device voice', off: 'No voice',
     recH: 'Record your own voice', recNote: 'A recording plays instead of the built-in voice for that moment (up to 3 s).',
     rec: '● Record', stop: '■ Stop', play1: '▶', del: '✕', close: 'Close',
+    sneakH: 'Sneaky moves', sneakNote: 'In “Find everyone”, a hiding animal sometimes runs to another hiding spot while your child is searching. Tap it while it runs to catch it!',
+    on: 'On', offOpt: 'Off', caught: 'Caught you!', toko: 'pitter-patter',
     recCats: { ready: '"Ready!"', mada: '"Not yet!"', found: '"Found you!"', miss: '"Not here"', clear: '"You found everyone!"', here: '"Here I am!"' },
   }
 };
@@ -837,10 +851,14 @@ let idleT = null;
 function startIdle() {
   stopIdle();
   idleT = setInterval(() => {
-    if (!G || G.busy || G.mode === 'C') return;
+    if (!G || G.busy || G.mode === 'C' || G.moving) return;
     const now = performance.now();
+    if (G.mode === 'A' && !G.photo && sneakOn) {
+      if (!G.nextMove) G.nextMove = now + SNEAK_EVERY[level] * rnd(.8, 1.2);
+      else if (now > G.nextMove && now - G.lastAct > 1500) { sneak(); return; }
+    }
     if (now - G.lastAct > G.L.idle) {
-      const h = pick(G.hs.filter(h => !h.found)); if (!h) return;
+      const h = pick(G.hs.filter(h => !h.found && h.el)); if (!h) return;
       h.el.classList.remove('peek'); void h.el.offsetWidth; h.el.classList.add('peek'); kusu(h.el);
       if (Math.random() < .5) speak('hint', undefined, 'idle');
       G.lastAct = now - G.L.idle * .4;
@@ -848,6 +866,53 @@ function startIdle() {
   }, 500);
 }
 function stopIdle() { clearInterval(idleT); idleT = null; }
+
+/* こっそり おひっこし: かくれている子が ときどき べつの ものかげへ はしる（はしる ところは みえる。タッチで つかまえられる） */
+const SNEAK_EVERY = [12000, 9000, 7000]; // むずかしさ ごとの だいたいの かんかく
+let sneakOn = store.get('kakurenbo-sneak', true);
+async function sneak() {
+  const g = G;
+  const empties = g.covers.filter(c => !c.h);
+  const cands = g.hs.filter(h => !h.found && h.el && h.spot && (h.moves || 0) < 2);
+  if (!empties.length || !cands.length) { g.nextMove = Infinity; return; }
+  const h = pick(cands), from = h.spot;
+  // いちばん とおすぎない ものかげへ（がめんを よこぎりすぎない）
+  const to = empties.map(c => [c, Math.hypot(c.x - from.x, c.y - from.y) + rnd(0, 25)]).sort((a, b) => a[1] - b[1])[0][0];
+  g.moving = h; h.moves = (h.moves || 0) + 1;
+  // よこく: すこし かおを だして くすくす
+  h.el.classList.remove('peek'); void h.el.offsetWidth; h.el.classList.add('peek'); kusu(h.el);
+  await sleep(800); if (G !== g || h.found) { g.moving = null; return; }
+  const sr = stage.getBoundingClientRect(), a = h.el.getBoundingClientRect(), b = to.el.getBoundingClientRect();
+  const H = parseFloat(h.el.style.getPropertyValue('--h')) || 10;
+  from.h = null; h.el.remove(); h.el = null; h.spot = null;
+  const r = document.createElement('div'); r.className = 'runner emo' + (b.left < a.left ? ' l' : '');
+  const dist = Math.hypot(b.left - a.left, b.top - a.top), t = Math.min(1.9, Math.max(1.2, dist / 200)); // ちいさい子にも おえる はやさ
+  r.style.cssText = `--h:${H};--t:${t}s;left:${a.left + a.width / 2 - sr.left}px;top:${a.top + a.height / 2 - sr.top}px`;
+  r.innerHTML = `<span class="in">${hiderHTML(h)}</span>`;
+  stage.appendChild(r); sfx.pop();
+  const run1 = { h, to, r, landed: false }; g.runner = run1;
+  const tk = document.createElement('div'); tk.className = 'kusu'; tk.textContent = T('toko');
+  tk.style.left = r.style.left; tk.style.top = r.style.top; stage.appendChild(tk); setTimeout(() => tk.remove(), 1500);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    r.style.left = (b.left + b.width / 2 - sr.left) + 'px'; r.style.top = (b.top + b.height * .25 - sr.top) + 'px';
+  }));
+  const steps = Math.round(t / .25);
+  for (let i = 0; i < steps; i++) {
+    await sleep(250); if (G !== g || run1.landed) { r.remove(); return; }
+    sfx.step();
+    if (i % 2 === 0) { const rr = r.getBoundingClientRect(), d = document.createElement('div'); d.className = 'dust emo'; d.textContent = '💨';
+      d.style.left = (rr.left + rr.width / 2 - sr.left) + 'px'; d.style.top = (rr.bottom - sr.top) + 'px'; stage.appendChild(d); setTimeout(() => d.remove(), 750); }
+  }
+  landRunner(g);
+  const cov = to.el.querySelector('.cov'); cov.classList.remove('wob'); void cov.offsetWidth; cov.classList.add('wob'); sfx.wob();
+}
+function landRunner(g) {
+  const run1 = g.runner; if (!run1 || run1.landed) return null;
+  run1.landed = true; run1.r.remove(); g.runner = null; g.moving = null;
+  putHider(run1.to, run1.h, g.L.vis);
+  g.lastAct = performance.now(); g.nextMove = performance.now() + SNEAK_EVERY[level] * rnd(.8, 1.2);
+  return run1.h;
+}
 function flyToSlot(h, i) {
   const from = h.el.getBoundingClientRect(), slot = $(`#slots i[data-i="${i}"]`); if (!slot) return;
   const to = slot.getBoundingClientRect();
@@ -907,6 +972,10 @@ stage.addEventListener('pointerdown', e => {
   if (G.mode === 'C') { onCTap(e); return; }
   G.lastAct = performance.now();
   if (G.photo) { onPhotoTap(e); return; }
+  if (e.target.closest('.runner') && G.runner) { // はしっている ところを つかまえた
+    const h = landRunner(G); if (h) { foundHider(h); sayBig(T('caught')); }
+    return;
+  }
   const spotEl = e.target.closest('.spot'); if (!spotEl) return;
   const c = G.covers.find(c => c.el === spotEl); if (!c) return;
   if (c.h && !c.h.found) foundHider(c.h);
@@ -914,7 +983,8 @@ stage.addEventListener('pointerdown', e => {
 });
 $('#btnHint').onclick = () => {
   if (!G || G.busy) return; audio(); sfx.tap();
-  const h = G.hs.find(h => !h.found); if (!h) return;
+  if (G.moving) return;
+  const h = G.hs.find(h => !h.found && h.el); if (!h) return;
   const el = h.spot ? h.spot.el : (h.box || h.el);
   el.classList.remove('glow'); void el.offsetWidth; el.classList.add('glow'); setTimeout(() => el.classList.remove('glow'), 2600);
   h.el.classList.remove('peek'); void h.el.offsetWidth; h.el.classList.add('peek');
@@ -1258,7 +1328,7 @@ $('#btnGames').onclick = () => { location.href = '../games/' + (lang === 'ja' ? 
 
 /* おうちのかたへ */
 function renderHelp() {
-  applyText(); renderKk();
+  applyText(); renderKk(); renderSneak();
   const vs = [1, 2, 3, 4].map(n => `<option value="ai:${n}">${T('voices')[n - 1]}</option>`).join('');
   $('#voiceSel').innerHTML = vs + `<option value="dev">${T('dev')}</option><option value="off">${T('off')}</option>`;
   $('#voiceSel').value = voiceMode;
@@ -1271,6 +1341,8 @@ function renderKk() {
   $('#kkNote').textContent = lang === 'ja' ? 'むりょうでは「もり」と「おうちで かくれんぼ」で あそべます。ぜんぶ版（買い切り）か ファミリーパスで、おうち・うみ・ゆきやま の ばめんも あそべます。広告は出しません。' : 'Free: the Woods scene and hide and seek in your own room. The full version (one-time) or the Family Pass adds the House, Beach and Snow scenes. No ads.';
   if (!$('#kkSlot').firstChild) $('#kkSlot').appendChild(Kakin.parentButton()); else $('#kkSlot').firstChild._kkUpdate();
 }
+function renderSneak() { document.querySelectorAll('#optSneak button').forEach(b => b.classList.toggle('sel', (b.dataset.v === '1') === sneakOn)); }
+$('#optSneak').onclick = e => { const b = e.target.closest('button'); if (!b) return; sneakOn = b.dataset.v === '1'; store.set('kakurenbo-sneak', sneakOn); sfx.tap(); renderSneak(); };
 $('#btnHelpClose').onclick = () => { stopRec(); $('#help').classList.remove('on'); };
 $('#voiceSel').onchange = e => { voiceMode = e.target.value; store.set('kakurenbo-voice', voiceMode); prepVoice(); };
 $('#voiceTest').onclick = () => { audio(); hush(); prepVoice(); setTimeout(() => speak('found', 0), voiceMode.startsWith('ai:') ? 500 : 0); };
