@@ -81,6 +81,7 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-a
 .zgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;overflow:auto;padding:2px 2px 8px}
 .zc{border:2px solid var(--line);background:var(--card);border-radius:18px;padding:6px 4px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 .zc canvas{width:96px;height:118px}
+.zc .zn{font-size:.95rem;font-weight:900;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .zc small{font-size:.75rem;color:var(--muted);font-weight:700}
 .zempty{text-align:center;color:var(--muted);font-weight:700;padding:30px 10px;line-height:1.8}
 /* parent */
@@ -91,6 +92,7 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-a
 .sheet select{font:inherit;padding:8px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .chip{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
+.ninp{width:100%;font:inherit;font-size:1.4rem;font-weight:900;text-align:center;padding:10px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);-webkit-user-select:text;user-select:text}
 .note{font-size:.85rem;color:var(--muted);line-height:1.6}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -129,6 +131,12 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-a
   <div class="ctl" id="ctl"></div>
 </div>
 
+<div class="ov" id="nameOv" hidden><div class="sheet">
+  <h2 id="nTitle"></h2>
+  <input class="ninp" id="nInp" maxlength="12" autocomplete="off">
+  <div class="row"><button class="chip" id="nRand"></button></div>
+  <div class="row"><button class="btn sub" id="nCancel"></button><button class="btn go" id="nOk"></button></div>
+</div></div>
 <div class="ov" id="parent" hidden><div class="sheet">
   <h2 id="pTitle"></h2>
   <label for="pLang" id="pLangL"></label>
@@ -216,7 +224,7 @@ ja:{
   stackT:'かさねよう',stackAsk:'あたまを からだの うえに のせてね',
   decoT:'かざろう',decoAsk:'すきな ものを えらんでね（ゆびで うごかせるよ）',decoOut:'そとに だすと はずれるよ',
   undo:'↩ もどす',rand:'🎲 おまかせ',fin:'⭐ できた！',
-  doneT:'できあがり！',doneAsk:n=>'ゆきだるま '+n+'ごう が できたよ！',
+  doneT:'できあがり！',doneAsk:n=>'「'+n+'」が できたよ！',rename:'✏️ なまえ',nTitle:'なまえを つける',nRand:'🎲 おまかせ',nOk:'これに する',nCancel:'やめる',renamed:n=>'なまえは「'+n+'」',
   fullAsk:(m)=>'ずかんは '+m+'こ まで。ぜんぶ版なら 60こ まで しまえるよ',swap:'いちばん ふるいのと いれかえる',swapped:'いれかえたよ！',unlock:'🔓 ぜんぶ版',
   toNight:'🌙 よるの ダンス',redeco:'🎨 きせかえ',saved:'きせかえ できたよ！',home:'🏠 メニュー',toZukan:'📖 ずかん',again:'⛄ もう1つ',make:'⛄ つくる',
   zTitle:'ゆきだるま ずかん',zEmpty:'まだ ゆきだるまが いないよ。<br>つくってみよう！',
@@ -241,7 +249,7 @@ en:{
   stackT:'Stack it',stackAsk:'Put the head on top of the body',
   decoT:'Decorate',decoAsk:'Pick anything you like (drag to move it)',decoOut:'Drag it away to take it off',
   undo:'↩ Undo',rand:'🎲 Surprise me',fin:'⭐ Done!',
-  doneT:'All done!',doneAsk:n=>'Snowman No. '+n+' is ready!',
+  doneT:'All done!',doneAsk:n=>n+' is ready!',rename:'✏️ Name',nTitle:'Name your snowman',nRand:'🎲 Pick for me',nOk:'OK',nCancel:'Cancel',renamed:n=>'New name: '+n,
   fullAsk:(m)=>'The book holds '+m+'. The full version holds 60',swap:'Replace the oldest one',swapped:'Replaced!',unlock:'🔓 Full version',
   toNight:'🌙 Night dance',redeco:'🎨 Dress up',saved:'All dressed up!',home:'🏠 Menu',toZukan:'📖 Book',again:'⛄ Make another',make:'⛄ Make one',
   zTitle:'Snowman book',zEmpty:'No snowmen yet.<br>Let\'s make one!',
@@ -266,6 +274,11 @@ const T=()=>TEXT[LANG];
 function setLang(l){LANG=l;S.lang=l;save();document.documentElement.lang=l;document.title=T().title}
 setLang(LANG);
 const FREE_MAX=6,FULL_MAX=60;
+// every snowman gets a name automatically (from the current language's list, not repeating names already in the book)
+const NAMES={ja:['ゆきまる','しろたん','ころすけ','ふわり','まるこ','ぽてまる','ゆきんこ','こおりん','もちまる','はくちゃん','ぽんた','ゆきみ','こなゆき','つららん','ころん','まっしろ','ぽよん','しずく','あられ','みぞれ','ほわほわ','ゆきお','ゆきの','まんまる','ぷにまる','ちゃぽ','ふゆこ','さくさく','ぽっぽ','きらら'],
+  en:['Snowy','Puff','Marshmallow','Button','Flurry','Chilly','Pebble','Snowball','Mochi','Sparkle','Drift','Pippin','Coco','Biscuit','Nimbus','Frostbite','Dumpling','Twinkle','Pudding','Noodle','Sleet','Cotton','Bubbles','Waffle','Jelly','Maple','Puddle','Sprinkle','Muffin','Pip']};
+function newName(skip){const used=new Set(S.men.map(m=>m.name));if(skip)used.add(skip);const list=NAMES[LANG].filter(n=>!used.has(n));return pick(list.length?list:NAMES[LANG])}
+S.men.forEach(m=>{if(!m.name)m.name=newName()});
 const cap=()=>Kakin.full()?FULL_MAX:FREE_MAX;
 
 // ================= sound =================
@@ -698,12 +711,21 @@ cv.addEventListener('pointerup',endPointer);cv.addEventListener('pointercancel',
 let lastSaved=null;
 function packMan(m){return{rb:m.rb,rh:m.rh,col:m.col,parts:m.parts.map(p=>({k:p.k,v:p.v,x:+p.x.toFixed(3),y:+p.y.toFixed(3)}))}}
 function finishMan(){if(mode!=='deco')return;mode='done';const t=T();$('pal').hidden=true;resize();sfx.fan();const L=manLayout();sparkle(W/2,H*.35,24);
-  if(D.editId){const i=S.men.findIndex(x=>x.id===D.editId);D.editId=null;if(i>=0){const rec=Object.assign({},S.men[i],packMan(MAN));S.men[i]=rec;save();lastSaved=rec;$('plTitle').textContent=t.no(rec.no);ask(t.saved);say('nice0');doneCtl();return}}
-  const rec=Object.assign({id:Date.now(),no:S.no,d:Date.now()},packMan(MAN));
-  if(S.men.length<cap()){S.men.push(rec);S.no++;save();lastSaved=rec;$('plTitle').textContent=t.doneT;ask(t.doneAsk(rec.no));say('done');doneCtl()}
+  if(D.editId){const i=S.men.findIndex(x=>x.id===D.editId);D.editId=null;if(i>=0){const rec=Object.assign({},S.men[i],packMan(MAN));S.men[i]=rec;save();lastSaved=rec;$('plTitle').textContent=rec.name;ask(t.saved);say('nice0');doneCtl();return}}
+  const rec=Object.assign({id:Date.now(),no:S.no,d:Date.now(),name:newName()},packMan(MAN));
+  if(S.men.length<cap()){S.men.push(rec);S.no++;save();lastSaved=rec;$('plTitle').textContent=rec.name;ask(t.doneAsk(rec.name));say('done');doneCtl()}
   else{lastSaved=null;MAN.pending=rec;$('plTitle').textContent=t.doneT;ask(t.fullAsk(cap()));say('full');
-    ctl([t.swap,'sub',()=>{S.men.shift();S.men.push(rec);S.no++;save();lastSaved=rec;MAN.pending=null;cheer(t.swapped);ask(t.doneAsk(rec.no));doneCtl()}],...(Kakin.full()?[]:[[t.unlock,'go',()=>Kakin.ask(()=>{if(MAN.pending&&S.men.length<cap()){S.men.push(rec);S.no++;save();lastSaved=rec;MAN.pending=null;ask(t.doneAsk(rec.no));doneCtl()}})]]),[t.toNight,'night',()=>startDance(rec)])}}
-function doneCtl(){const t=T();ctl([t.again,'sub',startRoll],[t.toZukan,'sub',()=>openZukan(true)],[t.toNight,'night',()=>startDance(lastSaved)])}
+    ctl([t.swap,'sub',()=>{S.men.shift();S.men.push(rec);S.no++;save();lastSaved=rec;MAN.pending=null;cheer(t.swapped);ask(t.doneAsk(rec.name));doneCtl()}],...(Kakin.full()?[]:[[t.unlock,'go',()=>Kakin.ask(()=>{if(MAN.pending&&S.men.length<cap()){S.men.push(rec);S.no++;save();lastSaved=rec;MAN.pending=null;ask(t.doneAsk(rec.name));doneCtl()}})]]),[t.toNight,'night',()=>startDance(rec)])}}
+function doneCtl(){const t=T();ctl(...(lastSaved?[[t.rename,'sub',()=>nameSheet(lastSaved.id)]]:[]),[t.again,'sub',startRoll],[t.toZukan,'sub',()=>openZukan(true)],[t.toNight,'night',()=>startDance(lastSaved)])}
+
+// name sheet: the name is given automatically; here a grown-up can type one, or pick another at random
+function nameSheet(id){const r=S.men.find(x=>x.id===id);if(!r)return;const t=T();$('nameOv').hidden=false;$('nTitle').textContent=t.nTitle;$('nRand').textContent=t.nRand;$('nOk').textContent=t.nOk;$('nCancel').textContent=t.nCancel;
+  const inp=$('nInp');inp.value=r.name||'';setTimeout(()=>{try{inp.focus();inp.select()}catch(e){}},50);
+  $('nRand').onclick=()=>{sfx.tap();inp.value=newName(inp.value)};
+  $('nCancel').onclick=()=>{$('nameOv').hidden=true};
+  $('nOk').onclick=()=>{const v=inp.value.trim().slice(0,12);$('nameOv').hidden=true;if(!v)return;r.name=v;if(lastSaved&&lastSaved.id===id)lastSaved.name=v;save();sfx.pop();
+    if(mode==='view'||mode==='done'){$('plTitle').textContent=v;ask(t.renamed(v))}}}
+$('nInp').addEventListener('keydown',e=>{if(e.key==='Enter')$('nOk').click()});
 
 // ================= zukan =================
 function thumbMan(c,m){const x=c.getContext('2d');const w=c.width,h=c.height;x.clearRect(0,0,w,h);const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#cfeaff');g.addColorStop(1,'#f4faff');x.fillStyle=g;x.fillRect(0,0,w,h);
@@ -711,12 +733,12 @@ function thumbMan(c,m){const x=c.getContext('2d');const w=c.width,h=c.height;x.c
 function openZukan(voice){mode='zukan';run++;hush();musicStop();show('zukan');const t=T();$('zBack').textContent=t.back;$('zTitle').textContent=t.zTitle;$('zCount').textContent=S.men.length+' / '+cap();
   const gd=$('zGrid');gd.innerHTML='';
   if(!S.men.length){gd.innerHTML=`<div class="zempty" style="grid-column:1/-1">${t.zEmpty}<br><br><button class="btn go" id="zMake">${t.make}</button></div>`;$('zMake').onclick=()=>{audio();startRoll()};if(voice)say('empty');return}
-  [...S.men].reverse().forEach(m=>{const b=document.createElement('button');b.className='zc';const c=document.createElement('canvas');c.width=192;c.height=236;b.appendChild(c);const s=document.createElement('small');s.textContent=t.no(m.no)+' · '+fmtD(m.d);b.appendChild(s);
+  [...S.men].reverse().forEach(m=>{const b=document.createElement('button');b.className='zc';const c=document.createElement('canvas');c.width=192;c.height=236;b.appendChild(c);const nm=document.createElement('b');nm.className='zn';nm.textContent=m.name||t.no(m.no);b.appendChild(nm);const s=document.createElement('small');s.textContent=t.no(m.no)+' · '+fmtD(m.d);b.appendChild(s);
     b.onclick=()=>{audio();sfx.tap();openView(m)};gd.appendChild(b);thumbMan(c,m)});
   if(voice)say('zukan')}
 const fmtD=ms=>{const d=new Date(ms);return LANG==='ja'?(d.getMonth()+1)+'/'+d.getDate():d.toLocaleDateString('en',{month:'short',day:'numeric'})};
-function openView(m){run++;hush();mode='view';const t=T();MAN=JSON.parse(JSON.stringify(m));MAN.lb=lumps();MAN.lh=lumps();playScreen(t.no(m.no),fmtD(m.d));flakes(26);ask(t.viewAsk);say('view');
-  let arm=false;ctl([t.del,'sub',(e)=>{if(!arm){arm=true;e.textContent=t.delSure;return}S.men=S.men.filter(x=>x.id!==m.id);save();sfx.poof();openZukan(false)}],[t.redeco,'go',()=>{run++;hush();D.editId=m.id;startDeco()}],[t.toNight,'night',()=>{danceFrom='zukan';startDance(m,true)}])}
+function openView(m){run++;hush();mode='view';const t=T();MAN=JSON.parse(JSON.stringify(m));MAN.lb=lumps();MAN.lh=lumps();playScreen(m.name||t.no(m.no),t.no(m.no));flakes(26);ask(t.viewAsk);say('view');
+  let arm=false;ctl([t.del,'sub',(e)=>{if(!arm){arm=true;e.textContent=t.delSure;return}S.men=S.men.filter(x=>x.id!==m.id);save();sfx.poof();openZukan(false)}],[t.rename,'sub',()=>nameSheet(m.id)],[t.redeco,'go',()=>{run++;hush();D.editId=m.id;startDeco()}],[t.toNight,'night',()=>{danceFrom='zukan';startDance(m,true)}])}
 
 // ================= 5) night dance =================
 let DN=[],danceFrom='home',STARS=[];
@@ -753,7 +775,8 @@ function danceDraw(dt,t){const now=t/1000;const g=cx.createLinearGradient(0,0,0,
   const b=beats();
   // spotlights on the beat
   const pulse=Math.pow(1-(b%1),3);for(const d of DN){if(d.row!==1)continue;const L=danceLayout(d);const sp=cx.createRadialGradient(L.x,L.gy,2,L.x,L.gy,L.U*d.m.rb*1.8);sp.addColorStop(0,`rgba(255,250,220,${.25+.2*pulse})`);sp.addColorStop(1,'rgba(255,250,220,0)');cx.fillStyle=sp;cx.fillRect(L.x-L.U*3,L.gy-L.U*2,L.U*6,L.U*4)}
-  for(const d of DN){const L=danceLayout(d);const pose=dancePose(d,b);const bl=(now+d.seed)%4<.12;if(bl)pose.blink=1;cx.save();if(d.row===0){cx.globalAlpha=.92}drawMan(cx,d.m,L.x,L.gy,L.U,pose);cx.restore()}
+  for(const d of DN){const L=danceLayout(d);const pose=dancePose(d,b);const bl=(now+d.seed)%4<.12;if(bl)pose.blink=1;cx.save();if(d.row===0){cx.globalAlpha=.92}drawMan(cx,d.m,L.x,L.gy,L.U,pose);cx.restore();
+    if(d.m.name){const fs=Math.max(11,Math.min(16,L.U*.2));cx.font=`900 ${fs}px ${getComputedStyle(document.body).fontFamily}`;cx.textAlign='center';cx.textBaseline='top';cx.fillStyle='rgba(20,30,70,.55)';const tw=cx.measureText(d.m.name).width+12;rr(L.x-tw/2,L.gy+3,tw,fs+6,8);cx.fill();cx.fillStyle='#fff';cx.fillText(d.m.name,L.x,L.gy+6)}}
   flakeDraw(dt,'rgba(255,255,255,.85)')}
 function danceTap(px,py){const b=beats();for(let k=DN.length-1;k>=0;k--){const d=DN[k];const L=danceLayout(d);const g=geom(d.m,L.x,L.gy,L.U);const top=g.hy-g.rh*1.6;
   if(px>L.x-g.rb*1.1&&px<L.x+g.rb*1.1&&py>top&&py<L.gy+6){if(b-d.tap<1.6)return;d.tap=b;sfx.boing();sparkle(L.x,g.hy-g.rh,12);sayIdle(pick(['tap0','tap1','tap2','tap3']));return}}}
