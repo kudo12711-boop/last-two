@@ -207,7 +207,7 @@ button{font:inherit;color:inherit}
 <script>
 'use strict';
 /* =========================================================
-   ふしぎな いきもの ずかん v0.4（v0.3: ごはんで みためが かわる／v0.4: であったときの ごはんは おおきく かわり、なかよしに なるか えらべる）
+   ふしぎな いきもの ずかん v0.5（v0.5: もう もっている ぶひん・にた いろでも かならず かわる／v0.3: ごはんで みためが かわる／v0.4: であったときの ごはんは おおきく かわり、なかよしに なるか えらべる）
    - 絵は1枚も使わず、生きもの・景色をすべてプログラムで描く
    - 生きもの = 8つの部品（からだ・もよう・め・くち・あたま・しっぽ・あし・はね）＋ 色
    - 2匹から 部品と色を受けつぐ子どもが 生まれる（ときどき めずらしい部品に かわる）
@@ -267,15 +267,16 @@ const DIET = [
   { h: 24, s: 90, l: 63 },  // にんじん: オレンジ、せが たかく
 ];
 // たくさん たべると ぶひんも かわる（v0.4）。きき目 .35 で 1つめ、.65 で 2つめ
-const DIET_PARTS = [
-  [['body', 'round'], ['mouth', 'tongue']],  // りんご: まんまる、ぺろり
-  [['tail', 'fin'], ['wings', 'fins']],      // さかな: さかなの しっぽ、ひれ
-  [['tail', 'fluffy'], ['top', 'bear']],     // どんぐり: ふわふわしっぽ、くまみみ
-  [['top', 'antenna'], ['wings', 'fairy']],  // はちみつ: しょっかく、ようせいの はね
-  [['body', 'drop'], ['top', 'sprout']],     // いちご: しずくがた、ふたば
-  [['top', 'bunny'], ['tail', 'nub']],       // にんじん: うさみみ、ちょこん しっぽ
+const DIET_PARTS = [ // まえから じゅんに、もう もっている ぶひんは とばして つかう（v0.5）
+  [['body', 'round'], ['mouth', 'tongue'], ['top', 'sprout'], ['pat', 'belly']],     // りんご: まんまる、ぺろり、はっぱ
+  [['tail', 'fin'], ['wings', 'fins'], ['mouth', 'o'], ['pat', 'stripes']],          // さかな: さかなの しっぽ、ひれ
+  [['tail', 'fluffy'], ['top', 'bear'], ['legs', 'paws'], ['body', 'mochi']],        // どんぐり: ふわふわしっぽ、くまみみ
+  [['top', 'antenna'], ['wings', 'fairy'], ['pat', 'stripes'], ['eyes', 'sparkle']], // はちみつ: しょっかく、はね、しましま
+  [['body', 'drop'], ['top', 'sprout'], ['pat', 'spots'], ['mouth', 'smile']],       // いちご: しずくがた、ふたば、みずたま
+  [['top', 'bunny'], ['tail', 'nub'], ['legs', 'four'], ['mouth', 'cat']],           // にんじん: うさみみ、ちょこん しっぽ
 ];
-const DIET_K = 15, DIET_STEPS = [3, 8, 15, 25, 40];
+const DIET_STAGE = [.35, .65, .88];
+const DIET_K = 10, DIET_STEPS = [2, 4, 7, 12, 20, 30];
 const FULL_MAX = 6, FULL_MS = 10 * 60 * 1000; // おなかは 6かいで いっぱい。10ぷんで 1つ へる
 const dietAmt = n => 1 - Math.exp(-(n || 0) / DIET_K);
 const lookCache = new WeakMap();
@@ -286,11 +287,22 @@ function lookG(g, fd) {
   let vx = 0, vy = 0, sa = 0, ss = 0, sl = 0;
   a.forEach((w, i) => { const r = DIET[i].h * Math.PI / 180; vx += Math.cos(r) * w; vy += Math.sin(r) * w; sa += w; ss += DIET[i].s * w; sl += DIET[i].l * w; });
   const k = clamp(Math.hypot(vx, vy) * 1.1, 0, .92), th = Math.atan2(vy, vx) * 180 / Math.PI;
-  const d = ((th - g.h1 + 540) % 360) - 180, k2 = clamp(sa * .7, 0, .7);
+  const d = ((th - g.h1 + 540) % 360) - 180, k2 = clamp(sa * .9, 0, .8);
   const o = Object.assign({}, g);
   o.h1 = (g.h1 + d * k + 360) % 360; o.s = lerp(g.s, ss / sa, k2); o.l = lerp(g.l, sl / sa, k2 * .7);
+  // もともと にた いろの ときは、こく あざやかに して ちがいを だす（v0.5）
+  const near = 1 - clamp(Math.abs(d) / 50, 0, 1);
+  if (near > 0) { o.s = clamp(o.s + 28 * k * near, 0, 92); o.l = clamp(o.l + (g.l > 60 ? -20 : 14) * k * near, 30, 90); }
   const best = {};
-  a.forEach((w, i) => DIET_PARTS[i].forEach(([cat, k], j) => { if (w >= (j ? .65 : .35) && (!best[cat] || best[cat] < w)) { best[cat] = w; o[cat] = k; } }));
+  a.forEach((w, i) => {
+    const n = DIET_STAGE.filter(v => w >= v).length; let used = 0;
+    for (const [cat, k] of DIET_PARTS[i]) {
+      if (used >= n) break;
+      if (g[cat] === k) continue; // もう もっている ぶひんは とばす
+      used++;
+      if (!best[cat] || best[cat] < w) { best[cat] = w; o[cat] = k; }
+    }
+  });
   o.dz = { blush: a[0], shine: a[1], plump: a[2], big: a[3], seeds: a[4], tall: a[5] };
   lookCache.set(g, { key, g: o }); return o;
 }
@@ -361,7 +373,7 @@ const TEXT = {
     fed: 'たべたもの: ', dietHint: 'あげた ごはんで、すこしずつ みためが かわるよ',
     dietNow: 'かわってきた: ', dietLv: ['ほんのり', 'だいぶ', 'すっかり'],
     dietFx: ['あかく まんまる、ほっぺ まっか', 'あおく つやつや、ひれと さかなの しっぽ', 'ちゃいろく まるまる、ふわふわしっぽと くまみみ', 'きんいろで おおきく、しょっかくと はね', 'ピンクの しずくがた、ふたばと つぶつぶ', 'オレンジで せが たかく、うさみみ'],
-    changed: '✨ すこし かわった！', favAte: 'だいすきな ごはん！',
+    changed: '✨ すこし かわった！', shaped: '✨ かたちが かわった！', favAte: 'だいすきな ごはん！',
   },
   en: {
     title: 'Curious Critters', sub: 'Search the bushes and make new friends',
@@ -401,7 +413,7 @@ const TEXT = {
     fed: 'Has eaten: ', dietHint: 'What it eats slowly changes how it looks',
     dietNow: 'Changing: ', dietLv: ['a little', 'quite', 'very'],
     dietFx: ['red and round, rosy cheeks', 'blue and shiny, fins and a fish tail', 'brown and chubby, fluffy tail and bear ears', 'golden and bigger, antennae and wings', 'a pink drop shape, sprout and seeds', 'orange and tall, bunny ears'],
-    changed: '✨ It changed a little!', favAte: 'Its favorite!',
+    changed: '✨ It changed a little!', shaped: '✨ Its shape changed!', favAte: 'Its favorite!',
   }
 };
 function pickLang() {
@@ -1624,12 +1636,14 @@ function feedBook(i) {
   setTimeout(() => { o.food = null; o.mood = 'eat'; o.moodUntil = now + 900; o.next = 'idle'; sfx.munch(); }, 500);
   setTimeout(() => {
     feeding = false;
+    const before = lookOf(e);
     e.fd = e.fd || [0, 0, 0, 0, 0, 0]; e.fd[i] = (e.fd[i] || 0) + 1;
+    const after = lookOf(e), shape = CATS.some(c => before[c] !== after[c]);
     const n = tummy(e); e.ful = { n: n + 1, t: n ? e.ful.t : Date.now() };
     const news = [];
     if (i === e.g.food) { o.mood = 'happy'; o.moodUntil = now + 1200; sfx.heart(); news.push(T().favAte); if (!e.fk) { e.fk = true; if (detailE === e) openDetailMeta(e); } }
     else { o.mood = 'happy'; o.moodUntil = now + 600; }
-    if (DIET_STEPS.includes(e.fd[i])) { o.spark = now; setTimeout(() => sfx.hatch(), 250); news.push(T().changed); }
+    if (shape || DIET_STEPS.includes(e.fd[i])) { o.spark = now; setTimeout(() => sfx.hatch(), 250); news.push(shape ? T().shaped : T().changed); }
     saveBook();
     if (detailE === e && detailO === o) { renderDiet(); $('#dNews').textContent = news.join(' '); }
   }, 1450);
