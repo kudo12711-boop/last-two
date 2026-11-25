@@ -274,11 +274,19 @@ const T=()=>TEXT[LANG];
 function setLang(l){LANG=l;S.lang=l;save();document.documentElement.lang=l;document.title=T().title}
 setLang(LANG);
 const FREE_MAX=6,FULL_MAX=60;
-// every snowman gets a name automatically (from the current language's list, not repeating names already in the book)
-const NAMES={ja:['ゆきまる','しろたん','ころすけ','ふわり','まるこ','ぽてまる','ゆきんこ','こおりん','もちまる','はくちゃん','ぽんた','ゆきみ','こなゆき','つららん','ころん','まっしろ','ぽよん','しずく','あられ','みぞれ','ほわほわ','ゆきお','ゆきの','まんまる','ぷにまる','ちゃぽ','ふゆこ','さくさく','ぽっぽ','きらら'],
-  en:['Snowy','Puff','Marshmallow','Button','Flurry','Chilly','Pebble','Snowball','Mochi','Sparkle','Drift','Pippin','Coco','Biscuit','Nimbus','Frostbite','Dumpling','Twinkle','Pudding','Noodle','Sleet','Cotton','Bubbles','Waffle','Jelly','Maple','Puddle','Sprinkle','Muffin','Pip']};
-function newName(skip){const used=new Set(S.men.map(m=>m.name));if(skip)used.add(skip);const list=NAMES[LANG].filter(n=>!used.has(n));return pick(list.length?list:NAMES[LANG])}
-S.men.forEach(m=>{if(!m.name)m.name=newName()});
+// every snowman gets a name automatically. The look decides the kind of name: girl-ish, boy-ish, or one that fits anyone.
+const NAMES={
+  ja:{g:['ゆきみ','ふゆこ','しずく','きらら','ゆきの','みぞれ','まるこ','ゆきちゃん','ももか','ゆきえ','ほのか','つららちゃん'],
+      b:['ゆきまる','ころすけ','ゆきお','ぽんた','もちまる','はくた','ゆきたろう','こおた','あられまる','ゆきのしん','ごろた','ぽてまる'],
+      n:['しろたん','ふわり','ころん','まんまる','ぽよん','ほわほわ','こなゆき','ぷにまる','さくさく','ぽっぽ','ちゃぽ','まっしろ','こおりん','ゆきんこ']},
+  en:{g:['Lily','Snowdrop','Twinkle','Daisy','Clara','Bella','Ivy','Rosie','Pearl','Holly','Stella','Ruby'],
+      b:['Oscar','Teddy','Benny','Jack','Leo','Toby','Charlie','Buster','Felix','Max','Archie','Ollie'],
+      n:['Snowy','Puff','Marshmallow','Button','Mochi','Pebble','Flurry','Coco','Pip','Biscuit','Dumpling','Nimbus','Sprinkle','Pudding']}};
+// look → kind. Ribbon, pink snow, hearts, cheeks lean girl-ish; top hat, bucket, blue, coal smile lean boy-ish.
+const LOOK={h5:3,p:3,e5:2,n4:2,c2:2,c1:1,h4:1,m4:0,h3:-3,h1:-2,s2:-1,b:-1,m2:-1,a3:0,n1:0};
+function kindOf(m){if(!m)return 'n';let sc=LOOK[m.col]||0;for(const p of m.parts||[])sc+=LOOK[p.v]||0;return sc>=2?'g':sc<=-2?'b':'n'}
+function newName(skip,m){const used=new Set(S.men.map(x=>x.name));if(skip)used.add(skip);const all=NAMES[LANG][kindOf(m)];const list=all.filter(n=>!used.has(n));return pick(list.length?list:all)}
+S.men.forEach(m=>{if(!m.name)m.name=newName(null,m)});
 const cap=()=>Kakin.full()?FULL_MAX:FREE_MAX;
 
 // ================= sound =================
@@ -711,8 +719,8 @@ cv.addEventListener('pointerup',endPointer);cv.addEventListener('pointercancel',
 let lastSaved=null;
 function packMan(m){return{rb:m.rb,rh:m.rh,col:m.col,parts:m.parts.map(p=>({k:p.k,v:p.v,x:+p.x.toFixed(3),y:+p.y.toFixed(3)}))}}
 function finishMan(){if(mode!=='deco')return;mode='done';const t=T();$('pal').hidden=true;resize();sfx.fan();const L=manLayout();sparkle(W/2,H*.35,24);
-  if(D.editId){const i=S.men.findIndex(x=>x.id===D.editId);D.editId=null;if(i>=0){const rec=Object.assign({},S.men[i],packMan(MAN));S.men[i]=rec;save();lastSaved=rec;$('plTitle').textContent=rec.name;ask(t.saved);say('nice0');doneCtl();return}}
-  const rec=Object.assign({id:Date.now(),no:S.no,d:Date.now(),name:newName()},packMan(MAN));
+  if(D.editId){const i=S.men.findIndex(x=>x.id===D.editId);D.editId=null;if(i>=0){const rec=Object.assign({},S.men[i],packMan(MAN));if(!rec.typed&&kindOf(rec)!==kindOf(S.men[i]))rec.name=newName(rec.name,rec);S.men[i]=rec;save();lastSaved=rec;$('plTitle').textContent=rec.name;ask(t.saved);say('nice0');doneCtl();return}}
+  const rec=Object.assign({id:Date.now(),no:S.no,d:Date.now(),name:null},packMan(MAN));rec.name=newName(null,rec);
   if(S.men.length<cap()){S.men.push(rec);S.no++;save();lastSaved=rec;$('plTitle').textContent=rec.name;ask(t.doneAsk(rec.name));say('done');doneCtl()}
   else{lastSaved=null;MAN.pending=rec;$('plTitle').textContent=t.doneT;ask(t.fullAsk(cap()));say('full');
     ctl([t.swap,'sub',()=>{S.men.shift();S.men.push(rec);S.no++;save();lastSaved=rec;MAN.pending=null;cheer(t.swapped);ask(t.doneAsk(rec.name));doneCtl()}],...(Kakin.full()?[]:[[t.unlock,'go',()=>Kakin.ask(()=>{if(MAN.pending&&S.men.length<cap()){S.men.push(rec);S.no++;save();lastSaved=rec;MAN.pending=null;ask(t.doneAsk(rec.name));doneCtl()}})]]),[t.toNight,'night',()=>startDance(rec)])}}
@@ -720,10 +728,10 @@ function doneCtl(){const t=T();ctl(...(lastSaved?[[t.rename,'sub',()=>nameSheet(
 
 // name sheet: the name is given automatically; here a grown-up can type one, or pick another at random
 function nameSheet(id){const r=S.men.find(x=>x.id===id);if(!r)return;const t=T();$('nameOv').hidden=false;$('nTitle').textContent=t.nTitle;$('nRand').textContent=t.nRand;$('nOk').textContent=t.nOk;$('nCancel').textContent=t.nCancel;
-  const inp=$('nInp');inp.value=r.name||'';setTimeout(()=>{try{inp.focus();inp.select()}catch(e){}},50);
-  $('nRand').onclick=()=>{sfx.tap();inp.value=newName(inp.value)};
+  const inp=$('nInp');inp.value=r.name||'';const r0=r.typed?null:r.name;setTimeout(()=>{try{inp.focus();inp.select()}catch(e){}},50);
+  let auto=null;$('nRand').onclick=()=>{sfx.tap();inp.value=auto=newName(inp.value,r)};
   $('nCancel').onclick=()=>{$('nameOv').hidden=true};
-  $('nOk').onclick=()=>{const v=inp.value.trim().slice(0,12);$('nameOv').hidden=true;if(!v)return;r.name=v;if(lastSaved&&lastSaved.id===id)lastSaved.name=v;save();sfx.pop();
+  $('nOk').onclick=()=>{const v=inp.value.trim().slice(0,12);$('nameOv').hidden=true;if(!v)return;r.name=v;r.typed=v!==auto&&v!==r0;if(lastSaved&&lastSaved.id===id)lastSaved.name=v;save();sfx.pop();
     if(mode==='view'||mode==='done'){$('plTitle').textContent=v;ask(t.renamed(v))}}}
 $('nInp').addEventListener('keydown',e=>{if(e.key==='Enter')$('nOk').click()});
 
