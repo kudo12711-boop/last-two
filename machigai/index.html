@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#ffe9a8">
 <title>まちがいさがし</title>
@@ -115,6 +116,12 @@ input[type=file]{display:none}
 .opt button{padding:8px 12px;border-radius:12px;background:var(--soft);font-weight:700;font-size:14px}
 .opt button.sel{background:var(--accent);color:#fff}
 </style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
 </head>
 <body>
 
@@ -211,7 +218,7 @@ const TEXT = {
     parents: 'おうちのかたへ',
     howto: '・上と下（よこ向きなら左と右）の絵で、ちがうところをタッチします。どちらの絵をタッチしてもOKです。<br>・「しゃしんで あそぶ」を選ぶと、スマホの写真から自動で「色がかわる・物が消える・さかさまになる・大きくなる・シールがふえる」などの違いを作ります。写真はこの端末の中だけで使い、どこにも送りません。<br>・見つからないときは 💡 で場所がふんわり光ります。<br>・同じ写真でも「つぎの もんだい」で違う間違いになります。',
     recH: '🎙️ ほめる こえ', recNote: 'おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。同じ場面に いくつも録音すると、毎回ランダムに えらばれます。録音はこの端末の中だけに保存されます。ひとつでも録音すると、機械の声は使わなくなります（録音していない「ぜんぶ」「ヒント」は「あたり」の録音でほめます）。録音がないときは、下で選んだ声が話します。',
-    test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた自然な声です（Kokoro-82M／Apache-2.0）。',
+    test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。',
     aiVoice: n => `AIのこえ ${n}`, devVoice: name => `スマホの読み上げ（${name}）`, noVoice: 'こえ なし（音だけ）', devTest: 'みーつけた！ すごいね！',
     fullH: '🔓 ぜんぶ版', fullNote: 'むりょうでは「のはら」と、しゃしんで あそぶ（1日2まいまで）、こえの録音が使えます。ぜんぶ版（買い切り）か ファミリーパスで、ほかの 7つの えと、しゃしんを何まいでも使えるようになります。広告は出しません。',
     close: 'とじる', takesN: n => `${n}こ`, ex: 'れい：', q: t => `「${t}」`, stop: '■ とめる', recMore: '＋ ろくおん', rec: '● ろくおん', del: 'けす',
@@ -236,7 +243,7 @@ const TEXT = {
     parents: 'For grown-ups',
     howto: '• Tap the differences between the top and bottom pictures (left and right in landscape). Tapping either picture is fine.<br>• “Play with a photo” turns a photo on this device into a puzzle, automatically adding differences such as a changed color, a missing object, something upside down, something bigger or an extra sticker. Photos stay on this device and are never sent anywhere.<br>• If your child is stuck, 💡 gently lights up the spot.<br>• “Next puzzle” makes new differences, even with the same photo.',
     recH: '🎙️ Praise voice', recNote: 'Record your own voice and the game will praise your child with it (our top tip). Record several takes per scene and one is picked at random each time. Recordings are saved only on this device. Once anything is recorded, the machine voice is no longer used (“All found” and “Hint” fall back to your “Correct” recordings). Without recordings, the voice chosen below speaks.',
-    test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI (Kokoro-82M / Apache-2.0).',
+    test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).',
     aiVoice: n => `AI voice ${n}`, devVoice: name => `Device voice (${name})`, noVoice: 'No voice (sounds only)', devTest: 'Found it! Great job!',
     fullH: '🔓 Full version', fullNote: 'Free: “Meadow”, photo mode (2 photos a day) and voice recording. The full version (one-time purchase) or the Family Pass opens the other 7 picture sets and unlimited photos. No ads.',
     close: 'Close', takesN: n => `${n}`, ex: 'e.g. ', q: t => `“${t}”`, stop: '■ Stop', recMore: '+ Record', rec: '● Record', del: 'Delete',
@@ -296,7 +303,7 @@ const sfx = {
 };
 /* こえ：①おうちの人の録音 → ②AIで作っておいた声（voice/フォルダ）→ ③端末の読み上げ の順に使う */
 // AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<場面><番号>.mp3）
-const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const AI_VOICES = { ja: ['vv_himari', 'vv_metan', 'vv_zunda', 'vv_hau'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const aiCount = cat => T().say[cat].length;
 const aiBuf = {}; // 'jf_alpha/ok0' -> AudioBuffer
 let aiSrc = null;
@@ -406,7 +413,7 @@ function pickTake(cat, list) { // おなじ声が つづかないように
 // 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
 let voiceMode = store.get('machigai-voice3', 'ai:1');
 if (store.get('machigai-voicemode', '') === 'off' && store.get('machigai-voice3', null) == null) voiceMode = 'off';
-{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+{ const i = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'].indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => AI_VOICES[LANG][(+voiceMode.slice(3) || 1) - 1] || AI_VOICES[LANG][0];
 // mode 'idle'＝おしゃべり（ほかの こえが なっていなければ だけ）。なし＝まえの こえが おわるまで まつ
 function speak(cat, mode) {

@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#ffe4ec">
 <title>ふくわらい</title>
@@ -122,6 +123,12 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 .opt button{padding:7px 12px;border-radius:14px;background:var(--soft);font-size:14px;font-weight:700}
 .opt button.sel{background:var(--accent);color:#fff}
 </style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
 </head>
 <body>
 
@@ -247,7 +254,7 @@ const T = {
     hVoice: 'こえ', hDev: 'スマホの こえ', hOff: 'なし', hSound: 'おと', hOn: 'あり', hLang: 'ことば / Language',
     moveHint: 'パーツは ゆびで うごかして なおせるよ',
     hSnap: 'ぴたっと くっつく（かんたん）', snapStrong: 'つよい', snapWeak: 'よわい', snapOff: 'なし',
-    hAbout: 'あそびかた',
+    hAbout: 'あそびかた', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。',
     hAboutT: '<b>かんたん</b>: パーツを かおの うえに おくと、ちかければ「ぴたっ」と くっつきます。<br><b>めかくし</b>: さいしょに かおを よく みてから、めかくし。おいた パーツは みえません。ぜんぶ おいたら「せーの！」で みんなで みよう。<br>おいた パーツは ゆびで うごかして、すこしずつ ばしょを なおせます（かんたんの とちゅうと、できあがった あと）。「ぴたっ」が じゃまなときは、下の せっていで よわく・なしに できます。<br>「こたえ」を おしている あいだは、もとの かおが みえます。',
     hPhoto: 'しゃしんの こと',
     hPhotoT: 'かおの いちを みつける しくみも ふくめて、ぜんぶ この きかいの なかで うごきます。しゃしんは インターネットに おくりません。つくった かおと アルバムは この きかいの ブラウザに ほぞんされます。',
@@ -271,7 +278,7 @@ const T = {
     hVoice: 'Voice', hDev: 'Device voice', hOff: 'Off', hSound: 'Sound', hOn: 'On', hLang: 'Language / ことば',
     moveHint: 'You can drag the parts to fix them',
     hSnap: 'Snap into place (Easy)', snapStrong: 'Strong', snapWeak: 'Weak', snapOff: 'Off',
-    hAbout: 'How to play',
+    hAbout: 'How to play', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).',
     hAboutT: '<b>Easy</b>: drop a part near its spot and it snaps into place.<br><b>Blindfold</b>: look at the face first, then the screen goes dark and the parts you place are hidden. When all are placed, tap the button to reveal the funny face together.<br>Drag a placed part to fine-tune where it sits (during Easy mode and after the face is finished). If snapping gets in the way, make it weaker or turn it off below.<br>Hold “Answer” to see the original face.',
     hPhoto: 'About photos',
     hPhotoT: 'Everything, including finding the face, runs on this device. Photos are never sent over the internet. Faces you make and the album are stored in this browser only.',
@@ -344,7 +351,7 @@ const sfx = {
 
 /* ---------- こえ（AIで作った声 → なければ 端末の読み上げ） ---------- */
 // AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<場面><番号>.mp3）
-const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const AI_VOICES = { ja: ['vv_himari', 'vv_metan', 'vv_zunda', 'vv_hau'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const aiBuf = {};
 function aiLoad(id) {
   const a = audio(); if (!a) return;
@@ -418,7 +425,7 @@ function tts(text, mode) {
   } catch (e) {}
 }
 let voiceMode = store.get('fuku-voice', 'ai:1'); // 'ai:1'〜'ai:4' / 'dev' / 'off'。むかしの 'ai:jf_alpha' なども よめる
-{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+{ const i = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'].indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => (AI_VOICES[lang] || AI_VOICES.ja)[(+voiceMode.slice(3) || 1) - 1] || AI_VOICES.ja[0];
 let aiSrc = null; const lastTake = {};
 // mode 'idle'＝おしゃべり（ほかの こえが なっていなければ だけ）。なし＝まえの こえが おわるまで まつ
@@ -1288,7 +1295,7 @@ function renderHelp() {
   const vb = (v, label) => `<button data-v="${v}" class="${voiceMode === v ? 'sel' : ''}">${label}</button>`;
   $('#helpBody').innerHTML = `
     <h2>${t('help')}</h2>
-    <h3>${t('hAbout')}</h3><p class="note" style="opacity:1;font-size:14px">${t('hAboutT')}</p>
+    <h3>${t('hAbout')}</h3><p class="note" style="opacity:1;font-size:14px">${t('hAboutT')}</p><p class="note">${t('voiceNote')}</p>
     <h3>${t('hVoice')}</h3>
     <div class="opt" id="vOpt">${[1, 2, 3, 4].map(n => vb('ai:' + n, 'AI ' + n)).join('')}${vb('dev', t('hDev'))}${vb('off', t('hOff'))}</div>
     <h3>${t('hSnap')}</h3>

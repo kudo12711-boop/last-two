@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#d9f2c4">
 <title>もういいかい？ かくれんぼ</title>
@@ -201,6 +202,12 @@ input[type=file]{display:none}
 #spots .foot2 .go{background:var(--accent);color:#fff}
 #spots{padding:0}
 </style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
 </head>
 <body>
 
@@ -305,6 +312,7 @@ input[type=file]{display:none}
   <div id="helpBody"></div>
   <h3 data-t="voiceH"></h3>
   <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest" data-t="test"></button></div>
+  <div class="note" data-t="voiceNote"></div>
   <h3 data-t="recH"></h3>
   <div class="note" data-t="recNote"></div>
   <div id="recList"></div>
@@ -370,7 +378,7 @@ const TEXT = {
 <p><b>おうちで かくれんぼ</b>: おうちの へやの しゃしんを とると、その しゃしんの なかに かくれます。かぞくの かおを いれると、かぞくも かくれます。</p>
 <p><b>きみが かくれる ばん</b>: こどもが かくれる ばしょを えらび、おにさんが さがします。みつからなければ メダルが もらえます。</p>
 <p>みつけた なかまは「なかよし ずかん」に あつまります。ときどき ひみつの おともだちも かくれています。</p>`,
-    voiceH: 'こえ', test: '▶ ためす', voices: ['AIのこえ 1', 'AIのこえ 2', 'AIのこえ 3', 'AIのこえ 4'], dev: 'スマホの よみあげ', off: 'こえ なし',
+    voiceH: 'こえ', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。', test: '▶ ためす', voices: ['AIのこえ 1', 'AIのこえ 2', 'AIのこえ 3', 'AIのこえ 4'], dev: 'スマホの よみあげ', off: 'こえ なし',
     recH: 'おうちの ひとの こえを ろくおん', recNote: 'ろくおんすると、その ばめんでは AI の こえの かわりに ながれます（3びょうまで）。',
     rec: '● ろくおん', stop: '■ とめる', play1: '▶', del: '✕', close: 'とじる',
     recCats: { ready: '「もういいよー！」', mada: '「まあだだよ！」', found: '「みーつけた！」', miss: '「ここじゃないね」', clear: '「ぜんぶ みつけたね！」', here: '「ここだよー！」' },
@@ -410,7 +418,7 @@ const TEXT = {
 <p><b>Hide & seek at home</b>: take a photo of a room and everyone hides inside it. Add family faces and the family hides too.</p>
 <p><b>Your turn to hide</b>: the child picks a hiding place and the seeker looks for them. Stay hidden to win a medal.</p>
 <p>Friends you find go into the friend book. Sometimes a secret friend is hiding too.</p>`,
-    voiceH: 'Voice', test: '▶ Test', voices: ['AI voice 1', 'AI voice 2', 'AI voice 3', 'AI voice 4'], dev: 'Device voice', off: 'No voice',
+    voiceH: 'Voice', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).', test: '▶ Test', voices: ['AI voice 1', 'AI voice 2', 'AI voice 3', 'AI voice 4'], dev: 'Device voice', off: 'No voice',
     recH: 'Record your own voice', recNote: 'A recording plays instead of the built-in voice for that moment (up to 3 s).',
     rec: '● Record', stop: '■ Stop', play1: '▶', del: '✕', close: 'Close',
     recCats: { ready: '"Ready!"', mada: '"Not yet!"', found: '"Found you!"', miss: '"Not here"', clear: '"You found everyone!"', here: '"Here I am!"' },
@@ -456,7 +464,7 @@ const sfx = {
 
 /* ---------- こえ: ろくおん → AIの こえ → 端末の よみあげ ---------- */
 // AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<場面><番号>.mp3）
-const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const AI_VOICES = { ja: ['vv_himari', 'vv_metan', 'vv_zunda', 'vv_hau'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const VOICE_TEXT = {
   ja: {
     intro: ['かくれんぼ、しよう！', 'みんな、かくれるよ。めを、つぶってね。'],
@@ -568,7 +576,7 @@ function pickIdx(cat, n) {
 }
 // 'ai:jf_alpha' / 'dev' / 'off'
 let voiceMode = store.get('kakurenbo-voice', 'ai:1'); // 'ai:1'〜'ai:4' / 'dev' / 'off'。むかしの 'ai:jf_alpha' なども よめる
-{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+{ const i = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'].indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => (AI_VOICES[lang] || AI_VOICES.ja)[(+voiceMode.slice(3) || 1) - 1] || AI_VOICES.ja[0];
 function playBuf(buf, mode) {
   const a = audio(); if (!a) return;

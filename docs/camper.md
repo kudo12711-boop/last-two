@@ -1,6 +1,6 @@
 # キャンピングカー世界一周
 
-最終更新: 2026-11-15 ／ いまの版: 2026-11-15 の「テレビ（Fire TV）向けの画面」まで（v0.1 → v0.2 → 以降は機能ごとに追加）
+最終更新: 2026-11-19 ／ いまの版: 2026-11-15 の「テレビ（Fire TV）向けの画面」まで（v0.1 → v0.2 → 以降は機能ごとに追加）
 
 ## ひとことで
 
@@ -163,3 +163,5 @@
 - テスト用の URL パラメータ: `?km=N`、`&pick=L1a,L2a,L4a,L6a`、`&h=時間`、`&ev=dolphin`、`&wx=天気コード`、`&temp=`、`?fast`（観光時間 ÷600）、`?allroutes`。
 - 注意: リセット時は、ページを離れる前に保存し直さないよう `st=null` にしてから再読み込みする（PR #9 の不具合）。
 - 課金（2026-11-03〜）: `tools/src.html` で `../common/kakin.js` を読み、`owns()` は `Kakin.hasPass()` でも true。お店の「ファミリーパスを見る」は `Kakin.setup({noFull: true})` で「ぜんぶ版」を出さず パスだけを案内。直すときは `tools/main.js` を直して `python3 tools/build.py <出力先>` で作り直す。
+
+- アプリの準備（2026-11-19）: `manifest.webmanifest` と `app/` の仮アイコン、`<head>` に `common/hikkoshi.js`（games.hajimaruyo.com への記録の引っ越し）。オフラインのしくみ（`common/app.js`）は入れていない（camper は自分の `sw.js` を使い、天気などネットが要るため）。`tools/src.html` にも同じタグを入れたので、作りなおしても残る。Fire TV のクッキーに入った旅は引っ越せないので、引き継ぎコードで移す。くわしくは [app-plan.md](app-plan.md)。

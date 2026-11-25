@@ -1,0 +1,30 @@
+{
+  "name": "ラスト・ツー",
+  "short_name": "ラスト・ツー",
+  "description": "最後の2人で 表情を 読み合う ババ抜き",
+  "lang": "ja",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#2c0d14",
+  "theme_color": "#2c0d14",
+  "icons": [
+    {
+      "src": "app/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "app/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "app/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
