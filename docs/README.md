@@ -40,6 +40,8 @@
 有料化とアプリ化（Google Play）の進め方: [app-plan.md](app-plan.md)
 
 ファミリーパスを グループ別にするか（提案）: [family-pass.md](family-pass.md)
+
+子ども向けアプリの 月々の売上予測（1年目の目安）: [sales-forecast.md](sales-forecast.md)
 25. **2026-11-19** 屋号「はじまるよ」・ゲームは games.hajimaruyo.com に決定。アカウントの要らない準備として、全ゲームに アプリの名札・仮アイコン・オフラインのしくみ、新しいアドレスへの記録の引っ越し（くどうさん「引っ越してください」）、プライバシーポリシーとストアの説明文の下書き。[app-plan.md](app-plan.md)
 
 「Claude のページ」は、くどうさんが claude.ai にログインしたときだけ開けます。「公開ページ」は誰でもログインなしで開けます。
