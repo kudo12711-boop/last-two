@@ -76,6 +76,14 @@ Google Play では、日本の値段に消費税（10%）が ふくまれ、そ�
 
 （計算: 値段 ÷ 1.1 × 0.85。所得税などは べつ）
 
+## 他社の実績（公表されている数字、2026-11-25 しらべ）
+
+| 会社・アプリ | わかったこと | 出典 |
+|---|---|---|
+| Piknik（Sago Mini・Toca Boca などの ぜんぶ入り定期購入、Spin Master） | 有料の契約 約47万件（2026年4〜6月、前年 約47.8万件から2%減）。Toca Boca World の月の利用者 約5,200万人。デジタルゲーム全体の売上 4,410万（ドル、3か月） | [Investing.com（Spin Master の決算資料の記事）](https://www.investing.com/news/company-news/spin-master-q2-2026-slides-profit-surge-masks-revenue-headwinds-93CH-4824899) |
+| Sago Mini World だけ | 会員数・売上は 公表なし | [Wikipedia](https://en.wikipedia.org/wiki/Sago_Mini) |
+| Pok Pok | 会員数は 公表なし。2024年6月時点で 月の定期購入の売上が「6けた（月10万ドル以上）」、1年で 会員数9倍・売上5倍、100万ダウンロード以上。社員10人（2022年）、資金 300万ドル（2022）＋600万ドル（2024） | [TechCrunch 2024](https://techcrunch.com/2024/06/18/now-a-series-a-startup-kids-app-and-digital-toy-pok-pok-is-coming-to-android)、[プレスリリース](https://playpokpok.com/res/downloads/pdfs/press-release-series-A.pdf)、[TechCrunch 2022](https://techcrunch.com/2022/06/15/edtech-company-pok-pok-raises-3m-expand-digital-play-experiences-kids) |
+
 ## これから
 
 - 値段は アプリを出す直前まで変えられます。決めるのは くどうさん。
