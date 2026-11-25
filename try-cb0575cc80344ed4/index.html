@@ -513,7 +513,7 @@ async function tapCand(i,el,my){const Q=G.Q;if(Q.done||my!==run)return;audio();
   if(i===Q.ans){Q.done=true;sfx.ok();el.classList.add('win');sparks(el);
     const keys=['ok'+rnd(4)];
     if(Q.sub==='diff'||Q.sub==='mvdiff'){ringOn(el,Q.th,c,Q.base);keys.push(catKey(Q.th,c))}
-    else [...$('grid').children].forEach((e,j)=>{if(j!==i){e.classList.add('dim');ringOn(e,Q.th,Q.cands[j],Q.base)}});
+    else [...$('grid').children].forEach((e,j)=>{if(j!==i){e.classList.add('dim')}});
     G.qi++;$('dots').children[G.qi-1]&&$('dots').children[G.qi-1].classList.add('on');
     await say(...keys);await wait(700);if(my!==run)return;
     if(G.qi>=ROUND)finish();else nextQ();return}
