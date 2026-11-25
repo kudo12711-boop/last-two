@@ -49,6 +49,7 @@ a.card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .desc{margin:0 0 8px;font-size:14px;color:var(--sub)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-size:12px;background:var(--chip);color:var(--chipInk);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.chip.trial{background:transparent;border:1px dashed var(--chipInk)}
 .pass{margin-top:28px;padding:14px 16px;border-radius:18px;background:var(--card);border:2px solid var(--line);font-size:14px;color:var(--sub);line-height:1.6}
 .pass p{margin:0 0 10px}
 footer{margin-top:36px;color:var(--sub);font-size:12px;text-align:center}
@@ -81,6 +82,8 @@ footer{margin-top:36px;color:var(--sub);font-size:12px;text-align:center}
 <script>
 // ゲームの一覧。新しいゲームを公開したら、ここに1つ足すだけで入口ページに並びます。
 // 文字はすべて下の TEXT（言語ごとの辞書）にあり、言語を足すときは TEXT に1つ足します。
+// かくしURL（try-…）のゲームも、そのURLのまま ここに足せます。hidden:true を付けると「ためし版」の札が付きます。
+// urlEn を付けると、英語のときだけ そのURLを開きます。
 var GAMES = [
   {id:"machigai",   url:"../machigai/",      icon:"🔍", color:"#ffe3a3", group:"kids"},
   {id:"meiro",      url:"../meiro/",         icon:"🐾", color:"#cdeccb", group:"kids"},
@@ -89,6 +92,10 @@ var GAMES = [
   {id:"kakurenbo",  url:"../kakurenbo/",     icon:"🙈", color:"#e6dcff", group:"kids"},
   {id:"oukoku",     url:"../oukoku/",        icon:"👑", color:"#ffd6e7", group:"kids"},
   {id:"kezuri",     url:"../kezuri/",        icon:"🎁", color:"#ffe0c2", group:"kids"},
+  {id:"hiragana",   url:"../try-c73775bbf6bb9c41/", urlEn:"../try-c73775bbf6bb9c41/?course=abcen", icon:"🔤", color:"#ffeaa8", group:"kids", hidden:true},
+  {id:"onaji",      url:"../try-cb0575cc80344ed4/", icon:"👀", color:"#d4f0e0", group:"kids", hidden:true},
+  {id:"amida",      url:"../try-b0e17c086f1b01da/", icon:"🐶", color:"#ffe1cc", group:"kids", hidden:true},
+  {id:"yukidama",   url:"../try-6c7ad175ab6aa707/", icon:"⛄", color:"#dcecff", group:"kids", hidden:true},
   {id:"lasttwo",    url:"../",               icon:"🃏", color:"#ffd2cc", group:"all"},
   {id:"nukenuke",   url:"../nukenuke-ring/", icon:"⭕", color:"#e2d6ff", group:"all"},
   {id:"todofuken",  url:"../todofuken/",     icon:"🗾", color:"#c9eef0", group:"all"},
@@ -102,7 +109,7 @@ var TEXT = {
     lead:"遊びたいゲームを えらんでね。どれも ブラウザで そのまま遊べます。",
     footer:"© kudo12711-boop",
     pass:"おうちのかたへ: 子ども向けゲームは、すこし むりょうで遊べて、「ぜんぶ版」（ゲームごとの買い切り）か「👪 ファミリーパス」（月ごと、ぜんぶのゲーム）で ぜんぶ遊べます。広告は出しません。いまは おためし版で、お金は かかりません。",
-    passBtn:"👪 ファミリーパスを見る", passOn:"👪 ファミリーパス 利用中",
+    passBtn:"👪 ファミリーパスを見る", passOn:"👪 ファミリーパス 利用中", trial:"🧪 ためし版",
     groups:{kids:["ちいさな子ども向け","2〜6さいくらい"], all:["みんなで・ひとりで","子どもから おとなまで"]},
     games:{
       machigai:  {name:"まちがいさがし", desc:"2まいの絵の ちがうところを さがそう。おうちの写真でも遊べます。", chips:["2〜5さい","ひとり"]},
@@ -112,6 +119,10 @@ var TEXT = {
       kakurenbo: {name:"もういいかい？ かくれんぼ", desc:"かくれた どうぶつを さがしたり、じぶんが かくれたり。おうちの写真でも遊べます。", chips:["2〜5さい","ひとり"]},
       oukoku:    {name:"ちいさな おうこく", desc:"プリンセス・おうじさま・きしさま・さむらいさまに なって、むらの おねがいを かなえよう。じぶんの かおで しょうぞうがも。", chips:["4〜8さい","ひとり","きせかえ"]},
       kezuri:    {name:"けずって なにかな？", desc:"ゆびで ごしごし けずると 何かが でてくるよ。あてて ずかんに あつめよう。おうちの写真でも遊べます。", chips:["2〜6さい","ひとり"]},
+      hiragana:  {name:"ひらがな あそび", desc:"しゃぼんだま・なまえ・どうぶつ・かるたで、ひらがなが 読めるように なろう。ABC の コースも あります。", chips:["3〜6さい","ひとり","おぼえる"]},
+      onaji:     {name:"おなじ？ ちがう？", desc:"おてほんと おなじ絵、ちがう絵、ちがう うごきを さがそう。シールが たまるよ。", chips:["2〜5さい","ひとり"]},
+      amida:     {name:"どうぶつ あみだくじ", desc:"はしを かけて どうぶつに ごはんを とどけよう。どこに つくか あてたり、家族で くじびきも。", chips:["3〜8さい","ひとり・みんなで"]},
+      yukidama:  {name:"ころころ ゆきだま", desc:"雪の玉を ころがして 大きくし、かさねて かざろう。夜は 雪だるまたちが ダンス！", chips:["2〜6さい","ひとり"]},
       lasttwo:   {name:"ラスト・ツー", desc:"ババ抜きの「最後の2人」。相手の表情を 読みあおう。", chips:["8さい〜","CPU・ともだち","カメラ"]},
       nukenuke:  {name:"ぬけぬけリング", desc:"ペアがそろうと 次々に抜けていく 連鎖パズル。", chips:["8さい〜","ひとり","パズル"]},
       todofuken: {name:"都道府県パズル", desc:"47都道府県の形を 日本地図に はめよう。3〜5まいの こどもステージと シールずかんつき。", chips:["4さい〜","ひとり","おぼえる"]},
@@ -124,7 +135,7 @@ var TEXT = {
     lead:"Pick a game to play. Everything runs right in your browser.",
     footer:"© kudo12711-boop · Some games are still in Japanese only.",
     pass:"For grown-ups: each kids game has a free part. Unlock everything with the game's full version (one-time) or the 👪 Family Pass (monthly, every game). No ads. This is a trial: no money is charged.",
-    passBtn:"👪 See the Family Pass", passOn:"👪 Family Pass active",
+    passBtn:"👪 See the Family Pass", passOn:"👪 Family Pass active", trial:"🧪 Trial",
     groups:{kids:["For little kids","about ages 2–6"], all:["For everyone","kids to grown-ups"]},
     games:{
       machigai:  {name:"Spot the Difference", desc:"Find what's different between two pictures. Works with your own photos too.", chips:["Ages 2–5","1 player"]},
@@ -134,6 +145,10 @@ var TEXT = {
       kakurenbo: {name:"Ready or Not? Hide & Seek", desc:"Find the hiding animals, or take your turn to hide. Works with a photo of your own room too.", chips:["Ages 2–5","1 player"]},
       oukoku:    {name:"My Little Kingdom", desc:"Be a princess, prince, knight or samurai and help the village. Paint a portrait with your own face.", chips:["Ages 4–8","1 player","Dress-up"]},
       kezuri:    {name:"Scratch & Guess", desc:"Rub with your finger to reveal a hidden picture, guess what it is, and fill your picture book. Works with family photos too.", chips:["Ages 2–6","1 player"]},
+      hiragana:  {name:"ABC Play", desc:"Learn to read letters with bubbles, names, animals and a card game. A Japanese hiragana course is included too.", chips:["Ages 3–6","1 player","Learning"]},
+      onaji:     {name:"Same or Different?", desc:"Find the picture that matches, the one that's different, or the one that moves differently. Collect stickers!", chips:["Ages 2–5","1 player"]},
+      amida:     {name:"Animal Amidakuji", desc:"Build bridges on a ladder puzzle to bring each animal its food. Guess where a path ends, or draw lots as a family.", chips:["Ages 3–8","Solo or together"]},
+      yukidama:  {name:"Roly-Poly Snowman", desc:"Roll snowballs to make them big, stack them and dress up your snowman. At night, the snowmen dance!", chips:["Ages 2–6","1 player"]},
       lasttwo:   {name:"Last Two", desc:"The final two players of Old Maid. Read each other's faces.", chips:["Ages 8+","vs CPU or friend","Camera"]},
       nukenuke:  {name:"Nuke-Nuke Ring", desc:"A chain puzzle where matching pairs pop out one after another.", chips:["Ages 8+","1 player","Puzzle"]},
       todofuken: {name:"Japan Map Puzzle", desc:"Fit all 47 prefectures onto the map of Japan. Short kids' stages and a sticker book included.", chips:["Ages 4+","1 player","Learning"]},
@@ -173,12 +188,12 @@ function render(lang){
     var grid = el("div","grid");
     GAMES.filter(function(x){return x.group===g;}).forEach(function(x){
       var t = T.games[x.id];
-      var a = el("a","card"); a.href = x.url;
+      var a = el("a","card"); a.href = (lang!=="ja" && x.urlEn) || x.url;
       var ic = el("div","icon", x.icon); ic.style.background = x.color; ic.setAttribute("aria-hidden","true");
       var b = el("div","body");
       b.appendChild(el("p","name",t.name));
       b.appendChild(el("p","desc",t.desc));
-      var c = el("div","chips"); t.chips.forEach(function(s){ c.appendChild(el("span","chip",s)); }); b.appendChild(c);
+      var c = el("div","chips"); if (x.hidden) c.appendChild(el("span","chip trial",T.trial)); t.chips.forEach(function(s){ c.appendChild(el("span","chip",s)); }); b.appendChild(c);
       a.appendChild(ic); a.appendChild(b); grid.appendChild(a);
     });
     root.appendChild(grid);
