@@ -26,7 +26,7 @@
 | けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 | ふしぎな いきもの ずかん | プログラムで描いた生きものと なかよくなって集め、2ひきから子どもを生む | v0.2 | [公開ページ](https://kudo12711-boop.github.io/last-two/ikimono/) | [ikimono.md](ikimono.md) |
 | ひらがな あそび | 幼児が字を読めるようになる（しゃぼんだま・なまえ・どうぶつ・かるた）。ひらがな・ABC（日本語の案内）・ABC（英語）の3コース | v0.3 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/)（いりぐちにも ためし版として のせている） | [hiragana.md](hiragana.md) |
-| どうぶつ あみだくじ | 幼児〜小学生向け、あみだくじで遊ぶ（はしを かけて ごはんを とどける・どこに つくか あてる・家族の くじびき） | v0.2 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-b0e17c086f1b01da/)（いりぐちにも ためし版として のせている） | [amida.md](amida.md) |
+| どうぶつ あみだくじ | 幼児〜小学生向け、あみだくじで遊ぶ（はしを かけて ごはんを とどける・どこに つくか あてる・家族の くじびき。おやつ・おてつだいは リストから えらべる） | v0.3 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-b0e17c086f1b01da/)（いりぐちにも ためし版として のせている） | [amida.md](amida.md) |
 | おなじ？ ちがう？ | 幼児向け、お手本と同じ絵・違う絵・違う動きを えらぶ（どうぶつ・アイス・のりもの・おうち・ロボット・かたち、★3段階） | v0.3 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-cb0575cc80344ed4/)（いりぐちにも ためし版として のせている） | [onaji.md](onaji.md) |
 | ころころ ゆきだま | 幼児向け、雪の玉を ころがして 大きくし、かさねて かざる。ずかんに しまい、夜は みんなで ダンス | v0.3 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-6c7ad175ab6aa707/)（いりぐちにも ためし版として のせている） | [yukidama.md](yukidama.md) |
 
