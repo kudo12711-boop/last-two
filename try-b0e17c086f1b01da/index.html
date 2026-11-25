@@ -214,7 +214,7 @@ ja:{
   l_setup:'みんなで くじびき',l_n:'なんにん？',l_kind:'なにを きめる？',
   l_kinds:{order:'🔢 じゅんばん',win:'⭐ あたり',snack:'🍪 おやつ',chore:'🧹 おてつだい',custom:'✏️ じぶんで かく'},
   l_start:'はじめる',l_ask:'すきな ところに はしを たしてね',l_open:'あける！',l_tap:'どうぶつを タッチすると すすむよ',l_all:'▶ みんな すすむ',l_new:'あたらしい くじ',l_set:'せってい',
-  l_pick:(k,n)=>'タッチして '+n+'こ えらんでね（いま '+k+'こ）',l_more:'＋ じぶんで かく',
+  l_pick:(k,n)=>'タッチして '+n+'こ えらんでね（いま '+k+'こ）。おなじものを なんかい えらんでも いいよ',l_sel:'えらんだもの（タッチで はずす）',l_more:'＋ じぶんで かく',
   l_custom:'下の ことばを かいてね（ぜんぶ版）',l_ph:n=>(n+1)+' ばんめ',
   order:i=>(i+1)+' ばん',win:'⭐ あたり',lose:'はずれ',
   snack:['🍪 クッキー','🍓 いちご','🍩 ドーナツ','🍫 チョコ','🍮 プリン','🍦 アイス','🍰 ケーキ','🍘 おせんべい','🍬 あめ','🥔 ポテトチップス','🍿 ポップコーン','🍌 バナナ','🍡 おだんご','🍎 りんご','🍇 ぶどう','🥞 ホットケーキ','🧃 ジュース','🍊 みかん'],
@@ -245,7 +245,7 @@ en:{
   l_setup:'Family lottery',l_n:'How many players?',l_kind:'What are we deciding?',
   l_kinds:{order:'🔢 Turn order',win:'⭐ One winner',snack:'🍪 Snacks',chore:'🧹 Chores',custom:'✏️ Write your own'},
   l_start:'Start',l_ask:'Add bridges anywhere you like',l_open:'Open!',l_tap:'Tap an animal to send it down',l_all:'▶ Everyone go',l_new:'New ladder',l_set:'Settings',
-  l_pick:(k,n)=>'Tap to choose '+n+' (now '+k+')',l_more:'＋ Write your own',
+  l_pick:(k,n)=>'Tap to choose '+n+' (now '+k+'). You can pick the same one more than once.',l_sel:'Chosen (tap to remove)',l_more:'＋ Write your own',
   l_custom:'Write the results (full version)',l_ph:n=>'#'+(n+1),
   order:i=>['1st','2nd','3rd','4th','5th'][i],win:'⭐ Winner!',lose:'Not this time',
   snack:['🍪 Cookie','🍓 Strawberry','🍩 Donut','🍫 Chocolate','🍮 Pudding','🍦 Ice cream','🍰 Cake','🍘 Rice cracker','🍬 Candy','🥔 Chips','🍿 Popcorn','🍌 Banana','🍡 Dango','🍎 Apple','🍇 Grapes','🥞 Pancake','🧃 Juice','🍊 Orange'],
@@ -522,7 +522,7 @@ async function chainIdle(my){while(speaking()&&my===run)await wait(100)}
 
 // ---------- mode 3: family lottery ----------
 // えらんだ おやつ・おてつだい（番号）。fill=true のときは 人数に たりない分を のこりから ランダムに たす
-function lotPick(k,fill){const P=S.lot.pick||(S.lot.pick={});let a=(P[k]||[0,1,2,3,4].slice(0,S.lot.n)).filter((v,i,x)=>v<T()[k].length&&x.indexOf(v)===i);
+function lotPick(k,fill){const P=S.lot.pick||(S.lot.pick={});let a=(P[k]||[0,1,2,3,4].slice(0,S.lot.n)).filter(v=>v<T()[k].length);  // 同じものを 何回 えらんでも よい
   if(fill){const rest=shuffle(T()[k].map((_,i)=>i).filter(i=>!a.includes(i)));while(a.length<S.lot.n&&rest.length)a.push(rest.pop())}P[k]=a;return a}
 function lotItems(n){const t=T(),k=S.lot.kind;
   if(k==='order')return Array.from({length:n},(_,i)=>({label:t.order(i)}));
@@ -537,15 +537,17 @@ function lotSetup(){mode='lotSet';run++;hush();show('pick');const t=T();$('pkBac
     <span style="font-size:1.6rem">${ANIMALS.slice(0,S.lot.n).map(a=>a[1]).join('')}</span></div>
     <div class="sec">${t.l_kind}</div><div class="row">${kinds.map(k=>`<button class="chip ${S.lot.kind===k?'on':''}" data-k="${k}">${t.l_kinds[k]}${lk(k)?' 🔒':''}</button>`).join('')}</div>`;
   if(S.lot.kind==='snack'||S.lot.kind==='chore'){const k=S.lot.kind,sel=lotPick(k).slice(0,S.lot.n);S.lot.pick[k]=sel;save();
-    h+=`<div class="note">${t.l_pick(sel.length,S.lot.n)}</div><div class="row">${t[k].map((x,i)=>`<button class="chip ${sel.includes(i)?'on':''}" data-p="${i}">${x}</button>`).join('')}${Kakin.full()?`<button class="chip" data-k="custom">${t.l_more}</button>`:''}</div>`}
+    const cnt=i=>sel.filter(v=>v===i).length;
+    h+=`<div class="note">${t.l_pick(sel.length,S.lot.n)}</div>`+(sel.length?`<div class="sec">${t.l_sel}</div><div class="row">${sel.map((v,j)=>`<button class="chip on" data-r="${j}">${t[k][v]} ✕</button>`).join('')}</div>`:'')+`<div class="row">${t[k].map((x,i)=>`<button class="chip ${cnt(i)?'on':''}" data-p="${i}">${x}${cnt(i)>1?' ×'+cnt(i):''}</button>`).join('')}${Kakin.full()?`<button class="chip" data-k="custom">${t.l_more}</button>`:''}</div>`}
   if(S.lot.kind==='custom'){h+=`<div class="note">${t.l_custom}</div><div class="labs">${Array.from({length:S.lot.n},(_,i)=>`<input class="inp" maxlength="14" data-c="${i}" placeholder="${t.l_ph(i)}" value="${(S.lot.custom[i]||'').replace(/"/g,'&quot;')}">`).join('')}</div>`}
   h+=`<button class="btn go" id="lStart">${t.l_start}</button></div>`;
   $('pkBody').innerHTML=h;
   $('pkBody').onclick=e=>{const b=e.target.closest('button');if(!b)return;audio();
     if(b.id==='lMinus'||b.id==='lPlus'){S.lot.n=Math.max(2,Math.min(5,S.lot.n+(b.id==='lPlus'?1:-1)));save();sfx.tap();lotSetup();return}
     if(b.dataset.p!=null){const k=S.lot.kind,i=+b.dataset.p,a=S.lot.pick[k];const j=a.indexOf(i);
-      // えらぶ数は 人数と おなじ。いっぱいのときは いちばん前に えらんだものと 入れかえる
-      if(j>=0){a.splice(j,1)}else{a.push(i);if(a.length>S.lot.n)a.shift()}save();sfx.tap();lotSetup();return}
+      // タッチで 1こ たす（同じものも なんかいでも）。人数より多くなったら いちばん前に えらんだものを はずす
+      a.push(i);if(a.length>S.lot.n)a.shift();save();sfx.tap();lotSetup();return}
+    if(b.dataset.r!=null){S.lot.pick[S.lot.kind].splice(+b.dataset.r,1);save();sfx.off();lotSetup();return}
     if(b.dataset.k){if(lk(b.dataset.k)){Kakin.ask();return}S.lot.kind=b.dataset.k;save();sfx.tap();lotSetup();return}
     if(b.id==='lStart'){sfx.tap();startLot()}};
   $('pkBody').oninput=e=>{const i=e.target.dataset.c;if(i!=null){S.lot.custom[+i]=e.target.value;save()}}}
