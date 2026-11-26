@@ -16,6 +16,7 @@
     {"dir": "try-cb0575cc80344ed4", "name": "おなじ？ ちがう？", "short": "おなじ", "emoji": "👀", "bg": ["#9be3b8", "#43b581"], "theme": "#fff6e6", "desc": "おてほんと おなじ え・ちがう え・ちがう うごきを えらぶ 幼児向けゲーム"},
     {"dir": "try-6c7ad175ab6aa707", "name": "ころころ ゆきだま", "short": "ゆきだま", "emoji": "⛄", "bg": ["#cfeaff", "#5aa6e6"], "theme": "#eef6ff", "desc": "ゆきだまを ころがして 大きくし、かさねて かざる 幼児向けの ゆきだるま づくり"},
     {"dir": "try-ed3c16d137084dd7", "name": "ぽーん！ ボールなげ", "short": "ボールなげ", "emoji": "🎯", "bg": ["#ffd1a1", "#ef8a5c"], "theme": "#fff6e6", "desc": "ゆびで シュッと ボールを なげて、つみきを たおす・どうぶつに たべさせる・ふうせんを わる 幼児向けゲーム"},
+    {"dir": "try-a985755ea1ec1719", "lang": "en", "name": "USA States Puzzle", "short": "USA States", "emoji": "🗺️", "bg": ["#bfe2ee", "#5a9fc0"], "theme": "#bfe2ee", "desc": "Drag the 50 US states onto the map (English version of the Japan prefecture puzzle)"},
     {"dir": "nukenuke-ring", "name": "ぬけぬけリング", "short": "ぬけぬけ", "emoji": "💫", "bg": ["#3a3480", "#1a1838"], "theme": "#1a1838", "desc": "輪になった5つの手札で ペアをそろえる 1人用パズル"},
     {"dir": "camper", "name": "キャンピングカー世界一周", "short": "キャンピング", "emoji": "🚐", "bg": ["#9fd3ff", "#6b4a33"], "theme": "#6b4a33", "desc": "放っておくと進む、車窓の 世界一周", "noOffline": true},
     {"dir": ".", "name": "ラスト・ツー", "short": "ラスト・ツー", "emoji": "🃏", "bg": ["#6e3240", "#2c0d14"], "theme": "#2c0d14", "desc": "最後の2人で 表情を 読み合う ババ抜き"}

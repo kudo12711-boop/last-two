@@ -1,0 +1,30 @@
+{
+  "name": "USA States Puzzle",
+  "short_name": "USA States",
+  "description": "Drag the 50 US states onto the map (English version of the Japan prefecture puzzle)",
+  "lang": "en",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#bfe2ee",
+  "theme_color": "#bfe2ee",
+  "icons": [
+    {
+      "src": "app/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "app/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "app/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
