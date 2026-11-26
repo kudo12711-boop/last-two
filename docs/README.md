@@ -15,7 +15,7 @@
 | ゆきどけ | 「あと一枚」の運だめし | v0.1（止まっている） | [Claude のページ](https://claude.ai/artifact/34nWk73xRYmMimZZe7sWKW) | [yukidoke.md](yukidoke.md) |
 | ぬけぬけリング | 1人用の連鎖パズル | v0.7 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
 | ラスト・ツー | 最後の2人の表情の読み合い | v1.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
-| まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類） | v0.8 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
+| まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類、年れい別） | v0.9 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
 | 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | テレビ（Fire TV）向けの画面（11/15）まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
 | ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
@@ -84,6 +84,7 @@
 36. **2026-11-19・11/25** くどうさん「まだ売り物にするには早いのではないか」→ 全ゲームとツールについて、売る前に直したいところ・磨く量（軽め／しっかり）・おすすめの順番を一覧にした。11/25「新しいゲームも含めて」で見直し、最初のアプリに入れる8本（ひらがな・ゆきだま・まちがいさがし・てんつなぎ・めいろ・おなじ？ちがう？・ふくわらい・都道府県）から磨く案に。いちばんの仕事は 遊んでもらう人を集めること。[polish-plan.md](polish-plan.md)
 37. **2026-11-26** くどうさん「再開して下さい」→ 磨きどころの順番どおり、まず ひらがな あそび v0.4（がぎぐ・きゃ・カタカナ・小文字の段階、なまえを おうちの人の声で、おうちのかたの すすみぐあい）。かくしURL のまま。[hiragana.md](hiragana.md)
 38. **2026-11-26** くどうさん「どんどん進めると上限に当たってしまうので、調整できるようにできますか？」→ 磨き込みは 1本ずつ、くどうさんの「次」で 進めることに。「次。」→ ころころ ゆきだま v0.7（雪だるまの しゃしん、ダンスの曲 3つ）。[yukidama.md](yukidama.md)
+39. **2026-11-26** 「次。」→ まちがいさがし v0.9（年れいで むずかしさが かわる、写真の違いを 🔄 で作りなおせる）。[machigai.md](machigai.md)
 
 ## お金の方針（2026-10-23 決定）
 

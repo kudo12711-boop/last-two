@@ -37,8 +37,10 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 .themes .big{width:auto;flex-direction:column;justify-content:center;gap:2px;padding:10px 2px;font-size:15px;text-align:center;border-radius:18px}
 .themes .big .ico{font-size:32px}
 .lvl{display:flex;gap:8px;align-items:center;font-size:15px}
-.lvl button{padding:10px 16px;border-radius:999px;background:var(--soft);font-weight:700}
+.lvl button{display:flex;flex-direction:column;align-items:center;line-height:1.15;padding:8px 14px;border-radius:999px;background:var(--soft);font-weight:700}
 .lvl button.sel{background:var(--accent);color:#fff}
+.lvl small{font-size:11px;font-weight:600;opacity:.8}
+#btnRemake{display:none}#game.photo #btnRemake{display:block}
 #book{width:min(420px,100%);background:var(--card);border-radius:20px;padding:12px 14px;box-shadow:var(--shadow)}
 #book b{font-size:15px}
 #bookList{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;font-size:30px;min-height:36px}
@@ -130,9 +132,9 @@ input[type=file]{display:none}
   <p class="sub" data-t="sub"></p>
 
   <div class="lvl"><span data-t="howMany"></span>
-    <button data-n="3" class="sel" data-t="n3"></button>
-    <button data-n="5" data-t="n5"></button>
-    <button data-n="7" data-t="n7"></button>
+    <button data-n="3" class="sel"><b data-t="n3"></b><small data-t="age3"></small></button>
+    <button data-n="5"><b data-t="n5"></b><small data-t="age5"></small></button>
+    <button data-n="7"><b data-t="n7"></b><small data-t="age7"></small></button>
   </div>
 
   <div class="themes">
@@ -158,6 +160,7 @@ input[type=file]{display:none}
 <section id="game" class="screen">
   <div class="bar">
     <button class="round" id="btnHome" data-ta="home">🏠</button>
+    <button class="round" id="btnRemake" data-ta="remake">🔄</button>
     <div id="stars"></div>
     <button class="round" id="btnHint" data-ta="hint">💡</button>
   </div>
@@ -209,7 +212,7 @@ const store = {
 const TEXT = {
   ja: {
     title: 'まちがいさがし', h1: ['まちがい', 'さがし'], sub: '2つの えの ちがうところを タッチしてね',
-    howMany: 'いくつ さがす？', n3: '3つ', n5: '5つ', n7: '7つ',
+    howMany: 'いくつ さがす？', n3: '3つ', n5: '5つ', n7: '7つ', age3: '2〜3さい', age5: '4さい', age7: '5さい〜', remake: 'まちがいを つくりなおす',
     th_field: 'のはら', th_sea: 'うみ', th_night: 'よぞら', th_town: 'まち', th_sweets: 'おやつ', th_forest: 'もり', th_snow: 'ふゆ', th_mix: 'まぜこぜ',
     photo: 'しゃしんで あそぶ', photoSub: 'スマホの なかの しゃしんから つくるよ', cam: 'いま とって あそぶ', camSub: 'カメラで とった しゃしんで つくるよ',
     book: 'あつめた シール', bookN: n => `（${n}まい）`, bookEmpty: 'ぜんぶ みつけると シールが もらえるよ',
@@ -234,7 +237,7 @@ const TEXT = {
   },
   en: {
     title: 'Spot the Difference', h1: ['Spot the', 'Difference'], sub: 'Tap the things that are different in the two pictures!',
-    howMany: 'How many?', n3: '3', n5: '5', n7: '7',
+    howMany: 'How many?', n3: '3', n5: '5', n7: '7', age3: 'age 2–3', age5: 'age 4', age7: 'age 5+', remake: 'Make new differences',
     th_field: 'Meadow', th_sea: 'Sea', th_night: 'Night sky', th_town: 'Town', th_sweets: 'Sweets', th_forest: 'Forest', th_snow: 'Winter', th_mix: 'Mix',
     photo: 'Play with a photo', photoSub: 'Made from a photo on this phone', cam: 'Take a photo now', camSub: 'Made from a photo you take',
     book: 'My stickers', bookN: n => `(${n})`, bookEmpty: 'Find them all to get a sticker!',
@@ -772,10 +775,13 @@ function placeObjs(theme, count) {
 }
 // 間違いの種類。ちがう種類がなるべく まんべんなく出るようにえらぶ
 const SCENE_KINDS = ['color', 'hide', 'size', 'swap', 'flip', 'rot', 'move', 'face', 'count', 'part', 'extra'];
+// 年れいで つかう まちがいを かえる（ちいさい子は ひと目で わかるものだけ）
+const SCENE_BY_LV = [['color', 'hide', 'size', 'swap'], ['color', 'hide', 'size', 'swap', 'flip', 'move', 'face', 'count'], SCENE_KINDS.filter(k => k !== 'extra')];
+const lvOf = n => n >= 7 ? 2 : n >= 5 ? 1 : 0;
 function applyKind(kind, o, def, theme, mod) {
   if (kind === 'color') { const cs = def.cols.filter(c => c !== o.col); o.col = cs.length ? pick(cs) : pick(PAL.filter(c => c !== o.col)); return true; }
   if (kind === 'hide') { o.hidden = true; return true; }
-  if (kind === 'size') { o.s *= Math.random() < .5 ? .55 : 1.45; return true; }
+  if (kind === 'size') { const big = mod.lv === 0 ? [.45, 1.6] : [.55, 1.45]; o.s *= Math.random() < .5 ? big[0] : big[1]; return true; }
   if (kind === 'swap') {
     const ts = THEMES[theme].types.concat(THEMES[theme].sky || []).filter(t => t !== o.type); if (!ts.length) return false;
     const t = pick(ts); o.type = t; o.col = pick(OBJ[t].cols); delete o.n; delete o.acc; return true;
@@ -798,7 +804,7 @@ function applyKind(kind, o, def, theme, mod) {
 }
 function makeScenePuzzle(theme, n) {
   const objs = placeObjs(theme, Math.max(11, n + 6));
-  const mod = objs.map(o => ({ ...o }));
+  const mod = objs.map(o => ({ ...o })); mod.lv = lvOf(n);
   const diffs = [], used = {};
   const order = shuffle(mod.map((_, i) => i));
   const leastUsed = list => { const m = Math.min(...list.map(k => used[k] || 0)); return shuffle(list.filter(k => (used[k] || 0) === m)); };
@@ -817,7 +823,7 @@ function makeScenePuzzle(theme, n) {
       }
       if (diffs.length >= n) break;
     }
-    for (const kind of [...leastUsed(SCENE_KINDS.filter(k => k !== 'extra')), 'color']) {
+    for (const kind of [...leastUsed(SCENE_BY_LV[mod.lv]), 'color']) {
       if (!applyKind(kind, o, def, theme, mod)) continue;
       used[kind] = (used[kind] || 0) + 1;
       if (kind === 'move') {
@@ -893,7 +899,7 @@ function feathered(r, inner, paint) {
   x.fillStyle = g; x.fillRect(0, 0, c.width, c.height);
   return c;
 }
-function makePhotoPuzzle(base, n) {
+function makePhotoPuzzle(base, n, avoid = []) {
   const w = base.width, h = base.height, m = Math.min(w, h);
   const r = m * (n >= 7 ? .085 : n >= 5 ? .1 : .12);
   const info = analyze(base);
@@ -903,7 +909,9 @@ function makePhotoPuzzle(base, n) {
   for (let y = r * 1.1; y < h - r * 1.1; y += g)
     for (let x = r * 1.1; x < w - r * 1.1; x += g) {
       const a = info(x, y, r);
-      cands.push({ x, y, ...a, score: a.busy + a.sat * 40 + rnd(0, 25) });
+      // つくりなおしのときは、まえと おなじ場所を さける
+      const near = avoid.some(d => Math.hypot(d.x * w - x, d.y * h - y) < r * 1.5);
+      cands.push({ x, y, ...a, score: a.busy + a.sat * 40 + rnd(0, 25) - (near ? 80 : 0) });
     }
   cands.sort((a, b) => b.score - a.score);
   const spots = [];
@@ -915,7 +923,8 @@ function makePhotoPuzzle(base, n) {
   }
   const B = document.createElement('canvas'); B.width = w; B.height = h;
   const cb = B.getContext('2d'); cb.drawImage(base, 0, 0);
-  let kinds = shuffle(['color', 'sticker', 'erase', 'flip', 'big', 'mirror', 'small', 'color', 'sticker']);
+  const lv = lvOf(n);
+  let kinds = shuffle(lv === 0 ? ['sticker', 'color', 'erase', 'sticker', 'color'] : lv === 1 ? ['color', 'sticker', 'erase', 'big', 'small', 'color', 'sticker'] : ['color', 'sticker', 'erase', 'flip', 'big', 'mirror', 'small', 'color', 'sticker']);
   const diffs = [];
   spots.forEach((s, idx) => {
     let kind = kinds[idx % kinds.length];
@@ -977,13 +986,13 @@ function makePhotoPuzzle(base, n) {
 
 /* ---------- ゲーム ---------- */
 document.addEventListener('pointerdown', () => { if (voiceMode.startsWith('ai:')) aiLoad(aiId()); }, { once: true, capture: true });
-let N = 3, cur = null, src = null; // src = {theme} or {base}
+let N = [3, 5, 7].includes(+store.get('machigai-n', 3)) ? +store.get('machigai-n', 3) : 3, cur = null, src = null; // src = {theme} or {base}
 const cvA = $('#cvA'), cvB = $('#cvB'), picA = $('#picA'), picB = $('#picB');
 let lastFind = 0;
 
-document.querySelectorAll('.lvl button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.lvl button').forEach(x => x.classList.toggle('sel', x === b)); N = +b.dataset.n; sfx.tap();
-});
+const selN = () => document.querySelectorAll('.lvl button').forEach(x => x.classList.toggle('sel', +x.dataset.n === N));
+selN();
+document.querySelectorAll('.lvl button').forEach(b => b.onclick = () => { N = +b.dataset.n; store.set('machigai-n', N); selN(); sfx.tap(); });
 /* 課金（../common/kakin.js、いまは おためし）: むりょうは のはら ＋ しゃしん1日2まい */
 const FREE_THEMES = ['field'], FREE_PHOTOS = 2;
 const themeOpen = th => FREE_THEMES.includes(th) || Kakin.full();
@@ -1013,11 +1022,12 @@ for (const id of ['#filePhoto', '#fileCam']) $(id).onchange = async e => {
 
 function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
 
-async function newRound() {
+async function newRound(avoid) {
+  $('#game').classList.toggle('photo', !!src.base);
   if (src.base) {
     $('#busy').classList.add('on');
     await new Promise(r => setTimeout(r, 30));
-    cur = makePhotoPuzzle(src.base, N);
+    cur = makePhotoPuzzle(src.base, N, avoid);
     $('#busy').classList.remove('on');
   } else cur = makeScenePuzzle(src.theme === 'mix' ? pick(THEME_KEYS) : src.theme, N);
   cur.found = cur.diffs.map(() => false);
@@ -1118,7 +1128,7 @@ $('#btnHint').onclick = () => {
   if (!cur) return;
   const i = cur.found.findIndex(f => !f); if (i < 0) return;
   sfx.tap(); speak('hint', 'idle');
-  const d = cur.diffs[i], ox = rnd(-.5, .5) * d.r, oy = rnd(-.5, .5) * d.r * cur.w / cur.h;
+  const d = cur.diffs[i], k = lvOf(cur.diffs.length) === 0 ? .15 : .5, ox = rnd(-k, k) * d.r, oy = rnd(-k, k) * d.r * cur.w / cur.h;
   for (const p of [picA, picB]) {
     const rc = p.getBoundingClientRect(), size = d.r * 5 * rc.width;
     const h = document.createElement('div'); h.className = 'hint';
@@ -1128,7 +1138,10 @@ $('#btnHint').onclick = () => {
 };
 // しばらく見つからないときは 💡 をゆらして教える
 setInterval(() => {
-  if (cur && $('#game').classList.contains('on') && Date.now() - lastFind > 25000) {
+  // 2〜3さいは はやめに（15びょう）、30びょうで ひとりでに ヒントを出す
+  const wait = Date.now() - lastFind, young = cur && lvOf(cur.diffs.length) === 0;
+  if (young && wait > 30000 && $('#game').classList.contains('on') && !$('#clear').classList.contains('on')) { $('#btnHint').onclick(); lastFind = Date.now() - 15000; return; }
+  if (cur && $('#game').classList.contains('on') && wait > (young ? 15000 : 25000)) {
     const b = $('#btnHint'); b.classList.remove('shake'); void b.offsetWidth; b.style.animation = 'pop .6s'; setTimeout(() => b.style.animation = '', 700);
   }
 }, 5000);
@@ -1157,6 +1170,8 @@ function confetti() {
   })(t0);
 }
 $('#btnNext').onclick = () => { sfx.tap(); newRound(); };
+// しゃしんの まちがいが わかりにくいとき、おうちの人が つくりなおせる（まえと ちがう場所に）
+$('#btnRemake').onclick = () => { if (!cur || !src || !src.base) return; sfx.tap(); newRound(cur.diffs); };
 $('#btnBack').onclick = $('#btnHome').onclick = () => { sfx.tap(); hush(); $('#clear').classList.remove('on'); show('title'); renderBook(); };
 $('#btnHelp').onclick = () => { $('#help').classList.add('on'); initVoiceUI(); };
 $('#btnHelpClose').onclick = () => { if (recording) recording.stop(); $('#help').classList.remove('on'); };
