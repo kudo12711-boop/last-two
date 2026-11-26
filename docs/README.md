@@ -22,7 +22,7 @@
 | てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（35まい、点は最大60こ） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
 | ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき、まぜこぜ顔） | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
 | もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
-| ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、3つのステージ、着せかえと肖像画つき | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
+| ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、3つのステージ、着せかえと肖像画つき | v0.7 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
 | けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 | ふしぎな いきもの ずかん | プログラムで描いた生きものと なかよくなって集め、2ひきから子どもを生む。あげた ごはんで 色も形も かわる | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/ikimono/) | [ikimono.md](ikimono.md) |
 | ひらがな あそび | 幼児が字を読めるようになる（しゃぼんだま・なまえ・どうぶつ・かるた）。ひらがな・ABC（日本語の案内）・ABC（英語）の3コース。がぎぐ・きゃ・カタカナ・小文字の段階も | v0.4 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/)（いりぐちにも ためし版として のせている） | [hiragana.md](hiragana.md) |

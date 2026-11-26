@@ -148,6 +148,7 @@ h1.logo{font-size:clamp(34px,10vw,56px);margin:0;text-align:center;letter-spacin
   text-align:center;position:relative;max-height:calc(100vh - 40px);overflow:auto}
 .card .who{font-size:64px;line-height:1;margin-top:-4px}
 .card .say{font-size:20px;font-weight:700;margin:8px 0 4px;line-height:1.5}
+.card .say.story{font-size:15px;font-weight:600;background:#fff6e8;border-radius:14px;padding:8px 12px;color:#6a4a3a;line-height:1.6}
 .card .note{color:var(--sub);font-size:14px;margin:0 0 14px}
 .card .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .x{position:absolute;top:8px;right:10px;border:0;background:transparent;font-size:26px;color:var(--sub);width:44px;height:44px}
@@ -325,6 +326,8 @@ var TEXT = {
     namePh:"なまえ（なくてもOK）", nameNote:"おうちのひとが いれてね",
     photoNote:"じぶんの かおの しゃしんで あそべます。しゃしんは この スマホの なかだけに しまわれて、ほかには おくられません。",
     photoPick:"しゃしんを えらぶ", photoOff:"しゃしんを やめる", photoUse:"これにする", photoZoom:"おおきさ", photoDrag:"ゆびで うごかして かおを まるに あわせてね",
+    stories:["こんどの まんげつの よる、おしろで ぶとうかいが あるの。みんなの おねがいを かなえて ハートを あつめたら、ぶとうかいの はじまりだよ！","うみべの おうこくでは、あらしで ふねが こわれちゃったの。みんなを たすけて、うみの おまつりを ひらこう！","ゆきの おうこくは さむくて、みんな げんきが ないみたい。おねがいを かなえて、ひかりの おまつりを ひらこう！"],
+    ends:["ぶとうかいは だいせいこう！ みんなで たのしく おどったよ。","ふねが なおって、うみの おまつりが はじまったよ！","ゆきの おまつりに ひかりが ともったよ。どの おうこくも えがおで いっぱい！"],
     welcome:"ようこそ、{t}！\nここは あなたの ちいさな おうこく。むらの みんなの おねがいを きいてあげてね。",
     welcomeSam:"ようこそ、ひがしの くにから きた {t}！\nここは ちいさな おうこく。むらの みんなの おねがいを きいてあげてね。",
     help:"てつだう！", later:"あとで", thanks:"ありがとう、{t}！", backKingdom:"おうこくに もどる",
@@ -383,6 +386,8 @@ var TEXT = {
     namePh:"Name (optional)", nameNote:"A grown-up can type it",
     photoNote:"Play with a photo of your own face. The photo stays only on this device and is never sent anywhere.",
     photoPick:"Choose a photo", photoOff:"Stop using photo", photoUse:"Use this", photoZoom:"Size", photoDrag:"Drag with your finger to fit the face in the circle",
+    stories:["On the next full moon there will be a royal ball at the castle. Grant everyone's wishes and collect hearts, and the ball can begin!","A storm broke the boats in the Seaside Kingdom. Help everyone, and let's hold the sea festival!","The Snow Kingdom is cold, and everyone feels a little sad. Grant their wishes and let's hold the festival of lights!"],
+    ends:["The royal ball was a big success! Everyone danced happily.","The boats are fixed, and the sea festival has begun!","The festival of lights is glowing. Every kingdom is full of smiles!"],
     welcome:"Welcome, {t}!\nThis is your little kingdom. Please help everyone in the village.",
     welcomeSam:"Welcome, {t} from the Eastern Land!\nThis is the little kingdom. Please help everyone in the village.",
     help:"I'll help!", later:"Later", thanks:"Thank you, {t}!", backKingdom:"Back to the kingdom",
@@ -645,8 +650,10 @@ function avatarSVG(look, role, opt){
   p.push('<rect x="92" y="106" width="16" height="14" fill="'+skin+'"/>');
   var useFace = face && layer!=="top";
   if(face){
-    p.push('<clipPath id="'+id+'c"><circle cx="100" cy="80" r="38"/></clipPath><circle cx="100" cy="80" r="39.5" fill="'+skin+'"/>');
-    if(layer==="all") p.push('<image href="'+face+'" x="62" y="42" width="76" height="76" clip-path="url(#'+id+'c)" preserveAspectRatio="xMidYMid slice"/>');
+    // しゃしんの かお（v0.7）: ふちを ぼかして はだの いろに なじませ、ほっぺを のせて キャラの かおに みえるように
+    p.push('<clipPath id="'+id+'c"><circle cx="100" cy="80" r="38"/></clipPath><radialGradient id="'+id+'g"><stop offset=".72" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient><mask id="'+id+'m"><circle cx="100" cy="80" r="38" fill="url(#'+id+'g)"/></mask><circle cx="100" cy="80" r="39.5" fill="'+skin+'"/>');
+    if(layer==="all") p.push('<image href="'+face+'" x="62" y="42" width="76" height="76" clip-path="url(#'+id+'c)" mask="url(#'+id+'m)" preserveAspectRatio="xMidYMid slice"/>'+
+      '<ellipse cx="76" cy="96" rx="7" ry="4.5" fill="#ff9aa8" opacity=".35"/><ellipse cx="124" cy="96" rx="7" ry="4.5" fill="#ff9aa8" opacity=".35"/>');
   } else {
     p.push('<circle cx="100" cy="80" r="38" fill="'+skin+'"/>'+
       '<ellipse cx="86" cy="84" rx="4.5" ry="6" fill="#3a2a2a"/><ellipse cx="114" cy="84" rx="4.5" ry="6" fill="#3a2a2a"/>'+
@@ -915,8 +922,8 @@ function enterKingdom(){
   if(!S.welcomed){
     S.welcomed=true; save();
     var msg=fmt(S.role==="samurai"?T().welcomeSam:T().welcome,{t:titleOf()});
-    var c=dialog('<div class="who">🏰</div><p class="say">'+esc(msg).replace(/\n/g,"<br>")+'</p><div class="btns"><button class="big" id="wOk">OK</button></div>');
-    c.querySelector("#wOk").onclick=closeDialog; voice("welcome_"+S.role, msg);
+    var c=dialog('<div class="who">🏰</div><p class="say">'+esc(msg).replace(/\n/g,"<br>")+'</p><p class="say story">📖 '+esc(T().stories[0])+'</p><div class="btns"><button class="big" id="wOk">OK</button></div>');
+    c.querySelector("#wOk").onclick=closeDialog; voice("welcome_"+S.role, msg); voice("story_0", T().stories[0]);
   }
 }
 $("#btnEnd").onclick=function(){
@@ -1035,12 +1042,12 @@ function showEnding(){
   sfx("deco"); confetti(30,["🎉","✨","⭐","💖","👑","🎆"]);
   var last=stageNo()>=STAGES.length-1;
   var m=fmt(last?T().allMsg:T().endMsg,{t:titleOf()}), next=last?"":fmt(T().stageNext,{s:T().stages[stageNo()+1]});
-  var c=dialog('<div class="who">👑</div><p class="say" style="font-size:24px">'+esc(last?T().allTitle:T().stageClear)+'</p><p class="say" style="font-size:17px">'+esc(m)+(next?'<br>'+esc(next):'')+'</p>'+
+  var c=dialog('<div class="who">👑</div><p class="say" style="font-size:24px">'+esc(last?T().allTitle:T().stageClear)+'</p><p class="say story">📖 '+esc(T().ends[stageNo()])+'</p><p class="say" style="font-size:17px">'+esc(m)+(next?'<br>'+esc(next):'')+'</p>'+
     '<p style="font-size:34px;margin:4px 0 14px">'+stageRes().map(function(r){ return r.emo; }).join("")+'</p>'+
     '<div class="btns" style="flex-direction:column;align-items:center">'+(last?'':'<button class="big" id="eN">'+(stageOpen(stageNo()+1)?'':'🔒 ')+esc(T().nextStage)+'</button>')+
     '<button class="big'+(last?'':' sub')+'" id="eP">'+esc(T().endPaint)+'</button>'+
     '<button class="big sub" id="eL">'+esc(T().endLook)+'</button></div>');
-  voice(last?"all_clear":"stage_clear", (last?T().allTitle:T().stageClear)+" "+m+" "+next);
+  voice("end_"+stageNo(), T().ends[stageNo()]); voice(last?"all_clear":"stage_clear", (last?T().allTitle:T().stageClear)+" "+m+" "+next);
   c.querySelector("#eL").onclick=closeDialog;
   if(!last) c.querySelector("#eN").onclick=function(){ closeDialog(); goStage(stageNo()+1); };
   c.querySelector("#eP").onclick=function(){ closeDialog(); renderGallery(); show("gallery"); $("#galNew").click(); };
@@ -1051,8 +1058,8 @@ function goStage(n){
   S.active=shuffle(STAGES[n].slice()).slice(0,3); save();
   renderKingdom(); sfx("win"); confetti(16,["✨","⭐","💖",["🌸","🌊","❄️"][n]]);
   var msg=fmt(n===0?T().stageBack:T().stageArrive,{s:T().stages[n]});
-  var c=dialog('<div class="who">'+["🌸","🌊","❄️"][n]+'</div><p class="say">'+esc(msg)+'</p><p style="font-size:34px;margin:4px 0 14px">'+stageRes().map(function(r){ return r.emo; }).join("")+'</p><div class="btns"><button class="big" id="sOk">OK</button></div>');
-  c.querySelector("#sOk").onclick=closeDialog; voice("stage_"+n, msg);
+  var c=dialog('<div class="who">'+["🌸","🌊","❄️"][n]+'</div><p class="say">'+esc(msg)+'</p><p class="say story">📖 '+esc(T().stories[n])+'</p><p style="font-size:34px;margin:4px 0 14px">'+stageRes().map(function(r){ return r.emo; }).join("")+'</p><div class="btns"><button class="big" id="sOk">OK</button></div>');
+  c.querySelector("#sOk").onclick=closeDialog; voice("stage_"+n, msg); voice("story_"+n, T().stories[n]);
 }
 $("#newKBtn").onclick=function(){
   sfx("tap");
