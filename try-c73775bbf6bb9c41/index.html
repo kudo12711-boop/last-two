@@ -122,7 +122,25 @@ h2{margin:6px 12px 0;font-size:1.1rem}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 select,.panel input{font:inherit;font-size:1rem;padding:8px 10px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:50;animation:cheer 2.6s forwards;white-space:nowrap}
+.bub.two{font-size:2.5rem;letter-spacing:-.04em}
+.tile.two{font-size:2.1rem;letter-spacing:-.04em}
+.slot.two{font-size:1.8rem;letter-spacing:-.06em}
+.zk.two{font-size:1.35rem;letter-spacing:-.06em}
+#sets{align-self:center}
+#sets button{padding:6px 12px;font-size:1.05rem;white-space:nowrap}
+#sets .lk{font-size:.65rem;margin-left:1px;vertical-align:.15em}
+.prog{display:flex;flex-direction:column;gap:8px}
+.pbar{display:flex;align-items:center;gap:8px;font-weight:700}
+.pbar .nm{min-width:4.2em}
+.pbar .bar{flex:1;height:12px;border-radius:999px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.pbar .bar i{display:block;height:100%;background:var(--leaf);border-radius:999px}
+.pbar .n{font-variant-numeric:tabular-nums;min-width:4.5em;text-align:right;font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px 9px;font-weight:900;font-size:1.15rem}
+.chips em{font-style:normal;font-size:.75rem;color:var(--muted);margin-left:3px;font-weight:700}
+.recdot{display:inline-block;width:.8em;height:.8em;border-radius:50%;background:#e23;margin-right:6px;animation:glow .6s infinite alternate}
 @media (max-width:520px){
+  .bub.two{font-size:2rem}.tile.two{font-size:1.75rem}.slot.two{font-size:1.35rem}
   .bub{width:88px;height:88px;font-size:2.7rem}
   .tile{width:78px;height:78px;font-size:2.5rem}
   .slot{width:58px;height:58px;font-size:2rem}
@@ -145,6 +163,7 @@ select,.panel input{font:inherit;font-size:1rem;padding:8px 10px;border-radius:1
 <section class="screen" id="home">
   <div class="top"><div class="seg" id="courses" role="group" aria-label="course"><button data-c="hira">あいう</button><button data-c="abcja">ABC<small>にほんご</small></button><button data-c="abcen">ABC<small>English</small></button></div><span class="grow"></span><button class="rb" id="btnSnd"></button></div>
   <h1 class="logo" id="logo"></h1>
+  <div class="seg" id="sets" role="group" aria-label="letters"></div>
   <div class="modes">
     <button class="mode m1" data-mode="shabon"><span class="ic">🫧</span><span data-t="m1"></span><small data-t="m1s"></small></button>
     <button class="mode m2" data-mode="namae"><span class="ic">🧒</span><span data-t="m2"></span><small data-t="m2s"></small></button>
@@ -184,9 +203,15 @@ select,.panel input{font:inherit;font-size:1rem;padding:8px 10px;border-radius:1
 <section class="screen" id="parent" hidden>
   <div class="top"><button class="rb" id="pBack" data-t="back"></button></div>
   <div class="panel">
+    <h3 data-t="pProg"></h3>
+    <div class="prog" id="pProg"></div>
+  </div>
+  <div class="panel">
     <h3 data-t="pName"></h3>
     <p data-t="pNameNote"></p>
     <div class="row"><input id="pNameIn" maxlength="8" aria-label="name"><button class="btn" id="pNameSave" data-t="save"></button></div>
+    <p data-t="pRecNote"></p>
+    <div class="row"><button class="btn sub" id="pRec"></button><button class="btn sub" id="pRecPlay" data-t="recPlay"></button><button class="btn sub" id="pRecDel" data-t="recDel"></button><span id="pRecMsg"></span></div>
   </div>
   <div class="panel">
     <h3 data-t="pVoice"></h3>
@@ -231,12 +256,47 @@ const SCRIPT={
     similar:['MWN','EF','OQCG','PRB','IL','UV','DO','KX','VW'],
     norm:s=>s.toUpperCase(),valid:/^[A-Z]+$/},
 };
+// ---- もじの なかま（v0.4）: ひらがな → がぎぐ（濁音・半濁音）→ きゃ（ねじれる音）→ カタカナ／ABC → abc（小文字）
+const DAKU='がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ'.split('');
+const YOUON='きゃ きゅ きょ しゃ しゅ しょ ちゃ ちゅ ちょ にゃ にゅ にょ ひゃ ひゅ ひょ みゃ みゅ みょ りゃ りゅ りょ ぎゃ ぎゅ ぎょ じゃ じゅ じょ びゃ びゅ びょ ぴゃ ぴゅ ぴょ'.split(' ');
+const h2k=w=>w.replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+96));
+const KATA=KANA.map(h2k);
+const abc=ABC.map(c=>c.toLowerCase());
+const SETS={
+  ja:[
+    {id:'sei',letters:KANA,key:i=>'k'+i,order:SCRIPT.ja.order,similar:SCRIPT.ja.similar,form:w=>w},
+    {id:'daku',letters:DAKU,key:i=>'d'+i,form:w=>w,
+      order:'がござぞどばぶぼぐげじずだでびべぎぜぱぽぴぷぺぢづ'.split(''),
+      similar:['ばぱ','びぴ','ぶぷ','べぺ','ぼぽ','じぢ','ずづ','ぎざ','ぐぺ','ぶぷふ']},
+    {id:'you',letters:YOUON,key:i=>'j'+i,form:w=>w,
+      order:'きゃ きゅ きょ しゃ しゅ しょ にゃ にゅ にょ みゃ みゅ みょ ちゃ ちゅ ちょ りゃ りゅ りょ ひゃ ひゅ ひょ じゃ じゅ じょ ぎゃ ぎゅ ぎょ びゃ びゅ びょ ぴゃ ぴゅ ぴょ'.split(' '),
+      similar:['きゃぎゃ','きゅぎゅ','きょぎょ','しゃじゃちゃ','しゅじゅちゅ','しょじょちょ','ひゃびゃぴゃ','ひゅびゅぴゅ','ひょびょぴょ']},
+    {id:'kata',letters:KATA,key:i=>'k'+i,form:h2k,  // 声は ひらがなと 同じ（カ＝か）
+      order:'アイウエオカクコシツテトノヘモランマヤユヨスソタナニハヒフミムリロキケサセチヌネルヲホワレメ'.split(''),
+      similar:['シツ','ソンリ','ウワ','クタケ','コユ','ナメ','ヌスフ','ルレ','チテ','マム','ヲラ','ノメ','シミ','ハへ','カヤ','エユ','ホオ','サセ','トヒ']},
+  ],
+  en:[
+    {id:'upper',letters:ABC,key:i=>'a'+i,order:SCRIPT.en.order,similar:SCRIPT.en.similar,form:w=>w},
+    {id:'lower',letters:abc,key:i=>'a'+i,form:w=>w.toLowerCase(),  // 声は 大文字と 同じ（a＝A）
+      order:'oxszcuvwkmtaeilhrnfjydbpqg'.split(''),
+      similar:['bdpq','mnh','ilj','uvwy','ceo','ao','nr','gq','ft','hn','ij']},
+  ],
+};
+const setsOf=L=>SETS[L];
+const allSets=()=>SETS.ja.concat(SETS.en);
+function setOf(ch){for(const st of allSets())if(st.letters.includes(ch))return st;return null}
+// ことばを 字の まとまりに わける（きゃ は 1つ）
+function tok(w){const out=[],a=[...w];for(let i=0;i<a.length;i++){const two=a[i]+(a[i+1]||'');if(a[i+1]&&YOUON.includes(two)){out.push(two);i++}else out.push(a[i])}return out}
+const two=k=>[...k].length>1?' two':'';
 const ANIMALS={
   ja:[['inu','いぬ','🐶','わんわん'],['neko','ねこ','🐱','にゃーん'],['usi','うし','🐮','もー'],['saru','さる','🐵','うきき'],['kame','かめ','🐢','のっそり'],['tako','たこ','🐙','にょろにょろ'],
     ['kuma','くま','🐻','がおー'],['uma','うま','🐴','ひひーん'],['kani','かに','🦀','ちょきちょき'],['tori','とり','🐦','ぴよぴよ'],['ari','あり','🐜','てくてく'],['hati','はち','🐝','ぶんぶん'],
     ['ika','いか','🦑','すいすい'],['wani','わに','🐊','がぶっ'],['sika','しか','🦌','ぴょーん'],['risu','りす','🐿️','かりかり'],['kitune','きつね','🦊','こんこん'],['hebi','へび','🐍','しゅるしゅる'],
     ['koara','こあら','🐨','すやすや'],['iruka','いるか','🐬','きゅいきゅい'],['hiyoko','ひよこ','🐤','ぴよぴよ'],['kaeru','かえる','🐸','けろけろ'],['usagi','うさぎ','🐰','ぴょんぴょん'],
-    ['kirin','きりん','🦒','もぐもぐ'],['sakana','さかな','🐟','すいすい'],['raion','らいおん','🦁','がおー'],['fukurou','ふくろう','🦉','ほーほー']],
+    ['kirin','きりん','🦒','もぐもぐ'],['sakana','さかな','🐟','すいすい'],['raion','らいおん','🦁','がおー'],['fukurou','ふくろう','🦉','ほーほー'],
+    // v0.4: がぎぐ・きゃ の ある どうぶつ
+    ['zou','ぞう','🐘','ぱおーん'],['buta','ぶた','🐷','ぶーぶー'],['gorira','ごりら','🦍','うほうほ'],['pengin','ぺんぎん','🐧','よちよち'],['rakuda','らくだ','🐫','のしのし'],
+    ['tokage','とかげ','🦎','ちょろちょろ'],['kingyo','きんぎょ','🐠','ひらひら'],['hyou','ひょう','🐆','がるる'],['tyoutyo','ちょうちょ','🦋','ひらひら'],['kyouryuu','きょうりゅう','🦖','がおー']],
   en:[['dog','DOG','🐶','Woof woof!'],['cat','CAT','🐱','Meow!'],['cow','COW','🐮','Moo!'],['pig','PIG','🐷','Oink oink!'],['fox','FOX','🦊','Yip yip!'],['hen','HEN','🐔','Cluck cluck!'],
     ['bee','BEE','🐝','Buzz buzz!'],['owl','OWL','🦉','Hoo hoo!'],['ant','ANT','🐜','March march!'],['bat','BAT','🦇','Flap flap!'],['yak','YAK','🐂','Grunt!'],['emu','EMU','🐦','Boom boom!'],
     ['duck','DUCK','🦆','Quack quack!'],['frog','FROG','🐸','Ribbit!'],['bear','BEAR','🐻','Grr!'],['lion','LION','🦁','Roar!'],['fish','FISH','🐟','Splash!'],['goat','GOAT','🐐','Maa!'],
@@ -296,6 +356,12 @@ for(const L of ['ja','en']){
 // ================= UI text =================
 const TEXT={
   ja:{title:'ひらがな あそび',logo:'ひらがなあそび',m1:'しゃぼんだま',m1s:'きいて タッチ',m2:'なまえの もじ',m2s:'じぶんの なまえを よもう',m3:'どうぶつ よぼう',m3s:'もじを あつめよう',m4:'かるた',m4s:'おうちの人や ロボと',
+    setName:{sei:'あいう',daku:'がぎぐ',you:'きゃ',kata:'アイウ',upper:'ABC',lower:'abc'},
+    pProg:'すすみぐあい',progN:(n,N)=>`⭐⭐⭐ ${n} / ${N}`,progNear:'もうすこしで おぼえる 字',progHard:'まちがえやすい 字',missN:n=>`×${n}`,progNone:'まだ ありません',
+    progNote:'おなじ字に 3かい あたると「おぼえた（⭐⭐⭐）」に なります。まちがえやすい 字は、しゃぼんだまで よく でるように なっています。きろくは この端末にだけ あります。',
+    pRecNote:'おうちの人の 声で おこさんの なまえを 録音すると、「なまえの もじ」で 読めたときに その声で よびます（AI の声は なまえを 読めないため）。4びょう まで。録音は この端末の中だけに 保存し、どこにも 送りません。',
+    recStart:'🎙 なまえを 録音',recStop:'とめる',recAgain:'🎙 録音しなおす',recPlay:'▶ きく',recDel:'けす',recHint:'なまえを よんでください…',recSaved:'録音しました',recShort:'みじかすぎました。もういちど',recDeleted:'けしました',
+    recNo:'この ブラウザでは 録音できません',recDenied:'マイクが つかえませんでした（ブラウザの せっていで マイクを ゆるしてください）',
     zukan:'📖 もじ ずかん',parent:'⚙️ おうちのかた',back:'← もどる',again:'🔊',lang:'English',sndOn:'🔊',sndOff:'🔇',
     star:n=>'⭐ '+n,animalsN:n=>'🐾 '+n+'ひき',zCount:(a,b)=>`おぼえた もじ ${a} / ${b}`,zLetters:'もじ（3かい あたると ⭐⭐⭐）',zAnimals:'どうぶつ ずかん',
     ask:k=>`「<span class="k">${k}</span>」は どれ？`,askWho:'だれかな？',come:w=>w+' が きたよ！',more:'シャボンだまが ふえるよ！',
@@ -307,11 +373,17 @@ const TEXT={
     pVoice:'こえ',test:'▶ ためす',pVoiceNote:'「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。声は とちゅうで きれずに、さいごまで よみあげます。',
     aiVoice:n=>'AIのこえ '+n,devVoice:'端末の よみあげ',noVoice:'こえ なし',
     pHow:'このゲームについて',
-    how:'声で きいた ひらがなを さがして タッチする あそびです。形が わかりやすい字から はじめ、「ぬ・め」「わ・れ・ね」のように 似ている字は あとから でてきます。おなじ字に 3かい あたると「もじ ずかん」に ⭐⭐⭐ が つきます。まちがえても しかられず、字の 名前を おしえてくれます。',
+    how:'声で きいた ひらがなを さがして タッチする あそびです。形が わかりやすい字から はじめ、「ぬ・め」「わ・れ・ね」のように 似ている字は あとから でてきます。おなじ字に 3かい あたると「もじ ずかん」に ⭐⭐⭐ が つきます。まちがえても しかられず、字の 名前を おしえてくれます。ホームの「あいう／がぎぐ／きゃ／アイウ」で、てんてん・まる の字（が・ぱ）、ねじれる音（きゃ・しゅ）、カタカナに すすめます。おすすめは あいう → がぎぐ → きゃ → アイウ の じゅんです。',
     pShop:'もっと あそぶ',pReset:'きろくを けす',pResetBtn:'おぼえた もじ・ずかんを けす',pResetSure:'もういちど おすと けします',pResetDone:'けしました',
     kkFree:['もじ しゃぼんだま（ぜんぶ）','なまえの もじ（じぶんの なまえ）','どうぶつ よぼう（6ぴき）','かるた（おうちの人と）','もじ ずかん'],
-    kkFull:['どうぶつ よぼう（27ひき）','なまえの もじ（かぞくの なまえ 6こ）','かるた（ロボと たいせん）']},
+    kkFull:['がぎぐ（てんてん・まる 25もじ）','きゃ（ねじれる音 33こ）','カタカナ（46もじ）','どうぶつ よぼう（37ひき）','なまえの もじ（かぞくの なまえ 6こ）','かるた（ロボと たいせん）']},
   en:{title:'ABC Play',logo:'ABC Play',m1:'Letter Bubbles',m1s:'Listen and tap',m2:'My Name',m2s:'Read your own name',m3:'Call the Animals',m3s:'Collect the letters',m4:'Card Grab',m4s:'With a grown-up or robot',
+    setName:{sei:'あいう',daku:'がぎぐ',you:'きゃ',kata:'アイウ',upper:'ABC',lower:'abc'},
+    pProg:'Progress',progN:(n,N)=>`⭐⭐⭐ ${n} / ${N}`,progNear:'Almost learned',progHard:'Often mixed up',missN:n=>`×${n}`,progNone:'None yet',
+    progNote:'Three right answers on a letter mark it as learned (⭐⭐⭐). Letters that are often mixed up come up more in Letter Bubbles. Progress is kept only on this device.',
+    pRecNote:"Record your child's name in your own voice. When your child reads their name in My Name, the game calls them with your recording (AI voices cannot read names). Up to 4 seconds. Saved only on this device and never sent anywhere.",
+    recStart:'🎙 Record name',recStop:'Stop',recAgain:'🎙 Record again',recPlay:'▶ Play',recDel:'Delete',recHint:'Say the name now…',recSaved:'Recorded',recShort:'Too short. Please try again',recDeleted:'Deleted',
+    recNo:'This browser cannot record',recDenied:'The microphone could not be used (allow it in the browser settings)',
     zukan:'📖 Letter book',parent:'⚙️ Grown-ups',back:'← Back',again:'🔊',lang:'日本語',sndOn:'🔊',sndOff:'🔇',
     star:n=>'⭐ '+n,animalsN:n=>'🐾 '+n,zCount:(a,b)=>`Letters learned ${a} / ${b}`,zLetters:'Letters (3 right answers = ⭐⭐⭐)',zAnimals:'Animal book',
     ask:k=>`Where is <span class="k">${k}</span>?`,askWho:'Who is it?',come:w=>w+' is here!',more:'More bubbles!',
@@ -323,10 +395,10 @@ const TEXT={
     pVoice:'Voice',test:'▶ Try',pVoiceNote:'“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0). Voices always finish speaking and are never cut off.',
     aiVoice:n=>'AI voice '+n,devVoice:'Device voice',noVoice:'No voice',
     pHow:'About this game',
-    how:'Children hear a letter and find it. Easy shapes come first, and look-alikes (M/W, E/F, P/R/B) come later. Three right answers on a letter give it ⭐⭐⭐ in the letter book. Wrong answers are never scolded; the game just names the letter that was tapped.',
+    how:'Children hear a letter and find it. Easy shapes come first, and look-alikes (M/W, E/F, P/R/B) come later. Three right answers on a letter give it ⭐⭐⭐ in the letter book. Wrong answers are never scolded; the game just names the letter that was tapped. Use “ABC / abc” on the home screen to move on to lowercase letters (b/d/p/q come late).',
     pShop:'Play more',pReset:'Clear progress',pResetBtn:'Clear letters and animal book',pResetSure:'Tap again to clear',pResetDone:'Cleared',
     kkFree:['Letter Bubbles (all)','My Name (own name)','Call the Animals (6 animals)','Card Grab (with a grown-up)','Letter book'],
-    kkFull:['Call the Animals (27 animals)','My Name (6 family words)','Card Grab (vs. the robot)']},
+    kkFull:['Lowercase letters (abc)','Call the Animals (27 animals)','My Name (6 family words)','Card Grab (vs. the robot)']},
 };
 
 TEXT.abcja=Object.assign({},TEXT.ja,{title:'ABC あそび',logo:'ABCあそび',
@@ -334,9 +406,9 @@ TEXT.abcja=Object.assign({},TEXT.ja,{title:'ABC あそび',logo:'ABCあそび',
   zCount:(a,b)=>`おぼえた ABC ${a} / ${b}`,zLetters:'アルファベット（3かい あたると ⭐⭐⭐）',
   nameQ:'おこさんの なまえを ローマじ（A〜Z）で いれてください（れい: YUTO）',nameNote:'じぶんの なまえの ABC から おぼえます。あとから「おうちのかた」で かえられます。',
   pNameNote:'ローマじ（A〜Z）で いれてください（れい: YUTO）。この端末にだけ ほぞんされます。',
-  how:'日本語の声で「○は どれかな？」と きき、アルファベットは 英語の発音で 読みます。形が わかりやすい字から はじめ、M・W、E・F、P・R・B のように 似ている字は あとから でてきます。どうぶつ・かぞく・かるたは 英語の ことば（DOG、MOM、A is for apple など）で、日本語の いみも 出ます。おなじ字に 3かい あたると ⭐⭐⭐。',
+  how:'ホームの「ABC／abc」で 小文字に すすめます（b・d・p・q は あとから）。日本語の声で「○は どれかな？」と きき、アルファベットは 英語の発音で 読みます。形が わかりやすい字から はじめ、M・W、E・F、P・R・B のように 似ている字は あとから でてきます。どうぶつ・かぞく・かるたは 英語の ことば（DOG、MOM、A is for apple など）で、日本語の いみも 出ます。おなじ字に 3かい あたると ⭐⭐⭐。',
   kkFree:['しゃぼんだま（ぜんぶ）','なまえの ABC（じぶんの なまえ）','どうぶつ よぼう（6ぴき）','かるた（おうちの人と）','もじ ずかん'],
-  kkFull:['どうぶつ よぼう（27ひき）','なまえの ABC（かぞくの ことば 6こ）','かるた（ロボと たいせん）']});
+  kkFull:['小文字（abc）','どうぶつ よぼう（27ひき）','なまえの ABC（かぞくの ことば 6こ）','かるた（ロボと たいせん）']});
 // ================= courses =================
 // 1つのアプリに 3つのコース。ui = 案内の ことば／声、scr = おぼえる 文字
 const COURSES={
@@ -346,12 +418,14 @@ const COURSES={
 };
 // ================= store =================
 const KEY='hiragana-v1';
-let S={course:null,voice:'ai:1',snd:true,name:{},got:{},zukan:{},unlock:{}};
+let S={course:null,voice:'ai:1',snd:true,name:{},got:{},zukan:{},unlock:{},set:{},unl:{},miss:{}};
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s){S=Object.assign(S,s);
   // v0.1 の きろく（ja / en）を コースへ うつす
   for(const f of ['name','got','zukan','unlock']){const o=S[f]||{};if('ja' in o){o.hira=o.hira??o.ja;delete o.ja}if('en' in o){o.abcen=o.abcen??o.en;delete o.en}S[f]=o}
   if(!S.course&&S.lang)S.course=S.lang==='en'?'abcen':'hira';delete S.lang}}catch(e){}
-for(const c in COURSES){S.name[c]=S.name[c]||'';S.got[c]=S.got[c]||{};S.zukan[c]=S.zukan[c]||[];S.unlock[c]=S.unlock[c]||6}
+for(const c in COURSES){S.name[c]=S.name[c]||'';S.got[c]=S.got[c]||{};S.zukan[c]=S.zukan[c]||[];S.unlock[c]=S.unlock[c]||6;S.miss[c]=S.miss[c]||{};
+  const L=COURSES[c].scr;S.unl[c]=S.unl[c]||{};S.unl[c][SETS[L][0].id]=S.unl[c][SETS[L][0].id]||S.unlock[c];  // v0.3 までの unlock は さいしょの なかま
+  if(!SETS[L].some(st=>st.id===S.set[c]))S.set[c]=SETS[L][0].id}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function pickCourse(){const q=new URLSearchParams(location.search);const c=q.get('course');if(COURSES[c])return c;
   if(q.get('lang')==='en')return 'abcen';if(q.get('lang')==='ja')return 'hira';
@@ -361,7 +435,11 @@ function pickCourse(){const q=new URLSearchParams(location.search);const c=q.get
 let COURSE=pickCourse(),UI,SCR,LANG;
 function setCourse(c){COURSE=c;UI=COURSES[c].ui;SCR=COURSES[c].scr;LANG=UI;S.course=c;save()}
 setCourse(COURSE);
-const T=()=>TEXT[COURSE==='abcja'?'abcja':UI];const SC=()=>SCRIPT[SCR];
+const T=()=>TEXT[COURSE==='abcja'?'abcja':UI];
+// いま えらんでいる もじの なかま（なかまは ぜんぶ版。むりょうは さいしょの なかま だけ）
+const setFree=st=>st===SETS[SCR][0];
+const setOpen=st=>setFree(st)||Kakin.full();
+const SC=()=>{let st=SETS[SCR].find(x=>x.id===S.set[COURSE])||SETS[SCR][0];if(!setOpen(st))st=SETS[SCR][0];return Object.assign({},SCRIPT[SCR],st)};
 const mean=id=>COURSE==='abcja'&&JA_MEAN[id]?'（'+JA_MEAN[id]+'）':'';
 
 // ================= sound =================
@@ -373,21 +451,22 @@ const sfx={pop:()=>{tone(880,.08,'triangle');tone(1320,.1,'triangle',.05)},ok:()
 // ---- voice: a queue. Lines always play to the end; a tap never cuts the voice off.
 const AI_VOICES={ja:['vv_himari','vv_metan','vv_zunda','vv_hau'],en:['af_heart','af_bella','bf_emma','am_michael']};
 // 文字・どうぶつ・かぞく・よみふだ は おぼえる ことばの 声、ほかは 案内の 声
-const keyLang=k=>/^(k\d+|a\d+|an_|f_|y\d+)/.test(k)?SCR:UI;
+const keyLang=k=>/^(k\d+|a\d+|d\d+|j\d+|an_|f_|y\d+)/.test(k)?SCR:UI;
 const aiId=L=>AI_VOICES[L][(+S.voice.slice(3)||1)-1]||AI_VOICES[L][0];
 const buf={};
 function load(k){const a=audio();const id=aiId(keyLang(k))+'/'+k;if(!a)return Promise.resolve(null);
   if(!buf[id])buf[id]=fetch(`voice/${id}.mp3?v=1`).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(b=>new Promise((res,rej)=>a.decodeAudioData(b,res,rej))).catch(()=>null);
   return buf[id]}
 function prep(keys){if(S.voice.startsWith('ai:'))keys.forEach(load)}
-function letterKey(ch){const i=SC().letters.indexOf(ch);return i<0?null:SC().key(i)}
-function textOf(k){if(/^[ka]\d+$/.test(k))return SC().letters[+k.slice(1)]||'';return LINES[keyLang(k)][k]||''}
+function letterKey(ch){const st=setOf(ch);if(!st)return null;return st.key(st.letters.indexOf(ch))}
+function textOf(k){const m=/^([kadj])(\d+)$/.exec(k);if(m)return ({k:KANA,a:ABC,d:DAKU,j:YOUON})[m[1]][+m[2]]||'';return LINES[keyLang(k)][k]||''}
 const devV={};function pickV(){try{const v=speechSynthesis.getVoices();for(const want of ['ja','en'])devV[want]=v.find(x=>x.lang.toLowerCase().startsWith(want)&&/Kyoko|O-ren|Samantha|Google/i.test(x.name))||v.find(x=>x.lang.toLowerCase().startsWith(want))||null}catch(e){}}
 try{pickV();speechSynthesis.onvoiceschanged=pickV}catch(e){}
 function ttsPlay(text,L){return new Promise(res=>{try{const u=new SpeechSynthesisUtterance(text);u.lang=L==='ja'?'ja-JP':'en-US';if(devV[L])u.voice=devV[L];u.rate=L==='ja'?.9:.85;u.pitch=1.15;
   let done=false;const fin=()=>{if(!done){done=true;res()}};u.onend=fin;u.onerror=fin;setTimeout(fin,600+text.length*260);speechSynthesis.speak(u)}catch(e){res()}})}
 let curSrc=null,gen=0;
 async function playOne(k,g){
+  if(k==='@rec'){if(S.snd)await playRec(g);return}
   if(!S.snd||S.voice==='off'){await wait(250);return}
   if(S.voice.startsWith('ai:')){const b=await load(k);if(g!==gen)return;if(b){const a=audio();await new Promise(res=>{try{const s=a.createBufferSource();s.buffer=b;s.connect(a.destination);curSrc=s;let done=false;const fin=()=>{if(!done){done=true;curSrc=null;res()}};s.onended=fin;setTimeout(fin,b.duration*1000+400);s.start()}catch(e){res()}});return}}
   if(g!==gen)return;await ttsPlay(textOf(k),keyLang(k));
@@ -406,10 +485,13 @@ const praise=()=>'ok'+rnd(4);
 function cheer(text){const c=document.createElement('div');c.className='cheer';c.textContent=text;$('stage').appendChild(c);setTimeout(()=>c.remove(),1700)}
 function toast(text){const t=document.createElement('div');t.className='toast';t.textContent=text;document.body.appendChild(t);setTimeout(()=>t.remove(),2700)}
 function shake(el){el.classList.remove('no');void el.offsetWidth;el.classList.add('no')}
-const sim=(a,b)=>SC().similar.some(g=>g.includes(a)&&g.includes(b));
-function distractors(target,n,pool,avoidSim=true){const out=[];
-  for(const src of [shuffle(pool),shuffle(SC().letters)])for(const k of src){if(out.length>=n)break;if(k===target||out.includes(k)||(avoidSim&&sim(k,target)))continue;out.push(k)}
+const sim=(a,b)=>{const st=setOf(a);return !!st&&st===setOf(b)&&(st.similar||[]).some(g=>g.includes(a)&&g.includes(b))};
+// まちがいの こうほ: おなじ なかまの 字から（似ている字は さける）
+function distractors(target,n,pool,avoidSim=true){const out=[];const st=setOf(target)||SC();
+  pool=pool.filter(k=>setOf(k)===st);
+  for(const src of [shuffle(pool),shuffle(st.letters)])for(const k of src){if(out.length>=n)break;if(k===target||out.includes(k)||(avoidSim&&sim(k,target)))continue;out.push(k)}
   return out}
+function missLetter(ch){const m=S.miss[COURSE];m[ch]=(m[ch]||0)+1;save()}
 function sparks(x,y,parent){for(let i=0;i<8;i++){const s=document.createElement('div');s.className='spark';s.textContent=['✨','⭐','💧'][i%3];
   const a=i/8*Math.PI*2;s.style.left=x+'px';s.style.top=y+'px';s.style.setProperty('--dx',Math.cos(a)*70+'px');s.style.setProperty('--dy',Math.sin(a)*70+'px');parent.appendChild(s);setTimeout(()=>s.remove(),850)}}
 // a right answer for a letter; 3 = learned
@@ -417,9 +499,10 @@ function gotLetter(ch){const g=S.got[COURSE];const was=g[ch]||0;g[ch]=was+1;save
   if(was<3&&g[ch]>=3){toast(T().learnedT(ch));return true}return false}
 const learnedCount=()=>SC().letters.filter(k=>(S.got[COURSE][k]||0)>=3).length;
 // letters a child is working on: the first N of the teaching order
-function pool(){return SC().order.slice(0,Math.max(4,Math.min(SC().order.length,S.unlock[COURSE]||6)))}
+const unlockN=()=>S.unl[COURSE][SC().id]||6;
+function pool(){return SC().order.slice(0,Math.max(4,Math.min(SC().order.length,unlockN())))}
 function pickTarget(p,last){const w=p.map(k=>k===last?0:1/(1+(S.got[COURSE][k]||0)));let s=w.reduce((a,b)=>a+b,0),r=Math.random()*s;for(let i=0;i<p.length;i++){r-=w[i];if(r<=0)return p[i]}return p[0]}
-function tileButtons(container,opts,onTap){container.innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.className='tile';b.textContent=o;b.onpointerdown=e=>{e.preventDefault();onTap(b,o)};container.appendChild(b)})}
+function tileButtons(container,opts,onTap){container.innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.className='tile'+two(o);b.textContent=o;b.onpointerdown=e=>{e.preventDefault();onTap(b,o)};container.appendChild(b)})}
 
 // ================= screens =================
 let mode=null,run=0; // run changes every time a play starts or stops, so old timers do nothing
@@ -429,7 +512,11 @@ function renderHome(){const t=T();document.documentElement.lang=LANG;document.ti
   $('logo').innerHTML=[...t.logo].map(c=>`<span>${c===' '?'&nbsp;':c}</span>`).join('');
   document.querySelectorAll('[data-t]').forEach(el=>{const v=t[el.dataset.t];if(typeof v==='string')el.textContent=v});
   $('btnSnd').textContent=S.snd?t.sndOn:t.sndOff;
-  document.querySelectorAll('#courses button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===COURSE));}
+  document.querySelectorAll('#courses button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===COURSE));
+  const cur=SC().id;$('sets').innerHTML=SETS[SCR].map(st=>`<button data-s="${st.id}" aria-pressed="${st.id===cur}">${t.setName[st.id]}${setOpen(st)?'':'<span class="lk">🔒</span>'}</button>`).join('');}
+$('sets').onclick=e=>{const b=e.target.closest('button');if(!b)return;audio();const st=SETS[SCR].find(x=>x.id===b.dataset.s);if(!st)return;
+  if(!setOpen(st)){Kakin.ask();return}sfx.tap();S.set[COURSE]=st.id;save();renderHome();
+  const k=st.key(st.letters.indexOf(st.order[0]));prep([k]);if(!speaking())say(k)};
 document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{audio();sfx.tap();startMode(b.dataset.mode)});
 $('btnHome').onclick=goHome;$('zBack').onclick=goHome;$('pBack').onclick=goHome;
 $('courses').onclick=e=>{const b=e.target.closest('button');if(!b||b.dataset.c===COURSE)return;audio();sfx.tap();setCourse(b.dataset.c);setupKakin();renderHome()};
@@ -453,7 +540,7 @@ async function round1(r){if(r!==run)return;
   const p=pool();S1.target=pickTarget(p,S1.last);S1.last=S1.target;
   const ks=shuffle([S1.target,...distractors(S1.target,S1.n-1,p)]);
   const W=sky.clientWidth,H=sky.clientHeight,size=W<520?88:110,lane=W/ks.length;
-  ks.forEach((k,i)=>{const el=document.createElement('div');el.className='bub';el.textContent=k;el.setAttribute('role','button');el.setAttribute('aria-label',k);
+  ks.forEach((k,i)=>{const el=document.createElement('div');el.className='bub'+two(k);el.textContent=k;el.setAttribute('role','button');el.setAttribute('aria-label',k);
     const b={el,k,base:Math.max(0,Math.min(W-size,lane*(i+.5)-size/2)),y:H*(.2+.55*Math.random()),ph:Math.random()*6,sp:.35+Math.random()*.25,size};
     el.onpointerdown=e=>{e.preventDefault();tap1(b)};sky.appendChild(el);S1.bubs.push(b)});
   $('ask').innerHTML=T().ask(S1.target);
@@ -465,14 +552,14 @@ function loop1(){const sky=$('sky');if(!sky)return;const H=sky.clientHeight;
   for(const b of S1.bubs){if(b.gone)continue;b.y-=b.sp;b.ph+=.02;if(b.y<-b.size)b.y=H+10;b.el.style.transform=`translate(${b.base+Math.sin(b.ph)*16}px,${b.y}px)`}
   S1.raf=requestAnimationFrame(loop1)}
 async function tap1(b){audio();if(S1.lock||b.gone)return;const r=run;
-  if(b.k!==S1.target){sfx.ng();shake(b.el);S1.streak=0;
+  if(b.k!==S1.target){sfx.ng();shake(b.el);S1.streak=0;missLetter(S1.target);
     if(!speaking())say(...(LANG==='ja'?['sore',letterKey(b.k)]:['sore',letterKey(b.k)]),...askKeys(S1.target));return}
   S1.lock=true;b.gone=true;sfx.pop();
   const R=$('sky').getBoundingClientRect(),rr=b.el.getBoundingClientRect();sparks(rr.left-R.left+rr.width/2-12,rr.top-R.top+rr.height/2-12,$('sky'));
   b.el.style.opacity=0;
   const learned=gotLetter(b.k);S1.streak++;updScore1();
   // unlock one more letter every 4 right answers
-  if(S1.streak%4===0&&S.unlock[COURSE]<SC().order.length){S.unlock[COURSE]++;save()}
+  if(S1.streak%4===0&&unlockN()<SC().order.length){S.unl[COURSE][SC().id]=unlockN()+1;save()}
   const keys=[praise()];
   if(learned)keys.push('learned');
   if(S1.streak%5===0&&S1.n<4){S1.n++;cheer(T().more);sfx.ok();keys.splice(0,1,'more')}
@@ -485,47 +572,51 @@ function startNamae(){const nm=S.name[COURSE];
   if(!nm){$('score').textContent='🧒';
     $('stage').innerHTML=`<div class="namebox center"><div class="who">🧒</div><p>${T().nameQ}</p><input id="nmIn" maxlength="8" aria-label="name"><button class="btn big" id="nmGo">${T().start}</button><p>${T().nameNote}</p></div>`;
     $('nmGo').onclick=()=>{const v=SC().norm($('nmIn').value.trim());if(!v||!SC().valid.test(v)){$('nmIn').focus();shake($('nmIn'));return}S.name[COURSE]=v;save();startNamae()};return}
-  S2.words=[[nm,'🧒',null],...(Kakin.full()?FAMILY[SCR].map(([id,w,e])=>[w,e,'f_'+id]):[])];S2.wi=0;
+  const f=SC().form;
+  S2.words=[[f(nm),'🧒',null],...(Kakin.full()?FAMILY[SCR].map(([id,w,e])=>[f(w),e,'f_'+id]):[])];S2.wi=0;
+  getRec().then(b=>S2.rec=b);
   $('stage').innerHTML=`<div class="center"><div class="who" id="face"></div><div class="slots" id="slots"></div><div class="ask" id="ask"></div><div class="tiles" id="tiles"></div></div>`;
-  prep(['name0','yometa','next',...SC().letters.filter(c=>nm.includes(c)).map(letterKey)]);
+  prep(['name0','yometa','next',...tok(f(nm)).map(letterKey).filter(Boolean)]);
   word2(run,true)}
 async function word2(r,first){if(r!==run)return;const [w,e,vk]=S2.words[S2.wi];S2.ci=0;S2.lock=true;
   $('face').textContent=e;$('score').textContent=e+' '+w+(vk?mean(vk.slice(2)):'');
-  $('slots').innerHTML=[...w].map(c=>`<div class="slot${letterKey(c)?'':' fix'}">${letterKey(c)?'':c}</div>`).join('');
+  $('slots').innerHTML=tok(w).map(c=>`<div class="slot${two(c)}${letterKey(c)?'':' fix'}">${letterKey(c)?'':c}</div>`).join('');
   $('tiles').innerHTML='';$('ask').textContent='';
   if(vk)prep([vk]);
   await (first?say('name0'):vk?say('next',vk):say('name0'));
   step2(r)}
-function step2(r){if(r!==run)return;const w=[...S2.words[S2.wi][0]];
-  while(S2.ci<w.length&&!letterKey(w[S2.ci]))S2.ci++; // ゃ・が など、まだ あつかわない字は とばす
+function step2(r){if(r!==run)return;const w=tok(S2.words[S2.wi][0]);
+  while(S2.ci<w.length&&!letterKey(w[S2.ci]))S2.ci++; // っ・ー など、よまない字は とばす
   if(S2.ci>=w.length)return done2(r);
   const k=w[S2.ci];
-  [...$('slots').children].forEach((el,i)=>{if(!letterKey(w[i]))return;el.className='slot'+(i<S2.ci?' done':i===S2.ci?' now':'');el.textContent=i<S2.ci?w[i]:''});
+  [...$('slots').children].forEach((el,i)=>{if(!letterKey(w[i]))return;el.className='slot'+two(w[i])+(i<S2.ci?' done':i===S2.ci?' now':'');el.textContent=i<S2.ci?w[i]:''});
   $('ask').innerHTML=T().ask(k);
-  const p=SC().letters.filter(x=>!w.includes(x));
+  const p=(setOf(k)||SC()).letters.filter(x=>!w.includes(x));
   tileButtons($('tiles'),shuffle([k,...distractors(k,2,p)]),(b,o)=>tap2(b,o,k));
   S2.lock=false;again=()=>say(...askKeys(k));say(...askKeys(k))}
 async function tap2(b,o,k){audio();if(S2.lock)return;const r=run;
-  if(o!==k){sfx.ng();shake(b);if(!speaking())say('sore',letterKey(o),...askKeys(k));return}
+  if(o!==k){sfx.ng();shake(b);missLetter(k);if(!speaking())say('sore',letterKey(o),...askKeys(k));return}
   S2.lock=true;sfx.pop();const learned=gotLetter(k);S2.ci++;
-  const el=$('slots').children[S2.ci-1];if(el){el.className='slot done';el.textContent=k}
+  const el=$('slots').children[S2.ci-1];if(el){el.className='slot done'+two(k);el.textContent=k}
   $('tiles').innerHTML='';
   await say(...(learned?[letterKey(k),'learned']:[letterKey(k)]));
   step2(r)}
 async function done2(r){const [w,,vk]=S2.words[S2.wi];
-  [...$('slots').children].forEach((el,i)=>{el.className='slot done';el.textContent=[...w][i]});$('ask').textContent='';$('tiles').innerHTML='';
+  const u=tok(w);[...$('slots').children].forEach((el,i)=>{el.className='slot done'+two(u[i]);el.textContent=u[i]});$('ask').textContent='';$('tiles').innerHTML='';
   sfx.ok();cheer(w+'！');
-  // 1もじずつ よんでから、ことば ぜんぶ
-  await say(...[...w].map(letterKey).filter(Boolean));
-  await say(...(vk?[vk,'yometa']:['yometa']));
+  // 1もじずつ よんでから、ことば ぜんぶ（じぶんの なまえは おうちの人の 録音が あれば それで よぶ）
+  await say(...u.map(letterKey).filter(Boolean));
+  await say(...(vk?[vk,'yometa']:S2.rec?['@rec','yometa']:['yometa']));
   await wait(700);if(r!==run)return;
   S2.wi=(S2.wi+1)%S2.words.length;word2(r,false)}
 
 // ================= ③ どうぶつ =================
 let S3={order:[],ai:0,ci:0,lock:true};
 function animalOpen(i){return i<FREE_ANIMALS||Kakin.full()}
-function startAnimal(){const list=ANIMALS[SCR];
-  const open=list.map((a,i)=>i).filter(animalOpen);
+function startAnimal(){const list=ANIMALS[SCR];const st=SC();
+  // がぎぐ・きゃ では その字が ある どうぶつ だけ
+  const fit=i=>st.id!=='daku'&&st.id!=='you'||tok(list[i][1]).some(c=>st.letters.includes(c));
+  let open=list.map((a,i)=>i).filter(animalOpen).filter(fit);if(!open.length)open=list.map((a,i)=>i).filter(animalOpen);
   // まだ ずかんに いない どうぶつを さきに
   const z=S.zukan[COURSE];const fresh=open.filter(i=>!z.includes(list[i][0])),seen=open.filter(i=>z.includes(list[i][0]));
   S3.order=[...shuffle(fresh),...shuffle(seen)];S3.ai=0;
@@ -536,19 +627,21 @@ function curAnimal(){return ANIMALS[SCR][S3.order[S3.ai%S3.order.length]]}
 async function animal3(r){if(r!==run)return;const [id,w,e]=curAnimal();S3.ci=0;S3.lock=true;
   $('score').textContent=T().animalsN(S.zukan[COURSE].length);
   const sl=$('silh');sl.textContent=e;sl.className='silh dark';
-  $('slots').innerHTML=[...w].map(()=>`<div class="slot"></div>`).join('');$('tiles').innerHTML='';$('ask').textContent=T().askWho;
-  prep(['an_'+id,...[...w].map(letterKey)]);
+  const u=tok(SC().form(w));
+  $('slots').innerHTML=u.map(c=>`<div class="slot${two(c)}"></div>`).join('');$('tiles').innerHTML='';$('ask').textContent=T().askWho;
+  prep(['an_'+id,...u.map(letterKey)]);
   await say('who');step3(r)}
-function step3(r){if(r!==run)return;const w=[...curAnimal()[1]];const k=w[S3.ci];
-  [...$('slots').children].forEach((el,i)=>{el.className='slot'+(i<S3.ci?' done':i===S3.ci?' now':'');el.textContent=i<S3.ci?w[i]:''});
+const aWord=()=>tok(SC().form(curAnimal()[1]));
+function step3(r){if(r!==run)return;const w=aWord();const k=w[S3.ci];
+  [...$('slots').children].forEach((el,i)=>{el.className='slot'+two(w[i])+(i<S3.ci?' done':i===S3.ci?' now':'');el.textContent=i<S3.ci?w[i]:''});
   $('ask').innerHTML=T().ask(k);
   tileButtons($('tiles'),shuffle([k,...distractors(k,2,pool())]),(b,o)=>tap3(b,o,k));
   S3.lock=false;again=()=>say(...askKeys(k));say(...askKeys(k))}
 async function tap3(b,o,k){audio();if(S3.lock)return;const r=run;
-  if(o!==k){sfx.ng();shake(b);if(!speaking())say('sore',letterKey(o),...askKeys(k));return}
+  if(o!==k){sfx.ng();shake(b);missLetter(k);if(!speaking())say('sore',letterKey(o),...askKeys(k));return}
   S3.lock=true;sfx.pop();const learned=gotLetter(k);S3.ci++;
-  const [id,word,e]=curAnimal();const w=[...word];
-  const el=$('slots').children[S3.ci-1];if(el){el.className='slot done';el.textContent=k}
+  const [id,word0,e]=curAnimal();const w=aWord(),word=w.join('');
+  const el=$('slots').children[S3.ci-1];if(el){el.className='slot done'+two(k);el.textContent=k}
   $('tiles').innerHTML='';
   if(S3.ci<w.length){await say(...(learned?[letterKey(k),'learned']:[letterKey(k)]));return step3(r)}
   await say(letterKey(k));
@@ -577,7 +670,7 @@ setM(S4.mode);
   for(const f of shuffle(FUDA[SCR].map((f,i)=>[...f,i]))){if(picked.length>=n)break;if(picked.some(p=>sim(p[0],f[0])))continue;picked.push(f)}
   S4.cards=picked.map(f=>({f,taken:false}));
   const g=$('grid');g.appendChild(hand);
-  S4.cards.forEach(c=>{const b=document.createElement('button');b.className='kcard';b.innerHTML=`<span class="l">${c.f[0]}</span><span class="e">${c.f[1]}</span>`;b.setAttribute('aria-label',c.f[0]);
+  S4.cards.forEach(c=>{const b=document.createElement('button');b.className='kcard';c.lb=(SC().id==='kata'||SC().id==='lower')?SC().form(c.f[0]):c.f[0];b.innerHTML=`<span class="l">${c.lb}</span><span class="e">${c.f[1]}</span>`;b.setAttribute('aria-label',c.lb);
     b.onpointerdown=e=>{e.preventDefault();tap4(c,b)};c.el=b;g.appendChild(b)});
   prep(['ready','took0','took1','robo_took','par_took','kid_win','par_win','robo_win','draw','again']);
   const r=run;say('ready').then(()=>next4(r))}
@@ -591,14 +684,14 @@ async function next4(r){if(r!==run)return;const left=S4.cards.filter(c=>!c.taken
   $('yomi').textContent=SCR==='ja'?'「'+c.f[2]+'」':'“'+c.f[2]+'”'+mean(c.f[0]);
   if(S4.mode==='robo')startHand(c,r)}
 function tap4(c,b){audio();if(S4.lock||c.taken||!S4.target)return;
-  if(c!==S4.target){sfx.ng();shake(b);if(!speaking())say('sore',letterKey(c.f[0]));return}
+  if(c!==S4.target){sfx.ng();shake(b);missLetter(S4.target.lb);if(!speaking())say('sore',letterKey(c.lb));return}
   S4.lock=true;
   if(S4.mode==='oya'){const d=document.createElement('div');d.className='choose';
     d.innerHTML=`<button class="btn big" id="wKid">${T().kidGot}</button><button class="btn big sub" id="wPar">${T().parGot}</button>`;
     $('stage').appendChild(d);$('wKid').onclick=()=>{d.remove();take4(c,'kid')};$('wPar').onclick=()=>{d.remove();take4(c,'opp')}}
   else take4(c,'kid')}
 async function take4(c,who){const r=run;stopHand();S4.lock=true;c.taken=true;c.el.classList.add('taken');S4.target=null;
-  if(who==='kid'){S4.sc++;$('sc').textContent=S4.sc;sfx.pop();gotLetter(c.f[0]);await say(rnd(2)?'took0':'took1',letterKey(c.f[0]))}
+  if(who==='kid'){S4.sc++;$('sc').textContent=S4.sc;sfx.pop();gotLetter(c.lb);await say(rnd(2)?'took0':'took1',letterKey(c.lb))}
   else{S4.so++;$('so').textContent=S4.so;tone(400,.15,'triangle');await say(S4.mode==='robo'?'robo_took':'par_took')}
   await wait(500);next4(r)}
 function startHand(c,r){stopHand();const g=$('grid');const G=g.getBoundingClientRect(),R=c.el.getBoundingClientRect();
@@ -609,15 +702,18 @@ function startHand(c,r){stopHand();const g=$('grid');const G=g.getBoundingClient
     S4.t2=setTimeout(()=>{if(r===run&&S4.target===c&&!S4.lock){S4.lock=true;take4(c,'opp')}},dur)},1200)}
 
 // ================= ずかん =================
-function openZukan(){run++;hush();show('zukan');const t=T();
-  $('zCount').textContent=t.zCount(learnedCount(),SC().letters.length);
-  const cols=SCR==='ja'?5:6;$('zLetters').style.gridTemplateColumns=`repeat(${cols},minmax(0,1fr))`;
-  let cells=SC().letters.slice();
-  if(SCR==='ja'){cells=[];const rows=['あいうえお','かきくけこ','さしすせそ','たちつてと','なにぬねの','はひふへほ','まみむめも','や ゆ よ','らりるれろ','わ を ん'];
-    rows.forEach(r=>[...r.padEnd(5,' ')].slice(0,5).forEach(c=>cells.push(c)))}
-  $('zLetters').innerHTML=cells.map(c=>{if(c===' ')return '<div class="zk blank"></div>';const n=Math.min(3,S.got[COURSE][c]||0);
-    return `<button class="zk${n>=3?' got':''}" data-k="${c}">${c}<small>${'⭐'.repeat(n)}</small></button>`}).join('');
-  $('zLetters').onclick=e=>{const b=e.target.closest('.zk');if(!b||!b.dataset.k)return;audio();if(!speaking())say(letterKey(b.dataset.k))};
+// ずかんの ならべかた（なかまごと）
+const GOJU=['あいうえお','かきくけこ','さしすせそ','たちつてと','なにぬねの','はひふへほ','まみむめも','や ゆ よ','らりるれろ','わ を ん'];
+function zCells(st){if(st.id==='sei'||st.id==='kata'){const c=[];GOJU.forEach(r=>[...r.padEnd(5,' ')].slice(0,5).forEach(x=>c.push(x===' '?' ':st.form(x))));return {cols:5,cells:c}}
+  if(st.id==='daku')return {cols:5,cells:DAKU};if(st.id==='you')return {cols:3,cells:YOUON};return {cols:6,cells:st.letters}}
+function openZukan(){run++;hush();show('zukan');const t=T();const st=SC();
+  $('zCount').textContent=t.zCount(learnedCount(),st.letters.length);
+  $('zLetters').innerHTML=SETS[SCR].map(x=>{const {cols,cells}=zCells(x);const open=setOpen(x);
+    return `<h2 style="margin:10px 2px 2px">${t.setName[x.id]}${open?'':' 🔒'}</h2><div class="zgrid" style="grid-template-columns:repeat(${cols},minmax(0,1fr));padding:4px 0">`+
+    cells.map(c=>{if(c===' ')return '<div class="zk blank"></div>';const n=Math.min(3,S.got[COURSE][c]||0);
+      return `<button class="zk${two(c)}${n>=3?' got':''}" data-k="${c}">${c}<small>${'⭐'.repeat(n)}</small></button>`}).join('')+'</div>'}).join('');
+  $('zLetters').style.display='block';
+  $('zLetters').onclick=e=>{const b=e.target.closest('.zk');if(!b||!b.dataset.k)return;audio();if(!setOpen(setOf(b.dataset.k))){Kakin.ask();return}if(!speaking()){const k=letterKey(b.dataset.k);prep([k]);say(k)}};
   const z=S.zukan[COURSE];
   $('zAnimals').innerHTML=ANIMALS[SCR].map((a,i)=>{const got=z.includes(a[0]);return `<button class="${got?'':'dark'}" data-i="${i}" aria-label="${got?a[1]:'?'}"><span>${a[2]}</span>${animalOpen(i)?'':'<span class="lock">🔒</span>'}</button>`}).join('');
   $('zAnimals').onclick=e=>{const b=e.target.closest('button');if(!b)return;audio();const i=+b.dataset.i;if(!animalOpen(i)){Kakin.ask();return}
@@ -629,18 +725,55 @@ let resetArm=false;
 function openParent(){run++;hush();show('parent');renderHome();const t=T();
   $('pNameIn').value=S.name[COURSE]||'';
   $('pVoice').innerHTML=[1,2,3,4].map(n=>`<option value="ai:${n}">${t.aiVoice(n)}</option>`).join('')+`<option value="dev">${t.devVoice}</option><option value="off">${t.noVoice}</option>`;
-  $('pVoice').value=S.voice;$('pHowText').textContent=t.how;$('pResetMsg').textContent='';resetArm=false;}
+  $('pVoice').value=S.voice;$('pHowText').textContent=t.how;$('pResetMsg').textContent='';resetArm=false;
+  renderProg();renderRec()}
+// すすみぐあい（おうちのかた）
+function renderProg(){const t=T(),g=S.got[COURSE],m=S.miss[COURSE];
+  const bars=SETS[SCR].map(st=>{const n=st.letters.filter(k=>(g[k]||0)>=3).length,N=st.letters.length;
+    return `<div class="pbar"><span class="nm">${t.setName[st.id]}</span><span class="bar"><i style="width:${Math.round(n/N*100)}%"></i></span><span class="n">${t.progN(n,N)}</span></div>`}).join('');
+  const all=SETS[SCR].flatMap(st=>st.letters);
+  const near=all.filter(k=>(g[k]||0)>0&&(g[k]||0)<3);
+  const hard=all.filter(k=>(m[k]||0)>=2).sort((a,b)=>(m[b]/(1+(g[b]||0)))-(m[a]/(1+(g[a]||0)))).slice(0,10);
+  const chips=(a,f)=>a.length?`<div class="chips">${a.map(k=>`<span>${k}${f?`<em>${f(k)}</em>`:''}</span>`).join('')}</div>`:`<p>${t.progNone}</p>`;
+  $('pProg').innerHTML=bars+`<p><b>${t.progNear}</b></p>`+chips(near,k=>'⭐'.repeat(g[k]))+`<p><b>${t.progHard}</b></p>`+chips(hard,k=>t.missN(m[k]))+`<p>${t.progNote}</p>`}
+
+// ---- おうちの人の声で なまえを よぶ（録音は この端末の中 IndexedDB だけ）
+const REC_DB='hiragana-rec';
+function recDb(){return new Promise((res,rej)=>{const r=indexedDB.open(REC_DB,1);r.onupgradeneeded=()=>r.result.createObjectStore('rec');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function getRec(){try{const d=await recDb();return await new Promise(res=>{const q=d.transaction('rec').objectStore('rec').get('name-'+COURSE);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})}catch(e){return null}}
+async function putRec(b){const d=await recDb();await new Promise((res,rej)=>{const tx=d.transaction('rec','readwrite');b?tx.objectStore('rec').put(b,'name-'+COURSE):tx.objectStore('rec').delete('name-'+COURSE);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
+let recBuf={};
+async function playRec(g){const b=await getRec();if(!b||g!==gen)return;const a=audio();if(!a)return;
+  try{const id=COURSE+':'+b.size;if(!recBuf[id])recBuf[id]=await new Promise((res,rej)=>b.arrayBuffer().then(x=>a.decodeAudioData(x,res,rej)));
+    if(g!==gen)return;await new Promise(res=>{const s=a.createBufferSource();s.buffer=recBuf[id];s.connect(a.destination);curSrc=s;let done=false;const fin=()=>{if(!done){done=true;curSrc=null;res()}};s.onended=fin;setTimeout(fin,recBuf[id].duration*1000+400);s.start()})}catch(e){}}
+let recState=null;
+async function renderRec(){const t=T();const b=await getRec();
+  $('pRec').innerHTML=recState?`<span class="recdot"></span>${t.recStop}`:(b?t.recAgain:t.recStart);
+  $('pRecPlay').hidden=!b||!!recState;$('pRecDel').hidden=!b||!!recState}
+$('pRec').onclick=async()=>{const t=T();audio();
+  if(recState){recState.stop();return}
+  if(!navigator.mediaDevices||!window.MediaRecorder){$('pRecMsg').textContent=t.recNo;return}
+  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){$('pRecMsg').textContent=t.recDenied;return}
+  const mr=new MediaRecorder(stream),chunks=[];mr.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  const tm=setTimeout(()=>{try{mr.stop()}catch(e){}},4000);
+  mr.onstop=async()=>{clearTimeout(tm);stream.getTracks().forEach(x=>x.stop());recState=null;
+    const blob=new Blob(chunks,{type:mr.mimeType||'audio/webm'});
+    if(blob.size>800){await putRec(blob);recBuf={};$('pRecMsg').textContent=t.recSaved;hush();say('@rec')}else $('pRecMsg').textContent=t.recShort;
+    renderRec()};
+  recState={stop:()=>{try{mr.stop()}catch(e){}}};mr.start();$('pRecMsg').textContent=t.recHint;renderRec()};
+$('pRecPlay').onclick=()=>{audio();hush();say('@rec')};
+$('pRecDel').onclick=async()=>{await putRec(null);recBuf={};$('pRecMsg').textContent=T().recDeleted;renderRec()};
 $('btnParent').onclick=()=>{audio();sfx.tap();openParent()};
 $('pNameSave').onclick=()=>{const v=SC().norm($('pNameIn').value.trim());if(v&&!SC().valid.test(v)){shake($('pNameIn'));return}S.name[COURSE]=v;save();toast(T().saved)};
 $('pVoice').onchange=e=>{S.voice=e.target.value;save()};
 $('pVoiceTest').onclick=()=>{audio();hush();prep(['hello']);say('hello')};
 $('pReset').onclick=()=>{if(!resetArm){resetArm=true;$('pResetMsg').textContent=T().pResetSure;return}
-  S.got[COURSE]={};S.zukan[COURSE]=[];S.unlock[COURSE]=6;save();resetArm=false;$('pResetMsg').textContent=T().pResetDone};
+  S.got[COURSE]={};S.zukan[COURSE]=[];S.unlock[COURSE]=6;S.unl[COURSE]={};S.miss[COURSE]={};save();resetArm=false;$('pResetMsg').textContent=T().pResetDone};
 
 // ================= 課金（おためし版） =================
 // ひらがな と ABC は べつの「ぜんぶ版」（ABC は にほんご／English の 2コース で 共通）。ファミリーパスなら ぜんぶ。
 function setupKakin(){if(!window.Kakin||!Kakin.setup)return;const g=COURSES[COURSE].game;
-  Kakin.setup({game:g,lang:()=>UI,onChange:()=>{if(!$('parent').hidden)openParent()},
+  Kakin.setup({game:g,lang:()=>UI,onChange:()=>{if(!$('parent').hidden)openParent();else if(!$('home').hidden)renderHome()},
     name:g==='abc'?{ja:'ABC あそび',en:'ABC Play'}:{ja:'ひらがな あそび',en:'Hiragana Play'},
     free:{ja:(g==='abc'?TEXT.abcja:TEXT.ja).kkFree,en:TEXT.en.kkFree},full:{ja:(g==='abc'?TEXT.abcja:TEXT.ja).kkFull,en:TEXT.en.kkFull}});
   $('kkSlot').innerHTML='';$('kkSlot').appendChild(Kakin.parentButton())}
