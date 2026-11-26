@@ -19,7 +19,7 @@
 | 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | テレビ（Fire TV）向けの画面（11/15）まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
 | ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
-| てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（31まい、点は最大60こ） | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
+| てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（35まい、点は最大60こ） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
 | ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
 | もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
 | ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、3つのステージ、着せかえと肖像画つき | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
@@ -85,6 +85,7 @@
 37. **2026-11-26** くどうさん「再開して下さい」→ 磨きどころの順番どおり、まず ひらがな あそび v0.4（がぎぐ・きゃ・カタカナ・小文字の段階、なまえを おうちの人の声で、おうちのかたの すすみぐあい）。かくしURL のまま。[hiragana.md](hiragana.md)
 38. **2026-11-26** くどうさん「どんどん進めると上限に当たってしまうので、調整できるようにできますか？」→ 磨き込みは 1本ずつ、くどうさんの「次」で 進めることに。「次。」→ ころころ ゆきだま v0.7（雪だるまの しゃしん、ダンスの曲 3つ）。[yukidama.md](yukidama.md)
 39. **2026-11-26** 「次。」→ まちがいさがし v0.9（年れいで むずかしさが かわる、写真の違いを 🔄 で作りなおせる）。[machigai.md](machigai.md)
+40. **2026-11-26** 「次」→ てんつなぎ v0.5（小さい子の指で つなぎやすく、こいのぼり・かぼちゃ・バス・ケーキ の絵）。[tentsunagi.md](tentsunagi.md)
 
 ## お金の方針（2026-10-23 決定）
 
