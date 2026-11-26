@@ -189,9 +189,11 @@ h1 ruby rt{font-size:.32em;font-weight:700;letter-spacing:.1em;color:var(--ink-s
       <button class="tg" id="o-names" aria-pressed="true">なまえ</button>
       <button class="tg" id="o-voice" aria-pressed="true">こえ</button>
       <button class="tg" id="o-sound" aria-pressed="true">おと</button>
+      <button class="tg" id="o-ai" aria-pressed="true">AIのこえ 1</button>
     </div>
     <p class="tip">さかいせん・なまえ を けすと むずかしくなるよ。スマホは ちほうごと が あそびやすいよ。</p>
     <p class="tip">おうちのかたへ: むりょうでは こどもステージ1〜4 と 北海道・東北、関東 で あそべます。ぜんぶ版（買い切り）か ファミリーパスで、ほかの ステージ・ちほう と ぜんこく も あそべます。広告は出しません。</p>
+    <p class="tip">こえ: VOICEVOX:冥鳴ひまり、VOICEVOX:四国めたん、VOICEVOX:ずんだもん、VOICEVOX:雨晴はう</p>
     <div id="kkSlot" style="text-align:center;margin:8px 0 16px"></div>
   </div>
 </section>
@@ -277,7 +279,7 @@ const store = {
   get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
-const opt = Object.assign({border:true,names:true,voice:true,sound:true}, store.get("todofuken-opt",{}));
+const opt = Object.assign({border:true,names:true,voice:true,sound:true,ai:1}, store.get("todofuken-opt",{}));
 let best = store.get("todofuken-best",{});
 const stickers = new Set(store.get("todofuken-stickers",[]));
 let kidDone = store.get("todofuken-kid",{});
@@ -321,10 +323,41 @@ function vqTts(u) {
   return done => { u.onend = done; u.onerror = done; speechSynthesis.cancel(); speechSynthesis.speak(u); return () => speechSynthesis.cancel(); };
 }
 // mode: なし＝まえの こえが おわるまで まつ / 'swap'＝タップで なまえ など（'swap' どうしだけ いれかわる）。tag: おなじ tag が まっていたら いれない
-function say(text, mode, tag){
-  if(!opt.voice||!window.speechSynthesis) return;
-  if(tag && vqHas(tag)) return;
+function sayDev(text, mode, tag){
+  if(!window.speechSynthesis) return;
   try{ const u=new SpeechSynthesisUtterance(text); u.lang="ja-JP"; u.rate=1; vqAdd({play:vqTts(u), max:3+text.length*.25, tag}, mode); }catch(e){}
+}
+/* AI の こえ（2026-11-26 v0.6、VOICEVOX）: 県の名前・とくさん・ほめことば。keys を じゅんばんに つなげて よむ。
+   opt.ai: 1〜4＝AIのこえ、0＝たんまつの こえ */
+const AI_VOICES=["vv_himari","vv_metan","vv_zunda","vv_hau"];
+const VT={here:"ここだよ",close:"おしい！",glow:"光っているところだよ",hintS:"は、光っているところだよ",p0:"やったね！",p1:"すごい！",p2:"ぴったり！",p3:"じょうず！",p4:"正解！",
+  clearAll:"日本、完成！ すごいね！",clear:"全部できたね！",clearKid:"全部できたね！ シール、ゲット！",nost:"まだ シールが ないよ"};
+const vtext=k=>VT[k]||(k[0]==="n"?INFO[+k.slice(1)-1][0]:k[0]==="f"?INFO[+k.slice(1)-1][3]:"");
+const aiBuf={};
+function aiLoad(k){
+  const id=AI_VOICES[(opt.ai||1)-1]+"/"+k;
+  if(aiBuf[id]) return aiBuf[id];
+  return aiBuf[id]=fetch("voice/"+id+".mp3").then(r=>{ if(!r.ok) throw 0; return r.arrayBuffer(); })
+    .then(b=>new Promise((res,rej)=>{ unlockAudio(); ac.decodeAudioData(b,res,rej); })).catch(()=>null);
+}
+function say(keys, mode, tag){
+  if(!opt.voice) return;
+  if(tag && vqHas(tag)) return;
+  if(typeof keys==="string") keys=[keys];
+  const text=keys.map(vtext).join(keys.length>1&&keys[1]!=="hintS"?"。":"");
+  if(!opt.ai||!ac){ sayDev(text,mode,tag); return; }
+  const ps=keys.map(aiLoad);
+  vqAdd({tag, max:4+keys.length*2, play:done=>{
+    let stop=false, src=null;
+    Promise.all(ps).then(bs=>{
+      if(stop) return;
+      if(bs.some(b=>!b)){ done(); sayDev(text,mode,tag); return; }
+      let i=0; const next=()=>{ if(stop) return; if(i>=bs.length){ done(); return; }
+        src=ac.createBufferSource(); src.buffer=bs[i++]; src.connect(ac.destination); src.onended=next; src.start(); };
+      next();
+    });
+    return ()=>{ stop=true; try{ src&&src.stop(); }catch(e){} };
+  }}, mode);
 }
 
 /* ---------- ゲームの状態 ---------- */
@@ -426,6 +459,7 @@ function startTimer(){
 function startDrag(e,id,card){
   if(drag||!G) return;
   e.preventDefault(); unlockAudio(); sPick();
+  if(G.mode.kid) say("n"+id,"swap"); // 字が よめない子にも わかるように、もったら 名前を よむ
   if(!G.started) startTimer();
   G.lastId=id;
   const p=P(id), a=map.getScreenCTM().a, maxDim=Math.max(p.b[2],p.b[3]);
@@ -469,17 +503,17 @@ function onUp(e){
   endListeners();
   const id=drag.id;
   $("#slot"+id)?.classList.remove("near");
-  if(!drag.moved){ say(INFO[id-1][0],"swap"); returnHome(false); return; }
+  if(!drag.moved){ say("n"+id,"swap"); returnHome(false); return; }
   const h=judge(id,drag.X,drag.Y), kid=G.mode.kid;
   G.miss[id]=G.miss[id]||0;
   if(!h.ok){ G.errors++; G.miss[id]++; sMiss(); }
   // こどもステージでは3回まちがえたら、ピースが自分で正しい場所へ飛んでいく
   if(h.ok || (kid && G.miss[id]>=3)){
     const dr=drag;
-    if(!h.ok) say("ここだよ","","miss");
+    if(!h.ok) say("here","","miss");
     animateFloat(dr,h.sx,h.sy,h.a,h.ok?200:700,()=>{ dr.g.remove(); drag=null; place(id); });
   } else {
-    if(kid) say(G.miss[id]===1?"おしい！":"光っているところだよ","","miss");
+    if(kid) say(G.miss[id]===1?"close":"glow","","miss");
     if(G.miss[id]>=(kid?1:2)) blinkSlot(id);
     returnHome(true);
   }
@@ -518,11 +552,11 @@ function place(id){
   $("#slot"+id)?.classList.remove("blink");
   sOk(); showBubble(id);
   if(G.mode.kid){
-    say(PRAISE[Math.random()*PRAISE.length|0]+"！ "+INFO[id-1][0]);
+    say(["p"+(Math.random()*PRAISE.length|0),"n"+id]);
     const p=P(id), a=map.getScreenCTM().a, fs=Math.min(26/a,Math.max(p.b[2],p.b[3])*.55);
     const t=el("text",{x:p.c[0]+o[0],y:p.c[1]+o[1],class:"emo pop","font-size":fs}); t.textContent=INFO[id-1][2];
     $("#emoG").appendChild(t);
-  } else say(INFO[id-1][0],"swap");
+  } else say("n"+id,"swap");
   if(!stickers.has(id)){ stickers.add(id); store.set("todofuken-stickers",[...stickers]); }
   if(navigator.vibrate) try{ navigator.vibrate(30); }catch(_){}
   updateCount(); layoutTray();
@@ -545,7 +579,7 @@ $("#hintBtn").onclick=()=>{
   const id=G.tray.includes(G.lastId)?G.lastId:G.tray[0]; if(!id) return;
   G.errors++; blinkSlot(id); if(G.mode.kid) G.miss[id]=(G.miss[id]||0)+1;
   const c=tray.querySelector(`.card[data-id="${id}"]`); if(c){ c.classList.remove("wobble"); void c.offsetWidth; c.classList.add("wobble"); }
-  say(INFO[id-1][0]+"は、光っているところだよ","","hint");
+  say(["n"+id,"hintS"],"","hint");
 };
 let backArmed=0;
 $("#back").onclick=()=>{
@@ -571,7 +605,7 @@ function finish(){
   $("#cStars").innerHTML="★".repeat(st)+"<i>"+"★".repeat(3-st)+"</i>";
   $("#cTime").textContent=`じかん ${fmt(G.sec)}　まちがい ${e}かい`;
   $("#cBest").textContent=newBest&&prev.t?"じこベスト こうしん！":"";
-  $("#clear").hidden=false; sClear(); say(k==="all"?"日本、完成！ すごいね！":"全部できたね！"); confetti();
+  $("#clear").hidden=false; sClear(); say(k==="all"?"clearAll":"clear"); confetti();
 }
 function finishKid(){
   const m=G.mode, next=KIDS[m.no];
@@ -581,7 +615,7 @@ function finishKid(){
   $("#cStk").innerHTML=m.ids.map((id,i)=>`<span style="animation-delay:${.15+i*.15}s" title="${INFO[id-1][0]}">${INFO[id-1][2]}</span>`).join("");
   $("#cAgain").textContent=next?"つぎの ステージへ":"ぜんこくに ちょうせん";
   $("#cHome").textContent="ステージを えらぶ";
-  $("#clear").hidden=false; sClear(); say("全部できたね！ シール、ゲット！"); confetti();
+  $("#clear").hidden=false; sClear(); say("clearKid"); confetti();
 }
 $("#cAgain").onclick=()=>{
   const m=G.mode;
@@ -642,7 +676,7 @@ function openZukan(){
     b.className="zc"+(has?"":" no");
     b.innerHTML=has?`<span class="ze">${inf[2]}</span><span class="zk">${inf[0]}</span><span class="zn">${inf[3]}</span>`
       :cardSvg(id).replace(/fill="[^"]*"/,'fill="#d9d2c0"')+`<span class="zk">？</span><span class="zn">${inf[1]}</span>`;
-    b.onclick=()=>{ unlockAudio(); say(has?`${inf[0]}。${inf[3]}`:`${inf[0]}。まだ シールが ないよ`,"swap"); };
+    b.onclick=()=>{ unlockAudio(); say(has?["n"+id,"f"+id]:["n"+id,"nost"],"swap"); };
     g.appendChild(b);
   }
   $("#home").hidden=true; $("#zukan").hidden=false; $("#zukan").scrollTop=0;
@@ -653,6 +687,8 @@ for(const k of ["border","names","voice","sound"]){
   const b=$("#o-"+k); b.setAttribute("aria-pressed",opt[k]);
   b.onclick=()=>{ opt[k]=!opt[k]; b.setAttribute("aria-pressed",opt[k]); store.set("todofuken-opt",opt); unlockAudio(); if(k==="sound"&&opt.sound) sOk(); if(k==="voice"&&!opt.voice) hush(); };
 }
+{ const b=$("#o-ai"), lab=()=>{ b.textContent=opt.ai?"AIのこえ "+opt.ai:"たんまつの こえ"; };
+  lab(); b.onclick=()=>{ opt.ai=(opt.ai+1)%5; store.set("todofuken-opt",opt); lab(); unlockAudio(); hush(); opt.voice=true; $("#o-voice").setAttribute("aria-pressed",true); say(opt.ai?"p0":"p0","swap"); }; }
 addEventListener("resize",()=>{ if(G&&!drag) layoutTray(); });
 document.addEventListener("gesturestart",e=>e.preventDefault());
 $("#kkSlot").appendChild(Kakin.parentButton());
