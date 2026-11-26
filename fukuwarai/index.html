@@ -248,7 +248,7 @@ const T = {
     editTitle: 'パーツの いち', detecting: 'かおを さがしているよ…',
     found: 'おうちの かたへ: まるが まゆ・め・はな・くちに あっているか たしかめてね。まるは ゆびで うごかせます（みぎしたの ● で おおきさ）。',
     notFound: 'かおが みつからなかったよ。まるを ゆびで まゆ・め・はな・くちに あわせてね。',
-    make: 'これで つくる', photoName: 'しゃしん', albumEmpty: 'まだ ないよ。かおが できたら「アルバムへ」で いれてね。',
+    make: 'これで つくる', photoName: 'しゃしん', mixName: '🔀 まぜこぜ', albumEmpty: 'まだ ないよ。かおが できたら「アルバムへ」で いれてね。',
     brow: 'まゆ', eye: 'め', nose: 'はな', mouth: 'くち',
     delFace: 'この かおを けしますか？', delPic: 'この しゃしんを けしますか？', full: 'いっぱいに なったので ふるい ものを けしました',
     hVoice: 'こえ', hDev: 'スマホの こえ', hOff: 'なし', hSound: 'おと', hOn: 'あり', hLang: 'ことば / Language',
@@ -272,7 +272,7 @@ const T = {
     editTitle: 'Face parts', detecting: 'Looking for the face…',
     found: 'For parents: check that the circles sit on the eyebrows, eyes, nose and mouth. Drag a circle to move it (the ● at its lower right changes its size).',
     notFound: 'No face found. Drag the circles onto the eyebrows, eyes, nose and mouth.',
-    make: 'Make it!', photoName: 'Photo', albumEmpty: 'Nothing yet. Tap "To album" after you finish a face.',
+    make: 'Make it!', photoName: 'Photo', mixName: '🔀 Mix-up', albumEmpty: 'Nothing yet. Tap "To album" after you finish a face.',
     brow: 'brow', eye: 'eye', nose: 'nose', mouth: 'mouth',
     delFace: 'Delete this face?', delPic: 'Delete this picture?', full: 'Storage was full, so the oldest one was removed',
     hVoice: 'Voice', hDev: 'Device voice', hOff: 'Off', hSound: 'Sound', hOn: 'On', hLang: 'Language / ことば',
@@ -784,6 +784,16 @@ function drawFull(g, face, w, h) { // サムネイル
   g.restore();
 }
 const builtPhoto = {}; // id -> face
+// まぜこぜの かお: 1つの かおを だいに して、パーツは ほかの かおから（ばしょは だいの かおに あわせる）
+function mixFace(list, fixed) {
+  const sh = fixed ? list.slice() : list.slice().sort(() => Math.random() - .5), base = sh[0], others = sh.slice(1);
+  const parts = base.parts.map((p, i) => {
+    const from = others[(fixed ? i : Math.floor(Math.random() * others.length)) % others.length];
+    const q = from.parts.find(x => x.id === p.id) || p;
+    return { type: p.type, id: p.id, tx: p.tx, ty: p.ty, img: q.img };
+  });
+  return { id: 'mix', photo: true, base: base.base, parts };
+}
 async function ensurePhotoFaces() {
   for (const rec of photoFaces) {
     if (builtPhoto[rec.id]) continue;
@@ -817,6 +827,14 @@ async function renderHome() {
       b.append(x);
     }
     box.append(b);
+  }
+  // まぜこぜ（v0.6）: しゃしんの かおが 2つ いじょう あると、パパの め＋ママの くち のように まぜた かおで あそべる
+  const built = photoFaces.map(r => builtPhoto[r.id]).filter(Boolean);
+  if (built.length >= 2) {
+    const b = document.createElement('button'); b.className = 'fc';
+    const c = mk(200, 240); drawFull(c.getContext('2d'), mixFace(built, true), 200, 240);
+    b.append(c); const sp = document.createElement('span'); sp.textContent = t('mixName'); b.append(sp);
+    b.onclick = () => startGame(mixFace(built)); box.append(b);
   }
   const add = document.createElement('button'); add.className = 'fc add';
   add.innerHTML = `<span class="ico">📷</span><span>${t('addPhoto')}</span>`;
@@ -1060,7 +1078,14 @@ function frame(now) {
       if (since < 400) { const q = since / 400; k = 1 + Math.sin(q * Math.PI) * .35; }
       if (G.moving === id) k *= 1.08;
       if (G.phase === 'done' && !G.calm) { const tt = (now - G.doneT) / 1000, i = face.parts.indexOf(p); rot = Math.sin(tt * 3.2 + i) * .07; dy = Math.sin(tt * 4 + i * 1.7) * 4; k *= 1 + Math.sin(tt * 5 + i) * .03; }
-      g.save(); g.translate(v.x, v.y + dy); g.rotate(rot); g.scale(k, k);
+      // できた かおが まばたき・くちパク（v0.6）: め は ときどき とじる、くち は こえが なっている あいだ ぱくぱく
+      let sy = 1;
+      if (G.phase === 'done') {
+        const tt = now - G.doneT;
+        if (p.type === 'eye') { const c = (tt + 700) % 3400; if (c < 150) sy = .12 + Math.abs(c - 75) / 75 * .88; }
+        if (p.type === 'mouth' && (vqBusy() || tt % 6000 < 900) && tt > 300) sy = 1 + Math.sin(now / 70) * .22;
+      }
+      g.save(); g.translate(v.x, v.y + dy); g.rotate(rot); g.scale(k, k * sy);
       g.drawImage(p.img, -p.img.width / 2, -p.img.height / 2); g.restore();
     }
   }

@@ -20,7 +20,7 @@
 | キャンピングカー世界一周 | 放置型の車窓の旅 | テレビ（Fire TV）向けの画面（11/15）まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
 | ゆびで めいろ | 幼児向け、指でなぞる迷路（キャラごとの けしき） | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
 | てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（35まい、点は最大60こ） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
-| ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
+| ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき、まぜこぜ顔） | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
 | もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
 | ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、3つのステージ、着せかえと肖像画つき | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
 | けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
