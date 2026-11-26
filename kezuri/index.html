@@ -88,6 +88,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 #bookGrid button .e{font-size:44px;line-height:1.1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
 #bookGrid button img{width:60px;height:60px;border-radius:12px;object-fit:cover}
 #bookGrid button.yet{background:#f2f6fb;box-shadow:none}
+#choices button .e img.tw,#bookGrid button .e img.tw{width:1em;height:1em;display:block;margin:0 auto}
 #bookGrid button.yet .e{filter:brightness(0);opacity:.13}
 #bookGrid button span{font-size:12px;font-weight:700;line-height:1.2}
 #bookGrid button i{position:absolute;right:6px;top:4px;font-size:11px;font-style:normal;font-weight:700;opacity:.6}
@@ -191,6 +192,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 <canvas id="fx"></canvas>
 
 <script src="../common/kakin.js"></script>
+<script src="../common/emoji.js"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -216,7 +218,7 @@ const TEXT = {
     bookN: (a, b) => `${a} / ${b} こ みつけたよ`, bookSum: (a, b) => `${a} / ${b} こ　（✨は きらきら）`,
     ph: '📷 おうちの しゃしん', phNote: 'しゃしんを えらぶと「おうち」で あそべます。なまえを いれて、🎙️で おうちの人の こえを ろくおんすると、あたったときに その こえで よびます。しゃしんと こえは この たんまつの なかにだけ ほぞんされます。',
     phAdd: 'しゃしんを えらぶ', phName: 'なまえ', close: 'とじる', phDel: 'この しゃしんを けしますか？',
-    set: '⚙️ せってい', voice: 'こえ', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。', sound: 'おと', on: 'あり', off: 'なし', dev: 'たんまつの こえ',
+    set: '⚙️ せってい', voice: 'こえ', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。　絵：Twemoji（© Twitter, Inc and other contributors、CC-BY 4.0）。', sound: 'おと', on: 'あり', off: 'なし', dev: 'たんまつの こえ',
     reset: 'ずかんを リセット', resetNote: 'みつけた ものの きろくを ぜんぶ けします。', resetB: 'リセットする', resetQ: 'ずかんを ぜんぶ けしますか？',
     ai: n => `AIのこえ ${n}`, noPhoto: 'まだ しゃしんが ありません',
     catName: { all: 'ぜんぶ', ani: 'どうぶつ', car: 'のりもの', food: 'たべもの', sea: 'うみ', nat: 'しぜん', home: 'おうち' },
@@ -239,7 +241,7 @@ const TEXT = {
     bookN: (a, b) => `Found ${a} of ${b}`, bookSum: (a, b) => `${a} / ${b} found  (✨ = sparkly)`,
     ph: '📷 Family photos', phNote: 'Pick photos to play the "Home" theme. Type a name and tap 🎙️ to record your own voice saying it. Photos and voices stay on this device only.',
     phAdd: 'Choose photos', phName: 'Name', close: 'Close', phDel: 'Delete this photo?',
-    set: '⚙️ Settings', voice: 'Voice', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).', sound: 'Sound', on: 'On', off: 'Off', dev: 'Device voice',
+    set: '⚙️ Settings', voice: 'Voice', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0). Pictures: Twemoji (© Twitter, Inc and other contributors, CC-BY 4.0).', sound: 'Sound', on: 'On', off: 'Off', dev: 'Device voice',
     reset: 'Reset picture book', resetNote: 'Erases everything found so far.', resetB: 'Reset', resetQ: 'Erase the whole picture book?',
     ai: n => `AI voice ${n}`, noPhoto: 'No photos yet',
     catName: { all: 'All', ani: 'Animals', car: 'Vehicles', food: 'Food', sea: 'Sea', nat: 'Nature', home: 'Home' },
@@ -297,6 +299,7 @@ const ITEMS = []; // { id, e, cat, n:{ja,en} }
 for (const c in CATS) for (const [id, e, ja, en] of CATS[c].items) ITEMS.push({ id, e, cat: c, n: { ja, en } });
 const ITEM_BY = Object.fromEntries(ITEMS.map(i => [i.id, i]));
 const nameOf = it => it.photo ? it.name : it.n[L] || it.n.en;
+Emo.prefetch(ITEMS.map(i => i.e));
 
 /* ---------- おと ---------- */
 let soundOn = store.get('kezuri-sound', true);
@@ -825,7 +828,7 @@ function showQuiz() {
   const el = $('#choices'); el.innerHTML = '';
   for (const c of st.choices) {
     const b = document.createElement('button');
-    b.innerHTML = c.photo ? `<img alt=""><span></span>` : `<div class="e">${c.e}</div><span></span>`;
+    b.innerHTML = c.photo ? `<img alt=""><span></span>` : `<div class="e"><img class="tw" alt="" src="${Emo.url(c.e)}"></div><span></span>`;
     if (c.photo) b.querySelector('img').src = c.url;
     b.querySelector('span').textContent = nameOf(c);
     b.onclick = () => answer(c, b);
@@ -912,8 +915,7 @@ function drawPic(c, it, S, now) {
   if (st.bounce && now > st.bounce) { const t = (now - st.bounce) / 1000; if (t < 1.4) sc = 1 + .16 * Math.sin(t * 11) * Math.exp(-t * 3); }
   const fs = S * st.ps;
   c.save(); c.translate(S * st.px, S * st.py); c.rotate(st.rot); c.scale(sc, sc);
-  c.font = `${fs}px ${EMOJI_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText(it.e, 0, fs * .04);
+  if (!Emo.draw(c, it.e, 0, 0, fs * 1.02)) { c.font = `${fs}px ${EMOJI_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(it.e, 0, fs * .04); }
   c.restore();
 }
 function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
@@ -1000,8 +1002,7 @@ function drawDemo(now) {
   if (BACK[back] && (dm.backT = (dm.backT || 0) + ddt) >= backStep()) { const x = dm.x; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1 - Math.exp(-BACK[back] * dm.backT); dm.backT = 0; x.drawImage(dm.base, 0, 0); x.restore(); }
   dg.setTransform(dpr, 0, 0, dpr, 0, 0);
   dg.fillStyle = '#fff3c9'; dg.fillRect(0, 0, S, S);
-  dg.font = `${S * .62}px ${EMOJI_FONT}`; dg.textAlign = 'center'; dg.textBaseline = 'middle';
-  dg.fillText(dm.e, S / 2, S / 2 + Math.sin(now / 400) * 3);
+  if (!Emo.draw(dg, dm.e, S / 2, S / 2 + Math.sin(now / 400) * 3, S * .62)) { dg.font = `${S * .62}px ${EMOJI_FONT}`; dg.textAlign = 'center'; dg.textBaseline = 'middle'; dg.fillText(dm.e, S / 2, S / 2 + Math.sin(now / 400) * 3); }
   dg.setTransform(1, 0, 0, 1, 0, 0); dg.drawImage(dm.c, 0, 0);
 }
 let dLast = null;
@@ -1042,7 +1043,7 @@ function renderBook() {
     const r = book[it.id], b = document.createElement('button');
     if (!r) b.className = 'yet';
     else if (r.s) b.className = 'shiny';
-    b.innerHTML = it.photo ? (r ? '<img alt=""><span></span>' : '<div class="e">❓</div><span>？</span>') : `<div class="e">${it.e}</div><span></span>`;
+    b.innerHTML = it.photo ? (r ? '<img alt=""><span></span>' : '<div class="e">❓</div><span>？</span>') : `<div class="e"><img class="tw" alt="" src="${Emo.url(it.e)}"></div><span></span>`;
     if (it.photo && r) b.querySelector('img').src = it.url;
     if (r) { b.querySelector('span').textContent = nameOf(it); if (r.n > 1) b.insertAdjacentHTML('beforeend', `<i>×${r.n}</i>`); }
     else if (!it.photo) b.querySelector('span').textContent = '？';
