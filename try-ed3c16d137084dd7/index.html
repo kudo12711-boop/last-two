@@ -210,7 +210,7 @@ ja:{
   aims:{strong:'つよい（ちいさい子に おすすめ）',weak:'すこし',off:'なし（じぶんの ちからだけ）'},
   sndOn:'🔊 おと あり',sndOff:'🔇 おと なし',vTest:'こえを きく',
   voices:['AIの こえ 1','AIの こえ 2','AIの こえ 3','AIの こえ 4','この 端末の こえ','こえ なし'],
-  about:'ゆびで はじく 強さで とぶ きょりが、向きで 方向が かわります。ねらう・ちからを 加減する・くずれる ようすを 見る、を 楽しめます。ちいさい子には「ねらいの おてつだい」を つよい に しておくと、だいたい ねらった ものに 当たります。むりょうで 3つの 遊びの ステージ 1〜3 と ボール 3しゅるい。 声：VOICEVOX:冥鳴ひまり、VOICEVOX:四国めたん、VOICEVOX:ずんだもん、VOICEVOX:雨晴はう（日本語、AIのこえ 1〜4）、Kokoro-82M（英語、Apache-2.0）。',
+  about:'ゆびで はじく 強さで とぶ きょりが、向きで 方向が かわります。ねらう・ちからを 加減する・くずれる ようすを 見る、を 楽しめます。ちいさい子には「ねらいの おてつだい」を つよい に しておくと、だいたい ねらった ものに 当たります。むりょうで 3つの 遊びの ステージ 1〜3 と ボール 3しゅるい。 声：VOICEVOX:冥鳴ひまり、VOICEVOX:四国めたん、VOICEVOX:ずんだもん、VOICEVOX:雨晴はう（日本語、AIのこえ 1〜4）、Kokoro-82M（英語、Apache-2.0）。 とどかない・とびすぎが つづくと、その たんまつと お子さんに あわせて とぶ きょりを じどうで ちょうせいします。',
   reset:'すすみぐあいを けす',resetSure:'もういちど おすと けします',resetDone:'けしました',close:'とじる',
   kkFree:'つみき たおし・ぱくぱく どうぶつ・ふうせん わり の ステージ 1〜3／ボール 3しゅるい（あか・ビーチ・テニス）',
   kkFull:'ぜんぶの ステージ（どんどん つづく）／ボール 4しゅるい（サッカー・ほし・にじいろ・すいか）',
@@ -233,7 +233,7 @@ en:{
   aims:{strong:'Strong (best for little kids)',weak:'A little',off:'Off (all on their own)'},
   sndOn:'🔊 Sound on',sndOff:'🔇 Sound off',vTest:'Test voice',
   voices:['AI voice 1','AI voice 2','AI voice 3','AI voice 4','Device voice','No voice'],
-  about:'How hard the child flicks sets how far the ball flies; the direction sets where it goes. Kids practise aiming, controlling strength and watching things tumble. With "Aiming help" set to Strong, the ball mostly hits what they aim at. Free: stages 1–3 of all three games and 3 balls. Voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう (Japanese); Kokoro-82M (English, Apache-2.0).',
+  about:'How hard the child flicks sets how far the ball flies; the direction sets where it goes. Kids practise aiming, controlling strength and watching things tumble. With "Aiming help" set to Strong, the ball mostly hits what they aim at. Free: stages 1–3 of all three games and 3 balls. Voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう (Japanese); Kokoro-82M (English, Apache-2.0). If throws keep falling short or flying too far, the game slowly adjusts the throwing strength to the device and the child.',
   reset:'Reset progress',resetSure:'Press again to reset',resetDone:'Reset',close:'Close',
   kkFree:'Stages 1–3 of Block knockdown, Hungry animals and Balloon pop / 3 balls (red, beach, tennis)',
   kkFull:'All stages (they keep going) / 4 more balls (soccer, star, rainbow, watermelon)',
@@ -346,7 +346,8 @@ let G=null; // the current stage
 let mode='home',raf=0,lastT=0,run=0,NOW=0;
 
 function throwBall(vsx,vsy){// vsx, vsy: finger speed in screen-heights per second (vsy>0 = up)
-  const vh0=clamp(1.6+vsy*.9,2,8.5);
+  // S.pow: その たんまつ・その子に あわせて じどうで かわる「とどきやすさ」（v0.3）。とどかない／とびすぎ が つづくと すこしずつ なおす
+  const vh0=clamp(1.6+vsy*.9*(S.pow||1),2,8.5);
   const phi0=clamp(Math.atan2(vsx,Math.max(.3,vsy))*.85,-.8,.8);
   const x0=HD.x,y0=HD.y,z0=HANDZ;
   const [vh,phi]=assist(x0,y0,z0,vh0,phi0);
@@ -375,6 +376,7 @@ function onBallEnd(b){if(!G||G.cleared)return;if(b.hit){G.short=0;G.long=0;retur
   let tz=null,bd=9;for(const p of MD().targets()){const d=Math.abs(Math.atan2(p.x-HD.x,p.z-HANDZ)-Math.atan2(b.vx,Math.abs(b.vz)+.01));if(d<bd){bd=d;tz=p.z}}
   if(tz==null)return;
   if(b.land<tz-.5){G.short++;G.long=0}else if(b.land>tz+.9){G.long++;G.short=0}
+  if(G.short>=1&&G.long===0)S.pow=clamp((S.pow||1)*1.08,.6,1.9);if(G.long>=1&&G.short===0)S.pow=clamp((S.pow||1)*.93,.6,1.9);save();
   if(G.short>=2){G.short=0;ask(T().farAsk);sayIdle('far')}
   else if(G.long>=2){G.long=0;ask(T().nearAsk);sayIdle('near')}}
 
