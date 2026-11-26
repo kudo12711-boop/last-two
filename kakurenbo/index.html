@@ -19,6 +19,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 .screen{position:fixed;inset:0;display:none;flex-direction:column;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
 .screen.on{display:flex}
 .emo{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;line-height:1}
+img.tw{width:1em;height:1em;display:inline-block;vertical-align:-.12em;pointer-events:none;-webkit-user-drag:none}
 
 /* タイトル */
 #title,#where,#photo{align-items:center;gap:14px;overflow:auto;padding-top:calc(env(safe-area-inset-top) + 20px);padding-bottom:24px}
@@ -334,6 +335,7 @@ input[type=file]{display:none}
 <canvas id="confetti"></canvas>
 
 <script src="../common/kakin.js"></script>
+<script src="../common/emoji.js"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -388,7 +390,7 @@ const TEXT = {
 <p><b>おうちで かくれんぼ</b>: おうちの へやの しゃしんを とると、その しゃしんの なかに かくれます。かぞくの かおを いれると、かぞくも かくれます。</p>
 <p><b>きみが かくれる ばん</b>: こどもが かくれる ばしょを えらび、おにさんが さがします。みつからなければ メダルが もらえます。</p>
 <p>みつけた なかまは「なかよし ずかん」に あつまります。ときどき ひみつの おともだちも かくれています。</p>`,
-    voiceH: 'こえ', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。', test: '▶ ためす', voices: ['AIのこえ 1', 'AIのこえ 2', 'AIのこえ 3', 'AIのこえ 4'], dev: 'スマホの よみあげ', off: 'こえ なし',
+    voiceH: 'こえ', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。　絵：Twemoji（© Twitter, Inc and other contributors、CC-BY 4.0）。', test: '▶ ためす', voices: ['AIのこえ 1', 'AIのこえ 2', 'AIのこえ 3', 'AIのこえ 4'], dev: 'スマホの よみあげ', off: 'こえ なし',
     recH: 'おうちの ひとの こえを ろくおん', recNote: 'ろくおんすると、その ばめんでは AI の こえの かわりに ながれます（3びょうまで）。',
     rec: '● ろくおん', stop: '■ とめる', play1: '▶', del: '✕', close: 'とじる',
     sneakH: 'こっそり おひっこし', sneakNote: '「みんなを さがそう」で さがしている あいだに、かくれている どうぶつが ときどき べつの ものかげへ はしって いどうします。はしっている ところを タッチすると「つかまえた！」。',
@@ -430,7 +432,7 @@ const TEXT = {
 <p><b>Hide & seek at home</b>: take a photo of a room and everyone hides inside it. Add family faces and the family hides too.</p>
 <p><b>Your turn to hide</b>: the child picks a hiding place and the seeker looks for them. Stay hidden to win a medal.</p>
 <p>Friends you find go into the friend book. Sometimes a secret friend is hiding too.</p>`,
-    voiceH: 'Voice', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).', test: '▶ Test', voices: ['AI voice 1', 'AI voice 2', 'AI voice 3', 'AI voice 4'], dev: 'Device voice', off: 'No voice',
+    voiceH: 'Voice', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0). Pictures: Twemoji (© Twitter, Inc and other contributors, CC-BY 4.0).', test: '▶ Test', voices: ['AI voice 1', 'AI voice 2', 'AI voice 3', 'AI voice 4'], dev: 'Device voice', off: 'No voice',
     recH: 'Record your own voice', recNote: 'A recording plays instead of the built-in voice for that moment (up to 3 s).',
     rec: '● Record', stop: '■ Stop', play1: '▶', del: '✕', close: 'Close',
     sneakH: 'Sneaky moves', sneakNote: 'In “Find everyone”, a hiding animal sometimes runs to another hiding spot while your child is searching. Tap it while it runs to catch it!',
@@ -695,7 +697,7 @@ function renderTitle() {
   $('#lvl').innerHTML = LEVELS.map((l, i) => `<button data-l="${i}" class="${i === level ? 'sel' : ''}">${T('lvl')[i]}<small>${T('lvlSub')[i]}</small></button>`).join('');
   const got = ALL_FRIENDS.filter(e => book[e]).length;
   $('#bookCount').textContent = `${got} / ${ALL_FRIENDS.length}` + (medals ? `　🏅×${medals}` : '');
-  $('#book').innerHTML = ALL_FRIENDS.map(e => `<span class="${book[e] ? '' : 'no'}">${e}</span>`).join('');
+  $('#book').innerHTML = ALL_FRIENDS.map(e => `<span class="${book[e] ? '' : 'no'}">${tw(e)}</span>`).join('');
   $('#btnSnd').textContent = soundOn ? T('soundOn') : T('soundOff');
 }
 function goTitle() { hush(); runId++; stopIdle(); show('title'); setTheme('#d9f2c4'); renderTitle(); }
@@ -714,7 +716,7 @@ Kakin.setup({
 });
 function renderWhere() {
   $('#scenes').innerHTML = Object.entries(SCENES).map(([id, s]) =>
-    `<button data-s="${id}" style="background:${s.card}" class="${sceneOpen(id) ? '' : 'kk-lock'}"><span class="emo">${s.icon}</span>${T('scenes')[id]}</button>`).join('');
+    `<button data-s="${id}" style="background:${s.card}" class="${sceneOpen(id) ? '' : 'kk-lock'}"><span class="emo">${tw(s.icon)}</span>${T('scenes')[id]}</button>`).join('');
 }
 
 /* ---------- ステージの おおきさ ---------- */
@@ -726,7 +728,9 @@ function fitStage() {
 }
 addEventListener('resize', () => { if ($('#game').classList.contains('on')) fitStage(); if ($('#spots').classList.contains('on')) drawSpots(); });
 
-function hiderHTML(h) { return h.face ? `<img src="${h.face}" alt="">` : h.e; }
+// そろった絵（v0.5）: 絵文字は Twemoji の 絵で だす（スマホごとの ちがいを なくす）
+const tw = e => `<img class="tw" src="${Emo.url(e)}" alt="${e}">`;
+function hiderHTML(h) { return h.face ? `<img src="${h.face}" alt="">` : tw(h.e); }
 
 /* カバー（かくれる もの）を ならべる */
 function layoutCovers(scene, K) {
@@ -750,13 +754,13 @@ function buildScene(scene) {
   stage.className = ''; stage.innerHTML = ''; stage.style.background = scene.bg;
   for (const [e, x, y, s] of scene.deco) {
     const d = document.createElement('div'); d.className = 'deco emo';
-    d.style.cssText = `left:${x}%;top:${y}%;font-size:calc(var(--u)*${s})`; d.textContent = e; stage.appendChild(d);
+    d.style.cssText = `left:${x}%;top:${y}%;font-size:calc(var(--u)*${s})`; d.innerHTML = tw(e); stage.appendChild(d);
   }
 }
 function makeSpot(c) {
   const el = document.createElement('div'); el.className = 'spot';
   el.style.cssText = `left:${c.x}%;top:${c.y}%;width:calc(var(--u)*${c.S});height:calc(var(--u)*${c.S});--s:${c.S}`;
-  el.innerHTML = `<div class="cov emo">${c.e}</div>`;
+  el.innerHTML = `<div class="cov emo">${tw(c.e)}</div>`;
   stage.appendChild(el); c.el = el; return el;
 }
 /* かくれる: カバーの うしろから すこし みえる */
@@ -838,7 +842,7 @@ async function hideSequence() {
 }
 function renderSlots() {
   $('#slots').style.display = ''; $('#barMsg').style.display = 'none';
-  $('#slots').innerHTML = G.hs.map((h, i) => `<i data-i="${i}" class="${h.found ? 'got' : 'no'}"><span class="emo">${h.face ? `<img src="${h.face}">` : h.e}</span></i>`).join('');
+  $('#slots').innerHTML = G.hs.map((h, i) => `<i data-i="${i}" class="${h.found ? 'got' : 'no'}"><span class="emo">${h.face ? `<img src="${h.face}">` : tw(h.e)}</span></i>`).join('');
 }
 function sayBig(txt, color) { const s = $('#say'); s.textContent = txt; s.style.webkitTextStroke = `3px ${color || 'var(--accent)'}`; s.classList.remove('on'); void s.offsetWidth; s.classList.add('on'); }
 function kusu(el) {
@@ -957,7 +961,7 @@ function finishSeek() {
     for (const h of G.hs) if (h.e) { if (!book[h.e]) fresh++; book[h.e] = (book[h.e] || 0) + 1; }
     store.set('kakurenbo-book', book);
     $('#clearH').textContent = T('clearH');
-    $('#rewardRow').innerHTML = G.hs.map(h => `<span>${h.face ? `<img class="face" src="${h.face}">` : h.e}</span>`).join('');
+    $('#rewardRow').innerHTML = G.hs.map(h => `<span>${h.face ? `<img class="face" src="${h.face}">` : tw(h.e)}</span>`).join('');
     $('#clearP').textContent = fresh ? T('clearP')(fresh) : T('clearP0');
     $('#btnOther').querySelector('[data-t]').textContent = G.photo ? T('otherRoom') : T('other');
     await wait(900);
@@ -1174,7 +1178,7 @@ function foundPhoto(h) {
 let cMe = store.get('kakurenbo-me', '🐰'), cOni = store.get('kakurenbo-oni', '🐻');
 function openCPick() {
   const me = ['🐰', '🐱', '🐶', '🐥', '🐼', '🦊'], oni = ['🐻', '🦁', '🐵', '🐘'];
-  const opt = (v, cur) => `<button data-v="${v}" class="${v === cur ? 'sel' : ''}">${v.startsWith('data:') ? `<img class="face" src="${v}">` : v}</button>`;
+  const opt = (v, cur) => `<button data-v="${v}" class="${v === cur ? 'sel' : ''}">${v.startsWith('data:') ? `<img class="face" src="${v}">` : tw(v)}</button>`;
   const fs = FACES.map(f => f.url);
   if (cMe.startsWith('data:') && !fs.includes(cMe)) cMe = '🐰';
   if (cOni.startsWith('data:') && !fs.includes(cOni)) cOni = '🐻';
@@ -1188,7 +1192,7 @@ $('#btnCStart').onclick = () => {
   try { localStorage.setItem('kakurenbo-me', JSON.stringify(cMe.startsWith('data:') ? '🐰' : cMe)); localStorage.setItem('kakurenbo-oni', JSON.stringify(cOni.startsWith('data:') ? '🐻' : cOni)); } catch (e) {}
   $('#cpick').classList.remove('on'); audio(); startC(sceneId);
 };
-const asHTML = v => v.startsWith('data:') ? `<img class="face" src="${v}" alt="">` : v;
+const asHTML = v => v.startsWith('data:') ? `<img class="face" src="${v}" alt="">` : tw(v);
 function startC(sid) {
   mode = 'C'; sceneId = sid; const scene = SCENES[sid];
   show('game'); setTheme(scene.card); fitStage(); buildScene(scene); prepVoice(); stopIdle();
@@ -1294,7 +1298,7 @@ async function cWin() {
 function cEnd(win) {
   $('#barMsg').textContent = '';
   $('#clearH').textContent = win ? T('winH') : T('loseH');
-  $('#rewardRow').innerHTML = `<span>${asHTML(cMe)}</span>` + (win ? '<span>🏅</span>' : `<span>${asHTML(cOni)}</span>`);
+  $('#rewardRow').innerHTML = `<span>${asHTML(cMe)}</span>` + (win ? `<span>${tw('🏅')}</span>` : `<span>${asHTML(cOni)}</span>`);
   $('#clearP').textContent = win ? T('winP') : T('loseP');
   $('#btnOther').querySelector('[data-t]').textContent = T('other');
   $('#clear').classList.add('on');
