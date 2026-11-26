@@ -38,7 +38,7 @@ function fileList(app) {
 
 function manifest(app) {
   return {
-    name: app.name, short_name: app.short, description: app.desc, lang: 'ja',
+    name: app.name, short_name: app.short, description: app.desc, lang: app.lang || 'ja',
     id: './', start_url: './', scope: app.scope || './', display: 'standalone',
     background_color: app.theme, theme_color: app.theme,
     icons: [
