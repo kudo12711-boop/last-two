@@ -43,6 +43,7 @@ button{font:inherit;color:inherit}
 .mini{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;align-items:center}
 .mini .btn{font-size:14px;padding:8px 12px}
 .note{font-size:13px;text-align:center;color:#3b4a6a;margin-top:8px;font-weight:700}
+.wish{margin-top:12px;padding:10px 14px;border-radius:16px;background:rgba(255,255,255,.85);font-weight:800;font-size:15px;text-align:center;color:#3b4a6a;box-shadow:0 3px 0 rgba(0,0,0,.08)}.wish:empty{display:none}.wish .wd{display:block;font-size:13px;margin-top:2px}
 
 /* さがす */
 .arrows{position:absolute;left:0;right:0;bottom:calc(120px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;padding:0 10px}
@@ -128,6 +129,8 @@ button{font:inherit;color:inherit}
       <button class="btn blue" id="tEgg"></button>
     </div>
     <div class="note" id="tEggNote"></div>
+    <div class="wish" id="tWish"></div>
+    <div class="note" id="tParts"></div>
     <div class="mini">
       <button class="btn" id="tLang"></button>
       <button class="btn" id="tSnd"></button>
@@ -345,6 +348,7 @@ const TEXT = {
     meetHint: 'ごはんを あげると みためが かわるよ。ゆびで なでても なかよく なれる',
     choose: 'なかよしに なる？ ごはんで まだ かえられるよ', beFriend: '💞 なかよしに なる', notNow: '👋 またね',
     bye: '← またね', love: 'だいすき！', yum: 'もぐもぐ', purr: 'すりすり',
+    wish: p => 'おねがい: 「' + p + '」の 子に あいたいな', wish0: 'おねがい: さいしょの なかよしを みつけよう', wishHit: (p, n) => '⭐ おねがい かなった！（' + p + '）いままでで ' + n + 'こ', complete: '🏆 ぶひんを ぜんぶ みつけた！ ずかん コンプリート！', partsCnt: (a, b) => 'みつけた ぶひん ' + a + ' / ' + b,
     friends: 'なかよしに なった！', newPart: p => '✨ あたらしい ぶひん: ' + p, sep: '・', backEx: 'さがしに もどる', toBook: 'ずかんを みる',
     bkTitle: '📖 ずかん', tabC: n => 'いきもの ' + n, tabP: (a, b) => 'ぶひん ' + a + '/' + b,
     empty: 'まだ だれも いないよ。<br>くさむらを さがしてみよう！',
@@ -385,6 +389,7 @@ const TEXT = {
     meetHint: 'Food changes how it looks. Petting with your finger works too',
     choose: 'Be friends? You can still feed it to change its look', beFriend: '💞 Be friends', notNow: '👋 Bye',
     bye: '← Bye', love: 'Yummy!', yum: 'Munch', purr: 'Purr',
+    wish: p => 'Wish: I want to meet one with "' + p + '"', wish0: 'Wish: find your first friend', wishHit: (p, n) => '⭐ Wish came true! (' + p + ') ' + n + ' so far', complete: '🏆 You found every part! The book is complete!', partsCnt: (a, b) => 'Parts found ' + a + ' / ' + b,
     friends: 'New friend!', newPart: p => '✨ New parts: ' + p, sep: ', ', backEx: 'Keep exploring', toBook: 'Open the book',
     bkTitle: '📖 Critter Book', tabC: n => 'Critters ' + n, tabP: (a, b) => 'Parts ' + a + '/' + b,
     empty: 'Nobody here yet.<br>Go search the bushes!',
@@ -489,12 +494,19 @@ let book = store.get('ikimono-book', null);
 if (!book || !Array.isArray(book.list)) book = { next: 1, list: [], seen: {} };
 const saveBook = () => store.set('ikimono-book', book);
 function seenCount() { let n = 0; for (const c of CATS) n += Object.keys(book.seen[c] || {}).filter(k => k !== 'none').length; return n; }
+// おねがい（v0.6）: まだ みたことの ない ぶひんを 1つ えらんで「この ぶひんの子に あいたい」。かなうと ⭐
+function newWish() {
+  const left = []; for (const c of CATS) for (const k of COLLECT(c)) if (!(book.seen[c] || {})[k] && !isRare(c, k)) left.push({ cat: c, k });
+  const pool = left.length ? left : (() => { const r = []; for (const c of CATS) for (const k of COLLECT(c)) if (!(book.seen[c] || {})[k]) r.push({ cat: c, k }); return r; })();
+  book.wish = pool.length ? pick(pool) : null;
+}
 function addToBook(g, from, par, nm) {
   const newParts = [];
+  if (book.wish && g[book.wish.cat] === book.wish.k) { book.wishDone = (book.wishDone || 0) + 1; book.wishHit = book.wish; book.wish = null; }
   for (const c of CATS) { book.seen[c] = book.seen[c] || {}; if (!book.seen[c][g[c]]) { book.seen[c][g[c]] = 1; if (g[c] !== 'none') newParts.push({ cat: c, k: g[c] }); } }
   const pg = par ? Math.max(...par.map(id => (findE(id) || { gen: 1 }).gen)) + 1 : 1;
   const e = { id: book.next++, g, nm: nm || newName(), cn: '', from, par: par || null, gen: pg, fk: false, at: Date.now() };
-  book.list.push(e); saveBook();
+  book.list.push(e); if (!book.wish) newWish(); saveBook();
   return { e, newParts };
 }
 const findE = id => book.list.find(e => e.id === id);
@@ -1132,6 +1144,27 @@ const sfx = {
   fan: () => [523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, .22, 'triangle', .12, null, i * .1)),
 };
 
+/* なきごえ（v0.6）: いきものの からだ・おおきさ・め・くち で こえが かわる。音の ファイルは つかわない */
+function cry(g, mood = 'happy') {
+  const a = ac(); if (!a || muted || !g) return;
+  const r = mulberry(g.seed || 1);
+  const bodyF = { round: 520, egg: 600, pear: 440, long: 380, spiky: 700, drop: 660, mochi: 480 }[g.body] || 520;
+  const f0 = bodyF / Math.pow(g.size || 1, 1.6) * (1 + (r() - .5) * .3);
+  const type = { fang: 'sawtooth', beak: 'square', cat: 'triangle', o: 'sine', tongue: 'triangle', smile: 'sine' }[g.mouth] || 'sine';
+  const n = g.eyes === 'three' ? 3 : g.eyes === 'one' ? 1 : 2, vib = g.eyes === 'sparkle' || g.eyes === 'glow';
+  const up = mood === 'happy' ? 1 : .8, t0 = a.currentTime + .02;
+  for (let i = 0; i < n; i++) {
+    const st = t0 + i * (.16 + r() * .06), d = .13 + r() * .12, o = a.createOscillator(), gn = a.createGain();
+    o.type = type; const f = f0 * (i === n - 1 ? 1.12 * up : 1);
+    o.frequency.setValueAtTime(f * .8, st); o.frequency.exponentialRampToValueAtTime(f * (g.mouth === 'o' ? 1.5 : 1.25) * up, st + d * .4); o.frequency.exponentialRampToValueAtTime(f * .9, st + d);
+    if (vib) { const l = a.createOscillator(), lg = a.createGain(); l.frequency.value = 22; lg.gain.value = f * .05; l.connect(lg).connect(o.frequency); l.start(st); l.stop(st + d + .02); }
+    const v = type === 'sawtooth' || type === 'square' ? .05 : .12;
+    gn.gain.setValueAtTime(0, st); gn.gain.linearRampToValueAtTime(v, st + .02); gn.gain.exponentialRampToValueAtTime(.001, st + d);
+    let out = gn; if (type !== 'sine') { const fl = a.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = f * 3; gn.connect(fl); out = fl; }
+    o.connect(gn); out.connect(a.destination); o.start(st); o.stop(st + d + .02);
+  }
+}
+
 /* ---------- まわりの音（場所ごとに その場で つくる。音のファイルは つかわない） ---------- */
 const AMB = { id: null, master: null, nodes: [], next: {} };
 let noiseBuf = null;
@@ -1290,6 +1323,9 @@ function renderTitle() {
     hb.appendChild(b);
   }
   $('#tBook').textContent = t.book(book.list.length);
+  if (!book.wish && book.list.length) { newWish(); saveBook(); }
+  $('#tWish').innerHTML = book.wish ? '🙏 ' + t.wish(partName(book.wish.cat, book.wish.k)) + (book.wishDone ? ' <span class="wd">' + '⭐'.repeat(Math.min(book.wishDone, 10)) + (book.wishDone > 10 ? ' ×' + book.wishDone : '') + '</span>' : '') : (book.list.length ? '' : '🙏 ' + t.wish0);
+  $('#tParts').textContent = t.partsCnt(seenCount(), TOTAL_PARTS);
   const canEgg = book.list.length >= 2;
   $('#tEgg').textContent = t.egg; $('#tEgg').disabled = !canEgg;
   $('#tEggNote').textContent = canEgg ? '' : t.eggNeed;
@@ -1532,9 +1568,12 @@ function showResult(o) {
   const news = [];
   if (o.mut) news.push(o.mut.color ? t.mutColor : t.mutPart(partName(o.mut.cat, o.mut.k)));
   if (o.newParts.length) news.push(t.newPart(o.newParts.map(p => partName(p.cat, p.k)).join(t.sep)));
+  if (book.wishHit) { news.push(t.wishHit(partName(book.wishHit.cat, book.wishHit.k), book.wishDone)); book.wishHit = null; saveBook(); setTimeout(() => sfx.fan(), 900); }
+  if (seenCount() >= TOTAL_PARTS && !book.complete) { book.complete = 1; saveBook(); news.push(t.complete); }
   $('#rNews').innerHTML = news.map(s => '<div>' + s + '</div>').join('');
   $('#rA').textContent = o.a; $('#rB').textContent = o.b;
   resultCb = o; $('#result').classList.add('on');
+  setTimeout(() => cry(lookOf(o.e)), 450);
 }
 $('#rA').onclick = () => { sfx.tap(); $('#result').classList.remove('on'); resultCb && resultCb.onA(); };
 $('#rB').onclick = () => { sfx.tap(); $('#result').classList.remove('on'); resultCb && resultCb.onB(); };
@@ -1595,6 +1634,7 @@ function openDetailMeta(e) {
 function openDetail(e) {
   detailE = e; const t = T();
   const pic = $('#dPic'); pic.innerHTML = ''; detailO = makeLive(e, 200, 'idle'); pic.appendChild(detailO.c);
+  pic.onclick = () => cry(lookOf(e)); setTimeout(() => cry(lookOf(e), 'idle'), 250); // さわると なく
   $('#dName').textContent = dispName(e); $('#rename').style.display = 'none';
   openDetailMeta(e);
   const ch = $('#dParts'); ch.innerHTML = '';
