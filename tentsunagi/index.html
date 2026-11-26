@@ -286,7 +286,7 @@ const TEXT = {
     doneSay: name => name + 'が、できたね！',
     cry: { star: 'きらりん！', heart: 'どきどき！', fish: 'すいすい！', house: 'ただいまー！', apple: 'しゃりっ！', cat: 'にゃーん！', rocket: 'はっしゃー！', yacht: 'ざぶーん！', mush: 'ぽこっ！', whale: 'ぷしゅー！', bfly: 'ひらひら！', rabbit: 'ぴょん、ぴょん！', car: 'ぶっぶー！', custom: 'やったね！',
       tulip: 'ゆらゆら！', umbrella: 'ぱっ！', snowman: 'さむいね！', balloon: 'ふわふわー！', icecream: 'つめたーい！', bear: 'がおー！', pig: 'ぶーぶー！', turtle: 'のそのそ！', chick: 'ぴよぴよ！',
-      plane: 'びゅーん！', dolphin: 'きゅいきゅい！', castle: 'ぱんぱかぱーん！', dino: 'がおーっ！', octopus: 'にょろにょろ！', crown: 'きらきら！', tree: 'メリークリスマス！', train: 'ぽっぽー！', elephant: 'ぱおーん！' },
+      plane: 'びゅーん！', dolphin: 'きゅいきゅい！', castle: 'ぱんぱかぱーん！', dino: 'がおーっ！', octopus: 'にょろにょろ！', crown: 'きらきら！', tree: 'メリークリスマス！', train: 'ぽっぽー！', elephant: 'ぱおーん！', koinobori: 'およげー！', pumpkin: 'トリック・オア・トリート！', bus: 'しゅっぱつ、しんこう！', cake: 'おめでとう！' },
     pics: null, // 日本語の名前は PICS の name
     letters: ['エー', 'ビー', 'シー', 'ディー', 'イー', 'エフ', 'ジー', 'エイチ', 'アイ', 'ジェー', 'ケー', 'エル', 'エム', 'エヌ', 'オー', 'ピー', 'キュー', 'アール', 'エス', 'ティー', 'ユー', 'ブイ', 'ダブリュー', 'エックス', 'ワイ', 'ゼット'],
     num(n) { const N = ['いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう', 'じゅう']; if (n <= 10) return N[n - 1]; const t = Math.floor(n / 10), o = n % 10; return ['', 'じゅう', 'にじゅう', 'さんじゅう', 'よんじゅう', 'ごじゅう', 'ろくじゅう'][t] + (o ? N[o - 1] : ''); },
@@ -319,9 +319,9 @@ const TEXT = {
     doneSay: name => `You made a ${name.toLowerCase()}!`,
     cry: { star: 'Twinkle!', heart: 'Ba-dump!', fish: 'Swish, swish!', house: 'I’m home!', apple: 'Crunch!', cat: 'Meow!', rocket: 'Blast off!', yacht: 'Splash!', mush: 'Pop!', whale: 'Whoosh!', bfly: 'Flutter, flutter!', rabbit: 'Hop, hop!', car: 'Beep beep!', custom: 'Hooray!',
       tulip: 'Sway, sway!', umbrella: 'Pop! It’s open!', snowman: 'Brrr, it’s cold!', balloon: 'Up, up and away!', icecream: 'So cold!', bear: 'Roar!', pig: 'Oink, oink!', turtle: 'Slow and steady!', chick: 'Cheep, cheep!',
-      plane: 'Zoom!', dolphin: 'Eee, eee!', castle: 'Ta-da!', dino: 'Rawr!', octopus: 'Wiggle, wiggle!', crown: 'Sparkle!', tree: 'Merry Christmas!', train: 'Choo choo!', elephant: 'Toot!' },
+      plane: 'Zoom!', dolphin: 'Eee, eee!', castle: 'Ta-da!', dino: 'Rawr!', octopus: 'Wiggle, wiggle!', crown: 'Sparkle!', tree: 'Merry Christmas!', train: 'Choo choo!', elephant: 'Toot!', koinobori: 'Swim, swim!', pumpkin: 'Trick or treat!', bus: 'All aboard!', cake: 'Happy birthday!' },
     pics: { star: 'Star', heart: 'Heart', fish: 'Fish', house: 'House', apple: 'Apple', cat: 'Cat', rocket: 'Rocket', yacht: 'Sailboat', mush: 'Mushroom', whale: 'Whale', bfly: 'Butterfly', rabbit: 'Bunny', car: 'Car',
-      tulip: 'Tulip', umbrella: 'Umbrella', snowman: 'Snowman', balloon: 'Balloon', icecream: 'Ice cream', bear: 'Bear', pig: 'Pig', turtle: 'Turtle', chick: 'Chick', plane: 'Airplane', dolphin: 'Dolphin', castle: 'Castle', dino: 'Dinosaur', octopus: 'Octopus', crown: 'Crown', tree: 'Christmas tree', train: 'Train', elephant: 'Elephant' },
+      tulip: 'Tulip', umbrella: 'Umbrella', snowman: 'Snowman', balloon: 'Balloon', icecream: 'Ice cream', bear: 'Bear', pig: 'Pig', turtle: 'Turtle', chick: 'Chick', plane: 'Airplane', dolphin: 'Dolphin', castle: 'Castle', dino: 'Dinosaur', octopus: 'Octopus', crown: 'Crown', tree: 'Christmas tree', train: 'Train', elephant: 'Elephant', koinobori: 'Carp streamer', pumpkin: 'Pumpkin', bus: 'Bus', cake: 'Birthday cake' },
     letters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
     num(n) { const O = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'], D = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty']; return n < 20 ? O[n] : D[Math.floor(n / 10)] + (n % 10 ? '-' + O[n % 10] : ''); },
     kana: false // あいうえお は 日本語のときだけ
@@ -413,6 +413,10 @@ const sfx = {
   crown() { sfx.star(); },
   tree() { [1319, 1319, 1319, 1319, 1319, 1319, 1319, 1568, 1047, 1175, 1319].forEach((f, i) => tone(f, i * .14, .12, 'sine', .1)); },
   train() { tone(880, 0, .7, 'square', .06); tone(1109, 0, .7, 'square', .05); for (let i = 0; i < 6; i++) noise(.8 + i * .2, .12, .14, 900, 500, 1); },
+  koinobori() { noise(0, 1.4, .18, 600, 1400, .6); tone(660, .3, .3, 'sine', .08, 880); },
+  pumpkin() { tone(392, 0, .5, 'triangle', .1, 260); tone(330, .5, .7, 'triangle', .1, 200); },
+  bus() { tone(520, 0, .2, 'square', .08); tone(660, .25, .3, 'square', .08); noise(.7, 1, .1, 200, 500, .8); },
+  cake() { [523, 523, 587, 523, 698, 659].forEach((f, i) => tone(f, i * .22, .2, 'triangle', .12)); },
   elephant() { tone(300, 0, .9, 'sawtooth', .1, 520); tone(150, 0, .9, 'square', .04, 260); }
 };
 
@@ -1002,7 +1006,52 @@ const PICS = [
       g.strokeStyle = '#fff'; g.lineWidth = 2.4; g.lineCap = 'round'; g.beginPath(); g.moveTo(84, 56); g.quadraticCurveTo(86, 62, 82, 64); g.stroke();
       for (const x of [68, 72, 32, 36]) ell(g, x, 85, 1.6, 1.2, '#fff');
       const p = t % 3; if (p < 1) for (let i = 0; i < 6; i++) { const k = p; ell(g, 96 + i * 1.5 + k * 6, 72 - k * 30 - i * 3, 1.4, 1.8, 'rgba(90,184,240,.8)'); }
-    } }
+    } },
+  /* ---- v0.5 で ふやした え（きせつの ぎょうじ と のりもの） ---- */
+  { id: 'koinobori', name: 'こいのぼり', emoji: '🎏', fill: '#ff6b6b', bg: '#dff1ff',
+    path() { return P().m(14, 36).c(34, 24, 62, 26, 80, 34).l(94, 24).l(88, 46).l(94, 68).l(80, 58).c(62, 66, 34, 68, 14, 56).c(8, 50, 8, 42, 14, 36).pts; },
+    anim(t) { return { dy: Math.sin(t * 2.4) * 3, rot: Math.sin(t * 2.4) * .05 }; },
+    back(g) { rect(g, 4, 10, 3.5, 90, '#a86b3d'); ell(g, 5.7, 9, 3.5, 3.5, '#ffd23f'); },
+    art(g, t) {
+      ell(g, 24, 44, 6.5, 6.5, '#fff'); ell(g, 24, 44, 3.5, 3.5, '#3a2a1a'); ell(g, 22.8, 42.8, 1.1, 1.1, '#fff');
+      g.strokeStyle = '#d94848'; g.lineWidth = 1.6; g.beginPath(); g.arc(31, 46, 10, -.9, .9); g.stroke();
+      for (let r = 0; r < 2; r++) for (let i = 0; i < 4; i++) { const x = 44 + i * 9 + r * 4.5, y = 40 + r * 9 + Math.sin(t * 4 + i) * .8; g.beginPath(); g.arc(x, y, 4, Math.PI * .1, Math.PI * .9); g.stroke(); }
+      ell(g, 14, 46, 2, 5, '#3a2a1a');
+    } },
+  { id: 'pumpkin', name: 'かぼちゃ', emoji: '🎃', fill: '#ff9a2e', bg: '#3b2a55',
+    path() { return P().m(50, 26).c(70, 18, 92, 30, 92, 56).c(92, 82, 70, 92, 50, 86).c(30, 92, 8, 82, 8, 56).c(8, 30, 30, 18, 50, 26).pts; },
+    anim(t) { const b = Math.abs(Math.sin(t * 2.6)); return { dy: -b * 4, sy: 1 - (1 - b) * .04, sx: 1 + (1 - b) * .03, oy: 88 }; },
+    back(g) { poly(g, [[46, 28], [48, 10], [56, 12], [54, 28]], '#5a8f3a'); },
+    art(g, t) {
+      g.strokeStyle = '#e07a10'; g.lineWidth = 1.8; g.beginPath(); g.ellipse(50, 56, 14, 30, 0, 0, 7); g.moveTo(50, 26); g.lineTo(50, 86); g.stroke();
+      const glow = `rgba(255,${200 + 40 * Math.sin(t * 5) | 0},60,1)`;
+      poly(g, [[28, 52], [36, 40], [42, 52]], glow); poly(g, [[58, 52], [64, 40], [72, 52]], glow);
+      poly(g, [[26, 62], [74, 62], [66, 76], [58, 70], [50, 78], [42, 70], [34, 76]], glow);
+      for (let i = 0; i < 3; i++) { const k = (t * .3 + i / 3) % 1; g.globalAlpha *= 1 - k; sparkle(g, 14 + i * 34, 30 - k * 24, 3, '#ffe9a8'); g.globalAlpha /= Math.max(.001, 1 - k); }
+    } },
+  { id: 'bus', name: 'バス', emoji: '🚌', fill: '#ffd23f', bg: '#e8f4e0',
+    path() { return P().m(12, 24).l(84, 24).c(90, 24, 92, 30, 92, 36).l(92, 72).l(8, 72).l(8, 28).c(8, 26, 10, 24, 12, 24).pts; },
+    anim(t) { const p = t % 5; if (p < 3) return { dy: Math.abs(Math.sin(t * 16)) * -.7 }; return { dx: Math.sin((p - 3) * Math.PI) * 6 }; },
+    car: true,
+    art(g, t) {
+      for (let i = 0; i < 4; i++) rect(g, 13 + i * 17, 31, 13, 14, '#e8f7ff');
+      rect(g, 82, 31, 8, 22, '#e8f7ff'); rect(g, 8, 50, 84, 4, '#ff8a3d');
+      for (let i = 0; i < 4; i++) { const k = (t * .7 + i * .37) % 1; ell(g, 19 + i * 17, 41 + Math.sin(t * 5 + i) * 1.2, 3, 3, ['#ffcf9e', '#ffb6c1', '#c7e8a1', '#ffe08a'][i]); }
+      ell(g, 90, 64, 2.4, 2.6, '#fff4a8'); rect(g, 9, 62, 3, 5, '#ff5a5a');
+      for (const x of [26, 74]) wheel(g, x, 72, 9, t * 6);
+    } },
+  { id: 'cake', name: 'ケーキ', emoji: '🎂', fill: '#fff1e0', bg: '#ffe6f0',
+    path() { return P().m(16, 46).c(16, 38, 84, 38, 84, 46).l(84, 84).c(84, 92, 16, 92, 16, 84).l(16, 46).pts; },
+    anim(t) { const b = Math.pow(Math.abs(Math.sin(t * 2.5)), 6); return { s: 1 + b * .05, oy: 90 }; },
+    back(g, t) {
+      for (const x of [32, 50, 68]) { rect(g, x - 2.5, 24, 5, 18, ['#7ecbff', '#ff8fb1', '#a8e07a'][(x - 32) / 18]); const f = 1 + Math.sin(t * 12 + x) * .15; ell(g, x, 19, 3 * f, 5 * f, '#ffb020'); ell(g, x, 20, 1.5, 2.6, '#fff3a0'); }
+    },
+    art(g, t) {
+      g.fillStyle = '#ff8fb1'; g.beginPath(); g.moveTo(16, 46); for (let i = 0; i <= 8; i++) { const x = 16 + i * 8.25; g.quadraticCurveTo(x - 4, 58, x, 50); } g.lineTo(84, 46); g.closePath(); g.fill();
+      rect(g, 16, 66, 68, 5, '#ff8fb1');
+      for (const x of [26, 44, 62, 78]) ell(g, x, 45, 4, 4, '#ff3b5c');
+      for (let i = 0; i < 5; i++) ell(g, 24 + i * 13, 78 + (i % 2) * 3, 1.6, 1.6, ['#7ecbff', '#ffd23f', '#a8e07a', '#c79bff', '#ff8fb1'][i]);
+    } },
 ];
 const PIC_BY = Object.fromEntries(PICS.map(p => [p.id, p]));
 buildTTS();
@@ -1208,7 +1257,10 @@ function renderProg() {
 }
 
 /* ---------- ゆびの うごき ---------- */
-const HIT_PX = 30;
+// 「かんたん」は 点の あたりを ひろく（小さい子の指でも とどく）
+let HIT_PX = 30;
+const setHit = () => { HIT_PX = touchMode === 'easy' ? 38 : 30; };
+setHit();
 function nearDot(p, i, px = HIT_PX) { const d = dotXY(i); return Math.hypot(p.x - d[0], p.y - d[1]) * lay.s < px * lay.k; }
 cv.addEventListener('pointerdown', e => {
   if (state !== 'play' || finger) return;
@@ -1232,6 +1284,8 @@ cv.addEventListener('pointermove', e => {
     const t = target();
     if (t >= 0 && nearDot(p, t)) { link(); continue; }
     // ちがう 点の うえに きた
+    // 「かんたん」では、ほかの点を ゆびが とおっても しからない（ひかる点を 見せるだけ）
+    if (touchMode === 'easy') { if (pz.idx.some((_, i) => i !== t && i >= done && nearDot(p, i, HIT_PX * .7))) hintUntil = Math.max(hintUntil, performance.now() + 800); continue; }
     for (let i = 0; i < pz.idx.length; i++) if (i !== t && i >= done && nearDot(p, i, HIT_PX * .7)) { wrong(i); break; }
   }
 });
@@ -1457,7 +1511,7 @@ Kakin.setup({
   game: 'tentsunagi', lang: () => LANG, onChange: () => { if (!modeOpen(mode)) mode = 'num'; renderTitle(); },
   name: { ja: 'てんつなぎ', en: 'Connect the Dots' },
   free: { ja: ['絵 5まい（ほし・ハート・さかな・おうち・りんご）', 'かぞえかた 1・2・3', 'じぶんで つくる（1まい）', 'こえの ろくおん'], en: ['5 pictures', 'Counting 1-2-3', 'Make your own (1)', 'Record your voice'] },
-  full: { ja: ['絵が 31まいに（ねこ・ロケット・くじら など26まい）', 'かぞえかた 2・4・6／あ・い・う／A・B・C', 'じぶんで つくる（8まいまで）'], en: ['31 pictures (26 more)', 'Counting by 2s and ABC', 'Make your own (up to 8)'] },
+  full: { ja: ['絵が 35まいに（ねこ・ロケット・こいのぼり など30まい）', 'かぞえかた 2・4・6／あ・い・う／A・B・C', 'じぶんで つくる（8まいまで）'], en: ['35 pictures (30 more)', 'Counting by 2s and ABC', 'Make your own (up to 8)'] },
 });
 $('#kkSlot').appendChild(Kakin.parentButton());
 function renderTitle() {
@@ -1530,7 +1584,7 @@ function renderHelp() {
 $('#btnHelp').onclick = () => { renderHelp(); $('#help').classList.add('on'); };
 $('#btnHelpClose').onclick = () => $('#help').classList.remove('on');
 $('#optGuide').onclick = e => { const b = e.target.closest('button'); if (!b) return; guide = b.dataset.v; store.set('tentsu-guide', guide); renderHelp(); };
-$('#optTouch').onclick = e => { const b = e.target.closest('button'); if (!b) return; touchMode = b.dataset.v; store.set('tentsu-touch', touchMode); renderHelp(); };
+$('#optTouch').onclick = e => { const b = e.target.closest('button'); if (!b) return; touchMode = b.dataset.v; store.set('tentsu-touch', touchMode); setHit(); renderHelp(); };
 $('#voiceSel').onchange = e => { voiceMode = e.target.value; store.set('tentsu-voice', voiceMode); prepVoice(['praise0']); };
 $('#btnLang').onclick = () => { sfx.tap(); setLang(LANG === 'ja' ? 'en' : 'ja'); };
 $('#optLang').onclick = e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.v); };

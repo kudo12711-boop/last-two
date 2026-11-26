@@ -229,7 +229,7 @@ ja:{
   toNight:'🌙 よるの ダンス',redeco:'🎨 きせかえ',saved:'きせかえ できたよ！',home:'🏠 メニュー',toZukan:'📖 ずかん',again:'⛄ もう1つ',make:'⛄ つくる',
   zTitle:'ゆきだるま ずかん',zEmpty:'まだ ゆきだるまが いないよ。<br>つくってみよう！',
   no:n=>n+'ごう',viewAsk:'タッチすると てを ふるよ',del:'🗑 けす',delSure:'もういちど おすと けします',
-  danceT:'よるの ダンス',danceAsk:'ゆきだるまを タッチしてみてね',sample:'（おてほん。つくると ここに ならぶよ）',musicOn:'🎵 おんがく',musicOff:'🔇 おんがく',
+  danceT:'よるの ダンス',danceAsk:'ゆきだるまを タッチしてみてね',sample:'（おてほん。つくると ここに ならぶよ）',musicOn:'🎵 おんがく',musicOff:'🔇 おんがく',nextSong:n=>'🎶 きょく '+n+'/3',photo:'📷 しゃしん',
   tabs:{eyes:'👀 め',nose:'🥕 はな',mouth:'👄 くち',cheek:'🌸 ほっぺ',hat:'🎩 ぼうし',scarf:'🧣 マフラー',arms:'🌿 うで',btn:'⚫ ボタン',col:'🎨 いろ'},
   pTitle:'おうちのかたへ',pLang:'ことば',pVoice:'こえ',sndOn:'🔊 おと あり',sndOff:'🔇 おと なし',vTest:'こえを きく',
   voices:['AIの こえ 1','AIの こえ 2','AIの こえ 3','AIの こえ 4','この 端末の こえ','こえ なし'],
@@ -254,7 +254,7 @@ en:{
   toNight:'🌙 Night dance',redeco:'🎨 Dress up',saved:'All dressed up!',home:'🏠 Menu',toZukan:'📖 Book',again:'⛄ Make another',make:'⛄ Make one',
   zTitle:'Snowman book',zEmpty:'No snowmen yet.<br>Let\'s make one!',
   no:n=>'No. '+n,viewAsk:'Tap it to wave hello',del:'🗑 Delete',delSure:'Press again to delete',
-  danceT:'Night dance',danceAsk:'Tap a snowman!',sample:'(Samples. Your snowmen will dance here)',musicOn:'🎵 Music',musicOff:'🔇 Music',
+  danceT:'Night dance',danceAsk:'Tap a snowman!',sample:'(Samples. Your snowmen will dance here)',musicOn:'🎵 Music',musicOff:'🔇 Music',nextSong:n=>'🎶 Song '+n+'/3',photo:'📷 Photo',
   tabs:{eyes:'👀 Eyes',nose:'🥕 Nose',mouth:'👄 Mouth',cheek:'🌸 Cheeks',hat:'🎩 Hat',scarf:'🧣 Scarf',arms:'🌿 Arms',btn:'⚫ Buttons',col:'🎨 Color'},
   pTitle:'For grown-ups',pLang:'Language',pVoice:'Voice',sndOn:'🔊 Sound on',sndOff:'🔇 Sound off',vTest:'Test voice',
   voices:['AI voice 1','AI voice 2','AI voice 3','AI voice 4','Device voice','No voice'],
@@ -333,15 +333,21 @@ function hush(){gen++;try{curSrc&&curSrc.stop()}catch(e){}curSrc=null;try{speech
 // ================= music (night dance) =================
 // An original little waltz-free loop: C - Am - F - G, 8 eighth-notes per bar. Bell melody, soft bass, sleigh-bell ticks.
 const BPM=112,BEAT=60/BPM,STEP=BEAT/2;
-const MEL=[72,0,76,0,79,76,72,0, 69,0,72,0,76,72,69,0, 65,69,72,74,72,0,69,0, 67,71,74,0,79,0,77,74];
-const BASS=[48,45,41,43];
-const M={on:false,t0:0,step:0,timer:0,gain:null};
+// v0.7: 3きょく（どれも この ゲームの ための みじかい くりかえし。はやさは おなじなので おどりは そのまま）
+const TUNES=[
+  {mel:[72,0,76,0,79,76,72,0, 69,0,72,0,76,72,69,0, 65,69,72,74,72,0,69,0, 67,71,74,0,79,0,77,74],bass:[48,45,41,43],w:'sine'},          // ベルの きょく C-Am-F-G
+  {mel:[67,67,69,0,71,0,74,0, 72,72,71,0,69,0,67,0, 64,0,67,69,71,69,67,0, 66,0,69,0,74,72,71,69],bass:[43,48,40,38],w:'triangle'},    // ぴょんぴょん G-C-Em-D
+  {mel:[76,0,74,76,79,0,76,0, 74,0,72,74,76,0,72,0, 69,72,76,0,74,72,71,0, 72,0,0,74,76,79,81,0],bass:[45,41,48,43],w:'sine'},          // おほしさま Am-F-C-G
+];
+let MEL=TUNES[0].mel,BASS=TUNES[0].bass;
+const M={on:false,t0:0,step:0,timer:0,gain:null,tune:0};
+function setTune(i){M.tune=(i+TUNES.length)%TUNES.length;MEL=TUNES[M.tune].mel;BASS=TUNES[M.tune].bass}
 const mtof=n=>440*Math.pow(2,(n-69)/12);
 function musicStart(){const a=audio();if(!a||M.on||!S.snd||!S.music)return;M.on=true;M.gain=a.createGain();M.gain.gain.value=.9;M.gain.connect(a.destination);
   M.t0=a.currentTime+.08;M.step=0;M.timer=setInterval(musicTick,40);musicTick()}
 function musicStop(){if(!M.on)return;M.on=false;clearInterval(M.timer);try{const a=audio();M.gain.gain.setTargetAtTime(0,a.currentTime,.05);const g=M.gain;setTimeout(()=>g.disconnect(),400)}catch(e){}}
 function musicTick(){const a=audio();if(!a||!M.on)return;while(M.t0+M.step*STEP<a.currentTime+.25){const t=M.t0+M.step*STEP,i=M.step%32,bar=Math.floor(i/8),s=i%8;
-  const n=MEL[i];if(n){tone(mtof(n),.5,'sine',t,.09,M.gain);tone(mtof(n+12),.22,'sine',t,.03,M.gain)}
+  const n=MEL[i];if(n){tone(mtof(n),.5,TUNES[M.tune].w,t,.09,M.gain);tone(mtof(n+12),.22,'sine',t,.03,M.gain)}
   if(s===0||s===4)tone(mtof(BASS[bar]),.35,'triangle',t,.13,M.gain);if(s===6)tone(mtof(BASS[bar]+7),.25,'triangle',t,.09,M.gain);
   if(s%2===1&&S.snd){try{const src=a.createBufferSource();if(!noiseBuf){noise(.01,1,0.0001)}src.buffer=noiseBuf;const f=a.createBiquadFilter();f.type='highpass';f.frequency.value=6000;const g=a.createGain();src.connect(f);f.connect(g);g.connect(M.gain);g.gain.setValueAtTime(.05,t);g.gain.exponentialRampToValueAtTime(.001,t+.06);src.start(t);src.stop(t+.08)}catch(e){}}
   M.step++}}
@@ -724,7 +730,21 @@ function finishMan(){if(mode!=='deco')return;mode='done';const t=T();$('pal').hi
   if(S.men.length<cap()){S.men.push(rec);S.no++;save();lastSaved=rec;$('plTitle').textContent=rec.name;ask(t.doneAsk(rec.name));say('done');doneCtl()}
   else{lastSaved=null;MAN.pending=rec;$('plTitle').textContent=t.doneT;ask(t.fullAsk(cap()));say('full');
     ctl([t.swap,'sub',()=>{S.men.shift();S.men.push(rec);S.no++;save();lastSaved=rec;MAN.pending=null;cheer(t.swapped);ask(t.doneAsk(rec.name));doneCtl()}],...(Kakin.full()?[]:[[t.unlock,'go',()=>Kakin.ask(()=>{if(MAN.pending&&S.men.length<cap()){S.men.push(rec);S.no++;save();lastSaved=rec;MAN.pending=null;ask(t.doneAsk(rec.name));doneCtl()}})]]),[t.toNight,'night',()=>startDance(rec)])}}
-function doneCtl(){const t=T();ctl(...(lastSaved?[[t.rename,'sub',()=>nameSheet(lastSaved.id)]]:[]),[t.again,'sub',startRoll],[t.toZukan,'sub',()=>openZukan(true)],[t.toNight,'night',()=>startDance(lastSaved)])}
+// v0.7: しゃしん（できた ゆきだるまを 1まいの 絵にして 保存・共有。端末の中で つくり、どこにも 送らない）
+function photoOf(m){const c=document.createElement('canvas');c.width=1080;c.height=1350;const x=c.getContext('2d');const w=c.width,h=c.height;
+  const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#bfe4ff');g.addColorStop(.75,'#eef8ff');x.fillStyle=g;x.fillRect(0,0,w,h);
+  x.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<70;i++){const r=3+((i*37)%9);x.beginPath();x.arc((i*173)%w,(i*97)%(h*.8),r,0,7);x.fill()}
+  x.fillStyle='#fff';x.beginPath();x.ellipse(w/2,h*.86,w*.75,h*.09,0,0,7);x.fill();x.fillRect(0,h*.86,w,h*.14);
+  const mm=Object.assign({lb:lumps(),lh:lumps()},m);drawMan(x,mm,w/2,h*.86,fitU(mm,w*.72,h*.62),{});
+  x.textAlign='center';x.fillStyle='#24405a';x.font='900 72px "Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif';x.fillText(m.name||T().no(m.no),w/2,h*.115);
+  x.font='700 38px "Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif';x.fillStyle='#4f6b84';x.fillText(T().no(m.no)+' · '+fmtD(m.d||Date.now()),w/2,h*.17);
+  x.font='700 30px "Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif';x.fillStyle='#7d93a6';x.fillText('⛄ '+T().title,w/2,h*.975);
+  return c}
+async function photoSave(m){if(!m)return;sfx.pop();const c=photoOf(m);const nm=(LANG==='ja'?'ゆきだるま':'snowman')+'-'+(m.name||m.no)+'.png';
+  const blob=await new Promise(r=>c.toBlob(r,'image/png'));if(!blob)return;
+  try{const f=new File([blob],nm,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:m.name||''});return}}catch(e){if(e&&e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);cheer('📷')}
+function doneCtl(){const t=T();ctl(...(lastSaved?[[t.rename,'sub',()=>nameSheet(lastSaved.id)],[t.photo,'sub',()=>photoSave(lastSaved)]]:[]),[t.again,'sub',startRoll],[t.toZukan,'sub',()=>openZukan(true)],[t.toNight,'night',()=>startDance(lastSaved)])}
 
 // name sheet: the name is given automatically; here a grown-up can type one, or pick another at random
 function nameSheet(id){const r=S.men.find(x=>x.id===id);if(!r)return;const t=T();$('nameOv').hidden=false;$('nTitle').textContent=t.nTitle;$('nRand').textContent=t.nRand;$('nOk').textContent=t.nOk;$('nCancel').textContent=t.nCancel;
@@ -746,7 +766,7 @@ function openZukan(voice){mode='zukan';run++;hush();musicStop();show('zukan');co
   if(voice)say('zukan')}
 const fmtD=ms=>{const d=new Date(ms);return LANG==='ja'?(d.getMonth()+1)+'/'+d.getDate():d.toLocaleDateString('en',{month:'short',day:'numeric'})};
 function openView(m){run++;hush();mode='view';const t=T();MAN=JSON.parse(JSON.stringify(m));MAN.lb=lumps();MAN.lh=lumps();playScreen(m.name||t.no(m.no),t.no(m.no));flakes(26);ask(t.viewAsk);say('view');
-  let arm=false;ctl([t.del,'sub',(e)=>{if(!arm){arm=true;e.textContent=t.delSure;return}S.men=S.men.filter(x=>x.id!==m.id);save();sfx.poof();openZukan(false)}],[t.rename,'sub',()=>nameSheet(m.id)],[t.redeco,'go',()=>{run++;hush();D.editId=m.id;startDeco()}],[t.toNight,'night',()=>{danceFrom='zukan';startDance(m,true)}])}
+  let arm=false;ctl([t.del,'sub',(e)=>{if(!arm){arm=true;e.textContent=t.delSure;return}S.men=S.men.filter(x=>x.id!==m.id);save();sfx.poof();openZukan(false)}],[t.rename,'sub',()=>nameSheet(m.id)],[t.photo,'sub',()=>photoSave(S.men.find(x=>x.id===m.id)||m)],[t.redeco,'go',()=>{run++;hush();D.editId=m.id;startDeco()}],[t.toNight,'night',()=>{danceFrom='zukan';startDance(m,true)}])}
 
 // ================= 5) night dance =================
 let DN=[],danceFrom='home',STARS=[];
@@ -760,7 +780,8 @@ function startDance(focus,fromZ){run++;hush();mode='dance';if(!fromZ)danceFrom='
   DN=[];backRow.forEach((m,i)=>DN.push({m:Object.assign({lb:lumps(),lh:lumps()},m),row:0,i,n:backRow.length,seed:Math.random()*8,tap:-9}));front.forEach((m,i)=>DN.push({m:Object.assign({lb:lumps(),lh:lumps()},m),row:1,i,n:front.length,seed:Math.random()*8,tap:-9}));
   STARS=[];for(let i=0;i<70;i++)STARS.push({x:Math.random(),y:Math.random()*.6,r:Math.random()*1.4+.4,p:Math.random()*TAU});flakes(40);
   ask(t.danceAsk+(sample?' '+t.sample:''));beat0=performance.now();musicStart();danceCtl();say('night')}
-function danceCtl(){const t=T();ctl([t.home,'go',renderHome],[t.make,'sub',startRoll],[S.music?t.musicOn:t.musicOff,'sub',()=>{S.music=!S.music;save();if(S.music)musicStart();else musicStop();danceCtl()}])}
+function danceCtl(){const t=T();ctl([t.home,'go',renderHome],[t.make,'sub',startRoll],[S.music?t.musicOn:t.musicOff,'sub',()=>{S.music=!S.music;save();if(S.music)musicStart();else musicStop();danceCtl()}],
+  ...(S.music?[[t.nextSong(M.tune+1),'sub',()=>{setTune(M.tune+1);if(M.on){musicStop();setTimeout(()=>{musicStart();beat0=performance.now()},120)}danceCtl()}]]:[]))}
 function danceLayout(d){const gy0=H*.93;const rowH=d.row?H*.62:H*.42;const gy=d.row?gy0:H*.74;const slot=W/d.n;const U=Math.min(fitU(d.m,slot*.95,rowH),fitU({rb:1,rh:.7},W*.3,rowH));return{x:slot*(d.i+.5)+(d.row?0:slot*.0),gy,U}}
 const MOVES=['bounce','sway','wave','hop','spin','bob'];
 function dancePose(d,b){const mi=(Math.floor(b/8)+Math.floor(d.seed))%MOVES.length;const mv=MOVES[mi];const ph=b+d.seed*.0;const L=danceLayout(d);const hgt=L.U*d.m.rb;let p={};

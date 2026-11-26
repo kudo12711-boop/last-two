@@ -15,21 +15,21 @@
 | ゆきどけ | 「あと一枚」の運だめし | v0.1（止まっている） | [Claude のページ](https://claude.ai/artifact/34nWk73xRYmMimZZe7sWKW) | [yukidoke.md](yukidoke.md) |
 | ぬけぬけリング | 1人用の連鎖パズル | v0.7 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
 | ラスト・ツー | 最後の2人の表情の読み合い | v1.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
-| まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類） | v0.8 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
+| まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類、年れい別） | v0.9 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
 | 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
 | アメリカ 州パズル | 都道府県パズルの英語・アメリカ版。50州の形をはめる（こどもステージ15こ・シールずかん） | v0.1 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-a985755ea1ec1719/) | [usa-states.md](usa-states.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | テレビ（Fire TV）向けの画面（11/15）まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
-| ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
-| てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（31まい、点は最大60こ） | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
+| ゆびで めいろ | 幼児向け、指でなぞる迷路（キャラごとの けしき） | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
+| てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（35まい、点は最大60こ） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
 | ふくわらい | 幼児向け、写真の顔でも遊べる福笑い（目かくしモードつき） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/fukuwarai/) | [fukuwarai.md](fukuwarai.md) |
 | もういいかい？ かくれんぼ | 幼児向け、さがす・おうちの写真・自分がかくれる の3つの遊び | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/kakurenbo/) | [kakurenbo.md](kakurenbo.md) |
 | ちいさな おうこく | プリンセス・王子・騎士・侍になって村のおねがいをかなえる、3つのステージ、着せかえと肖像画つき | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/oukoku/) | [oukoku.md](oukoku.md) |
 | けずって なにかな？ | 幼児向け、スクラッチをけずって当てる＋ずかん | v0.6 | [公開ページ](https://kudo12711-boop.github.io/last-two/kezuri/) | [kezuri.md](kezuri.md) |
 | ふしぎな いきもの ずかん | プログラムで描いた生きものと なかよくなって集め、2ひきから子どもを生む。あげた ごはんで 色も形も かわる | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/ikimono/) | [ikimono.md](ikimono.md) |
-| ひらがな あそび | 幼児が字を読めるようになる（しゃぼんだま・なまえ・どうぶつ・かるた）。ひらがな・ABC（日本語の案内）・ABC（英語）の3コース | v0.3 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/)（いりぐちにも ためし版として のせている） | [hiragana.md](hiragana.md) |
+| ひらがな あそび | 幼児が字を読めるようになる（しゃぼんだま・なまえ・どうぶつ・かるた）。ひらがな・ABC（日本語の案内）・ABC（英語）の3コース。がぎぐ・きゃ・カタカナ・小文字の段階も | v0.4 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-c73775bbf6bb9c41/)（いりぐちにも ためし版として のせている） | [hiragana.md](hiragana.md) |
 | どうぶつ あみだくじ | 幼児〜小学生向け、あみだくじで遊ぶ（はしを かけて ごはんを とどける・どこに つくか あてる・家族の くじびき。おやつ・おてつだいは リストから えらべる、同じものを なんかいでも） | v0.4 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-b0e17c086f1b01da/)（いりぐちにも ためし版として のせている） | [amida.md](amida.md) |
-| おなじ？ ちがう？ | 幼児向け、お手本と同じ絵・違う絵・違う動きを えらぶ（どうぶつ・アイス・のりもの・おうち・ロボット・かたち、★3段階） | v0.4 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-cb0575cc80344ed4/)（いりぐちにも ためし版として のせている） | [onaji.md](onaji.md) |
-| ころころ ゆきだま | 幼児向け、雪の玉を ころがして 大きくし、かさねて かざる。ずかんに しまい、夜は みんなで ダンス | v0.6 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-6c7ad175ab6aa707/)（いりぐちにも ためし版として のせている） | [yukidama.md](yukidama.md) |
+| おなじ？ ちがう？ | 幼児向け、お手本と同じ絵・違う絵・違う動きを えらぶ（どうぶつ・アイス・のりもの・おうち・ロボット・かたち・おさかな・むし・おようふく、★3段階） | v0.5 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-cb0575cc80344ed4/)（いりぐちにも ためし版として のせている） | [onaji.md](onaji.md) |
+| ころころ ゆきだま | 幼児向け、雪の玉を ころがして 大きくし、かさねて かざる。ずかんに しまい、夜は みんなで ダンス | v0.7 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-6c7ad175ab6aa707/)（いりぐちにも ためし版として のせている） | [yukidama.md](yukidama.md) |
 | ぽーん！ ボールなげ | 幼児向け、指で シュッと ボールを なげる。つみき たおし・ぱくぱく どうぶつ（食べものを なげる）・ふうせん わり の 3つ。1球で たくさん たおせる・割れる | v0.2 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-ed3c16d137084dd7/)（いりぐちにも ためし版として のせている） | [pon.md](pon.md) |
 
 全ゲーム共通の課金のしくみ: [kakin.md](kakin.md)
@@ -39,6 +39,8 @@
 日本語の読み上げ（AI の声）の作り方・VOICEVOX の利用のきまり・クレジット: [voice-ja.md](voice-ja.md)
 
 有料化とアプリ化（Google Play）の進め方: [app-plan.md](app-plan.md)
+
+売り物にする前の磨きどころ（全ゲームの一覧と おすすめの順番）: [polish-plan.md](polish-plan.md)
 25. **2026-11-19** 屋号「はじまるよ」・ゲームは games.hajimaruyo.com に決定。アカウントの要らない準備として、全ゲームに アプリの名札・仮アイコン・オフラインのしくみ、新しいアドレスへの記録の引っ越し（くどうさん「引っ越してください」）、プライバシーポリシーとストアの説明文の下書き。[app-plan.md](app-plan.md)
 
 「Claude のページ」は、くどうさんが claude.ai にログインしたときだけ開けます。「公開ページ」は誰でもログインなしで開けます。
@@ -80,6 +82,12 @@
 33. **2026-11-25** くどうさん「画面をスワイプするとボールが投げられて何か遊べるゲームを作ってください。」→ 幼児向け「ぽーん！ ボールなげ」v0.1（つみき たおし・ぱくぱく どうぶつ・ふうせん わり、ねらいの おてつだい、ボール7しゅるい、日本語・英語の声、課金）を作り、かくしURLで公開。[pon.md](pon.md)
 34. **2026-11-25** くどうさん「ボールを投げるゲームは入り口から見れるようになっていますか？…見れるようにしてください。」→ ぽーん！ ボールなげ を かくしURL のまま 入口ページの 子ども向けに「🧪 ためし版」で のせた（[games.md](games.md)）。
 35. **2026-11-25** くどうさん「一つのボールで複数の積み木を倒せたり…風船はもっと連続的に割れるように…口にめがけて投げるものを食べ物に」→ ぽーん！ ボールなげ v0.2（おもい ボールで つみきが まとめて たおれる、ふうせんは たばで うかび 割れが つぎつぎ ひろがる、ぱくぱく どうぶつ は 食べもの 7しゅるいを なげる）。[pon.md](pon.md)
+36. **2026-11-19・11/25** くどうさん「まだ売り物にするには早いのではないか」→ 全ゲームとツールについて、売る前に直したいところ・磨く量（軽め／しっかり）・おすすめの順番を一覧にした。11/25「新しいゲームも含めて」で見直し、最初のアプリに入れる8本（ひらがな・ゆきだま・まちがいさがし・てんつなぎ・めいろ・おなじ？ちがう？・ふくわらい・都道府県）から磨く案に。いちばんの仕事は 遊んでもらう人を集めること。[polish-plan.md](polish-plan.md)
+37. **2026-11-26** くどうさん「再開して下さい」→ 磨きどころの順番どおり、まず ひらがな あそび v0.4（がぎぐ・きゃ・カタカナ・小文字の段階、なまえを おうちの人の声で、おうちのかたの すすみぐあい）。かくしURL のまま。[hiragana.md](hiragana.md)
+38. **2026-11-26** くどうさん「どんどん進めると上限に当たってしまうので、調整できるようにできますか？」→ 磨き込みは 1本ずつ、くどうさんの「次」で 進めることに。「次。」→ ころころ ゆきだま v0.7（雪だるまの しゃしん、ダンスの曲 3つ）。[yukidama.md](yukidama.md)
+39. **2026-11-26** 「次。」→ まちがいさがし v0.9（年れいで むずかしさが かわる、写真の違いを 🔄 で作りなおせる）。[machigai.md](machigai.md)
+40. **2026-11-26** 「次」→ てんつなぎ v0.5（小さい子の指で つなぎやすく、こいのぼり・かぼちゃ・バス・ケーキ の絵）。[tentsunagi.md](tentsunagi.md)
+41. **2026-11-26** 「次2つ進めてください」→ ゆびで めいろ v0.6（キャラごとの けしき: ゆき・うちゅう・どうろ など）と おなじ？ ちがう？ v0.5（おさかな・むし・おようふく の絵を追加して9しゅるい）。[meiro.md](meiro.md)・[onaji.md](onaji.md)
 
 36. **2026-11-26** くどうさんが 都道府県パズルの英語版（アメリカの州・ヨーロッパの国）を作れるか たずね、アメリカから →「アメリカをお願いします」。都道府県パズルと同じ遊び方の「アメリカ 州パズル（USA States Puzzle）」v0.1 を作り、かくしURLで公開。[usa-states.md](usa-states.md)
 
@@ -99,6 +107,7 @@
 
 ## 次にやるとよいこと
 
+- 売り物にする前の磨き込み。順番は [polish-plan.md](polish-plan.md) を見て くどうさんと決める。
 - 知り合いに遊んでもらって感想を集める（ぬけぬけリングの難しさは公開ページのURLを送るだけでOK、ラスト・ツーの友だち対戦）。
 - 売りたいゲームが決まったら、アプリ化の準備。
 

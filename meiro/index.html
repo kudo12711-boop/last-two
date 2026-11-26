@@ -585,6 +585,43 @@ function emoji(ch, x, y, size, rot = 0, sx = 1, sy = 1) {
   ctx.font = `${size}px ${EMOJI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(ch, 0, size * .06); ctx.restore();
 }
+// キャラごとの けしき（v0.6）: のはら・おはな・ゆき・はなばたけ・うちゅう・どうろ
+const fr = (i, k) => { const v = Math.sin(i * 127.1 + k * 311.7) * 43758.5; return v - Math.floor(v); }; // いつも おなじ ばらつき
+function scenery(now) {
+  const { cell, ox, oy, w, h } = lay, id = theme.id, t = now / 1000;
+  ctx.save(); ctx.beginPath(); ctx.rect(ox - 6, oy - 6, w + 12, h + 12); ctx.clip();
+  if (id === 'car') { // みちを アスファルトに、まんなかに しろい てんせん
+    const lines = (wd, col, dash) => {
+      ctx.strokeStyle = col; ctx.lineWidth = wd; ctx.lineCap = dash ? 'butt' : 'round'; ctx.setLineDash(dash || []); ctx.beginPath();
+      for (let c = 0; c < maze.cols * maze.rows; c++) { const a = center(c);
+        if (maze.open[c] & E) { ctx.moveTo(a.x, a.y); ctx.lineTo(a.x + cell, a.y); }
+        if (maze.open[c] & S) { ctx.moveTo(a.x, a.y); ctx.lineTo(a.x, a.y + cell); } }
+      ctx.stroke(); ctx.setLineDash([]);
+    };
+    lines(cell * .78, '#9a938b'); lines(Math.max(1.5, cell * .05), 'rgba(255,255,255,.85)', [cell * .16, cell * .14]);
+  } else if (id === 'rocket') { // ほしが またたく、ときどき ながれぼし
+    for (let i = 0; i < 46; i++) { const a = .25 + .6 * (.5 + .5 * Math.sin(t * (1 + fr(i, 3) * 2) + i)); ctx.fillStyle = `rgba(255,255,255,${a})`;
+      const r = 1 + fr(i, 4) * 1.6; ctx.beginPath(); ctx.arc(ox + fr(i, 1) * w, oy + fr(i, 2) * h, r, 0, 7); ctx.fill(); }
+    const k = (t % 7) / 1.2; if (k < 1) { const x = ox + w * (1 - k * 1.2), y = oy + h * (.1 + k * .5); const g = ctx.createLinearGradient(x, y, x + cell * 2, y - cell); g.addColorStop(0, 'rgba(255,240,180,.9)'); g.addColorStop(1, 'rgba(255,240,180,0)'); ctx.strokeStyle = g; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + cell * 2, y - cell); ctx.stroke(); }
+  } else if (id === 'penguin') { // ゆきが ふる
+    ctx.fillStyle = 'rgba(255,255,255,.95)';
+    for (let i = 0; i < 40; i++) { const sp = .04 + fr(i, 2) * .05, y = oy + ((fr(i, 1) + t * sp) % 1) * h, x = ox + fr(i, 3) * w + Math.sin(t * 1.5 + i) * cell * .2;
+      ctx.beginPath(); ctx.arc(x, y, 1.5 + fr(i, 4) * 2.5, 0, 7); ctx.fill(); }
+  } else if (id === 'rabbit') { // はなびらが まう
+    for (let i = 0; i < 18; i++) { const y = oy + ((fr(i, 1) + t * .035) % 1) * h, x = ox + fr(i, 3) * w + Math.sin(t * 1.2 + i) * cell * .35;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(t * 1.5 + i); ctx.globalAlpha = .55; ctx.fillStyle = i % 3 ? '#ffb3c8' : '#ffd1dc'; ctx.beginPath(); ctx.ellipse(0, 0, cell * .1, cell * .06, 0, 0, 7); ctx.fill(); ctx.restore(); }
+  } else if (id === 'bee') { // はなと、ふわふわ のぼる かふん
+    for (let i = 0; i < 22; i++) { const x = ox + fr(i, 1) * w, y = oy + h - ((fr(i, 2) + t * .03) % 1) * h; ctx.globalAlpha = .5; ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(x + Math.sin(t + i) * 6, y, 2 + fr(i, 3) * 2, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  } else if (id === 'dog') { // くさと ちょうちょ
+    ctx.strokeStyle = 'rgba(95,174,76,.35)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    for (let i = 0; i < 30; i++) { const x = ox + fr(i, 1) * w, y = oy + fr(i, 2) * h, s = cell * .12, sw = Math.sin(t * 2 + i) * s * .3;
+      ctx.beginPath(); ctx.moveTo(x - s * .5, y); ctx.lineTo(x - s * .7 + sw, y - s); ctx.moveTo(x, y); ctx.lineTo(x + sw, y - s * 1.3); ctx.moveTo(x + s * .5, y); ctx.lineTo(x + s * .7 + sw, y - s); ctx.stroke(); }
+    const bx = ox + (.5 + .45 * Math.sin(t * .23)) * w, by = oy + (.5 + .4 * Math.sin(t * .37 + 1)) * h;
+    ctx.globalAlpha = .8; emoji('🦋', bx, by + Math.sin(t * 6) * 3, cell * .42, Math.sin(t * 3) * .2, .7 + .3 * Math.abs(Math.sin(t * 10)), 1); ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
 function draw(now) {
   requestAnimationFrame(draw);
   if (!maze || !$('#game').classList.contains('on')) return;
@@ -593,10 +630,7 @@ function draw(now) {
   ctx.clearRect(0, 0, cv.width, cv.height);
   // ゆか
   ctx.fillStyle = theme.floor; roundRect(ox - 6, oy - 6, w + 12, h + 12, Math.min(24, cell * .4)); ctx.fill();
-  if (theme.dark) { // よぞらの ほし
-    ctx.fillStyle = 'rgba(255,255,255,.5)';
-    for (let i = 0; i < 40; i++) { const sx = ox + ((i * 97) % 100) / 100 * w, sy = oy + ((i * 61) % 100) / 100 * h; ctx.fillRect(sx, sy, 2, 2); }
-  }
+  scenery(now);
   // スタートと ゴールの マス
   const sc = center(maze.start), gc = center(maze.goal);
   ctx.fillStyle = theme.dark ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.8)';
@@ -695,7 +729,7 @@ Kakin.setup({
   game: 'meiro', lang: () => L, onChange: () => renderTitle(),
   name: { ja: 'ゆびで めいろ', en: 'Finger Maze' },
   free: { ja: ['🐶 わんちゃん と 🐰 うさぎさん の めいろ', 'むずかしさ ★〜★★★★ ぜんぶ', 'シールあつめ'], en: ['Dog and Bunny mazes', 'All difficulty levels', 'Sticker collection'] },
-  full: { ja: ['🐧 ペンギン・🐝 はちさん・🚀 ロケット・🚗 くるま の めいろ'], en: ['Penguin, Bee, Rocket and Car mazes'] },
+  full: { ja: ['🐧 ペンギン・🐝 はちさん・🚀 ロケット・🚗 くるま の めいろ', 'キャラごとの けしき（ゆきが ふる・うちゅう・どうろ・はなばたけ）'], en: ['Penguin, Bee, Rocket and Car mazes', 'A scene for each one: snow, space, roads and flower fields'] },
 });
 $('#kkSlot').appendChild(Kakin.parentButton());
 
