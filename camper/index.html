@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#6b4a33">
@@ -308,7 +309,26 @@ svg.map{touch-action:none;cursor:grab;width:100%;aspect-ratio:1.5/1;border-radiu
 .letter.pal{background:#eef6fb;border-color:#8bb8d8}.paldraw{font-size:46px;margin:6px 0}.palword{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap;background:#fff;border-radius:12px;padding:6px 10px;margin:6px 0}.palword b{font-size:20px}.palword span{font-size:13px;color:var(--ink2)}.letter.sm .palword{justify-content:flex-start}
 .palreply{display:flex;flex-direction:column;gap:6px;margin:12px 0;text-align:left}.palreply .mini{text-align:left;white-space:normal}.palgift{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .letter.sm{text-align:left;padding:10px 14px;margin:8px 0;border-radius:12px}.letter.sm p{margin:4px 0 0;font-size:14px}.letter.sm small{color:var(--ink2)}.letter small{display:block}
+
+/* テレビ向けの画面（tv.js）・リモコン操作の光る枠 */
+body.kbnav :focus{outline:4px solid #ffcf3f!important;outline-offset:3px;box-shadow:0 0 0 10px rgba(255,207,63,.38)!important}
+body.kbnav :focus:not(:focus-visible){outline:4px solid #ffcf3f!important}
+body.tv #app{grid-template-columns:minmax(0,1fr) minmax(300px,34%)}
+body.tv header,body.tv #panel,body.tv #sheet,body.tv #toasts,body.tv #fsinfo,body.tv #gzbar,body.tv #fshint{zoom:var(--tvz,1.3)}
+body.tv #win>button{zoom:calc(var(--tvz,1.3) * .85)}
+body.tv #addr,body.tv .stats,body.tv #nextlm{display:none}
+body.tv #sheet{max-height:calc(92vh / var(--tvz,1.3))}
+body.tv #tvscroll{position:fixed;right:2.5vw;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:3vh;z-index:5}body.tv #tvscroll[hidden]{display:none}#tvscroll button{width:11vh;height:11vh;border-radius:50%;border:none;background:#ffcf3f;color:#333;font-size:5vh;box-shadow:0 4px 14px #0006;cursor:pointer}#tvscroll button:disabled{opacity:.3}
+body.tv #panel{padding-right:10px}
+body.lite *,body.tv *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.tv.full #fsmap svg,body.tv.full #fsmap,body.tv.full #fsinfo,body.tv.full #b-info,body.tv.full #b-snd,body.tv.full #b-full,body.tv.full #b-radio{border-radius:0!important;box-shadow:none!important;transition:none!important;text-shadow:none!important}body.tv.full #fsmap,body.tv.full #fsmap.solid{opacity:1;overflow:visible;border:1px solid #4a5568;width:clamp(90px,20vmin,140px)}body.tv.full #fsmap svg{background:#1c2636}body.tv.full #fsmap .sea{fill:#1c2636}body.tv.full #fsmap .land{fill:#33443c;stroke:none}body.tv.full #fsmap text{fill:#b8c0cc;stroke:none}body.tv.full #fsinfo{opacity:1;background:rgb(16,20,30);color:#d8dde6;font-size:80%;padding:6px 10px}body.tv.full.calm #fsinfo,body.tv.full.calm #fsmap{display:none!important}body.tv.full #b-info,body.tv.full #b-snd,body.tv.full #b-radio{background:rgb(40,40,40)}
+#tvsndhint{position:fixed;left:50%;transform:translateX(-50%);bottom:6vh;z-index:40;background:rgb(20,24,34);color:#fff;font-size:2.6vh;padding:1vh 2.2vh;border-radius:999px;pointer-events:none}#tvsndhint[hidden]{display:none}
+body.lite #win>button,body.tv #win>button{background:rgba(0,0,0,.5)}
 </style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<!-- /app -->
 </head>
 <body>
 <div id="app">
@@ -2573,9 +2593,31 @@ const LEG = {};
 const KEY = 'camper-trip-v1';
 let OWNED = (() => { try { return JSON.parse(localStorage.getItem('camper-owned') || '[]'); } catch (e) { return []; } })();
 const QS = new URLSearchParams(location.search);
+/* ためし用：?demo=day（暖かい昼）／?demo=night（暖かい夜）。今の旅や記録にはさわらない（km を使った見本の旅になり、保存しない） */
+const DEMO = /^(day|night)$/.test(QS.get('demo') || '') ? QS.get('demo') : '';
+if (DEMO) { if (!QS.has('km')) QS.set('km', '120'); QS.set('temp', '24'); QS.set('wx', '1'); if (!QS.has('h')) { const lh = (new Date().getUTCHours() + 9) % 24, want = DEMO === 'day' ? 10 : 21; QS.set('h', String((want - lh + 24) % 24)); } }
 let st = null;
 function load() { try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { st = null; } }
-function save() { if (!st || st.preview || QS.has('km')) return; try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } }
+function save() { if (!st || st.preview || QS.has('km') || window.GUEST) return; /* GUEST：テレビの旅をスマホで見ているときは保存しない */ try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } mirrorSave(); }
+// 予備の保存：ブラウザ（テレビのブラウザなど）が閉じるときに localStorage を消してしまうことがあるので、
+// 旅と設定を IndexedDB にも写しておき、localStorage が空なら そこから戻す。ブラウザにも「消さないで」とお願いする
+const MIRROR_SKIP = /^camper-(img|wx|geo)/;
+let mirrorAt = 0, persistAsked = false; const MIRROR_ON = true; // 11/14 いったん止めている（Fire TV で出発できない報告。原因を調べてから戻す）
+function idb() { return new Promise((res, rej) => { try { const r = indexedDB.open('camper', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); }
+async function idbSet(k, v) { const db = await idb(); return new Promise(res => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = tx.onerror = () => { db.close(); res(); }; }); }
+async function idbGet(k) { const db = await idb(); return new Promise(res => { const rq = db.transaction('kv').objectStore('kv').get(k); rq.onsuccess = () => { db.close(); res(rq.result); }; rq.onerror = () => { db.close(); res(null); }; }); }
+function mirrorSave(force) {
+  if (window.GUEST || QS.has('km')) return;
+  if (!MIRROR_ON) return;
+  if (!force && Date.now() - mirrorAt < 30e3) return; mirrorAt = Date.now();
+  try {
+    const ls = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('camper-') && !MIRROR_SKIP.test(k)) ls[k] = localStorage.getItem(k); }
+    if (!ls[KEY] && st && !st.preview) ls[KEY] = JSON.stringify(st);
+    if (ls[KEY]) idbSet('ls', { at: Date.now(), ls }).catch(() => { });
+  } catch (e) { }
+  if (!persistAsked && navigator.storage && navigator.storage.persist) { persistAsked = true; navigator.storage.persist().catch(() => { }); }
+}
+async function mirrorLoad() { if (!MIRROR_ON) return null; try { const o = await idbGet('ls'); return o && o.ls && o.ls[KEY] ? o : null; } catch (e) { return null; } }
 function newState(speed, from = '東京') {
   const f = findStart(from);
   return { v: 1, km: f.km, startKm: f.km, startName: from, laps: 0, t: Date.now(), speed, started: Date.now(), choices: f.choices, auto: {}, stamps: { [from]: 1 }, lm: {}, dex: {}, bottles: 0 };
@@ -2819,7 +2861,7 @@ function applyTest() {
   if (QS.has('wind')) wx.wind = +QS.get('wind');
 }
 function wxState() {
-  const w = wx || fakeWx(P.ll);
+  let w = wx || fakeWx(P.ll); if (DEMO) w = Object.assign({}, w, { temp: 24, code: 1, cloud: 20, wind: 6 });
   const rain = RAIN[w.code] || 0, snow = SNOW[w.code] || 0;
   return { temp: w.temp, code: w.code, cloud: Math.max(w.cloud, rain || snow ? 85 : 0), rain, snow, fog: (w.code === 45 || w.code === 48) ? 0.6 : 0, thunder: w.code >= 95, wind: w.wind,
     snowCover: (snow > 0 && w.temp < 2) || w.temp < -2, frost: w.temp < -6 };
@@ -2862,10 +2904,10 @@ const DEX = {
 if (EN) for (const k in DEX) DEX[k] = [DEX[k][0], tr(DEX[k][1]), tr(DEX[k][2])];
 
 /* ===== 画面 ===== */
-const cv = $('#cv'), c = cv.getContext('2d');
+const cv = $('#cv'); let c = cv.getContext('2d'); // c はテレビで空を描き置きするとき一時的に切りかえる
 let W = 0, H = 0, DPR = 1;
 // 大きな画面（パソコンの全画面など）で重くなりすぎないよう、絵の細かさに上限をつける
-let PXMAX = 2.2e6, HALF = false, drawAvg = 8, perfAt = 0, fcount = 0;
+let PXMAX = 2.2e6, PXMIN = 7e5, HALF = false, drawAvg = 8, perfAt = 0, fcount = 0, ivAvg = 16;
 function resize() {
   const r = cv.getBoundingClientRect(); DPR = Math.min(2, window.devicePixelRatio || 1);
   W = Math.max(1, r.width); H = Math.max(1, r.height);
@@ -2926,7 +2968,10 @@ function drawSky(hz, W8, alt) {
   c.fillStyle = g; c.fillRect(-W, -H, W * 3, hz + H + 2);
   const sa = clamp(1 - L.dl * 2.5) * clamp(1 - L.k * 1.25);
   drawMilkyWay(hz, sa, S.ctx || {}); drawConst(hz, sa);
-  if (sa > 0.02) for (const s of STARS) { c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)))})`; c.fillRect(s[0] * W, s[1] * hz * .9, s[2] > .85 ? 2 : 1.2, s[2] > .85 ? 2 : 1.2); }
+  if (sa > 0.02 && S.tvLite) { // テレビ：星は明るさを4段にまとめて描く
+    const B = [[], [], [], []]; for (const s of STARS) B[Math.min(3, Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)) * 4 | 0)].push(s);
+    B.forEach((b, k) => { if (!b.length) return; c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * (k + .5) / 4)})`; c.beginPath(); for (const s of b) { const z = s[2] > .85 ? 2 : 1.2; c.rect(s[0] * W, s[1] * hz * .9, z, z); } c.fill(); });
+  } else if (sa > 0.02) for (const s of STARS) { c.fillStyle = `rgba(255,255,240,${sa * (0.35 + 0.65 * Math.abs(Math.sin(S.t * (0.5 + s[2]) + s[2] * 9)))})`; c.fillRect(s[0] * W, s[1] * hz * .9, s[2] > .85 ? 2 : 1.2, s[2] > .85 ? 2 : 1.2); }
   // 月（本物の位置と満ち欠け。昼間の月はうすく。地平線より下なら見えない）
   const MV = moonView(P.ll[0], P.ll[1], nowMs()); S.MV = MV;
   const ma = clamp((MV.alt + 1) / 4) * (L.dl > .5 ? .38 * (1 - L.dl * .5) : clamp(1 - L.dl / .7 + .3)) * clamp(1 - L.k * 1.1) * (MV.k < .03 ? 0 : 1);
@@ -3135,10 +3180,14 @@ function drawProp(p, x, gy, sc, ctx) {
       c.fillStyle = shc(bc, .25); c.fillRect(x - w / 2, gy - h, w, h);
       const cols = Math.max(2, Math.floor(w / (7 * sc))), rows = Math.max(2, Math.floor(h / (9 * sc)));
       const cw = w / cols, rh = h / rows;
-      for (let yy = 0; yy < rows - 0.5; yy++) for (let xx = 0; xx < cols; xx++) {
-        const on = h2(p.seed * 31 + xx, yy) < (night ? .55 : 0);
-        c.fillStyle = on ? 'rgba(255,220,140,.95)' : shc(mix(bc, [60, 80, 110], .5), .25);
-        c.fillRect(x - w / 2 + xx * cw + cw * .25, gy - h + yy * rh + rh * .3, cw * .5, rh * .45);
+      for (const lit of [false, true]) { // 窓は、明かりの有り無しで2回にまとめて描く（1枚ずつ描くより ずっと軽い）
+        if (lit && !night) break;
+        c.fillStyle = lit ? 'rgba(255,220,140,.95)' : shc(mix(bc, [60, 80, 110], .5), .25); c.beginPath();
+        for (let yy = 0; yy < rows - 0.5; yy++) for (let xx = 0; xx < cols; xx++) {
+          if ((h2(p.seed * 31 + xx, yy) < (night ? .55 : 0)) !== lit) continue;
+          c.rect(x - w / 2 + xx * cw + cw * .25, gy - h + yy * rh + rh * .3, cw * .5, rh * .45);
+        }
+        c.fill();
       }
       break;
     }
@@ -3488,7 +3537,7 @@ function drawLandmarks(gy, sc, sea) {
 /* ----- 陸の景色 ----- */
 function drawLand(dt, W8, alt, ctx) {
   const hz = H * .56;
-  drawSky(hz, W8, alt); drawSkyEvents(hz);
+  drawSky(hz, W8, alt); drawSkyEvents(hz, false);
   drawClouds(hz, W8);
   const B = S.rp, sc = Math.max(.7, Math.min(H, W * 1.6) / 360);
   // 海が見える海岸
@@ -3498,17 +3547,21 @@ function drawLand(dt, W8, alt, ctx) {
   drawRidge(S.off.far, hz + 1, H * B.farAmp, B, B.far, .62, 3, .004, B.jag > .6 ? .62 : null);
   drawLandmarks(gtop, sc, false); drawMirage(gtop);
   drawRidge(S.off.hill, gtop + H * .03, H * B.hillAmp, B, B.hill, .32, 9, .007, null);
+  drawSkyEvents(hz, true); // 鳥や気球は、雲・遠くの山・富士山などの名所・手前の丘より前に
   // 地面（畑のすじ）
   const gy0 = gtop + H * .03;
   c.fillStyle = shc(B.ground, .12); c.fillRect(0, gy0, W, H - gy0);
   if (ctx.biome === 'farm' && !W8.snowCover) { for (let k = 0; k < 6; k++) { const y = gy0 + (H * .82 - gy0) * (k / 6) ** 1.2; c.fillStyle = shc(mix(B.ground, k % 2 ? [150, 180, 70] : [100, 150, 60], .3), .1); c.fillRect(0, y, W, (H * .82 - gy0) / 9); } }
   drawCrops(gy0, ctx);
   // 中景
-  const mg = gy0 + (H - gy0) * .32, tw = 100, o = S.off.mid;
+  const mg = gy0 + (H - gy0) * .32, tw = 100, o = S.off.mid, MIDQ = [];
   for (let i = Math.floor(o / tw) - 1; i <= Math.floor((o + W) / tw) + 1; i++) {
     let t = S.tiles.get(i); if (!t) { t = tileProps(i, ctx.biome, P); S.tiles.set(i, t); }
-    for (const p of t) { const x = i * tw - o + p.x, y = mg + (p.z - .5) * 10 * sc, k = bendOf(p); if (k) { c.save(); c.translate(x, y); c.transform(1, 0, k, 1, 0, 0); c.translate(-x, -y); } drawProp(p, x, y, sc * (0.9 + p.z * .2), ctx); if (k) c.restore(); }
+    for (const p of t) MIDQ.push([i * tw - o + p.x, p]);
   }
+  MIDQ.sort((a, b) => a[1].z - b[1].z); // 奥（z が小さい）から順に描く。となりの区画の建物が手前の家にかぶらないように
+  for (const [x, p] of MIDQ) { const y = mg + (p.z - .5) * 10 * sc, k = bendOf(p); if (k) { c.save(); c.translate(x, y); c.transform(1, 0, k, 1, 0, 0); c.translate(-x, -y); } drawProp(p, x, y, sc * (0.9 + p.z * .2), ctx); if (k) c.restore(); }
+  MIDQ.length = 0;
   if (S.tiles.size > 60) for (const k of S.tiles.keys()) if (k < Math.floor(o / tw) - 3) S.tiles.delete(k);
   drawGroundEvents(mg, sc); drawNightMarket(mg, sc); drawFolk(mg, sc, ctx); drawTraffic(mg, sc, ctx, W8); drawSigns(mg, sc, ctx);
   if (L.fog > 0) { c.fillStyle = css(mix(L.haze, [230, 232, 236], .3), L.fog * .75); c.fillRect(0, 0, W, H); }
@@ -3545,7 +3598,7 @@ function drawSea(dt, W8, alt, ctx) {
   const roll = Math.sin(S.t * .55) * (0.4 + clamp(W8.wind / 50) * 3.2) * D2R, bob = Math.sin(S.t * .8) * (2 + clamp(W8.wind / 50) * 10);
   const hz = H * .47 + bob;
   c.save(); c.translate(W / 2, H * .7); c.rotate(roll); c.translate(-W / 2, -H * .7);
-  drawSky(hz, W8, alt); drawSkyEvents(hz); drawClouds(hz, W8);
+  drawSky(hz, W8, alt); drawSkyEvents(hz, false); drawClouds(hz, W8); drawSkyEvents(hz, true);
   const sc = Math.max(.7, Math.min(H, W * 1.6) / 360);
   // 遠くの島と船
   const tw = 500, o = S.off.far;
@@ -3670,7 +3723,7 @@ function evPool(ctx, W8, alt) {
     if (b === 'desert' && (lon > 30 || (lon > -20 && lat > 10))) add('camels', 2.5);
     if (b === 'mount' || b === 'desert') add('eagle', 1.5);
     if ((b === 'farm' || b === 'steppe' || b === 'forest') && lon > -20) add('train', 1);
-    if (landFinds(ctx, W8, false).length) add('roadfind', 2); // 道ばたで光るひろいもの
+    if (landFinds(ctx, W8, false).length) add('roadfind', DEMO ? 8 : 2); // 道ばたで光るひろいもの
     if (nearLm('cappadocia', 60) || nearLm('balloons', 60)) add('balloon', alt < 35 ? 6 : 1.5);
     else add('balloon', .15);
   }
@@ -3754,10 +3807,12 @@ function drawBirds(e, p, hz, sc) {
   }
   if (DEX[e.id]) addHit(bx - 30 * sc, by - 30 * sc, bx + (n * 26 + 30) * sc, by + 60 * sc, 'D:' + e.id);
 }
-function drawSkyEvents(hz) {
-  drawShower(S.dt || .016, hz); drawFest(hz);
+// near=false：空そのもの（流れ星・オーロラ・虹・流星群）は雲や山より奥。near=true：鳥・ワシ・気球・花火は雲や山より手前
+function drawSkyEvents(hz, near) {
+  if (near) drawFest(hz); else drawShower(S.dt || .016, hz);
   for (const e of S.events) {
     const p = (S.t - e.t0) / e.dur; if (p < 0 || p > 1) continue;
+    if (!near !== /^(shootingstar|aurora|rainbow)$/.test(e.id)) continue;
     if (e.id === 'shootingstar') { const x = W * (.8 - p * .5) + (e.seed % 100), y = hz * (.1 + p * .3); addHit(x - 20, y - 50, x + 100, y + 20, 'D:shootingstar'); const g = c.createLinearGradient(x, y, x + 80, y - 40); g.addColorStop(0, `rgba(255,255,255,${1 - p})`); g.addColorStop(1, 'rgba(255,255,255,0)'); c.strokeStyle = g; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 80, y - 40); c.stroke(); }
     if (e.id === 'aurora') { addHit(0, hz * .05, W, hz * .55, 'D:aurora'); const a = Math.sin(p * Math.PI) * .55; for (let k = 0; k < 3; k++) { c.fillStyle = `rgba(${k === 1 ? '160,90,220' : '80,240,160'},${a * (k === 1 ? .4 : .5)})`; c.beginPath(); c.moveTo(0, hz * .6); for (let x = 0; x <= W; x += 20) c.lineTo(x, hz * (.2 + k * .08) + Math.sin(x * .01 + S.t * .4 + k) * 20); c.lineTo(W, hz * .6); for (let x = W; x >= 0; x -= 20) c.lineTo(x, hz * (.55 + k * .03) + Math.sin(x * .013 + S.t * .3 + k) * 14); c.fill(); } }
     if (e.id === 'rainbow') { const a = Math.sin(p * Math.PI) * .35, cx = W * .3, r = Math.min(W, H) * .5; addHit(cx - r, hz - r, cx + r, hz - r * .6, 'D:rainbow'); const cols = ['255,60,60', '255,160,40', '255,240,60', '80,220,80', '60,140,255', '140,80,220']; c.lineWidth = Math.max(4, r * .025); cols.forEach((cl, k) => { c.strokeStyle = `rgba(${cl},${a})`; c.beginPath(); c.arc(cx, hz + 10, r - k * c.lineWidth, Math.PI, 0); c.stroke(); }); }
@@ -3798,7 +3853,7 @@ function drawGroundEvents(gy, sc) {
 /* ===== 画面の文字 ===== */
 function placeName() { if (!P) return ''; const s = P.seg; return P.segKm < 8 ? tr(s.a.name) : s.len - P.segKm < 8 ? tr(s.b.name) : `${tr(s.a.name)}${J('〜', ' – ')}${tr(s.b.name)}`; }
 function updateHud() {
-  if (document.body.classList.contains('full')) setTimeout(fsInfo);
+  if (document.body.classList.contains('full') && !(S.tvLite && Date.now() - (S.fsiAt || 0) < 15e3)) { S.fsiAt = Date.now(); setTimeout(fsInfo); } // テレビでは15秒に1回だけ書きかえる（書きかえのたびに一瞬止まるため）
   if (!P) return;
   const s = P.seg, sea = s.mode === 's';
   $('#place').textContent = st.parked ? J(`${st.parked}で停車中`, `Parked in ${tr(st.parked)}`) : P.segKm < 8 ? `${tr(s.a.name)}` : s.len - P.segKm < 8 ? J(`${s.b.name}に到着`, `Arriving in ${tr(s.b.name)}`) : `${tr(s.a.name)} → ${tr(s.b.name)}`;
@@ -4261,7 +4316,7 @@ function showSettings() {
   document.querySelectorAll('[data-notify]').forEach(b => b.onclick = async () => { const ok = await setNotify(b.dataset.notify === 'on'); document.querySelectorAll('[data-notify]').forEach(x => x.classList.toggle('on', (x.dataset.notify === 'on') === NOTIFY)); });
   document.querySelectorAll('[data-snd]').forEach(b => b.onclick = () => { setSound(b.dataset.snd === 'on'); document.querySelectorAll('[data-snd]').forEach(x => x.classList.toggle('on', x === b)); });
   $('#s-vol').oninput = e => { SVOL = +e.target.value; try { localStorage.setItem('camper-vol', SVOL); } catch (er) { } if (!SOUND) setSound(true); auVolume(); };
-  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = J('もう一度押すとリセットします', 'Press again to reset'); return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } location.reload(); };
+  let armed = false; $('#reset').onclick = e => { if (!armed) { armed = true; e.target.textContent = J('もう一度押すとリセットします', 'Press again to reset'); return; } st = null; try { localStorage.removeItem(KEY); } catch (e) { } idbSet('ls', null).catch(() => { }).finally(() => { if (window.tvForget) tvForget(); location.reload(); }); };
 }
 /* ===== ひろいもの（海に浮かんで流れてくる物。タッチで拾って「ひろいもの帳」に） ===== */
 // id: [絵, 名前, 英語名, 説明, 英語の説明, 出る海（null=どこでも）, 出やすさ]
@@ -4675,7 +4730,7 @@ function auMaybe(name, every) { // 平均 every 秒に1回くらい鳴らす
   if (now >= AU.next[name]) { SFX[name](); AU.next[name] = now + every * (.4 + Math.random() * 1.2); }
 }
 function auUpdate(W8, ctx) {
-  if (!AU.ac || !SOUND || AU.ac.state !== 'running') return;
+  if (!AU.ac || !SOUND || (AU.ac.state !== 'running' && !window.TVSND)) return;
   const moving = !st.parked, sea = ctx.sea, b = ctx.biome, hr = localDate().getUTCHours(), night = L.night > .5;
   const lodge = st.parked && st.stay && st.stay.lodge, indoors = night && lodge === 'hotel';
   const wind = clamp(((W8.wind || 0) - 8) / 40, 0, 1);
@@ -4697,7 +4752,7 @@ function auUpdate(W8, ctx) {
   if (b === 'city' && !sea && !night && moving) auMaybe('horn', 70);
   if (sea && moving) auMaybe('bell', 120);
 }
-document.addEventListener('pointerdown', () => auStart(), { passive: true });
+['pointerdown', 'mousedown', 'click', 'keydown', 'touchend'].forEach(t => document.addEventListener(t, () => { if (!AU.ac || AU.ac.state !== 'running') auStart(); }, { passive: true, capture: true })); // テレビのリモコンは pointerdown が来ないことがあるので、クリックやキーでも音を始める
 document.addEventListener('visibilitychange', () => { if (!AU.ac) return; if (document.hidden) AU.ac.suspend(); else if (SOUND) AU.ac.resume(); });
 function setSound(on) {
   SOUND = on; try { localStorage.setItem('camper-sound', on ? 'on' : 'off'); } catch (e) { }
@@ -5029,6 +5084,7 @@ function back() {
 function frame(ts) {
   requestAnimationFrame(frame);
   if (!st || document.hidden) return;
+  { const iv = ts - (S.lastTs || ts); S.lastTs = ts; if (iv > 0 && iv < 200) ivAvg = ivAvg * .95 + iv * .05; } // 画面が実際に何コマ出せているか
   if (HALF && (++fcount & 1)) return; // 重い端末では1コマおきに描く
   const t0 = performance.now();
   const dt = Math.min(.1, (ts - lastFrame) / 1000 || 0); lastFrame = ts; S.t += dt; S.dt = dt;
@@ -5046,10 +5102,10 @@ function frame(ts) {
   prevBiome = ctx.biome;
   const vf = st.parked ? 0 : clamp(Math.sqrt(st.speed / 60), .6, 2.2); S.vf = vf;
   S.off.cloud += dt * (5 * vf + (W8.wind || 0) * .25); S.off.far += dt * 9 * vf; S.off.hill += dt * 22 * vf; S.off.mid += dt * 75 * vf; S.off.near += dt * 480 * vf; S.off.sea += dt * 60 * vf;
-  if (S.t > S.nextEv) { spawnEvent(ctx, W8, alt); S.nextEv = S.t + 18 + Math.random() * 30; }
+  if (S.t > S.nextEv) { spawnEvent(ctx, W8, alt); S.nextEv = S.t + (DEMO ? 8 + Math.random() * 6 : 18 + Math.random() * 30); }
   S.events = S.events.filter(e => S.t - e.t0 < e.dur);
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const bump = ctx.sea || st.parked ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0) + (S.storm ? Math.sin(S.t * 17) * Math.sin(S.t * 2.3) * clamp((S.storm.w - 40) / 40) * 3 : 0);
+  const bump = ctx.sea || st.parked || S.tvLite ? 0 : Math.sin(S.t * 13) * .5 + (Math.random() < .01 ? 1.5 : 0) + (S.storm ? Math.sin(S.t * 17) * Math.sin(S.t * 2.3) * clamp((S.storm.w - 40) / 40) * 3 : 0);
   c.save(); c.translate(0, bump);
   if (ctx.sea) drawSea(dt, W8, alt, ctx); else drawLand(dt, W8, alt, ctx);
   c.restore();
@@ -5062,15 +5118,17 @@ function frame(ts) {
   drawAvg = drawAvg * .95 + (performance.now() - t0) * .05;
   if (ts - perfAt > 3000) {
     perfAt = ts;
-    if (drawAvg > 14) { if (PXMAX > 7e5) { PXMAX *= .7; resize(); } else HALF = true; }
+    // 描くのが重い、または画面の書きかえが追いつかない（1コマ24ms以上）なら、細かさを下げて引きのばす。ぼかし効果も止める
+    if (!S.tvLite && (drawAvg > 14 || ivAvg > 24)) { document.body.classList.add('lite'); if (PXMAX > PXMIN) { PXMAX = Math.max(PXMIN, PXMAX * .7); resize(); } else if (drawAvg > 14 && drawAvg < 18) HALF = true; }
+    if (HALF && drawAvg > 20) HALF = false; // 1コマが重すぎるときは、1コマおきにしても遅くなるだけなのでやめる
   }
 }
 cv.addEventListener('click', e => {
   const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
   for (const ev of S.events) if ((ev.id === 'bottle' || ev.id === 'roadfind') && ev.hit && Math.hypot(x - ev.hit[0], y - ev.hit[1]) < ev.hit[2] + 12) { ev.dur = 0; if (ev.item === 'magic') showPal(ev.pal); else if (ev.item && ev.item !== 'bottle') showFind(ev.item); else showBottle(); return; }
 });
-document.addEventListener('visibilitychange', () => { if (!st) return; if (document.hidden) { tick(); save(); } else back(); });
-window.addEventListener('pagehide', () => { if (st) { tick(); save(); } });
+document.addEventListener('visibilitychange', () => { if (!st) return; if (document.hidden) { tick(); save(); mirrorSave(true); } else back(); });
+window.addEventListener('pagehide', () => { if (st) { tick(); save(); mirrorSave(true); } });
 window.addEventListener('resize', resize);
 $('#b-map').onclick = () => showMap(+(lsGet('camper-mapz') || 0)); $('#b-rec').onclick = () => showRecord(); $('#b-set').onclick = showSettings; $('#b-ev').onclick = () => showEvents(); $('#b-photo').onclick = postcard; $('#fork').onclick = showFork;
 // 全画面：景色だけを画面いっぱいに。さわらないでいるとボタンや文字が消える
@@ -5196,8 +5254,19 @@ function startTrip() {
 load();
 resize();
 if (QS.has('km')) { st = newState(60); if (QS.get('pick')) QS.get('pick').split(',').forEach((v, i) => st.choices['0:' + [1, 2, 4, 6][i]] = v); advance(+QS.get('km')); P = posAt(st.km); startTrip(); if (QS.get('ev')) setTimeout(() => { S.events.push({ id: QS.get('ev'), t0: S.t, dur: 30, x0: W * .6, d: .3, seed: 5 }); }, 300); }
-else if (!st) { st = newState(60); st.preview = true; startTrip(); showIntro(); }
-else { P = curPos(); startTrip(); back(); }
+else if (!st) {
+  st = newState(60); st.preview = true; startTrip(); showIntro();
+  mirrorLoad().then(o => { // 予備の保存から旅をもどす
+    if (!o || !st || !st.preview) return;
+    let s0; try { s0 = JSON.parse(o.ls[KEY]); } catch (e) { return; } if (!s0 || typeof s0.km !== 'number') return;
+    let ok = false; try { for (const k in o.ls) localStorage.setItem(k, o.ls[k]); ok = localStorage.getItem(KEY) === o.ls[KEY]; } catch (e) { }
+    // 書きもどせたら読みこみ直して、設定（ことば・窓など）もまとめて反映。書けないブラウザでは、このまま旅だけ続ける
+    if (ok) { try { if (!sessionStorage.getItem('camper-restored')) { sessionStorage.setItem('camper-restored', '1'); st = null; location.reload(); return; } } catch (e) { } }
+    closeModal(); st = s0; P = curPos(); startTrip(); back();
+    toast(J('💾 前回の旅を、予備の保存からもどしました', '💾 Your trip was restored from the backup copy'), 5000);
+  });
+}
+else { P = curPos(); startTrip(); back(); try { if (sessionStorage.getItem('camper-restored') === '1') { sessionStorage.setItem('camper-restored', '2'); setTimeout(() => toast(J('💾 前回の旅を、予備の保存からもどしました', '💾 Your trip was restored from the backup copy'), 5000), 1500); } } catch (e) { } }
 requestAnimationFrame(frame);
 
 /* ===== 天体イベントとお祭り（本物の日付・いる場所に合わせる） ===== */
@@ -5751,6 +5820,7 @@ const LOCAL = {
   keitruck: ['🛻', '軽トラ', 'Kei truck', '日本の田舎で大活躍の小さなトラック', 'The tiny trucks of the Japanese countryside', '軽トラック', 'Kei truck'],
   lada: ['🚗', 'ラーダ', 'Lada', 'ロシア生まれの四角いクルマ。旧ソ連の国々で今も走る', 'The boxy Russian car still common across the former USSR', 'ラーダ (自動車)', 'Lada'],
   beetle: ['🚕', 'ワーゲンビートル', 'VW Beetle', 'メキシコでは「ボチョ」とよばれて長く愛された', 'Known as the “vocho” and loved for decades in Mexico', 'フォルクスワーゲン・タイプ1', 'Volkswagen Beetle'],
+  bicycles_cn: ['🚲', '自転車の列（中国）', 'Rows of bicycles (China)', '中国はむかし「自転車王国」。いまは町じゅうにシェアサイクルと電動自転車', 'Once the "kingdom of bicycles"; now full of bike-share and e-bikes', 'シェアサイクル', 'Bicycle-sharing system'],
   bicycles: ['🚲', '自転車の列', 'Rows of bicycles', 'コペンハーゲンは、クルマより自転車が多い町', 'Copenhagen has more bikes than cars', '自転車', 'Cycling in Copenhagen'],
   postbus: ['🚌', 'ポストバス', 'PostBus', 'アルプスの山道を走る黄色いバス。ラッパのような警笛', 'Yellow buses of the Alps with a three-tone horn', 'ポストバス', 'PostBus Switzerland'],
   dogsled: ['🛷', '犬ぞり', 'Dog sled', '雪と氷の土地で、犬たちが引くそり', 'Sleds pulled by dogs across the snow', '犬ぞり', 'Dog sled'],
@@ -5857,7 +5927,7 @@ function spawnTraffic(ctx, W8) {
   const base = { t0: S.t, seed: Math.random() * 100, col: VCOL[Math.random() * VCOL.length | 0], shirt: VCOL[Math.random() * VCOL.length | 0], v: 40 + Math.random() * 60 };
   const out = [];
   if (type === 'motorbikes') { const n = 5 + (Math.random() * 6 | 0); for (let k = 0; k < n; k++) out.push(Object.assign({}, base, { type: 'moto', off: k * 18 + Math.random() * 10, lane: Math.random() * 6, col: VCOL[k % 7], shirt: VCOL[(k + 3) % 7], hat: Math.random() < .4 ? 'cone' : '#d33', two: Math.random() < .5, shirt2: VCOL[(k + 5) % 7], hat2: Math.random() < .5 ? 'cone' : '#36c', id: 'motorbikes' })); }
-  else if (type === 'bicycles') { const n = 3 + (Math.random() * 4 | 0); for (let k = 0; k < n; k++) out.push(Object.assign({}, base, { type: 'bike', off: k * 16, lane: Math.random() * 4, shirt: VCOL[k % 7], v: 18, id: 'bicycles' })); }
+  else if (type === 'bicycles') { const n = 3 + (Math.random() * 4 | 0); for (let k = 0; k < n; k++) out.push(Object.assign({}, base, { type: 'bike', off: k * 16, lane: Math.random() * 4, shirt: VCOL[k % 7], v: 18, id: ccOf(P) === 'CN' ? 'bicycles_cn' : 'bicycles' })); }
   else if (type === 'horseman') { const n = 1 + (Math.random() * 3 | 0); for (let k = 0; k < n; k++) out.push(Object.assign({}, base, { type, off: k * 24, lane: k * 2, v: 25, id: type, seed: k * 2 })); }
   else out.push(Object.assign({}, base, { type, off: 0, lane: 0, id: type, col: type === 'tuktuk' ? ['#2f80c0', '#2e9d5b', '#e4572e'][Math.random() * 3 | 0] : type === 'tram' ? (cc === 'PT' ? '#f2c014' : cc === 'PL' || cc === 'CZ' ? '#c8302c' : '#e8442e') : base.col, load: type === 'keitruck' ? ['#e07b39', '#7bb24f', null][Math.random() * 3 | 0] : null, v: type === 'donkeycart' || type === 'dogsled' ? 18 : type === 'tram' ? 30 : base.v }));
   S.traffic = (S.traffic || []).concat(out);
@@ -5888,7 +5958,7 @@ function localizeTile(out, b, P0, i) {
     if ((p.type === 'tree' || p.type === 'conifer') && tt && r(p.x | 0) < .55 && !(tt === 'bamboo' && b === 'desert')) p.type = tt;
     if (p.type === 'cactus' && (cc === 'US' || cc === 'MX')) p.type = 'saguaro';
   }
-  if (ht && b === 'city' && r(1) < .35) out.push({ type: ht, x: r(2) * 80, s: .9 + r(3) * .3, z: r(4), c: r(5) * 4 | 0 });
+  if (ht && b === 'city' && r(1) < .35) out.push({ type: ht, x: r(2) * 80, s: .9 + r(3) * .3, z: .85 + r(4) * .15, c: r(5) * 4 | 0 });
   if (ht && (b === 'coast' || b === 'farm' || b === 'steppe' || b === 'desert') && r(6) < .18) out.push({ type: ht, x: r(7) * 80, s: .85 + r(8) * .3, z: r(9), c: r(10) * 4 | 0 });
   if ((cc === 'GR' || cc === 'IT' || cc === 'ES' || cc === 'PT') && b === 'farm' && r(11) < .5) for (let k = 0; k < 3; k++) out.push({ type: 'olive', x: k * 26 + r(12 + k) * 10, s: .8, z: r(20 + k) });
   if (cc === 'IT' && (b === 'farm' || b === 'mount') && r(13) < .4) out.push({ type: 'cypress', x: r(14) * 80, s: 1, z: r(15) });
@@ -5899,8 +5969,9 @@ function localizeTile(out, b, P0, i) {
 }
 function drawLocalProp(p, x, gy, sc, ctx) {
   const s = sc * p.s, d = .11, C = col => css(sh(col, d)), night = L.night > .55, win = night ? 'rgba(255,214,120,.95)' : C([70, 90, 110]);
-  if (x > W * .1 && x < W * .9 && LOCAL[p.type]) seeLocal(p.type);
-  if (LOCAL[p.type]) addHit(x - 16 * s, gy - 46 * s, x + 16 * s, gy, 'L:' + p.type);
+  const own = p.type === 'futon' || p.type === 'laundry'; // 干しているときだけ記録・説明（drawLocalProp2 で判断）
+  if (!own && x > W * .1 && x < W * .9 && LOCAL[p.type]) seeLocal(p.type);
+  if (!own && LOCAL[p.type]) addHit(x - 16 * s, gy - 46 * s, x + 16 * s, gy, 'L:' + p.type);
   switch (p.type) {
     case 'cyclades': { c.fillStyle = C([246, 246, 242]); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 16 * s); c.fillRect(x + 4 * s, gy - 24 * s, 12 * s, 8 * s); c.fillStyle = C([40, 100, 180]); c.beginPath(); c.arc(x - 4 * s, gy - 16 * s, 6.5 * s, Math.PI, 0); c.fill(); c.fillRect(x + 7 * s, gy - 9 * s, 4 * s, 9 * s); c.fillStyle = win; c.fillRect(x - 10 * s, gy - 10 * s, 4 * s, 4 * s); c.fillStyle = C([40, 100, 180]); c.fillRect(x + 9 * s, gy - 22 * s, 3 * s, 3 * s); break; }
     case 'nordichouse': { const col = [[166, 44, 38], [226, 176, 60], [70, 110, 150], [236, 232, 222]][p.c || 0]; c.fillStyle = C(col); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 16 * s); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [50, 52, 58]); c.beginPath(); c.moveTo(x - 15 * s, gy - 16 * s); c.lineTo(x, gy - 30 * s); c.lineTo(x + 15 * s, gy - 16 * s); c.fill(); c.fillStyle = C([250, 250, 248]); c.fillRect(x - 13 * s, gy - 16 * s, 26 * s, 1.4 * s); c.fillRect(x - 13 * s, gy - 16 * s, 1.4 * s, 16 * s); c.fillRect(x + 11.6 * s, gy - 16 * s, 1.4 * s, 16 * s);
@@ -5910,7 +5981,9 @@ function drawLocalProp(p, x, gy, sc, ctx) {
     case 'thaitemple': { c.fillStyle = C([246, 240, 228]); c.fillRect(x - 15 * s, gy - 12 * s, 30 * s, 12 * s); for (let k = 0; k < 3; k++) { const yy = gy - 12 * s - k * 7 * s, ww = (20 - k * 5) * s; c.fillStyle = C(k % 2 ? [40, 110, 70] : [196, 60, 40]); c.beginPath(); c.moveTo(x - ww, yy); c.lineTo(x - ww * .5, yy - 8 * s); c.lineTo(x + ww * .5, yy - 8 * s); c.lineTo(x + ww, yy); c.fill(); c.strokeStyle = C([220, 176, 60]); c.lineWidth = 1.2 * s; c.beginPath(); c.moveTo(x - ww, yy); c.quadraticCurveTo(x - ww - 2 * s, yy - 5 * s, x - ww + 1 * s, yy - 6 * s); c.moveTo(x + ww, yy); c.quadraticCurveTo(x + ww + 2 * s, yy - 5 * s, x + ww - 1 * s, yy - 6 * s); c.stroke(); } c.fillStyle = C([220, 176, 60]); c.fillRect(x - .8 * s, gy - 44 * s, 1.6 * s, 10 * s); c.fillStyle = win; c.fillRect(x - 3 * s, gy - 9 * s, 6 * s, 9 * s); break; }
     case 'chalet': { c.fillStyle = C([238, 234, 224]); c.fillRect(x - 15 * s, gy - 10 * s, 30 * s, 10 * s); c.fillStyle = C([128, 86, 52]); c.fillRect(x - 15 * s, gy - 20 * s, 30 * s, 10 * s); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [92, 64, 44]); c.beginPath(); c.moveTo(x - 20 * s, gy - 19 * s); c.lineTo(x, gy - 29 * s); c.lineTo(x + 20 * s, gy - 19 * s); c.fill(); c.fillStyle = C([90, 60, 40]); c.fillRect(x - 15 * s, gy - 12 * s, 30 * s, 1.6 * s); if (!ctx.snow) { c.fillStyle = C([210, 50, 60]); for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(x - 13 * s + k * 5.2 * s, gy - 13.5 * s, 1.4 * s, 0, 7); c.fill(); } } c.fillStyle = win; c.fillRect(x - 10 * s, gy - 18 * s, 4 * s, 4 * s); c.fillRect(x + 6 * s, gy - 18 * s, 4 * s, 4 * s); c.fillRect(x - 3 * s, gy - 7 * s, 6 * s, 7 * s); break; }
     case 'izba': { c.fillStyle = C([128, 92, 60]); c.fillRect(x - 12 * s, gy - 16 * s, 24 * s, 16 * s); c.strokeStyle = C([96, 66, 42]); c.lineWidth = .9 * s; c.beginPath(); for (let k = 1; k < 6; k++) { c.moveTo(x - 12 * s, gy - k * 2.8 * s); c.lineTo(x + 12 * s, gy - k * 2.8 * s); } c.stroke(); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [80, 90, 84]); c.beginPath(); c.moveTo(x - 15 * s, gy - 16 * s); c.lineTo(x, gy - 29 * s); c.lineTo(x + 15 * s, gy - 16 * s); c.fill(); for (const wx of [-7, 3]) { c.fillStyle = C([60, 120, 190]); c.fillRect(x + (wx - 1) * s, gy - 13 * s, 6 * s, 8 * s); c.fillStyle = win; c.fillRect(x + wx * s, gy - 12 * s, 4 * s, 5 * s); } break; }
-    case 'hanok': { c.fillStyle = C([236, 230, 216]); c.fillRect(x - 13 * s, gy - 12 * s, 26 * s, 12 * s); c.fillStyle = C([120, 80, 52]); for (const bx of [-13, -4, 5, 12]) c.fillRect(x + bx * s, gy - 12 * s, 1.4 * s, 12 * s); c.fillStyle = C(ctx.snow ? [236, 240, 246] : [70, 74, 80]); c.beginPath(); c.moveTo(x - 21 * s, gy - 16 * s); c.quadraticCurveTo(x - 14 * s, gy - 12 * s, x - 10 * s, gy - 20 * s); c.lineTo(x + 10 * s, gy - 20 * s); c.quadraticCurveTo(x + 14 * s, gy - 12 * s, x + 21 * s, gy - 16 * s); c.lineTo(x + 14 * s, gy - 11 * s); c.lineTo(x - 14 * s, gy - 11 * s); c.fill(); c.fillStyle = win; c.fillRect(x - 9 * s, gy - 9 * s, 5 * s, 5 * s); c.fillRect(x + 1 * s, gy - 9 * s, 5 * s, 5 * s); break; }
+    case 'hanok': { c.fillStyle = C([236, 230, 216]); c.fillRect(x - 13 * s, gy - 12 * s, 26 * s, 12 * s); c.fillStyle = C([120, 80, 52]); for (const bx of [-13, -4, 5, 12]) c.fillRect(x + bx * s, gy - 12 * s, 1.4 * s, 12 * s); const rc = ctx.snow ? [236, 240, 246] : [70, 74, 80]; c.fillStyle = C(rc); c.beginPath(); c.moveTo(x - 9 * s, gy - 22 * s); c.lineTo(x + 9 * s, gy - 22 * s); c.quadraticCurveTo(x + 13 * s, gy - 14 * s, x + 20 * s, gy - 15.5 * s); c.quadraticCurveTo(x + 17 * s, gy - 11.5 * s, x + 13 * s, gy - 11.5 * s); c.lineTo(x - 13 * s, gy - 11.5 * s); c.quadraticCurveTo(x - 17 * s, gy - 11.5 * s, x - 20 * s, gy - 15.5 * s); c.quadraticCurveTo(x - 13 * s, gy - 14 * s, x - 9 * s, gy - 22 * s); c.fill();
+      c.fillStyle = C(ctx.snow ? [210, 216, 224] : [52, 55, 60]); c.fillRect(x - 10 * s, gy - 23.5 * s, 20 * s, 2 * s); c.beginPath(); c.moveTo(x - 10 * s, gy - 21.5 * s); c.lineTo(x - 12 * s, gy - 25 * s); c.lineTo(x - 9 * s, gy - 23.5 * s); c.moveTo(x + 10 * s, gy - 21.5 * s); c.lineTo(x + 12 * s, gy - 25 * s); c.lineTo(x + 9 * s, gy - 23.5 * s); c.fill();
+      c.strokeStyle = C(rc.map(v => v * .8)); c.lineWidth = .7 * s; c.beginPath(); for (let k = -3; k <= 3; k++) { c.moveTo(x + k * 2.6 * s, gy - 21.5 * s); c.lineTo(x + k * 3.8 * s, gy - 12 * s); } c.stroke(); c.fillStyle = win; c.fillRect(x - 9 * s, gy - 9 * s, 5 * s, 5 * s); c.fillRect(x + 1 * s, gy - 9 * s, 5 * s, 5 * s); break; }
     case 'colorful': { const pal = [[232, 92, 74], [60, 170, 200], [246, 196, 70], [130, 190, 90], [210, 110, 170]]; for (let k = 0; k < 3; k++) { const hx = x - 18 * s + k * 12 * s, hh = (13 + ((p.c + k) % 3) * 3) * s; c.fillStyle = C(pal[(p.c + k) % 5]); c.fillRect(hx, gy - hh, 12 * s, hh); c.fillStyle = C([250, 250, 248]); c.fillRect(hx, gy - hh, 12 * s, 1.2 * s); c.fillStyle = win; c.fillRect(hx + 3.5 * s, gy - hh + 3 * s, 5 * s, 4 * s); } break; }
     case 'baobab': { c.fillStyle = C([150, 120, 96]); c.beginPath(); c.moveTo(x - 7 * s, gy); c.quadraticCurveTo(x - 9 * s, gy - 20 * s, x - 5 * s, gy - 32 * s); c.lineTo(x + 5 * s, gy - 32 * s); c.quadraticCurveTo(x + 9 * s, gy - 20 * s, x + 7 * s, gy); c.fill(); c.strokeStyle = C([150, 120, 96]); c.lineWidth = 2 * s; c.beginPath(); for (let k = 0; k < 6; k++) { const a = -Math.PI * (.15 + k * .14); c.moveTo(x, gy - 31 * s); c.lineTo(x + Math.cos(a) * 14 * s, gy - 31 * s + Math.sin(a) * 9 * s); } c.stroke(); c.fillStyle = C([96, 130, 70]); for (let k = 0; k < 6; k++) { const a = -Math.PI * (.15 + k * .14); c.beginPath(); c.arc(x + Math.cos(a) * 14 * s, gy - 31 * s + Math.sin(a) * 9 * s, 3.4 * s, 0, 7); c.fill(); } break; }
     case 'birch': { c.fillStyle = C([238, 236, 228]); c.fillRect(x - 1.6 * s, gy - 36 * s, 3.2 * s, 36 * s); c.fillStyle = C([40, 40, 40]); for (let k = 0; k < 6; k++) c.fillRect(x - 1.6 * s + (k % 2) * 1.6 * s, gy - 6 * s - k * 5 * s, 1.6 * s, .9 * s); const tc = treeCol(ctx.lat, ctx.mon, p.x * 7); if (tc) { c.fillStyle = C(mix(tc, [180, 200, 90], .3)); c.beginPath(); c.ellipse(x, gy - 38 * s, 7 * s, 11 * s, 0, 0, 7); c.fill(); } break; }
@@ -5949,7 +6022,7 @@ const LSFX = {
   },
 };
 function localSounds(ctx) {
-  if (!AU.ac || !SOUND || AU.ac.state !== 'running' || !P) return;
+  if (!AU.ac || !SOUND || (AU.ac.state !== 'running' && !window.TVSND) || !P) return;
   const cc = ccOf(P), ld = localDate(), hr = ld.getUTCHours(), mi = ld.getUTCMinutes(), day = ld.toISOString().slice(0, 10);
   const near = nearbyStops(P).some(n => Math.abs(n.d) < 20 && !n.port || Math.abs(n.d) < 12), town = ctx.biome === 'city' || near;
   const once = (key, fn, note) => { const k = key + ':' + day; S.lsDone = S.lsDone || {}; if (S.lsDone[k]) return; S.lsDone[k] = 1; fn(); const id = key.split(':')[0]; if (st.local && st.local[id]) { if (note) toast(note, 3500); } else seeLocal(id); };
@@ -6205,7 +6278,8 @@ function extraTile(out, b, i, cc, r) {
 function drawLocalProp2(p, x, gy, sc, ctx) {
   const s = sc * p.s, C = col => css(sh(col, .11)), night = L.night > .55, win = night ? 'rgba(255,214,120,.95)' : C([70, 90, 110]);
   const hr = localDate().getUTCHours(), seen = id => { if (x > W * .1 && x < W * .9) seeLocal(id); };
-  if (LOCAL[p.type]) addHit(x - 16 * s, gy - (p.type === 'koinobori' ? 62 : 46) * s, x + 16 * s, gy, 'L:' + p.type);
+  const shown = p.type === 'futon' ? !night && hr >= 9 && hr <= 15 && !W8rain() : p.type === 'laundry' ? !W8rain() : true; // 干していないときは説明も出さない
+  if (LOCAL[p.type] && shown) addHit(x - 16 * s, gy - (p.type === 'koinobori' ? 62 : 46) * s, x + 16 * s, gy, 'L:' + p.type);
   const flap = k => Math.sin(S.t * 4 + k + p.x) * (1 + (S.storm ? 2.5 : 0));
   switch (p.type) {
     case 'laundry': { const pal = [[226, 170, 120], [236, 210, 160], [200, 120, 90], [240, 230, 214], [214, 180, 140]];
@@ -6273,13 +6347,14 @@ function drawCrops(gy0, ctx) {
   for (let k = 0; k < N; k++) {
     const t0 = k / N, t1 = (k + 1) / N, y0 = gy0 + (yB - gy0) * t0 ** 1.25, y1 = gy0 + (yB - gy0) * t1 ** 1.25, f = .35 + 1.3 * t0, o = S.off.mid * (.3 + 1.8 * t0);
     c.fillStyle = shc(mix(bcol, k % 2 ? [255, 255, 255] : [0, 0, 0], .05), .1); c.fillRect(0, y0, W, y1 - y0 + 1);
-    const gap = 9 * f * Math.max(1, H / 500), n0 = Math.floor(o / gap) - 1;
+    const gap = 9 * f * Math.max(1, H / 500) * (S.tvLite ? 1.6 : 1), n0 = Math.floor(o / gap) - 1;
+    const batch = (crop === 'rice' && stg !== 'water') || crop === 'wheat' || (crop === 'corn' && stg !== 'bare'); if (batch) c.beginPath(); // 同じ色の線は まとめて1回で描く（テレビなどで軽くなる）
     for (let j = n0; j < n0 + W / gap + 3; j++) {
       const x = j * gap - o, yy = y1 - 1, hh = (y1 - y0), q = h2(j, k);
       switch (crop) {
-        case 'rice': if (stg === 'water') { if (q < .7) { c.fillStyle = shc([110, 170, 80], .1); c.fillRect(x, yy - 2 * f, 1.2 * f, 2 * f); } } else { c.strokeStyle = shc(stg === 'gold' ? [196, 160, 60] : stg === 'stub' ? [180, 150, 100] : [70, 140, 60], .1); c.lineWidth = 1; c.beginPath(); c.moveTo(x, yy); c.lineTo(x + (stg === 'gold' ? 2 * f : 0), yy - hh * (stg === 'stub' ? .3 : .9)); c.stroke(); } break;
-        case 'wheat': c.strokeStyle = shc(stg === 'gold' ? [236, 200, 100] : [110, 160, 70], .1); c.lineWidth = 1; c.beginPath(); c.moveTo(x, yy); c.lineTo(x + Math.sin(S.t * 2 + j * .3) * f, yy - hh * (stg === 'young' ? .3 : 1)); c.stroke(); break;
-        case 'corn': if (stg !== 'bare') { c.strokeStyle = shc(stg === 'dry' ? [180, 160, 100] : [70, 130, 50], .1); c.lineWidth = 1.4 * f; c.beginPath(); c.moveTo(x, yy); c.lineTo(x, yy - hh * (stg === 'young' ? .6 : 1.8)); c.moveTo(x, yy - hh * .8); c.lineTo(x - 3 * f, yy - hh * .5); c.stroke(); } break;
+        case 'rice': if (stg === 'water') { if (q < .7) { c.fillStyle = shc([110, 170, 80], .1); c.fillRect(x, yy - 2 * f, 1.2 * f, 2 * f); } } else { c.strokeStyle = shc(stg === 'gold' ? [196, 160, 60] : stg === 'stub' ? [180, 150, 100] : [70, 140, 60], .1); c.lineWidth = 1; c.moveTo(x, yy); c.lineTo(x + (stg === 'gold' ? 2 * f : 0), yy - hh * (stg === 'stub' ? .3 : .9)); } break;
+        case 'wheat': c.strokeStyle = shc(stg === 'gold' ? [236, 200, 100] : [110, 160, 70], .1); c.lineWidth = 1; c.moveTo(x, yy); c.lineTo(x + Math.sin(S.t * 2 + j * .3) * f, yy - hh * (stg === 'young' ? .3 : 1)); break;
+        case 'corn': if (stg !== 'bare') { c.strokeStyle = shc(stg === 'dry' ? [180, 160, 100] : [70, 130, 50], .1); c.lineWidth = 1.4 * f; c.moveTo(x, yy); c.lineTo(x, yy - hh * (stg === 'young' ? .6 : 1.8)); c.moveTo(x, yy - hh * .8); c.lineTo(x - 3 * f, yy - hh * .5); } break;
         case 'vineyard': if (j % 2 === 0) { c.fillStyle = shc([110, 90, 70], .1); c.fillRect(x, yy - hh * 1.3, 1 * f, hh * 1.3); } if (stg !== 'bare') { c.fillStyle = shc([80, 130, 60], .1); c.fillRect(x, yy - hh * 1.2, gap + .5, hh * .7); if (stg === 'grapes' && q < .5) { c.fillStyle = shc([96, 50, 110], .1); c.beginPath(); c.arc(x + gap * .5, yy - hh * .45, 1.3 * f, 0, 7); c.fill(); } } break;
         case 'sunflower': if (stg !== 'bare') { c.strokeStyle = shc([80, 130, 50], .1); c.lineWidth = 1; c.beginPath(); c.moveTo(x, yy); c.lineTo(x, yy - hh * 1.4); c.stroke(); if (stg === 'bloom' || stg === 'dry') { c.fillStyle = shc(stg === 'bloom' ? [246, 196, 30] : [140, 110, 60], .1); c.beginPath(); c.arc(x, yy - hh * 1.4, 2.4 * f, 0, 7); c.fill(); c.fillStyle = shc([90, 60, 30], .1); c.beginPath(); c.arc(x, yy - hh * 1.4, 1 * f, 0, 7); c.fill(); } } break;
         case 'lavender': case 'tea': case 'cotton': { c.fillStyle = shc(crop === 'lavender' ? (stg === 'bloom' ? [150, 110, 200] : [130, 150, 130]) : crop === 'tea' ? (stg === 'fresh' ? [130, 196, 80] : [70, 140, 60]) : (stg === 'bare' ? [140, 112, 82] : [90, 130, 70]), .1); c.beginPath(); c.ellipse(x, yy - hh * .3, gap * .48, hh * .55, 0, Math.PI, 0); c.fill();
@@ -6287,6 +6362,7 @@ function drawCrops(gy0, ctx) {
         case 'rapeseed': c.fillStyle = shc(stg === 'bloom' ? [250, 220, 60] : [110, 150, 70], .1); c.fillRect(x, yy - hh * .9, 1.6 * f, hh * .6); break;
       }
     }
+    if (batch) c.stroke();
   }
   addHit(0, gy0, W, yB, 'C:' + crop + ':' + stg);
   if (SHOWY[crop].split(' ').includes(stg)) seeLocal(crop);
@@ -6548,6 +6624,522 @@ function drawShip(e, p, hz, sc) {
   addHit(x - 40 * s, y - 30 * s, x + 44 * s, y + 4, 'S:' + e.ship);
   if (x > W * .15 && x < W * .85) seeLocal('ship_' + e.ship);
 }
+
+const TVDBG = new URLSearchParams(location.search).has('debug');
+/* ===== テレビ向けの画面（Fire TV など）=====
+   ・リモコンの矢印キーで選び、決定ボタンで押す（選んでいる所が光る）
+   ・文字とボタンを大きく
+   ・しばらく操作がないと「ながら見」（景色だけ）。分かれ道はいつもどおり運転手さんのおまかせ
+   ・画面が消えにくいようにする
+   切りかえ：設定（自動／テレビ／ふつう）、アドレスの ?tv（?tv=0 でふつう）。自動は、ブラウザの名前（AFT・Silk など）や、
+   マウスもタッチもない大きな画面で判断。矢印キーを押すと、どの画面でもリモコン操作（光る枠）になる */
+const TV_UA = /AFT|Silk|SmartTV|SMART-TV|Tizen|Web0S|WebOS|BRAVIA|GoogleTV|Android ?TV|CrKey|HbbTV|NetCast|Viera|AQUOS/i;
+let TVPREF = (() => { const q = new URLSearchParams(location.search).get('tv'); if (q !== null) { const v = q === '0' || q === 'off' ? 'off' : 'on'; try { localStorage.setItem('camper-tv', v); } catch (e) { } return v; } try { return localStorage.getItem('camper-tv') || 'auto'; } catch (e) { return 'auto'; } })();
+const tvAuto = () => TV_UA.test(navigator.userAgent) || (!('ontouchstart' in window) && !navigator.maxTouchPoints && window.matchMedia && matchMedia('(hover: none)').matches && matchMedia('(pointer: none)').matches && innerWidth >= 900);
+let TV = false, tvKeyAt = Date.now();
+function tvZoom() { document.documentElement.style.setProperty('--tvz', Math.max(1.2, Math.min(3, 1.3 * innerHeight / 540)).toFixed(3)); }
+function setTV(on, quiet) {
+  TV = !!on; document.body.classList.toggle('tv', TV); if (TV) { tvZoom(); tvWake(true); } else tvWake(false);
+  // テレビの機械は力が弱いので、景色は少しあらく描いて引きのばす（絵柄なので目立たない）。重ければさらに下げる
+  // 車のゆれも止める
+  if (TV) { PXMAX = 1.6e5; PXMIN = 1.2e5; HALF = false; drawAvg = 12; /* Fire TV で測って、最初からこの細かさ（約55コマ/秒になった） */ S.tvLite = true; document.body.classList.add('lite'); } else { PXMAX = 2.2e6; PXMIN = 7e5; HALF = false; S.tvLite = false; }
+  setTimeout(resize, 50); if (TV && !quiet) toast(J('📺 テレビ向けの画面です。「もどる」ボタンで開いている画面をとじます', '📺 TV mode: press Back on the remote to close windows'), 5000);
+}
+window.addEventListener('resize', () => { if (TV) tvZoom(); });
+
+// ----- リモコン操作（矢印で選ぶ） -----
+function kbNav(on) { document.body.classList.toggle('kbnav', on); }
+const NATIVE = 'button,a[href],input,select,textarea,summary';
+function tvScope() {
+  if (!$('#modal').hidden) return $('#sheet');
+  const gb = $('#gzbar'); if (gb && !gb.hidden) return gb;
+  if (document.body.classList.contains('gaze')) return null;
+  return document.body;
+}
+function tvVisible(el, inSheet) {
+  if (el.disabled || el.closest('[hidden]')) return false;
+  const r = el.getBoundingClientRect(); if (r.width < 4 || r.height < 4) return false;
+  if (!inSheet && (r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth)) return false;
+  const cs = getComputedStyle(el); return cs.visibility !== 'hidden' && cs.display !== 'none' && +cs.opacity > .05 && cs.pointerEvents !== 'none';
+}
+function tvCands(root) {
+  const out = [], inSheet = root.id === 'sheet';
+  for (const el of root.querySelectorAll('*')) {
+    if (el.closest('#toasts,#modal[hidden]') || (root === document.body && el.closest('#modal'))) continue;
+    const nat = el.matches(NATIVE) || el.hasAttribute('data-close') || el.getAttribute('role') === 'button' || (el.hasAttribute('tabindex') && el.tabIndex >= 0);
+    if (!nat) { // マウスの形が「指」になる所も押せる所とみなす（いちばん外側だけ）
+      if (getComputedStyle(el).cursor !== 'pointer') continue;
+      const p = el.parentElement; if (p && p !== root && getComputedStyle(p).cursor === 'pointer') continue;
+    } else if (el.parentElement && el.parentElement.closest(NATIVE)) continue;
+    if (el.matches('input[type=hidden]') || !tvVisible(el, inSheet)) continue;
+    out.push(el);
+  }
+  return out;
+}
+function tvFocus(el) { if (!el) return; if (!el.matches(NATIVE) && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1'); el.focus({ preventScroll: true }); el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+function tvMove(dir) {
+  const root = tvScope(); if (!root) return false;
+  const C = tvCands(root); if (!C.length) return false;
+  const cur = document.activeElement && root.contains(document.activeElement) && C.includes(document.activeElement) ? document.activeElement : null;
+  if (!cur) { tvFocus(C[0]); return true; }
+  const a = cur.getBoundingClientRect(), ax = (a.left + a.right) / 2, ay = (a.top + a.bottom) / 2;
+  let best = null, bs = 1e9;
+  for (const el of C) {
+    if (el === cur) continue;
+    const b = el.getBoundingClientRect(), bx = (b.left + b.right) / 2, by = (b.top + b.bottom) / 2;
+    let main, side;
+    if (dir === 'ArrowRight') { if (b.left < a.right - 6 && bx <= ax + 6) continue; main = Math.max(0, b.left - a.right); side = Math.max(0, Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom)) ? Math.abs(by - ay) : 0; }
+    else if (dir === 'ArrowLeft') { if (b.right > a.left + 6 && bx >= ax - 6) continue; main = Math.max(0, a.left - b.right); side = Math.max(0, Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom)) ? Math.abs(by - ay) : 0; }
+    else if (dir === 'ArrowDown') { if (b.top < a.bottom - 6 && by <= ay + 6) continue; main = Math.max(0, b.top - a.bottom); side = Math.max(0, Math.max(a.left, b.left) - Math.min(a.right, b.right)) ? Math.abs(bx - ax) : 0; }
+    else { if (b.bottom > a.top + 6 && by >= ay - 6) continue; main = Math.max(0, a.top - b.bottom); side = Math.max(0, Math.max(a.left, b.left) - Math.min(a.right, b.right)) ? Math.abs(bx - ax) : 0; }
+    const sc = main + side * 2.5; if (sc < bs) { bs = sc; best = el; }
+  }
+  if (best) { tvFocus(best); return true; }
+  if (root.id === 'sheet' && (dir === 'ArrowDown' || dir === 'ArrowUp')) { root.scrollBy({ top: dir === 'ArrowDown' ? 140 : -140, behavior: 'smooth' }); return true; }
+  return false;
+}
+const TV_BACK = ['Escape', 'GoBack', 'BrowserBack', 'Back'];
+function tvBack() {
+  tvKeyAt = Date.now(); // もどるで全画面をぬけたあと、すぐ「ながら見」にもどらないように
+  if (!$('#modal').hidden) { closeModal(); return true; }
+  const gb = $('#gzbar'); if (gb && !gb.hidden) { gb.hidden = true; return true; }
+  if (document.body.classList.contains('full')) { gzMoveT = Date.now() + 1500; setFull(false); return true; }
+  return false;
+}
+// Fire TV のブラウザは、ふだんリモコンでマウスのような矢印（カーソル）を動かして押す。
+// カーソルが動いているあいだは、矢印キーや決定ボタンを横取りしない（横取りすると、押したい所が押せなくなる）
+let tvPtrAt = 0;
+document.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; tvPtrAt = tvKeyAt = Date.now(); if (document.body.classList.contains('kbnav')) { kbNav(false); const a = document.activeElement; if (a && a !== document.body && a.blur) a.blur(); } }, { passive: true });
+document.addEventListener('pointerdown', () => { tvKeyAt = Date.now(); }, { passive: true });
+const tvCursor = () => Date.now() - tvPtrAt < 120e3;
+document.addEventListener('keydown', e => {
+  tvKeyAt = Date.now();
+  if (tvCursor() && !TV_BACK.includes(e.key) && e.key !== 'Backspace') return;
+  const k = e.key, t = e.target, typing = t && (t.matches('textarea,select') || (t.matches('input') && !/^(range|button|checkbox|radio)$/.test(t.type)));
+  const arrow = /^Arrow/.test(k);
+  if (arrow && !document.body.classList.contains('kbnav')) kbNav(true);
+  if (k === 'Escape' && document.body.classList.contains('full') && $('#modal').hidden) { const g2 = $('#gzbar'); if (g2) g2.hidden = true; }
+  if (TV_BACK.includes(k) || (k === 'Backspace' && !typing)) { if (k !== 'Escape' || !$('#modal').hidden || !document.body.classList.contains('full')) { if (tvBack()) { e.preventDefault(); tvBackKeyAt = Date.now(); } e.stopImmediatePropagation(); } return; }
+  const gaze = document.body.classList.contains('gaze'), gb = $('#gzbar');
+  if (gaze && gb && gb.hidden && (arrow || k === 'Enter' || k === ' ')) { e.preventDefault(); gazeBar(); tvFocus(gb.querySelector('button')); return; }
+  if (gaze && gb && !gb.hidden) { clearTimeout(gzBarT); gzBarT = setTimeout(() => { gb.hidden = true; }, 8000); }
+  if (arrow) {
+    if (typing && (k === 'ArrowLeft' || k === 'ArrowRight')) return;
+    if (t && t.matches('input[type=range]') && (k === 'ArrowLeft' || k === 'ArrowRight')) return;
+    if (tvMove(k)) e.preventDefault();
+    return;
+  }
+  if ((k === 'Enter' || k === ' ') && document.body.classList.contains('kbnav') && t && t !== document.body && !t.matches(NATIVE)) { e.preventDefault(); t.click(); }
+}, true);
+// ダイアログが開いたら中の最初のボタンへ、とじたら元の場所へ
+let tvPrev = null;
+new MutationObserver(() => {
+  if (!document.body.classList.contains('kbnav')) return;
+  if (!$('#modal').hidden) { if (!$('#sheet').contains(document.activeElement)) { tvPrev = document.activeElement; setTimeout(() => { const C = tvCands($('#sheet')); tvFocus(C.find(el => !el.matches('[data-close]')) || C[0]); }, 60); } }
+  else if (tvPrev && document.contains(tvPrev)) { tvFocus(tvPrev); tvPrev = null; }
+}).observe($('#modal'), { attributes: true, attributeFilter: ['hidden'] });
+new MutationObserver(() => { // ダイアログの中身が入れかわったとき（次のページなど）
+  if (document.body.classList.contains('kbnav') && !$('#modal').hidden && !$('#sheet').contains(document.activeElement)) { const C = tvCands($('#sheet')); tvFocus(C.find(el => !el.matches('[data-close]')) || C[0]); }
+}).observe($('#sheet'), { childList: true });
+// ながめるモードのボタンを押したあとも、同じボタンを光らせたまま
+$('#gzbar').addEventListener('click', e => { const k = e.target.closest('[data-gz]'); if (!k || !document.body.classList.contains('kbnav')) return; const g = k.dataset.gz; setTimeout(() => { const b = $('#gzbar').querySelector('[data-gz="' + g + '"]'); if (b && !$('#gzbar').hidden) tvFocus(b); }, 0); });
+// マウスやタッチを使ったら光る枠は消す（テレビ向けの画面のときは消さない）
+document.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || tvCursor()) kbNav(false); }, { passive: true });
+
+// ----- テレビの「もどる」ボタン：アプリから出てしまわないよう、ひとつ前にもどる操作を受けとめる -----
+let tvHist = false;
+// ブラウザは「操作なしで作った受け皿」を、もどるで飛ばしてしまう。もどるの直後に作りなおした受け皿は操作なしなので、
+// 次にリモコンやカーソルを押したときに、操作ありの受け皿をもう1つ作っておく
+let tvHistAct = false;
+function tvHistArm() {
+  if (!TV) return; const act = navigator.userActivation ? navigator.userActivation.isActive : true;
+  if (tvHist && (tvHistAct || !act)) return;
+  try { history.pushState({ tv: 1 }, ''); tvHist = true; tvHistAct = act; } catch (e) { }
+}
+window.addEventListener('popstate', () => { if (!tvHist) return; tvHist = false; if (Date.now() - tvBackKeyAt < 800) { tvHistArm(); return; } if (!tvBack()) history.back(); else tvHistArm(); });
+let tvBackKeyAt = 0;
+// カーソルで押したときも「もどる」の受け皿を作る（ブラウザは、押した操作のあとでないと受け皿を認めないため）
+['pointerdown', 'click'].forEach(t => document.addEventListener(t, () => tvHistArm(), { capture: true, passive: true }));
+
+// ----- ながら見：しばらく操作がないと景色だけに -----
+setInterval(() => {
+  if (!TV || !st || document.body.classList.contains('gaze') || !$('#modal').hidden) return;
+  if (Date.now() - tvKeyAt > 90e3) { gzMoveAt = 0; setFull(true, true); }
+}, 5000);
+
+// ----- 画面が消えにくいように -----
+let tvVid = null;
+const TVWAKE = { lock: '', at: 0 };
+async function tvWakeReq() { // 画面を消さないお願い（Wake Lock）。だめなときは理由を覚えて、設定（?debug）に出す
+  if (!navigator.wakeLock) { TVWAKE.lock = J('この機能なし', 'not supported'); return; }
+  if (wakeLock && !wakeLock.released) return;
+  try { wakeLock = await navigator.wakeLock.request('screen'); TVWAKE.lock = J('有効', 'active'); TVWAKE.at = Date.now(); wakeLock.addEventListener('release', () => { TVWAKE.lock = J('切れた', 'released'); wakeLock = null; }); }
+  catch (e) { TVWAKE.lock = J('失敗', 'failed') + ': ' + e.name + ' ' + String(e.message).slice(0, 80); }
+}
+['click', 'keydown'].forEach(t => document.addEventListener(t, () => { if (TV && !document.hidden) tvWakeReq(); }, { capture: true, passive: true }));
+setInterval(() => { if (TV && !document.hidden) { tvWakeReq(); if (tvVid && tvVid.paused) tvVid.play().catch(() => { }); } }, 30e3);
+async function tvWake(on) {
+  if (!on) { if (tvVid) { tvVid.pause(); tvVid.remove(); tvVid = null; } return; }
+  tvWakeReq();
+  if (!tvVid && !tvVidOff) { // 11/15：音を音声ファイルで鳴らすようになったので、音ありでも流す（スクリーンセーバーよけ） // 画面を起こしておく機能がないブラウザ用：見えない小さな動画を音なしでくり返し再生
+    tvVid = document.createElement('video'); tvVid.muted = true; tvVid.loop = true; tvVid.playsInline = true; tvVid.setAttribute('playsinline', ''); tvVid.setAttribute('aria-hidden', 'true');
+    tvVid.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:-1'; /* 11/15：画面いっぱいにしても Fire TV のスクリーンセーバーは止まらなかったので、小さいまま（描く負担を増やさない） */
+    tvVid.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMrbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAlV0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHNbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABeG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAThzdGJsAAAAuHN0c2QAAAAAAAAAAQAAAKhhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALmF2Y0MBQsAK/+EAFmdCwArZHsBEAAADAAQAAAMACDxImSABAAVoy4PLIAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAApAAAAKQAAAABhzdHRzAAAAAAAAAAEAAAACAABAAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAACAAAAAQAAABxzdHN6AAAAAAAAAAAAAAACAAAChgAAAAoAAAAUc3RjbwAAAAAAAAABAAADWwAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAAKYbWRhdAAAAnAGBf//bNxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBb///w9FAAFPf4AAAAAGQZo4CvqA';
+    document.body.appendChild(tvVid);
+  }
+  if (tvVid) tvVid.play().catch(() => { });
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && TV) { wakeLock = null; tvWake(true); } });
+document.addEventListener('keydown', () => { if (TV && tvVid && tvVid.paused) tvVid.play().catch(() => { }); tvHistArm(); }, { passive: true });
+
+// 全画面に入ったときの案内を、テレビ用のことばに
+const _fsHint = fsHint;
+fsHint = function () {
+  if (!TV) return _fsHint();
+  const h = $('#fshint'); if (!h) return;
+  h.innerHTML = J('リモコンの<b>「もどる」</b>で もとの画面に、矢印か決定ボタンでメニューが出ます', 'Press <b>Back</b> on the remote to return; arrows or OK show the menu');
+  h.hidden = false; clearTimeout(h._t); h._t = setTimeout(() => { h.hidden = true; }, 4500);
+};
+// ----- 設定に「テレビ向けの画面」を足す -----
+const _showSettings = showSettings;
+showSettings = function () {
+  _showSettings();
+  const lang = $('#sheet .frames'); if (!lang) return;
+  const box = document.createElement('div');
+  box.innerHTML = `<h3>${J('テレビ向けの画面', 'TV mode')}</h3><div class="frames">${[['auto', J('🤖 自動', '🤖 Auto')], ['on', J('📺 テレビ向け', '📺 TV')], ['off', J('📱 ふつう', '📱 Normal')]].map(([k, n]) => `<button data-tv="${k}" class="${TVPREF === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+    <p class="note">${J('テレビ（Fire TV など）で見るときの画面です。文字とボタンが大きくなり、リモコンの矢印で選んで決定ボタンで押せます。1分半ほど操作がないと、景色だけの「ながら見」になります。「自動」は、テレビのブラウザかどうかを見て切りかえます。アドレスの最後に ?tv をつけて開いても、テレビ向けになります。', 'For watching on a TV (Fire TV etc.): bigger text and buttons, choose with the remote\'s arrows and press OK. After about 90 seconds without input it switches to scenery only. "Auto" detects TV browsers. You can also open the page with ?tv at the end of the address.')}</p>`;
+  if (TV) { const yn = v => v == null ? '…' : v ? '○' : '×'; box.innerHTML += `<h3>${J('開いたときに残っていた旅', 'Trip found on open')}</h3><p class="note">${J('ふつうの保存', 'Storage')} ${yn(TVDIAG.ls)} ／ ${J('予備', 'Backup')} ${yn(TVDIAG.idb)} ／ ${J('クッキー', 'Cookie')} ${yn(TVDIAG.ck)} ／ ${J('アドレス', 'Address')} ${yn(TVDIAG.hash)}${'<br>' + J('音', 'Sound') + ': ' + (SOUND ? J('鳴らす', 'on') : J('消す', 'off')) + ' ／ ' + (AU.ac ? ({ running: J('鳴っている', 'playing'), suspended: J('止まっている', 'suspended') }[AU.ac.state] || AU.ac.state) : J('まだ始まっていない', 'not started'))}${'<br>' + J('テレビ用の音', 'TV sound') + ': ' + (tvSndInfo || J('まだ', 'not yet')) + ' ／ ' + Object.entries(TVL).filter(([n, l]) => l.v > 0).map(([n, l]) => n + (l.el.paused ? '(止)' : '(▶)')).join(' ')}${'<br>' + J('画面を消さない', 'Keep awake') + ': ' + (TVWAKE.lock || '-') + ' ／ ' + J('動画', 'video') + ' ' + (tvVid ? (tvVid.paused ? J('止まっている', 'paused') : J('流れている', 'playing')) : J('なし', 'none'))}${TVERR.length ? '<br>' + J('エラー', 'Errors') + ': ' + TVERR.map(x => x.replace(/</g, '&lt;')).join('<br>') : ''}${TVPERF.fps != null ? '<br>' + J('全画面のなめらかさ', 'Full screen') + `: ${J('約', '~')}${TVPERF.fps} ${J('コマ/秒', 'fps')}（${J('描く時間', 'draw')} ${TVPERF.draw}ms・${TVPERF.px}）${TVPERF.n != null || TVPERF.g != null ? '<br>' + J('ふつうの全画面', 'Full screen') + ' ' + (TVPERF.n ?? '-') + ' ／ ' + J('時計が出る ながら見', 'Clock view') + ' ' + (TVPERF.g ?? '-') + J(' コマ/秒', ' fps') : ''}${TVPERF.jn != null || TVPERF.jg != null ? '<br>' + J('引っかかり（1分あたり）', 'Hitches per minute') + ': ' + J('ふつう', 'normal') + ' ' + (TVPERF.jn ?? '-') + ' ／ ' + J('ながら見', 'clock') + ' ' + (TVPERF.jg ?? '-') : ''}` : ''}</p><div class="frames"><button id="tv-bm">📌 ${J('ブックマークの案内をもう一度', 'Show bookmark tip again')}</button></div>`; }
+  if (TV && !TVDBG) { const h = [...box.querySelectorAll('h3')].find(x => x.textContent === J('開いたときに残っていた旅', 'Trip found on open')); if (h) { const n = h.nextElementSibling; if (n && n.matches('p.note')) n.remove(); h.remove(); } } // 調べるための表示は ?debug のときだけ
+  lang.after(box);
+  if (TV && TVDBG) {
+    const t = document.createElement('div');
+    t.innerHTML = `<h3>${J('音をためす', 'Sound test')}</h3><div class="frames"><button id="tv-b1">🔔 ${J('ためす1', 'Test 1')}</button><button id="tv-b2">🔔 ${J('ためす2', 'Test 2')}</button><button id="tv-b3">🔔 ${J('動画を止めてためす', 'Test without video')}</button></div><p class="note" id="tv-binfo"></p>`;
+    box.after(t);
+    const info = () => { const a = AU.ac; t.querySelector('#tv-binfo').textContent = `${a ? a.state + ' ' + a.sampleRate + 'Hz' : '-'} ／ vol ${SVOL} ／ master ${AU.master ? AU.master.gain.value.toFixed(2) : '-'} ／ video ${tvVid ? (tvVid.paused ? 'stop' : 'play') : '-'}`; };
+    t.querySelector('#tv-b1').onclick = () => { tvBeep1(); setTimeout(info, 300); };
+    t.querySelector('#tv-b2').onclick = () => { tvBeep2(); setTimeout(info, 300); };
+    t.querySelector('#tv-b3').onclick = () => { tvVidOff = true; if (tvVid) { tvVid.pause(); tvVid.remove(); tvVid = null; } tvBeep1(); setTimeout(tvBeep2, 900); setTimeout(info, 300); };
+    info();
+  }
+  const bm = box.querySelector('#tv-bm'); if (bm) bm.onclick = () => { closeModal(); tvBmTip(); };
+  box.querySelectorAll('[data-tv]').forEach(b => b.onclick = () => { TVPREF = b.dataset.tv; try { localStorage.setItem('camper-tv', TVPREF); } catch (e) { } box.querySelectorAll('[data-tv]').forEach(x => x.classList.toggle('on', x === b)); setTV(TVPREF === 'on' || (TVPREF === 'auto' && tvAuto()), true); });
+};
+$('#b-set').onclick = showSettings;
+setTV(TVPREF === 'on' || (TVPREF === 'auto' && tvAuto()));
+
+// ----- 閉じても続きから：テレビのブラウザは閉じると保存を消すことがあるので、旅をアドレス（#の後ろ）にも入れておく -----
+// ブラウザが前のページを開き直したときや、ブックマークから開いたときに、そこから旅を続けられる
+async function tvCode() {
+  const data = new TextEncoder().encode(JSON.stringify({ s: st, f: lsGet('camper-frame'), p: lsGet('camper-poles'), o: OWNED, snd: lsGet('camper-sound') }));
+  if (window.CompressionStream) { try { return 'CAMPER1-' + b64(await pipe(data, CompressionStream)); } catch (e) { } }
+  return 'CAMPER0-' + b64(data);
+}
+let tvHashAt = 0;
+async function tvHash(force) {
+  if (!TV || !st || st.preview || QS.has('km')) return; if (!force && Date.now() - tvHashAt < 60e3) return; tvHashAt = Date.now();
+  try { tick(); const code = await tvCode(); history.replaceState(history.state, '', location.pathname + location.search + '#trip=' + code); } catch (e) { }
+}
+// （テレビのブラウザはアドレスが変わるたびに上に英数字のアドレスを出すので、定期的には書きかえない）
+document.addEventListener('visibilitychange', () => { if (document.hidden) tvHash(true); });
+window.addEventListener('pagehide', () => tvHash(true));
+(async () => { // 開いたときに旅がなく、アドレスに旅が入っていれば、そこから続ける
+  const m = location.hash.match(/trip=(CAMPER[01]-[A-Za-z0-9_-]+)/); if (!m || !st || /[&#]pc=1/.test(location.hash) || !st.preview) return;
+  let o; try { o = await readCode(m[1]); } catch (e) { return; }
+  if (!st.preview) return;
+  let ok = false; try { localStorage.setItem(KEY, JSON.stringify(o.s)); ok = localStorage.getItem(KEY) != null; for (const [k, v] of [['camper-frame', o.f], ['camper-poles', o.p], ['camper-sound', o.snd]]) if (v != null) localStorage.setItem(k, v); } catch (e) { }
+  if (ok) { try { if (!sessionStorage.getItem('camper-restored')) { sessionStorage.setItem('camper-restored', '1'); st = null; location.reload(); return; } } catch (e) { } }
+  closeModal(); st = o.s; P = curPos(); startTrip(); back();
+  toast(J('💾 アドレスに入っていた旅から続けます', '💾 Continuing the trip saved in the address'), 5000);
+})();
+// ----- 旅の案内（ブックマーク）：旅が20秒すすんだら1回だけ出す -----
+let tvRunAt = 0, tvTipDone = false;
+try { tvTipDone = sessionStorage.getItem('camper-bmtip') === '1'; } catch (e) { }
+function tvBmTip() {
+  tvHash(true);
+  toast(J('📌 ブラウザのメニューで「ブックマークに追加」しておくと、ブラウザを閉じても、そのブックマークから旅の続きを開けます', '📌 Add this page to your bookmarks from the browser menu: even after closing the browser, the bookmark reopens your trip'), 12000);
+}
+setInterval(() => {
+  if (!TV || !st || st.preview) { tvRunAt = 0; return; }
+  if (!tvRunAt) tvRunAt = Date.now();
+  if (tvTipDone || Date.now() - tvRunAt < 20e3 || !$('#modal').hidden) return;
+  tvTipDone = true; try { sessionStorage.setItem('camper-bmtip', '1'); } catch (e) { }
+  tvBmTip();
+}, 3e3);
+
+// ----- クッキーにも旅を入れておく（テレビのブラウザが ほかの保存を消しても、残ることがあるため） -----
+const CK_PATH = location.pathname.replace(/[^/]*$/, '');
+function ckGetAll() { const o = {}; document.cookie.split(/;\s*/).forEach(c => { const k = c.indexOf('='); if (k > 0) o[c.slice(0, k)] = c.slice(k + 1); }); return o; }
+function ckSet(k, v) { document.cookie = k + '=' + v + ';path=' + CK_PATH + ';max-age=' + (v ? 315360000 : 0) + ';SameSite=Lax' + (location.protocol === 'https:' ? ';Secure' : ''); }
+function ckRead() {
+  const o = ckGetAll(), n = +o.camper_n || 0; if (!n) return null;
+  let code = ''; for (let i = 0; i < n; i++) { if (o['camper_t' + i] == null) return null; code += o['camper_t' + i]; }
+  return /^CAMPER[01]-[A-Za-z0-9_-]+$/.test(code) ? code : null;
+}
+let tvCkAt = 0;
+async function tvCookie(force) {
+  if (!st || st.preview || QS.has('km')) return; if (!force && Date.now() - tvCkAt < 60e3) return; tvCkAt = Date.now();
+  try {
+    tick(); const code = await tvCode(); const parts = code.match(/.{1,3800}/g) || [];
+    if (parts.length > 24) return;
+    const old = +ckGetAll().camper_n || 0;
+    parts.forEach((p, i) => ckSet('camper_t' + i, p)); for (let i = parts.length; i < old; i++) ckSet('camper_t' + i, '');
+    ckSet('camper_n', String(parts.length));
+  } catch (e) { }
+}
+setInterval(() => { if (TV) tvCookie(); }, 15e3);
+document.addEventListener('visibilitychange', () => { if (document.hidden && TV) tvCookie(true); });
+window.addEventListener('pagehide', () => { if (TV) tvCookie(true); });
+
+// 開いたときに、どこに旅が残っていたかを覚えておく（設定の画面に出す）
+const TVDIAG = { ls: !!(st && !st.preview), hash: /trip=CAMPER/.test(location.hash), ck: !!ckRead(), idb: null };
+(MIRROR_ON ? mirrorLoad() : Promise.resolve(null)).then(o => { TVDIAG.idb = !!o; });
+(async () => { // 旅がなく、アドレスにも無いとき、クッキーから続ける
+  if (!st || !st.preview || TVDIAG.hash) return; const code = ckRead(); if (!code) return;
+  let o; try { o = await readCode(code); } catch (e) { return; }
+  if (!st.preview || !o || !o.s) return;
+  let ok = false; try { localStorage.setItem(KEY, JSON.stringify(o.s)); ok = localStorage.getItem(KEY) != null; for (const [k, v] of [['camper-frame', o.f], ['camper-poles', o.p], ['camper-sound', o.snd]]) if (v != null) localStorage.setItem(k, v); } catch (e) { }
+  if (ok) { try { if (!sessionStorage.getItem('camper-restored')) { sessionStorage.setItem('camper-restored', 'ck'); st = null; location.reload(); return; } } catch (e) { } }
+  closeModal(); st = o.s; P = curPos(); startTrip(); back();
+  toast(J('💾 クッキーに入っていた旅から続けます', '💾 Continuing the trip saved in a cookie'), 5000);
+})();
+try { if (sessionStorage.getItem('camper-restored') === 'ck' && st && !st.preview) { sessionStorage.setItem('camper-restored', '2'); setTimeout(() => toast(J('💾 クッキーに入っていた旅から続けます', '💾 Continuing the trip saved in a cookie'), 5000), 1500); } } catch (e) { }
+
+// ----- 下に続く画面を、カーソルでも動かせるように ▲▼ ボタンを出す -----
+const tvScr = document.createElement('div'); tvScr.id = 'tvscroll'; tvScr.hidden = true;
+tvScr.innerHTML = '<button id="tvs-up" aria-label="up">▲</button><button id="tvs-dn" aria-label="down">▼</button>';
+$('#modal').appendChild(tvScr);
+const tvSheetBy = d => { const sh = $('#sheet'); sh.scrollBy({ top: d * sh.clientHeight * .7, behavior: 'smooth' }); setTimeout(tvScrUpd, 450); };
+tvScr.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (b) tvSheetBy(b.id === 'tvs-up' ? -1 : 1); });
+function tvScrUpd() {
+  const sh = $('#sheet'), on = TV && !$('#modal').hidden && sh.scrollHeight > sh.clientHeight + 8;
+  tvScr.hidden = !on; if (!on) return;
+  $('#tvs-up').disabled = sh.scrollTop < 4; $('#tvs-dn').disabled = sh.scrollTop + sh.clientHeight >= sh.scrollHeight - 4;
+}
+$('#sheet').addEventListener('scroll', tvScrUpd, { passive: true });
+new MutationObserver(() => setTimeout(tvScrUpd, 80)).observe($('#modal'), { attributes: true, attributeFilter: ['hidden'], childList: true, subtree: true });
+window.addEventListener('resize', tvScrUpd); setInterval(tvScrUpd, 1000); setTimeout(tvScrUpd, 300);
+
+
+// リセットしたら、アドレスとクッキーの旅も消す
+window.tvForget = function () {
+  try { const o = ckGetAll(), n = Math.max(+o.camper_n || 0, 24); for (let i = 0; i < n; i++) if (o['camper_t' + i] != null) ckSet('camper_t' + i, ''); ckSet('camper_n', ''); } catch (e) { }
+  try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) { }
+};
+
+// ----- 全画面の なめらかさを はかって、設定に出す。描くのが重すぎるときは、さらに粗くする -----
+const TVPERF = { fps: null, draw: null, px: '', g: null, n: null, jg: null, jn: null };
+// 引っかかり（1コマが60ms以上かかった回数）を、ふつうの全画面と ながら見で別々に1分あたりで数える
+const tvJ = { n: [0, 0], g: [0, 0] }; let tvJLast = 0;
+(function tvJank(ts) { requestAnimationFrame(tvJank); const iv = ts - tvJLast; tvJLast = ts;
+  if (!TV || !document.body.classList.contains('full') || document.hidden || iv <= 0 || iv > 1000) return;
+  const k = document.body.classList.contains('gaze') ? 'g' : 'n'; tvJ[k][1] += iv; if (iv > 60) tvJ[k][0]++;
+  if (tvJ[k][1] > 20e3) TVPERF['j' + k] = Math.round(tvJ[k][0] / tvJ[k][1] * 60e3);
+})(0);
+let tvPerfN = 0, tvPerfF = 0;
+setInterval(() => {
+  if (!TV || !document.body.classList.contains('full') || document.hidden) { tvPerfN = 0; return; }
+  const fps = 1000 / ivAvg / (HALF ? 2 : 1);
+  tvPerfN++; tvPerfF += fps;
+  TVPERF[document.body.classList.contains('gaze') ? 'g' : 'n'] = Math.round(1000 / ivAvg);
+  if (tvPerfN >= 3) { TVPERF.fps = Math.round(tvPerfF / tvPerfN); TVPERF.draw = Math.round(drawAvg); TVPERF.px = cv.width + '×' + cv.height; }
+  if (tvPerfN >= 10) { tvPerfN = 0; tvPerfF = 0; }
+  if (drawAvg > 26 && PXMAX > PXMIN) { PXMAX = Math.max(PXMIN, PXMAX * .85); resize(); }
+}, 2000);
+
+// ----- テレビ：空（空の色・星・天の川・星座・月）は描き置きして、4コマに1回だけ描きなおす -----
+const _drawSky = drawSky; let skyHits = [], skyC = null, skyX = null, skyN = 0, skyKey = '';
+drawSky = function (hz, W8, alt) {
+  if (!S.tvLite) return _drawSky(hz, W8, alt);
+  if (!skyC) { skyC = document.createElement('canvas'); skyX = skyC.getContext('2d'); }
+  if (skyC.width !== cv.width || skyC.height !== cv.height) { skyC.width = cv.width; skyC.height = cv.height; skyN = 0; }
+  const key = Math.round(hz) + ',' + W + ',' + H;
+  if (skyN-- <= 0 || key !== skyKey) {
+    skyKey = key; skyN = 3;
+    const m = c.getTransform(), main = c;
+    skyX.setTransform(1, 0, 0, 1, 0, 0); skyX.globalAlpha = 1; skyX.clearRect(0, 0, skyC.width, skyC.height); skyX.setTransform(m);
+    const h0 = (S.hits = S.hits || []).length;
+    c = skyX; try { _drawSky(hz, W8, alt); } finally { c = main; skyX.globalAlpha = 1; }
+    skyHits = S.hits.slice(h0); // 空の上の「さわると説明が出る場所」も覚えておく
+  } else if (skyHits.length) (S.hits = S.hits || []).push(...skyHits); // 描きなおさないコマでも同じ場所を使う（説明がチラチラしないように）
+  c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.drawImage(skyC, 0, 0); c.restore();
+};
+
+// ----- 音のテスト：1＝アプリと同じしくみ（Web Audio）、2＝ふつうの音声ファイル -----
+var tvVidOff = false;
+function tvBeep1() {
+  try { auStart(); const ac = AU.ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state !== 'running') ac.resume();
+    const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 660; g.gain.value = .5; o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + .7);
+  } catch (e) { tvErr('test1: ' + e.message); }
+}
+function tvBeep2(quiet) {
+  const sr = 22050, n = sr * (quiet ? .3 : .7) | 0, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.sin(i / sr * 2 * Math.PI * 880) * (quiet ? 2 : 16000) * Math.min(1, (n - i) / 2000), true);
+  const a = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))); a.play().catch(e => { tvErr('test2: ' + e.message); if (!quiet) toast(J('🔔 鳴らせませんでした', '🔔 Could not play'), 3000); });
+}
+
+// ----- テレビ：絵はがきはテレビのブラウザに保存できないので、スマホで同じ旅を開いて受けとる -----
+new MutationObserver(() => { // 絵はがきの画面が出たら（テレビは絵を作るのに時間がかかるので、出たときに）ボタンを差しかえる
+  if (!TV) return; const b = $('#pc-send'); if (!b || b.dataset.tv) return;
+  b.dataset.tv = '1'; b.textContent = J('📱 スマホで受けとる', '📱 Get it on your phone'); b.onclick = () => tvToPhone();
+}).observe($('#sheet'), { childList: true, subtree: true });
+function tvQRLib() {
+  return window.QRCode ? Promise.resolve() : new Promise((ok, ng) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = ok; s.onerror = ng; document.head.appendChild(s); });
+}
+async function tvToPhone() {
+  let url = location.origin + location.pathname;
+  try { tick(); url += '#trip=' + await tvCode() + '&pc=1'; } catch (e) { }
+  modal(`<h2 style="margin:0 0 6px">📱 ${J('スマホのカメラで読みとってください', 'Scan with your phone camera')}</h2>
+    <div id="tv-qr" style="background:#fff;padding:16px;width:max-content;margin:4px auto;image-rendering:pixelated"></div>
+    <p class="note">${J('スマホで同じ旅が開き、絵はがきが出ます。そこで保存やLINEで送れます（テレビのブラウザには画像を保存できないため）。', 'The same trip opens on your phone with the postcard, ready to save or share (TV browsers cannot save images).')}</p>
+    <button class="big ghost" data-close>${J('とじる', 'Close')}</button>`);
+  try { await tvQRLib(); const q = $('#tv-qr'); new QRCode(q, { text: url, width: 248, height: 248, correctLevel: QRCode.CorrectLevel.L }); q.querySelectorAll('img,canvas').forEach(x => { x.style.imageRendering = 'pixelated'; x.style.width = x.style.height = '248px'; }); }
+  catch (e) { $('#tv-qr').textContent = J('コードを作れませんでした（インターネットの接続を確かめてください）', 'Could not make the code (check the internet connection)'); }
+}
+$('#b-photo').onclick = postcard;
+
+// 音を鳴らすときは見えない動画を止め、音を消したときは画面が消えないように動画を流す
+const _setSound = setSound;
+setSound = function (on) {
+  const r = _setSound.apply(this, arguments);
+  if (TV && !on) tvWake(true);
+  return r;
+};
+
+
+// ----- テレビの「スマホで受けとる」のQRから開いたとき：スマホの旅はそのままにして、テレビの旅を見るだけにし、絵はがきを開く -----
+(async () => {
+  const m = location.hash.match(/trip=(CAMPER[01]-[A-Za-z0-9_-]+)&pc=1/); if (!m) return;
+  let o; try { o = await readCode(m[1]); } catch (e) { return; } if (!o || !o.s) return;
+  window.GUEST = true; closeModal(); st = o.s; P = curPos(); startTrip(); back();
+  toast(J('📺 テレビの旅を見ています（スマホの旅はそのまま残っています）', '📺 Viewing the TV trip (your own trip on this phone is kept)'), 6000);
+  setTimeout(() => postcard(), 2500);
+})();
+
+
+// ----- テレビ：音は「音声ファイル」で鳴らす -----
+// Fire TV では Web Audio の音が聞こえず、音声ファイル（ためす2）なら鳴る。そこで、エンジン音・風・雨などの
+// くり返しの音を最初に音声ファイルに書き出して、audio 要素でくり返し再生し、音量だけを変える
+const TVERR = [];
+const tvErr = m => { TVERR.push(new Date().toTimeString().slice(0, 8) + ' ' + String(m).slice(0, 140)); if (TVERR.length > 5) TVERR.shift(); };
+window.addEventListener('error', e => tvErr(e.message || 'error'));
+window.addEventListener('unhandledrejection', e => tvErr('promise: ' + ((e.reason && e.reason.message) || e.reason)));
+function tvWav(buf, plain) {
+  const d = buf.getChannelData(0), sr = buf.sampleRate, n = d.length, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[i] * (plain ? 1 : Math.sin(Math.PI * i / n)))) * 32000, true); // 両はしが0の山形：もう1本と半分ずらすと、合わせた大きさが一定になる
+  return URL.createObjectURL(new Blob([ab], { type: 'audio/wav' }));
+}
+const TVL = {}; let tvSndOn = false, tvSndInfo = '';
+const TV_LAYERS = { engine: ['brown', [['lowpass', 320]]], road: ['pink', [['bandpass', 700, .5], ['lowpass', 1800]]], waves: ['brown', [['lowpass', 700]], [.11, .7]], surf: ['pink', [['highpass', 900], ['lowpass', 3500]], [.11, .85]], rain: ['white', [['highpass', 1200], ['lowpass', 7000]]], wind: ['pink', [['bandpass', 500, 1.8]], [.07, .5]], city: ['brown', [['bandpass', 260, .6]]] };
+async function tvSndBuild() {
+  if (tvSndOn) return; tvSndOn = true; window.TVSND = true; auVolume();
+  const sr = 22050, len = 12; // 12秒のくり返しを2本、半分ずらして重ねる（つなぎ目で音が切れないように）
+  for (const [name, [kind, filters, lfo]] of Object.entries(TV_LAYERS)) {
+    const el = new Audio(), el2 = new Audio(); el.loop = el2.loop = true; el.volume = el2.volume = 0; TVL[name] = { el, el2, v: 0 };
+    const L0 = TVL[name]; el.addEventListener('playing', () => { L0.started = true; });
+    try {
+      const oc = new OfflineAudioContext(1, sr * len, sr), src = oc.createBufferSource(); src.buffer = noiseBuf(oc, kind); src.loop = true;
+      let node = src; for (const [type, f, q] of filters) { const bq = oc.createBiquadFilter(); bq.type = type; bq.frequency.value = f; bq.Q.value = q || .7; node.connect(bq); node = bq; }
+      const g = oc.createGain(); node.connect(g); g.connect(oc.destination);
+      if (lfo) { g.gain.value = 1 - lfo[1]; const o = oc.createOscillator(); o.frequency.value = 1 / len; const og = oc.createGain(); og.gain.value = lfo[1]; o.connect(og); og.connect(g.gain); o.start(); }
+      src.start(); const out = await oc.startRendering();
+      const u = tvWav(out); el.src = el2.src = u; el.play().catch(e => tvErr(name + ': ' + e.message));
+      el2.addEventListener('loadedmetadata', () => { try { el2.currentTime = len / 2; } catch (e) { } }, { once: true }); el2.play().catch(e => tvErr(name + '2: ' + e.message));
+    } catch (e) { tvErr(name + ': ' + e.message); }
+  }
+  tvSndInfo = Object.keys(TVL).length + J('つの音を用意', ' sounds ready');
+  tvSfxBuild();
+}
+// 鳥・カモメ・虫・カエル・たき火・雷・クラクション・船の鐘も、それぞれ3通りずつ音声ファイルにしておき、鳴らすときは audio 要素で鳴らす
+const TVSFX = {}, TV_SFX_LEN = { bird: 1.4, gull: 1.4, cricket: 1.4, frog: 1, crackle: 1.8, thunder: 8, horn: .8, bell: 2 }, tvSfxPool = [];
+let tvSfxN = 0;
+async function tvRender(fn, len) { // Web Audio で作る音を、その場で音声ファイルにする
+  const sr = 22050, oc = new OfflineAudioContext(1, Math.ceil(sr * len), sr), m = oc.createGain(); m.gain.value = 1.4; m.connect(oc.destination);
+  const keep = [AU.ac, AU.master, AU.buf];
+  AU.ac = oc; AU.master = m; AU.buf = { white: noiseBuf(oc, 'white'), pink: noiseBuf(oc, 'pink'), brown: noiseBuf(oc, 'brown') };
+  try { fn(); } finally { [AU.ac, AU.master, AU.buf] = keep; }
+  return tvWav(await oc.startRendering(), true);
+}
+async function tvSfxBuild() {
+  for (let k = 0; k < 4; k++) tvSfxPool.push(new Audio());
+  for (const [name, len] of Object.entries(TV_SFX_LEN)) {
+    const urls = [];
+    for (let k = 0; k < 3; k++) {
+      try { urls.push(await tvRender(() => { if (name === 'thunder') { burst(4.5, .5, 'lowpass', 140, .05, 1); burst(2.2, .25, 'lowpass', 380, .15 + Math.random() * .5, 1); } else TVSFX_ORIG[name](); }, len)); }
+      catch (e) { tvErr(name + ' sfx: ' + e.message); }
+    }
+    if (urls.length) TVSFX[name] = urls;
+  }
+  tvSndInfo += J('・ちょっとした音 ', ' + short sounds ') + Object.keys(TVSFX).length;
+}
+function tvPlayUrl(url, name, own) {
+  if (!url || !SOUND || document.hidden || !tvSfxPool.length) return;
+  const el = own ? new Audio() : tvSfxPool[tvSfxN++ % tvSfxPool.length];
+  try { el.src = url; el.volume = Math.max(0, Math.min(1, SVOL * .8)); el.play().catch(e => tvErr(name + ': ' + e.message)); } catch (e) { tvErr(name + ': ' + e.message); }
+}
+function tvSfx(name) { const urls = TVSFX[name]; if (urls) tvPlayUrl(urls[Math.random() * urls.length | 0], name); }
+const TVSFX_ORIG = {};
+for (const name of Object.keys(SFX)) { TVSFX_ORIG[name] = SFX[name]; SFX[name] = function () { if (TV && window.TVSND) return tvSfx(name); return TVSFX_ORIG[name].apply(this, arguments); }; }
+// テレビでは Web Audio の時計が進まないことがあるので、「ときどき鳴らす」の時計はふつうの時計を使う
+const _auMaybe = auMaybe;
+auMaybe = function (name, every) {
+  if (!(TV && window.TVSND)) return _auMaybe(name, every);
+  const now = performance.now() / 1000, nx = tvSfxNext; if (nx[name] == null) nx[name] = now + Math.random() * every;
+  if (now >= nx[name]) { SFX[name](); nx[name] = now + every * (.4 + Math.random() * 1.2); }
+};
+const tvSfxNext = {};
+const _auThunder = auThunder;
+auThunder = function () { if (TV && window.TVSND) { if (SOUND) SFX.thunder(); return; } return _auThunder(); };
+// 教会の鐘・お寺の鐘・夕方のチャイムなど（めったに鳴らない音）は、鳴らすときにその場で音声ファイルにする
+const TV_LSFX_LEN = { churchbell: n => (n || 1) * 1.9 + 4.2, templebell: 9.5, adhan: 20, market: 5.5, shiphorn: 3.6, chime: 10 };
+for (const name of Object.keys(LSFX)) {
+  const orig = LSFX[name];
+  LSFX[name] = function (...a) {
+    if (!(TV && window.TVSND)) return orig.apply(this, a);
+    const L = TV_LSFX_LEN[name], len = typeof L === 'function' ? L(...a) : (L || 6);
+    tvRender(() => orig.apply(this, a), len).then(u => tvPlayUrl(u, name, true)).catch(e => tvErr(name + ': ' + e.message));
+  };
+}
+// アプリが音量を変えるとき、テレビでは audio 要素の音量にする（1つの音に2本ずつ）
+const tvEls = l => [l.el, l.el2];
+const tvVol = l => Math.max(0, Math.min(1, l.v * (SOUND ? SVOL : 0) * 1.1));
+function tvPlay(l, name) { for (const e of tvEls(l)) { e.volume = tvVol(l); if (e.paused && e.src && SOUND && !document.hidden) e.play().catch(er => tvErr(name + ': ' + er.message)); } }
+const _auSet = auSet;
+auSet = function (name, v) {
+  _auSet(name, v); if (!TV) return;
+  if (!tvSndOn) tvSndBuild();
+  const l = TVL[name]; if (!l) return; l.v = v;
+  try { if (v > 0) tvPlay(l, name); else for (const e of tvEls(l)) e.volume = 0; } catch (e) { tvErr(e.message); }
+};
+['click', 'keydown', 'pointerdown'].forEach(t => document.addEventListener(t, () => {
+  if (!TV || !SOUND) return; if (!tvSndOn) tvSndBuild();
+  for (const [n, l] of Object.entries(TVL)) tvPlay(l, n);
+}, { capture: true, passive: true }));
+document.addEventListener('visibilitychange', () => { for (const [n, l] of Object.entries(TVL)) { if (document.hidden) tvEls(l).forEach(e => e.pause()); else if (SOUND && TV) tvPlay(l, n); } });
+const _setSound2 = setSound;
+setSound = function (on) { const r = _setSound2.apply(this, arguments); for (const [n, l] of Object.entries(TVL)) { if (!on) tvEls(l).forEach(e => e.pause()); else tvPlay(l, n); } return r; };
+const _auVolume = auVolume;
+auVolume = function () { _auVolume(); if (TV && window.TVSND && AU.master) AU.master.gain.setTargetAtTime(0, AU.ac.currentTime, .05); for (const l of Object.values(TVL)) tvEls(l).forEach(e => e.volume = tvVol(l)); };
+
+// 見えない動画で音が止められてしまうテレビでは、動画をやめて音を優先する
+setInterval(() => {
+  if (!TV || !SOUND || document.hidden || !tvVid) return;
+  const stopped = Object.values(TVL).some(l => l.started && l.v > 0 && l.el.paused);
+  if (!stopped) return;
+  tvVidOff = true; tvVid.pause(); tvVid.remove(); tvVid = null; tvErr('video stopped sound');
+  for (const [n, l] of Object.entries(TVL)) tvPlay(l, n);
+}, 4000);
+// ----- テレビ：音がまだ出ていないときは「決定ボタンで音が出ます」と小さく出す -----
+const tvSH = document.createElement('div'); tvSH.id = 'tvsndhint'; tvSH.hidden = true; document.body.appendChild(tvSH);
+setInterval(() => {
+  const playing = Object.values(TVL).some(l => !l.el.paused);
+  const show = TV && SOUND && st && !st.preview && !playing && $('#modal').hidden && !document.hidden;
+  if (show) tvSH.textContent = J('🔈 リモコンの決定ボタンを押すと音が出ます', '🔈 Press OK on the remote to turn on the sound');
+  tvSH.hidden = !show;
+}, 1500);
 
 </script>
 </body>

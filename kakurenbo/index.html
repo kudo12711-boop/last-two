@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#d9f2c4">
 <title>もういいかい？ かくれんぼ</title>
@@ -79,6 +80,13 @@ h1 .q{color:var(--accent);display:inline-block;animation:bob 2.2s ease-in-out in
 .spot.found .hid{z-index:3;transform:translateY(calc(var(--u)*var(--h)*-.55)) scale(1.3)}
 .spot.glow .cov{filter:drop-shadow(0 0 10px #fff36b) drop-shadow(0 0 18px #ffd23f);animation:wob .6s 2}
 .spot.me .cov{filter:drop-shadow(0 0 8px rgba(255,255,255,.95))}
+.runner{position:absolute;z-index:7;transform:translate(-50%,-50%);font-size:calc(var(--u)*var(--h));width:calc(var(--u)*var(--h));height:calc(var(--u)*var(--h));
+  display:grid;place-items:center;transition:left var(--t,1s) ease-in-out,top var(--t,1s) ease-in-out;cursor:pointer}
+.runner .in{display:block;animation:runhop .22s ease-in-out infinite alternate}
+.runner.l .in{transform:scaleX(-1)}
+@keyframes runhop{to{translate:0 calc(var(--u)*-3);rotate:9deg}}
+.dust{position:absolute;pointer-events:none;z-index:6;transform:translate(-50%,-50%);font-size:calc(var(--u)*5);animation:dust .7s ease-out forwards}
+@keyframes dust{from{opacity:.9}to{opacity:0;transform:translate(-50%,-90%) scale(1.6)}}
 .crit{position:absolute;pointer-events:none;z-index:5;transform:translate(-50%,-50%);animation:fly 1.6s ease-out forwards}
 @keyframes fly{0%{transform:translate(-50%,-30%) scale(.4);opacity:0}20%{opacity:1;transform:translate(-50%,-90%) scale(1)}100%{transform:translate(-10%,-320%) scale(.9);opacity:0}}
 .kusu{position:absolute;pointer-events:none;z-index:5;font-weight:900;color:#fff;-webkit-text-stroke:1.5px #c46a1b;font-size:calc(var(--u)*4.5);
@@ -201,6 +209,12 @@ input[type=file]{display:none}
 #spots .foot2 .go{background:var(--accent);color:#fff}
 #spots{padding:0}
 </style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
 </head>
 <body>
 
@@ -305,9 +319,13 @@ input[type=file]{display:none}
   <div id="helpBody"></div>
   <h3 data-t="voiceH"></h3>
   <div class="vrow"><select id="voiceSel"></select><button class="rb" id="voiceTest" data-t="test"></button></div>
+  <div class="note" data-t="voiceNote"></div>
   <h3 data-t="recH"></h3>
   <div class="note" data-t="recNote"></div>
   <div id="recList"></div>
+  <h3 data-t="sneakH"></h3>
+  <div class="note" data-t="sneakNote"></div>
+  <div class="opt" id="optSneak"><button data-v="1" data-t="on"></button><button data-v="0" data-t="offOpt"></button></div>
   <h3 id="kkH"></h3><div class="note" id="kkNote"></div><div id="kkSlot"></div>
   <button class="big" id="btnHelpClose" style="margin-top:16px;justify-content:center"><span data-t="close"></span></button>
 </div></div>
@@ -366,13 +384,15 @@ const TEXT = {
     helpTitle: 'おうちのかたへ',
     helpBody: `<p>ことばを はなしはじめた ころから あそべる かくれんぼです。</p>
 <h3>あそびかた</h3>
-<p><b>みんなを さがそう</b>: どうぶつたちが かくれたら、「もういいかい？」の ボタンを おして さがします。みみや しっぽが すこし みえています。こまったら 💡 か、しばらく まつと 「くすくす」と うごいて おしえてくれます。</p>
+<p><b>みんなを さがそう</b>: どうぶつたちが かくれたら、「もういいかい？」の ボタンを おして さがします。みみや しっぽが すこし みえています。こまったら 💡 か、しばらく まつと 「くすくす」と うごいて おしえてくれます。ときどき べつの ものかげへ こっそり おひっこし するので、よく みていてね。</p>
 <p><b>おうちで かくれんぼ</b>: おうちの へやの しゃしんを とると、その しゃしんの なかに かくれます。かぞくの かおを いれると、かぞくも かくれます。</p>
 <p><b>きみが かくれる ばん</b>: こどもが かくれる ばしょを えらび、おにさんが さがします。みつからなければ メダルが もらえます。</p>
 <p>みつけた なかまは「なかよし ずかん」に あつまります。ときどき ひみつの おともだちも かくれています。</p>`,
-    voiceH: 'こえ', test: '▶ ためす', voices: ['AIのこえ 1', 'AIのこえ 2', 'AIのこえ 3', 'AIのこえ 4'], dev: 'スマホの よみあげ', off: 'こえ なし',
+    voiceH: 'こえ', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。', test: '▶ ためす', voices: ['AIのこえ 1', 'AIのこえ 2', 'AIのこえ 3', 'AIのこえ 4'], dev: 'スマホの よみあげ', off: 'こえ なし',
     recH: 'おうちの ひとの こえを ろくおん', recNote: 'ろくおんすると、その ばめんでは AI の こえの かわりに ながれます（3びょうまで）。',
     rec: '● ろくおん', stop: '■ とめる', play1: '▶', del: '✕', close: 'とじる',
+    sneakH: 'こっそり おひっこし', sneakNote: '「みんなを さがそう」で さがしている あいだに、かくれている どうぶつが ときどき べつの ものかげへ はしって いどうします。はしっている ところを タッチすると「つかまえた！」。',
+    on: 'あり', offOpt: 'なし', caught: 'つかまえた！', toko: 'とことこ',
     recCats: { ready: '「もういいよー！」', mada: '「まあだだよ！」', found: '「みーつけた！」', miss: '「ここじゃないね」', clear: '「ぜんぶ みつけたね！」', here: '「ここだよー！」' },
   },
   en: {
@@ -406,13 +426,15 @@ const TEXT = {
     helpTitle: 'For parents',
     helpBody: `<p>A hide-and-seek game for little ones who are just starting to talk.</p>
 <h3>How to play</h3>
-<p><b>Find everyone</b>: once the animals hide, press "Ready or not?" and look for them. An ear or a tail is always peeking out. Press 💡, or wait a bit and they giggle and wiggle.</p>
+<p><b>Find everyone</b>: once the animals hide, press "Ready or not?" and look for them. An ear or a tail is always peeking out. Press 💡, or wait a bit and they giggle and wiggle. Now and then one sneaks off to another hiding spot, so keep watching!</p>
 <p><b>Hide & seek at home</b>: take a photo of a room and everyone hides inside it. Add family faces and the family hides too.</p>
 <p><b>Your turn to hide</b>: the child picks a hiding place and the seeker looks for them. Stay hidden to win a medal.</p>
 <p>Friends you find go into the friend book. Sometimes a secret friend is hiding too.</p>`,
-    voiceH: 'Voice', test: '▶ Test', voices: ['AI voice 1', 'AI voice 2', 'AI voice 3', 'AI voice 4'], dev: 'Device voice', off: 'No voice',
+    voiceH: 'Voice', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).', test: '▶ Test', voices: ['AI voice 1', 'AI voice 2', 'AI voice 3', 'AI voice 4'], dev: 'Device voice', off: 'No voice',
     recH: 'Record your own voice', recNote: 'A recording plays instead of the built-in voice for that moment (up to 3 s).',
     rec: '● Record', stop: '■ Stop', play1: '▶', del: '✕', close: 'Close',
+    sneakH: 'Sneaky moves', sneakNote: 'In “Find everyone”, a hiding animal sometimes runs to another hiding spot while your child is searching. Tap it while it runs to catch it!',
+    on: 'On', offOpt: 'Off', caught: 'Caught you!', toko: 'pitter-patter',
     recCats: { ready: '"Ready!"', mada: '"Not yet!"', found: '"Found you!"', miss: '"Not here"', clear: '"You found everyone!"', here: '"Here I am!"' },
   }
 };
@@ -456,7 +478,7 @@ const sfx = {
 
 /* ---------- こえ: ろくおん → AIの こえ → 端末の よみあげ ---------- */
 // AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<場面><番号>.mp3）
-const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const AI_VOICES = { ja: ['vv_himari', 'vv_metan', 'vv_zunda', 'vv_hau'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const VOICE_TEXT = {
   ja: {
     intro: ['かくれんぼ、しよう！', 'みんな、かくれるよ。めを、つぶってね。'],
@@ -516,15 +538,50 @@ function loadDevVoice() {
   try { devVoice = speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith(lang)).sort((a, b) => voiceScore(b) - voiceScore(a))[0] || null; } catch (e) {}
 }
 if ('speechSynthesis' in window) { loadDevVoice(); speechSynthesis.onvoiceschanged = loadDevVoice; }
-function tts(text) {
+/* ---------- こえの じゅんばんまち（2026-11-16）: どの こえも さいごまで よむ。とめるのは がめんを でるとき（hush）だけ ----------
+   mode: なし＝じゅんばんに まつ / 'idle'＝ほかの こえが なっていなければ だけ（おしゃべり）/ 'swap'＝'swap' どうしだけ いれかわる（かぞえる こえ・タップで なまえ） */
+const VQ = { q: [], cur: null, seq: 0 };
+function vqBusy() { return !!VQ.cur || VQ.q.length > 0; }
+function vqHas(tag) { return (VQ.cur && VQ.cur.tag === tag) || VQ.q.some(x => x.tag === tag); }
+function vqAdd(it, mode) {
+  if (mode === 'idle' && vqBusy()) return false;
+  it.swap = mode === 'swap';
+  if (it.swap) { VQ.q = VQ.q.filter(x => !x.swap); if (VQ.cur && VQ.cur.swap) vqCut(); }
+  VQ.q.push(it); vqNext(); return true;
+}
+function vqCut() { const c = VQ.cur; VQ.cur = null; VQ.seq++; if (c && c.stop) try { c.stop(); } catch (e) {} }
+function vqNext() {
+  if (VQ.cur) return;
+  const it = VQ.q.shift(); if (!it) return;
+  VQ.cur = it; const my = ++VQ.seq; let fin = false, safety = 0;
+  const done = () => { if (fin) return; fin = true; clearTimeout(safety); if (my !== VQ.seq) return; VQ.cur = null; if (it.onend) try { it.onend(); } catch (e) {} vqNext(); };
+  safety = setTimeout(done, (it.max || 8) * 1000);
+  try { it.stop = it.play(done) || null; } catch (e) { done(); }
+}
+function hush() { VQ.q = []; vqCut(); try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+// AudioBuffer を ならす（おわったら done）
+function vqBuf(a, b, off, dur, gain) {
+  return done => {
+    const s = a.createBufferSource(); s.buffer = b; let out = a.destination;
+    if (gain) { const g = a.createGain(); g.gain.value = gain; g.connect(a.destination); out = g; }
+    s.connect(out); s.onended = done; s.start(0, off || 0, dur || b.duration);
+    return () => s.stop();
+  };
+}
+// 端末の よみあげ（u は SpeechSynthesisUtterance）
+function vqTts(u) {
+  return done => { u.onend = done; u.onerror = done; speechSynthesis.cancel(); speechSynthesis.speak(u); return () => speechSynthesis.cancel(); };
+}
+function tts(text, mode) {
   if (!('speechSynthesis' in window)) return;
   try {
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang === 'ja' ? 'ja-JP' : 'en-US'; u.pitch = 1.15; u.rate = .95; if (devVoice) u.voice = devVoice;
-    speechSynthesis.speak(u);
+    vqAdd({ play: vqTts(u), max: 3 + text.length * .25 }, mode);
   } catch (e) {}
 }
+// ms まって、こえが よみおわるのも まつ（おはなしの じゅんばんが こえと ずれないように）
+async function talk(ms) { await wait(ms); while (vqBusy()) await wait(60); }
 const lastTake = {};
 function pickIdx(cat, n) {
   const all = [...Array(n).keys()];
@@ -533,24 +590,25 @@ function pickIdx(cat, n) {
 }
 // 'ai:jf_alpha' / 'dev' / 'off'
 let voiceMode = store.get('kakurenbo-voice', 'ai:1'); // 'ai:1'〜'ai:4' / 'dev' / 'off'。むかしの 'ai:jf_alpha' なども よめる
-{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+{ const i = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'].indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => (AI_VOICES[lang] || AI_VOICES.ja)[(+voiceMode.slice(3) || 1) - 1] || AI_VOICES.ja[0];
-function playBuf(buf) {
+function playBuf(buf, mode) {
   const a = audio(); if (!a) return;
-  try { if (curSrc) curSrc.stop(); } catch (e) {}
-  const src = a.createBufferSource(); src.buffer = buf; src.connect(a.destination); src.start(); curSrc = src;
+  vqAdd({ play: vqBuf(a, buf), max: buf.duration + 2 }, mode);
 }
-function speak(cat, idx) {
+// mode 'idle'＝おしゃべり（ほかの こえが なっていなければ だけ）。なし＝まえの こえが おわるまで まつ
+function speak(cat, idx, mode) {
   if (!soundOn || voiceMode === 'off') return;
-  if (recBuf[cat]) { playBuf(recBuf[cat]); return; }
+  if (mode === 'idle' && vqBusy()) return;
+  if (recBuf[cat]) { playBuf(recBuf[cat], mode); return; }
   const lines = (VOICE_TEXT[lang] || VOICE_TEXT.ja)[cat]; if (!lines) return;
   const i = idx ?? pickIdx(cat, lines.length);
   if (voiceMode.startsWith('ai:')) {
     const id = aiId(); aiLoad(id);
     const b = aiBuf[`${id}/${cat}${i}`];
-    if (b && typeof b !== 'string') { playBuf(b); return; }
+    if (b && typeof b !== 'string') { playBuf(b, mode); return; }
   }
-  tts(lines[i]);
+  tts(lines[i], mode);
 }
 function prepVoice() { if (voiceMode.startsWith('ai:')) aiLoad(aiId()); }
 
@@ -640,7 +698,7 @@ function renderTitle() {
   $('#book').innerHTML = ALL_FRIENDS.map(e => `<span class="${book[e] ? '' : 'no'}">${e}</span>`).join('');
   $('#btnSnd').textContent = soundOn ? T('soundOn') : T('soundOff');
 }
-function goTitle() { runId++; stopIdle(); show('title'); setTheme('#d9f2c4'); renderTitle(); }
+function goTitle() { hush(); runId++; stopIdle(); show('title'); setTheme('#d9f2c4'); renderTitle(); }
 function setTheme(c) { document.querySelector('meta[name=theme-color]').content = c; }
 
 let mode = 'A', sceneId = 'mori', curRoom = null;
@@ -744,7 +802,7 @@ async function hideSequence() {
   intro.innerHTML = hs.map(h => `<span>${hiderHTML(h)}</span>`).join('');
   stage.appendChild(intro);
   speak('intro', 0);
-  await wait(1900);
+  await talk(1900);
   // めを つぶって かぞえる
   const eyes = $('#eyes'); eyes.classList.remove('fade'); eyes.classList.add('on');
   $('#eyesMsg').textContent = T('eyesMsg'); $('#eyesNum').textContent = ''; $('#eyesReply').textContent = ''; $('#btnAsk').style.visibility = 'hidden';
@@ -757,21 +815,21 @@ async function hideSequence() {
   for (let i = 0; i < 5; i++) {
     $('#eyesNum').textContent = lang === 'ja' ? '12345'[i] : String(i + 1);
     $('#eyesNum').classList.remove('pop'); void $('#eyesNum').offsetWidth; $('#eyesNum').classList.add('pop');
-    sfx.tick(); speak('num', i); await wait(950);
+    sfx.tick(); speak('num', i); await talk(950);
   }
   let madaDone = Math.random() < .55;
   for (;;) {
     $('#btnAsk').style.visibility = 'visible';
     await new Promise(res => { $('#btnAsk').onclick = () => { $('#btnAsk').onclick = null; res(); }; });
     $('#btnAsk').style.visibility = 'hidden'; $('#eyesReply').textContent = '';
-    audio(); speak('ask'); await wait(1300);
+    audio(); speak('ask'); await talk(1300);
     if (!madaDone) {
-      madaDone = true; $('#eyesReply').textContent = T('mada'); speak('mada'); await wait(1500);
+      madaDone = true; $('#eyesReply').textContent = T('mada'); speak('mada'); await talk(1500);
       $('#eyesReply').textContent = '';
       for (let i = 0; i < 3; i++) { $('#eyesNum').textContent = lang === 'ja' ? '678'[i] : String(i + 6); sfx.tick(); await wait(650); }
       continue;
     }
-    $('#eyesReply').textContent = T('ready'); speak('ready'); await wait(1300);
+    $('#eyesReply').textContent = T('ready'); speak('ready'); await talk(1300);
     break;
   }
   eyes.classList.add('fade'); await wait(450); eyes.classList.remove('on', 'fade');
@@ -793,17 +851,68 @@ let idleT = null;
 function startIdle() {
   stopIdle();
   idleT = setInterval(() => {
-    if (!G || G.busy || G.mode === 'C') return;
+    if (!G || G.busy || G.mode === 'C' || G.moving) return;
     const now = performance.now();
+    if (G.mode === 'A' && !G.photo && sneakOn) {
+      if (!G.nextMove) G.nextMove = now + SNEAK_EVERY[level] * rnd(.8, 1.2);
+      else if (now > G.nextMove && now - G.lastAct > 1500) { sneak(); return; }
+    }
     if (now - G.lastAct > G.L.idle) {
-      const h = pick(G.hs.filter(h => !h.found)); if (!h) return;
+      const h = pick(G.hs.filter(h => !h.found && h.el)); if (!h) return;
       h.el.classList.remove('peek'); void h.el.offsetWidth; h.el.classList.add('peek'); kusu(h.el);
-      if (Math.random() < .5) speak('hint');
+      if (Math.random() < .5) speak('hint', undefined, 'idle');
       G.lastAct = now - G.L.idle * .4;
     }
   }, 500);
 }
 function stopIdle() { clearInterval(idleT); idleT = null; }
+
+/* こっそり おひっこし: かくれている子が ときどき べつの ものかげへ はしる（はしる ところは みえる。タッチで つかまえられる） */
+const SNEAK_EVERY = [12000, 9000, 7000]; // むずかしさ ごとの だいたいの かんかく
+let sneakOn = store.get('kakurenbo-sneak', true);
+async function sneak() {
+  const g = G;
+  const empties = g.covers.filter(c => !c.h);
+  const cands = g.hs.filter(h => !h.found && h.el && h.spot && (h.moves || 0) < 2);
+  if (!empties.length || !cands.length) { g.nextMove = Infinity; return; }
+  const h = pick(cands), from = h.spot;
+  // いちばん とおすぎない ものかげへ（がめんを よこぎりすぎない）
+  const to = empties.map(c => [c, Math.hypot(c.x - from.x, c.y - from.y) + rnd(0, 25)]).sort((a, b) => a[1] - b[1])[0][0];
+  g.moving = h; h.moves = (h.moves || 0) + 1;
+  // よこく: すこし かおを だして くすくす
+  h.el.classList.remove('peek'); void h.el.offsetWidth; h.el.classList.add('peek'); kusu(h.el);
+  await sleep(800); if (G !== g || h.found) { g.moving = null; return; }
+  const sr = stage.getBoundingClientRect(), a = h.el.getBoundingClientRect(), b = to.el.getBoundingClientRect();
+  const H = parseFloat(h.el.style.getPropertyValue('--h')) || 10;
+  from.h = null; h.el.remove(); h.el = null; h.spot = null;
+  const r = document.createElement('div'); r.className = 'runner emo' + (b.left < a.left ? ' l' : '');
+  const dist = Math.hypot(b.left - a.left, b.top - a.top), t = Math.min(1.9, Math.max(1.2, dist / 200)); // ちいさい子にも おえる はやさ
+  r.style.cssText = `--h:${H};--t:${t}s;left:${a.left + a.width / 2 - sr.left}px;top:${a.top + a.height / 2 - sr.top}px`;
+  r.innerHTML = `<span class="in">${hiderHTML(h)}</span>`;
+  stage.appendChild(r); sfx.pop();
+  const run1 = { h, to, r, landed: false }; g.runner = run1;
+  const tk = document.createElement('div'); tk.className = 'kusu'; tk.textContent = T('toko');
+  tk.style.left = r.style.left; tk.style.top = r.style.top; stage.appendChild(tk); setTimeout(() => tk.remove(), 1500);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    r.style.left = (b.left + b.width / 2 - sr.left) + 'px'; r.style.top = (b.top + b.height * .25 - sr.top) + 'px';
+  }));
+  const steps = Math.round(t / .25);
+  for (let i = 0; i < steps; i++) {
+    await sleep(250); if (G !== g || run1.landed) { r.remove(); return; }
+    sfx.step();
+    if (i % 2 === 0) { const rr = r.getBoundingClientRect(), d = document.createElement('div'); d.className = 'dust emo'; d.textContent = '💨';
+      d.style.left = (rr.left + rr.width / 2 - sr.left) + 'px'; d.style.top = (rr.bottom - sr.top) + 'px'; stage.appendChild(d); setTimeout(() => d.remove(), 750); }
+  }
+  landRunner(g);
+  const cov = to.el.querySelector('.cov'); cov.classList.remove('wob'); void cov.offsetWidth; cov.classList.add('wob'); sfx.wob();
+}
+function landRunner(g) {
+  const run1 = g.runner; if (!run1 || run1.landed) return null;
+  run1.landed = true; run1.r.remove(); g.runner = null; g.moving = null;
+  putHider(run1.to, run1.h, g.L.vis);
+  g.lastAct = performance.now(); g.nextMove = performance.now() + SNEAK_EVERY[level] * rnd(.8, 1.2);
+  return run1.h;
+}
 function flyToSlot(h, i) {
   const from = h.el.getBoundingClientRect(), slot = $(`#slots i[data-i="${i}"]`); if (!slot) return;
   const to = slot.getBoundingClientRect();
@@ -837,7 +946,7 @@ function missCover(c) {
     k.style.cssText = `left:${c.x}%;top:${c.y}%;font-size:calc(var(--u)*${c.S * .35})`; k.textContent = pick(['🦋', '🐞', '🐛', '🐝', '🍂', '🌸', '🐌']);
     stage.appendChild(k); setTimeout(() => k.remove(), 1700); setTimeout(sfx.crit, 150);
   }
-  if (Math.random() < .5) speak('miss');
+  if (Math.random() < .5) speak('miss', undefined, 'idle');
 }
 function finishSeek() {
   stopIdle(); G.busy = true;
@@ -863,6 +972,10 @@ stage.addEventListener('pointerdown', e => {
   if (G.mode === 'C') { onCTap(e); return; }
   G.lastAct = performance.now();
   if (G.photo) { onPhotoTap(e); return; }
+  if (e.target.closest('.runner') && G.runner) { // はしっている ところを つかまえた
+    const h = landRunner(G); if (h) { foundHider(h); sayBig(T('caught')); }
+    return;
+  }
   const spotEl = e.target.closest('.spot'); if (!spotEl) return;
   const c = G.covers.find(c => c.el === spotEl); if (!c) return;
   if (c.h && !c.h.found) foundHider(c.h);
@@ -870,11 +983,12 @@ stage.addEventListener('pointerdown', e => {
 });
 $('#btnHint').onclick = () => {
   if (!G || G.busy) return; audio(); sfx.tap();
-  const h = G.hs.find(h => !h.found); if (!h) return;
+  if (G.moving) return;
+  const h = G.hs.find(h => !h.found && h.el); if (!h) return;
   const el = h.spot ? h.spot.el : (h.box || h.el);
   el.classList.remove('glow'); void el.offsetWidth; el.classList.add('glow'); setTimeout(() => el.classList.remove('glow'), 2600);
   h.el.classList.remove('peek'); void h.el.offsetWidth; h.el.classList.add('peek');
-  speak('hint', 0); G.lastAct = performance.now();
+  speak('hint', 0, 'idle'); G.lastAct = performance.now();
 };
 
 /* ---------- おうちで かくれんぼ（しゃしん） ---------- */
@@ -1042,7 +1156,7 @@ function onPhotoTap(e) {
   let best = null, bd = 1e9;
   for (const h of G.hs) if (!h.found) { const d = Math.hypot(h.cx - x, h.cy - y); if (d < bd) { bd = d; best = h; } }
   if (best && bd < Math.max(48, best.size * .85)) foundPhoto(best);
-  else { sfx.wob(); if (Math.random() < .35) speak('miss'); }
+  else { sfx.wob(); if (Math.random() < .35) speak('miss', undefined, 'idle'); }
 }
 function foundPhoto(h) {
   h.found = true; G.busy = true;
@@ -1124,14 +1238,14 @@ function onCTap(e) {
 }
 async function oniCount(n) {
   $('#barMsg').textContent = T('counting');
-  for (let i = 0; i < n; i++) { oniSay(lang === 'ja' ? ['いーち', 'にーい', 'さーん', 'しーい', 'ごー'][i] : ['One', 'Two', 'Three', 'Four', 'Five'][i], 900); sfx.tick(); speak('num', i); await wait(1000); }
+  for (let i = 0; i < n; i++) { oniSay(lang === 'ja' ? ['いーち', 'にーい', 'さーん', 'しーい', 'ごー'][i] : ['One', 'Two', 'Three', 'Four', 'Five'][i], 900); sfx.tick(); speak('num', i); await talk(1000); }
   G.phase = 'ask'; oniSay(T('ask'), 0); speak('ask');
   $('#barMsg').textContent = '';
   const btns = $('#cbtns'); btns.classList.add('on');
   const r = await new Promise(res => { btns.querySelector('.mada').onclick = () => res('mada'); btns.querySelector('.ready').onclick = () => res('ready'); });
   btns.classList.remove('on'); audio();
-  if (r === 'mada') { speak('mada'); await wait(1300); return oniCount(3); }
-  speak('ready'); G.phase = 'seek'; await wait(1300); await oniSeek();
+  if (r === 'mada') { speak('mada'); await talk(1300); return oniCount(3); }
+  speak('ready'); G.phase = 'seek'; await talk(1300); await oniSeek();
 }
 async function oniSeek() {
   $('#barMsg').textContent = T('seeking');
@@ -1148,16 +1262,16 @@ async function oniSeek() {
     if (mine || Math.hypot(c.x - G.mySpot.x, c.y - G.mySpot.y) < 30) { $('#doki').classList.add('on'); sfx.heart(); setTimeout(sfx.heart, 600); }
     for (let k = 0; k < 3; k++) { sfx.step(); await wait(330); }
     o.classList.remove('walk');
-    oniSay(T('koko'), 0); speak('koko'); await wait(1100);
+    oniSay(T('koko'), 0); speak('koko'); await talk(1100);
     if (mine) {
       $('#doki').classList.remove('on');
       c.el.classList.add('found'); sfx.found(); sayBig(T('found')); speak('found', 0); oniSay('😆', 0);
-      await wait(1600); speak('lose'); await wait(500);
+      await talk(1600); speak('lose'); await talk(500);
       return cEnd(false);
     }
     c.el.querySelector('.cov').classList.remove('wob'); void c.el.offsetWidth; c.el.querySelector('.cov').classList.add('wob'); sfx.wob();
     await wait(500);
-    oniSay(T('inai'), 0); speak('inai'); await wait(1200);
+    oniSay(T('inai'), 0); speak('inai'); await talk(1200);
     $('#doki').classList.remove('on');
   }
   // みつからなかった
@@ -1173,7 +1287,7 @@ async function cWin() {
   const c = G.mySpot; c.el.classList.remove('glow');
   c.el.classList.add('found'); sfx.found(); sayBig(T('here')); speak('here');
   oniSay('😲', 0);
-  await wait(1500); speak('win'); medals++; store.set('kakurenbo-medal', medals);
+  await talk(1500); speak('win'); medals++; store.set('kakurenbo-medal', medals);
   confetti(); sfx.clear();
   await wait(800); cEnd(true);
 }
@@ -1205,16 +1319,16 @@ $('#btnAgain').onclick = () => {
   if (mode === 'A') startA(sceneId); else if (mode === 'B') startB(curRoom.key, curRoom.room); else startC(sceneId);
 };
 $('#btnOther').onclick = () => {
-  sfx.tap(); runId++; stopIdle();
+  sfx.tap(); hush(); runId++; stopIdle();
   if (mode === 'B') { show('photo'); renderPhotoScreen(); } else { renderWhere(); show('where'); }
 };
-$('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('kakurenbo-sound', soundOn); if (soundOn) { audio(); sfx.tap(); } renderTitle(); };
+$('#btnSnd').onclick = () => { soundOn = !soundOn; if (!soundOn) hush(); store.set('kakurenbo-sound', soundOn); if (soundOn) { audio(); sfx.tap(); } renderTitle(); };
 $('#btnLang').onclick = () => { lang = lang === 'ja' ? 'en' : 'ja'; store.set('kakurenbo-lang', lang); loadDevVoice(); renderTitle(); prepVoice(); };
 $('#btnGames').onclick = () => { location.href = '../games/' + (lang === 'ja' ? '' : '?lang=' + lang); };
 
 /* おうちのかたへ */
 function renderHelp() {
-  applyText(); renderKk();
+  applyText(); renderKk(); renderSneak();
   const vs = [1, 2, 3, 4].map(n => `<option value="ai:${n}">${T('voices')[n - 1]}</option>`).join('');
   $('#voiceSel').innerHTML = vs + `<option value="dev">${T('dev')}</option><option value="off">${T('off')}</option>`;
   $('#voiceSel').value = voiceMode;
@@ -1227,9 +1341,11 @@ function renderKk() {
   $('#kkNote').textContent = lang === 'ja' ? 'むりょうでは「もり」と「おうちで かくれんぼ」で あそべます。ぜんぶ版（買い切り）か ファミリーパスで、おうち・うみ・ゆきやま の ばめんも あそべます。広告は出しません。' : 'Free: the Woods scene and hide and seek in your own room. The full version (one-time) or the Family Pass adds the House, Beach and Snow scenes. No ads.';
   if (!$('#kkSlot').firstChild) $('#kkSlot').appendChild(Kakin.parentButton()); else $('#kkSlot').firstChild._kkUpdate();
 }
+function renderSneak() { document.querySelectorAll('#optSneak button').forEach(b => b.classList.toggle('sel', (b.dataset.v === '1') === sneakOn)); }
+$('#optSneak').onclick = e => { const b = e.target.closest('button'); if (!b) return; sneakOn = b.dataset.v === '1'; store.set('kakurenbo-sneak', sneakOn); sfx.tap(); renderSneak(); };
 $('#btnHelpClose').onclick = () => { stopRec(); $('#help').classList.remove('on'); };
 $('#voiceSel').onchange = e => { voiceMode = e.target.value; store.set('kakurenbo-voice', voiceMode); prepVoice(); };
-$('#voiceTest').onclick = () => { audio(); prepVoice(); setTimeout(() => speak('found', 0), voiceMode.startsWith('ai:') ? 500 : 0); };
+$('#voiceTest').onclick = () => { audio(); hush(); prepVoice(); setTimeout(() => speak('found', 0), voiceMode.startsWith('ai:') ? 500 : 0); };
 let recState = null;
 async function startRec(k, btn) {
   try {
@@ -1240,7 +1356,7 @@ async function startRec(k, btn) {
       stream.getTracks().forEach(t => t.stop());
       const blob = new Blob(chunks, { type: mr.mimeType }); const ab = await blob.arrayBuffer();
       try { await dbPut('voice', k, ab.slice(0)); } catch (e) {}
-      try { const a = audio(); recBuf[k] = await new Promise((res, rej) => a.decodeAudioData(ab, res, rej)); playBuf(recBuf[k]); } catch (e) {}
+      try { const a = audio(); recBuf[k] = await new Promise((res, rej) => a.decodeAudioData(ab, res, rej)); hush(); playBuf(recBuf[k]); } catch (e) {}
       recState = null; renderHelp();
     };
     mr.start(); recState = { mr, k, t: setTimeout(stopRec, 3000) };
@@ -1251,7 +1367,7 @@ function stopRec() { if (recState) { clearTimeout(recState.t); try { recState.mr
 $('#recList').onclick = async e => {
   const b = e.target.closest('button'); if (!b) return; const k = b.closest('.recrow').dataset.k; audio();
   if (b.dataset.a === 'rec') { if (recState) stopRec(); else startRec(k, b); }
-  else if (b.dataset.a === 'play' && recBuf[k]) playBuf(recBuf[k]);
+  else if (b.dataset.a === 'play' && recBuf[k]) { hush(); playBuf(recBuf[k]); }
   else if (b.dataset.a === 'del') { delete recBuf[k]; try { await dbDel('voice', k); } catch (e) {} renderHelp(); }
 };
 

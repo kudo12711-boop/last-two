@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#ffe9a8">
 <title>てんつなぎ</title>
@@ -128,6 +129,12 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 .colors button{width:34px;height:34px;padding:0!important;border-radius:50%!important;border:3px solid #fff}
 .colors button.sel{outline:3px solid var(--ink)}
 </style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
 </head>
 <body>
 
@@ -262,7 +269,7 @@ const TEXT = {
     howto: '・光っている点から、つぎの点へ指でなぞると線がつながります。点をタップするだけでもつながるので、小さい子でも遊べます。<br>・全部つなぐと、絵に色がついて動き出し、声や音が出ます。できた絵はシールちょうにたまります。<br>・「むずかしさ」で点の数（5・10・15・20・30・45）を選び、−／＋で3〜60まで細かく変えられます（ABCは26まで、あいうえおは46まで）。点が多いときは、おしろ・きょうりゅう・タコなどの むずかしい絵が出てきます。点が少ないときは、絵の残りの部分が はじめから描いてあります。<br>・「かぞえかた」で 1,2,3／2,4,6（2とびの数え方）／あいうえお順／ABC順 を選べます。つなぐたびに声で読みあげるので、数や文字を覚える練習にもなります。<br>・「じぶんで つくる」で、おうちの人が指で描いた形や、紙に描いた絵・写真のりんかくから、オリジナルの点つなぎが作れます。',
     guideH: '💡 つぎの点', always: 'いつも ひからせる', onHint: '💡のときだけ', touchH: '✋ つなぎかた', easy: 'タップでも OK', trace: 'なぞる だけ',
     traceNote: '「なぞる だけ」にすると、まえの点から指をはなさずに なぞったときだけ つながります。',
-    voiceH: '🗣️ こえ', test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です（Kokoro-82M／Apache-2.0）。', rec2: '🎙️ じぶんの こえを ろくおんする',
+    voiceH: '🗣️ こえ', test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。', rec2: '🎙️ じぶんの こえを ろくおんする',
     aiVoice: n => `AIのこえ ${n}`, devVoice: 'スマホの よみあげ', noVoice: 'こえ なし',
     myH: '✏️ じぶんで つくった え', myNone: 'まだ ありません。タイトルの「✏️ じぶんで つくる」から作れます。', del: 'けす',
     fullH: '🔓 ぜんぶ版', fullNote: 'むりょうでは 5まいの絵（ほし・ハート・さかな・おうち・りんご）、かぞえかた「1・2・3」、じぶんで つくる 1まい が使えます。ぜんぶ版（買い切り）か ファミリーパスで、絵が31まいに ふえ、2とび・あいうえお・ABC と、じぶんで つくる 8まい が使えます。広告は出しません。',
@@ -295,7 +302,7 @@ const TEXT = {
     howto: '• Trace with a finger from the glowing dot to the next one to draw a line. Simply tapping the dots also works, so even little ones can play.<br>• When all dots are joined, the picture fills with color, moves and makes sounds. Finished pictures go into the sticker book.<br>• “Difficulty” sets the number of dots (5, 10, 15, 20, 30, 45); fine-tune from 3 to 60 with − / + (up to 26 for ABC). With many dots, harder pictures such as the castle, dinosaur or octopus appear. With few dots, the rest of the picture is already drawn.<br>• “Count with” chooses 1, 2, 3 / 2, 4, 6 (counting by twos) / A, B, C. Each dot is read aloud, so it’s good practice for numbers and letters.<br>• “Make your own” turns a shape drawn with a finger, or the outline of a drawing or photo, into your own dot-to-dot.',
     guideH: '💡 Next dot', always: 'Always glow', onHint: 'Only with 💡', touchH: '✋ How to connect', easy: 'Tapping is OK', trace: 'Tracing only',
     traceNote: 'With “Tracing only”, dots connect only when traced from the previous dot without lifting the finger.',
-    voiceH: '🗣️ Voice', test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI (Kokoro-82M / Apache-2.0).', rec2: '🎙️ Record your own voice',
+    voiceH: '🗣️ Voice', test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).', rec2: '🎙️ Record your own voice',
     aiVoice: n => `AI voice ${n}`, devVoice: 'Device voice', noVoice: 'No voice',
     myH: '✏️ Your own pictures', myNone: 'None yet. Make one with “✏️ Make your own” on the title screen.', del: 'Delete',
     fullH: '🔓 Full version', fullNote: 'Free: 5 pictures (star, heart, fish, house, apple), counting 1-2-3 and 1 picture of your own. The full version (one-time purchase) or the Family Pass gives 31 pictures, counting by 2s and ABC, and up to 8 pictures of your own. No ads.',
@@ -411,7 +418,7 @@ const sfx = {
 
 /* ---------- こえ ---------- */
 // AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<key>.mp3）
-const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const AI_VOICES = { ja: ['vv_himari', 'vv_metan', 'vv_zunda', 'vv_hau'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const KANA = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん';
 const ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 // 声ファイル（voice/<声>/<key>.mp3）と、ないときの よみあげ文（ことばごと）
@@ -453,56 +460,76 @@ function loadVoice() {
   try { voiceList = speechSynthesis.getVoices(); } catch (e) {}
 }
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
-function tts(text, onend) {
-  if (!('speechSynthesis' in window)) { if (onend) setTimeout(onend, 800); return; }
+/* ---------- こえの じゅんばんまち（2026-11-16）: どの こえも さいごまで よむ。とめるのは がめんを でるとき（hush）だけ ----------
+   mode: なし＝じゅんばんに まつ / 'idle'＝ほかの こえが なっていなければ だけ（おしゃべり）/ 'swap'＝'swap' どうしだけ いれかわる（かぞえる こえ・タップで なまえ） */
+const VQ = { q: [], cur: null, seq: 0 };
+function vqBusy() { return !!VQ.cur || VQ.q.length > 0; }
+function vqHas(tag) { return (VQ.cur && VQ.cur.tag === tag) || VQ.q.some(x => x.tag === tag); }
+function vqAdd(it, mode) {
+  if (mode === 'idle' && vqBusy()) return false;
+  it.swap = mode === 'swap';
+  if (it.swap) { VQ.q = VQ.q.filter(x => !x.swap); if (VQ.cur && VQ.cur.swap) vqCut(); }
+  VQ.q.push(it); vqNext(); return true;
+}
+function vqCut() { const c = VQ.cur; VQ.cur = null; VQ.seq++; if (c && c.stop) try { c.stop(); } catch (e) {} }
+function vqNext() {
+  if (VQ.cur) return;
+  const it = VQ.q.shift(); if (!it) return;
+  VQ.cur = it; const my = ++VQ.seq; let fin = false, safety = 0;
+  const done = () => { if (fin) return; fin = true; clearTimeout(safety); if (my !== VQ.seq) return; VQ.cur = null; if (it.onend) try { it.onend(); } catch (e) {} vqNext(); };
+  safety = setTimeout(done, (it.max || 8) * 1000);
+  try { it.stop = it.play(done) || null; } catch (e) { done(); }
+}
+function hush() { VQ.q = []; vqCut(); try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+// AudioBuffer を ならす（おわったら done）
+function vqBuf(a, b, off, dur, gain) {
+  return done => {
+    const s = a.createBufferSource(); s.buffer = b; let out = a.destination;
+    if (gain) { const g = a.createGain(); g.gain.value = gain; g.connect(a.destination); out = g; }
+    s.connect(out); s.onended = done; s.start(0, off || 0, dur || b.duration);
+    return () => s.stop();
+  };
+}
+// 端末の よみあげ（u は SpeechSynthesisUtterance）
+function vqTts(u) {
+  return done => { u.onend = done; u.onerror = done; speechSynthesis.cancel(); speechSynthesis.speak(u); return () => speechSynthesis.cancel(); };
+}
+function tts(text, item, mode) {
+  if (!('speechSynthesis' in window) || !text) { if (item.onend) setTimeout(item.onend, 600); return; }
   try {
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     const vs = voiceList.filter(v => v.lang.replace('_', '-').toLowerCase().startsWith(LANG)).sort((a, b) => voiceScore(b) - voiceScore(a));
     u.lang = LANG === 'ja' ? 'ja-JP' : 'en-US'; u.pitch = 1.15; u.rate = LANG === 'ja' ? .95 : .9; if (vs[0]) u.voice = vs[0];
-    if (onend) { let done = false; const f = () => { if (!done) { done = true; onend(); } }; u.onend = f; setTimeout(f, 2500); }
-    speechSynthesis.speak(u);
+    item.play = vqTts(u); item.max = 2.5 + text.length * .25; vqAdd(item, mode);
   } catch (e) {}
 }
 // 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
 let voiceMode = store.get('tentsu-voice', 'ai:1');
-{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+{ const i = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'].indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => AI_VOICES[LANG][(+voiceMode.slice(3) || 1) - 1] || AI_VOICES[LANG][0];
 let lastSpeak = 0, speakToken = 0;
 function voiceText(key) { return TTS_BY[LANG][key] || ''; }
-// key をしゃべる。おわったら onend
-function say(key, force, onend) {
+// key をしゃべる。さいごまで よみおわったら onend
+// force＝たいせつな こえ（まえの こえが おわるまで まつ）/ force なし＝おしゃべり（ほかの こえが なっていなければ）/ mode 'swap'＝かぞえる こえ（まえの かずだけ とめる）
+function say(key, force, onend, mode) {
   if (!soundOn || voiceMode === 'off') { if (onend) setTimeout(onend, 300); return; }
+  if (!mode) mode = force ? '' : 'idle';
   const now = performance.now();
   if (!force && now - lastSpeak < 1400) return;
+  if (mode === 'idle' && vqBusy()) return;
   lastSpeak = now;
-  const tok = ++speakToken;
-  const fin = () => { if (onend && tok === speakToken) onend(); };
-  const rb = recBuf[key];
-  if (rb && rb.buf && audio()) { // おうちの人の 録音
-    playBuf(rb.buf, rb.off, rb.dur);
-    if (onend) setTimeout(fin, rb.dur * 1000 + 120);
-    return;
+  const item = { onend };
+  const rb = recBuf[key], a = audio();
+  if (rb && rb.buf && a) { // おうちの人の 録音
+    item.play = vqBuf(a, rb.buf, rb.off, rb.dur); item.max = rb.dur + 2; vqAdd(item, mode); return;
   }
-  if (voiceMode.startsWith('ai:')) {
-    const id = aiId(), a = audio();
-    if (a) {
-      aiLoad(id, [key]);
-      const b = aiBuf[`${id}/${key}`];
-      if (b && typeof b !== 'string') {
-        playBuf(b, 0, b.duration);
-        if (onend) setTimeout(fin, b.duration * 1000 + 120);
-        return;
-      }
-    }
+  if (voiceMode.startsWith('ai:') && a) {
+    const id = aiId();
+    aiLoad(id, [key]);
+    const b = aiBuf[`${id}/${key}`];
+    if (b && typeof b !== 'string') { item.play = vqBuf(a, b, 0, b.duration); item.max = b.duration + 2; vqAdd(item, mode); return; }
   }
-  tts(voiceText(key), onend ? fin : null);
-}
-function playBuf(b, off, dur) {
-  const a = audio(); if (!a) return;
-  try { if (aiSrc) aiSrc.stop(); } catch (e) {}
-  try { speechSynthesis.cancel(); } catch (e) {}
-  const src = a.createBufferSource(); src.buffer = b; src.connect(a.destination); src.start(0, off, dur); aiSrc = src;
+  tts(voiceText(key), item, mode);
 }
 function sayCat(cat, force) { // start → start0 / start1 など（録音があれば そちらを）
   const keys = Object.keys(TTS_BY[LANG]).filter(k => k.replace(/\d+$/, '') === cat);
@@ -1225,9 +1252,9 @@ function link() {
   const n = pz.idx.length;
   const finished = closing || (!pz.full && done === n);
   if (finished) { if (closing) done = n + 1; complete(); return; }
-  if (pz.full && done === n) { say(pz.labels[t].key, true, () => { if (state === 'play') say('close0', true); }); }
-  else if (done === n - 1 && !pz.full) say(pz.labels[t].key, true, () => { if (state === 'play' && done === n - 1) say('last0', true); });
-  else say(pz.labels[t].key, true);
+  if (pz.full && done === n) { say(pz.labels[t].key, true, () => { if (state === 'play') say('close0', true); }, 'swap'); }
+  else if (done === n - 1 && !pz.full) say(pz.labels[t].key, true, () => { if (state === 'play' && done === n - 1) say('last0', true); }, 'swap');
+  else say(pz.labels[t].key, true, null, 'swap');
   if (!cheered && done === Math.ceil(n / 2) && n >= 8) { cheered = true; setTimeout(() => { if (state === 'play') sayCat('cheer', false); }, 700); }
   renderProg();
 }
@@ -1241,7 +1268,7 @@ function wrong(i) {
 }
 function hint() {
   hintUntil = performance.now() + 3000;
-  sayCat('here', true);
+  sayCat('here', !vqBusy()); // れんだしても 「ここだよ」が つみあがらない
 }
 $('#btnHint').onclick = () => { if (state !== 'play') return; audio(); sfx.tap(); hint(); };
 
@@ -1460,7 +1487,7 @@ function thumbOutline(pic) {
   return c;
 }
 function goTitle() {
-  state = 'idle'; finger = null; pz = null; speakToken++; confettiId++;
+  state = 'idle'; finger = null; pz = null; speakToken++; confettiId++; hush();
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
   $('#title').classList.add('on'); $('#clear').classList.remove('on');
   document.querySelector('meta[name=theme-color]').content = '#ffe9a8';
@@ -1484,7 +1511,7 @@ $('#btnHome').onclick = () => { sfx.tap(); goTitle(); };
 $('#btnBack').onclick = () => { sfx.tap(); goTitle(); };
 $('#btnAgain').onclick = () => { sfx.tap(); startGame(curPic); };
 $('#btnNext').onclick = () => { sfx.tap(); startGame(nextPic(curPic)); };
-$('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('tentsu-sound', soundOn); if (soundOn) { audio(); sfx.tap(); } renderTitle(); };
+$('#btnSnd').onclick = () => { soundOn = !soundOn; if (!soundOn) hush(); store.set('tentsu-sound', soundOn); if (soundOn) { audio(); sfx.tap(); } renderTitle(); };
 function renderHelp() {
   document.querySelectorAll('#optGuide button').forEach(b => b.classList.toggle('sel', b.dataset.v === guide));
   document.querySelectorAll('#optTouch button').forEach(b => b.classList.toggle('sel', b.dataset.v === touchMode));
@@ -1507,7 +1534,7 @@ $('#optTouch').onclick = e => { const b = e.target.closest('button'); if (!b) re
 $('#voiceSel').onchange = e => { voiceMode = e.target.value; store.set('tentsu-voice', voiceMode); prepVoice(['praise0']); };
 $('#btnLang').onclick = () => { sfx.tap(); setLang(LANG === 'ja' ? 'en' : 'ja'); };
 $('#optLang').onclick = e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.v); };
-$('#voiceTest').onclick = () => { audio(); prepVoice(['praise0']); setTimeout(() => say('praise0', true), voiceMode.startsWith('ai:') ? 500 : 0); };
+$('#voiceTest').onclick = () => { audio(); hush(); prepVoice(['praise0']); setTimeout(() => say('praise0', true), voiceMode.startsWith('ai:') ? 500 : 0); };
 
 /* ---------- じぶんで つくる ---------- */
 const mkBoard = $('#mkBoard'), mkCv = $('#mkCv'), mctx = mkCv.getContext('2d');
@@ -1742,9 +1769,9 @@ $('#recTabs').onclick = e => { const b = e.target.closest('button'); if (!b || r
 $('#recGrid').onclick = e => {
   const b = e.target.closest('button'); if (!b || recording) return;
   recSel = +b.dataset.i; renderRecM();
-  const k = recItems()[recSel].key; if (recBuf[k] && recBuf[k].buf) say(k, true);
+  const k = recItems()[recSel].key; if (recBuf[k] && recBuf[k].buf) { hush(); say(k, true); }
 };
-$('#recPlay').onclick = () => { const k = recItems()[recSel].key; if (recs[k]) { audio(); if (recBuf[k] && recBuf[k].buf) say(k, true); else decodeRec(k).then(() => say(k, true)); } };
+$('#recPlay').onclick = () => { const k = recItems()[recSel].key; if (recs[k]) { audio(); hush(); if (recBuf[k] && recBuf[k].buf) say(k, true); else decodeRec(k).then(() => say(k, true)); } };
 $('#recDel').onclick = async () => { const k = recItems()[recSel].key; if (!recs[k]) return; delete recs[k]; delete recBuf[k]; try { await vdb.del(k); } catch (e) {} renderRecM(); };
 $('#recGo').onclick = async () => {
   if (recording) { recording.stop(); return; }
@@ -1760,7 +1787,7 @@ $('#recGo').onclick = async () => {
     const blob = new Blob(chunks, { type: mr.mimeType || 'audio/mp4' });
     if (blob.size > 800) {
       recs[key] = blob; try { await vdb.put(key, blob); } catch (e) {}
-      await decodeRec(key); say(key, true);
+      await decodeRec(key); hush(); say(key, true);
       // つぎの まだ 録音していない ますへ
       let n = idx + 1; while (n < items.length && recs[items[n].key]) n++;
       if (n < items.length && recTab === tabAt) recSel = n;

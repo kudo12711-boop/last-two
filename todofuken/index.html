@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}body{margin:0}[hidden]{display:none!important}</style>
@@ -147,6 +148,12 @@ h1 ruby rt{font-size:.32em;font-weight:700;letter-spacing:.1em;color:var(--ink-s
 .zc.no .zk{color:var(--ink-soft)}
 @media (prefers-reduced-motion:reduce){.pop,.blink,.card.wobble,.cbox,.stk span{animation:none}}
 </style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
 </head>
 <body>
 
@@ -255,7 +262,7 @@ const KIDS = [
  ["ちゅうごく",[31,32,33,34,35]],["しこく",[36,37,38,39]],["きゅうしゅう その1",[40,41,42,43]],["きゅうしゅう その2",[44,45,46,47]]
 ].map(([name,ids],i)=>({k:"s"+(i+1),no:i+1,name,kana:`ステージ ${i+1}`,ids,kid:true,okiLocal:ids.includes(47)}));
 const findMode = k => MODES.find(m=>m.k===k)||KIDS.find(m=>m.k===k);
-const PRAISE = ["やったね","すごい","ぴったり","じょうず","せいかい"];
+const PRAISE = ["やったね","すごい","ぴったり","じょうず","正解"];
 const modeOfId = id => id<=7?"hk":id<=14?"kt":id<=23?"cb":id<=30?"kk":id<=39?"cs":"ks";
 const P = id => SHAPES[id-1];
 const NS = "http://www.w3.org/2000/svg";
@@ -288,9 +295,36 @@ const sMiss = ()=> (G&&G.mode.kid) ? (tone(440,0,.14,"sine",.16), tone(330,.1,.2
   : (tone(220,0,.18,"triangle",.22), tone(185,.1,.22,"triangle",.2));
 const sPick = ()=>tone(520,0,.06,"sine",.1);
 const sClear = ()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.11,.35,"triangle",.16));
-function say(text){
+/* ---------- こえの じゅんばんまち（2026-11-16）: どの こえも さいごまで よむ。とめるのは がめんを でるとき（hush）だけ ----------
+   mode: なし＝じゅんばんに まつ / 'idle'＝ほかの こえが なっていなければ だけ（おしゃべり）/ 'swap'＝'swap' どうしだけ いれかわる（かぞえる こえ・タップで なまえ） */
+const VQ = { q: [], cur: null, seq: 0 };
+function vqBusy() { return !!VQ.cur || VQ.q.length > 0; }
+function vqHas(tag) { return (VQ.cur && VQ.cur.tag === tag) || VQ.q.some(x => x.tag === tag); }
+function vqAdd(it, mode) {
+  if (mode === 'idle' && vqBusy()) return false;
+  it.swap = mode === 'swap';
+  if (it.swap) { VQ.q = VQ.q.filter(x => !x.swap); if (VQ.cur && VQ.cur.swap) vqCut(); }
+  VQ.q.push(it); vqNext(); return true;
+}
+function vqCut() { const c = VQ.cur; VQ.cur = null; VQ.seq++; if (c && c.stop) try { c.stop(); } catch (e) {} }
+function vqNext() {
+  if (VQ.cur) return;
+  const it = VQ.q.shift(); if (!it) return;
+  VQ.cur = it; const my = ++VQ.seq; let fin = false, safety = 0;
+  const done = () => { if (fin) return; fin = true; clearTimeout(safety); if (my !== VQ.seq) return; VQ.cur = null; if (it.onend) try { it.onend(); } catch (e) {} vqNext(); };
+  safety = setTimeout(done, (it.max || 8) * 1000);
+  try { it.stop = it.play(done) || null; } catch (e) { done(); }
+}
+function hush() { VQ.q = []; vqCut(); try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+// 端末の よみあげ（u は SpeechSynthesisUtterance）。2026-11-23〜 県の名前は 漢字で読ませる（ひらがなだと アクセントが くずれやすい）
+function vqTts(u) {
+  return done => { u.onend = done; u.onerror = done; speechSynthesis.cancel(); speechSynthesis.speak(u); return () => speechSynthesis.cancel(); };
+}
+// mode: なし＝まえの こえが おわるまで まつ / 'swap'＝タップで なまえ など（'swap' どうしだけ いれかわる）。tag: おなじ tag が まっていたら いれない
+function say(text, mode, tag){
   if(!opt.voice||!window.speechSynthesis) return;
-  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang="ja-JP"; u.rate=1; speechSynthesis.speak(u); }catch(e){}
+  if(tag && vqHas(tag)) return;
+  try{ const u=new SpeechSynthesisUtterance(text); u.lang="ja-JP"; u.rate=1; vqAdd({play:vqTts(u), max:3+text.length*.25, tag}, mode); }catch(e){}
 }
 
 /* ---------- ゲームの状態 ---------- */
@@ -435,17 +469,17 @@ function onUp(e){
   endListeners();
   const id=drag.id;
   $("#slot"+id)?.classList.remove("near");
-  if(!drag.moved){ say(INFO[id-1][1]); returnHome(false); return; }
+  if(!drag.moved){ say(INFO[id-1][0],"swap"); returnHome(false); return; }
   const h=judge(id,drag.X,drag.Y), kid=G.mode.kid;
   G.miss[id]=G.miss[id]||0;
   if(!h.ok){ G.errors++; G.miss[id]++; sMiss(); }
   // こどもステージでは3回まちがえたら、ピースが自分で正しい場所へ飛んでいく
   if(h.ok || (kid && G.miss[id]>=3)){
     const dr=drag;
-    if(!h.ok) say("ここだよ");
+    if(!h.ok) say("ここだよ","","miss");
     animateFloat(dr,h.sx,h.sy,h.a,h.ok?200:700,()=>{ dr.g.remove(); drag=null; place(id); });
   } else {
-    if(kid) say(G.miss[id]===1?"おしい！":"ひかっている ところ だよ");
+    if(kid) say(G.miss[id]===1?"おしい！":"光っているところだよ","","miss");
     if(G.miss[id]>=(kid?1:2)) blinkSlot(id);
     returnHome(true);
   }
@@ -484,11 +518,11 @@ function place(id){
   $("#slot"+id)?.classList.remove("blink");
   sOk(); showBubble(id);
   if(G.mode.kid){
-    say(PRAISE[Math.random()*PRAISE.length|0]+"！ "+INFO[id-1][1]);
+    say(PRAISE[Math.random()*PRAISE.length|0]+"！ "+INFO[id-1][0]);
     const p=P(id), a=map.getScreenCTM().a, fs=Math.min(26/a,Math.max(p.b[2],p.b[3])*.55);
     const t=el("text",{x:p.c[0]+o[0],y:p.c[1]+o[1],class:"emo pop","font-size":fs}); t.textContent=INFO[id-1][2];
     $("#emoG").appendChild(t);
-  } else say(INFO[id-1][1]);
+  } else say(INFO[id-1][0],"swap");
   if(!stickers.has(id)){ stickers.add(id); store.set("todofuken-stickers",[...stickers]); }
   if(navigator.vibrate) try{ navigator.vibrate(30); }catch(_){}
   updateCount(); layoutTray();
@@ -511,7 +545,7 @@ $("#hintBtn").onclick=()=>{
   const id=G.tray.includes(G.lastId)?G.lastId:G.tray[0]; if(!id) return;
   G.errors++; blinkSlot(id); if(G.mode.kid) G.miss[id]=(G.miss[id]||0)+1;
   const c=tray.querySelector(`.card[data-id="${id}"]`); if(c){ c.classList.remove("wobble"); void c.offsetWidth; c.classList.add("wobble"); }
-  say(INFO[id-1][1]+"は ひかっている ところ だよ");
+  say(INFO[id-1][0]+"は、光っているところだよ","","hint");
 };
 let backArmed=0;
 $("#back").onclick=()=>{
@@ -521,7 +555,7 @@ $("#back").onclick=()=>{
   }
   goHome();
 };
-function goHome(){ clearInterval(timerId); G=null; tray.innerHTML=""; renderHome(); $("#clear").hidden=true; $("#zukan").hidden=true; $("#home").hidden=false; $("#bubble").hidden=true; $("#back").textContent="← もどる"; }
+function goHome(){ hush(); clearInterval(timerId); G=null; tray.innerHTML=""; renderHome(); $("#clear").hidden=true; $("#zukan").hidden=true; $("#home").hidden=false; $("#bubble").hidden=true; $("#back").textContent="← もどる"; }
 
 /* ---------- クリア ---------- */
 function finish(){
@@ -537,7 +571,7 @@ function finish(){
   $("#cStars").innerHTML="★".repeat(st)+"<i>"+"★".repeat(3-st)+"</i>";
   $("#cTime").textContent=`じかん ${fmt(G.sec)}　まちがい ${e}かい`;
   $("#cBest").textContent=newBest&&prev.t?"じこベスト こうしん！":"";
-  $("#clear").hidden=false; sClear(); say(k==="all"?"にっぽん かんせい！ すごいね！":"ぜんぶ できたね！"); confetti();
+  $("#clear").hidden=false; sClear(); say(k==="all"?"日本、完成！ すごいね！":"全部できたね！"); confetti();
 }
 function finishKid(){
   const m=G.mode, next=KIDS[m.no];
@@ -547,7 +581,7 @@ function finishKid(){
   $("#cStk").innerHTML=m.ids.map((id,i)=>`<span style="animation-delay:${.15+i*.15}s" title="${INFO[id-1][0]}">${INFO[id-1][2]}</span>`).join("");
   $("#cAgain").textContent=next?"つぎの ステージへ":"ぜんこくに ちょうせん";
   $("#cHome").textContent="ステージを えらぶ";
-  $("#clear").hidden=false; sClear(); say("ぜんぶ できたね！ シール ゲット！"); confetti();
+  $("#clear").hidden=false; sClear(); say("全部できたね！ シール、ゲット！"); confetti();
 }
 $("#cAgain").onclick=()=>{
   const m=G.mode;
@@ -608,16 +642,16 @@ function openZukan(){
     b.className="zc"+(has?"":" no");
     b.innerHTML=has?`<span class="ze">${inf[2]}</span><span class="zk">${inf[0]}</span><span class="zn">${inf[3]}</span>`
       :cardSvg(id).replace(/fill="[^"]*"/,'fill="#d9d2c0"')+`<span class="zk">？</span><span class="zn">${inf[1]}</span>`;
-    b.onclick=()=>{ unlockAudio(); say(has?`${inf[1]}。${inf[3]}`:`${inf[1]}。まだ シールが ないよ`); };
+    b.onclick=()=>{ unlockAudio(); say(has?`${inf[0]}。${inf[3]}`:`${inf[0]}。まだ シールが ないよ`,"swap"); };
     g.appendChild(b);
   }
   $("#home").hidden=true; $("#zukan").hidden=false; $("#zukan").scrollTop=0;
 }
 $("#zOpen").onclick=()=>{ unlockAudio(); openZukan(); };
-$("#zClose").onclick=()=>{ $("#zukan").hidden=true; renderHome(); $("#home").hidden=false; };
+$("#zClose").onclick=()=>{ hush(); $("#zukan").hidden=true; renderHome(); $("#home").hidden=false; };
 for(const k of ["border","names","voice","sound"]){
   const b=$("#o-"+k); b.setAttribute("aria-pressed",opt[k]);
-  b.onclick=()=>{ opt[k]=!opt[k]; b.setAttribute("aria-pressed",opt[k]); store.set("todofuken-opt",opt); unlockAudio(); if(k==="sound"&&opt.sound) sOk(); };
+  b.onclick=()=>{ opt[k]=!opt[k]; b.setAttribute("aria-pressed",opt[k]); store.set("todofuken-opt",opt); unlockAudio(); if(k==="sound"&&opt.sound) sOk(); if(k==="voice"&&!opt.voice) hush(); };
 }
 addEventListener("resize",()=>{ if(G&&!drag) layoutTray(); });
 document.addEventListener("gesturestart",e=>e.preventDefault());

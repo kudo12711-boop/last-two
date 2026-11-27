@@ -1,0 +1,30 @@
+{
+  "name": "ちいさな おうこく",
+  "short_name": "おうこく",
+  "description": "プリンセス・王子・騎士・侍になって 村の おねがいを かなえる",
+  "lang": "ja",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffe9f2",
+  "theme_color": "#ffe9f2",
+  "icons": [
+    {
+      "src": "app/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "app/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "app/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

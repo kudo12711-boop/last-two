@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>おなじ？ ちがう？</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+/* Layout: home = 3 big mode cards + theme chips + level stars. Play = top bar, お手本 card, candidate grid (sized by JS to fit the screen). */
+:root{
+  --bg:#fff6e6; --card:#ffffff; --ink:#2e2a26; --muted:#7a6e62; --line:#f0dfc4;
+  --accent:#ff7a59; --leaf:#43b581; --sun:#ffc93c; --sky:#5aa9e6; --plum:#9b7be8; --ng:#e0524a;
+  --font:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#231f1b; --card:#fdfaf4; --ink:#f4ede3; --muted:#c2b5a5; --line:#4a4037;
+  --accent:#ff8d70; --leaf:#4fc790; --sun:#ffd25e; --sky:#6db6ee; --plum:#ab90f0; color-scheme:dark}}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;
+  padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(14px,env(safe-area-inset-left,0px));
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:manipulation}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.screen{max-width:920px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:12px;padding-block:12px 18px}
+.top{display:flex;align-items:center;gap:8px}
+.top .grow{flex:1}
+.rb{border:2px solid var(--line);background:var(--card);color:#2e2a26;border-radius:999px;padding:7px 14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.rb.ic{padding:7px 11px;font-size:1.15rem;line-height:1}
+.btn{border:0;border-radius:999px;padding:11px 22px;background:var(--leaf);color:#fff;font-weight:900;cursor:pointer;font-size:1.1rem}
+.btn.sub{background:var(--card);color:#2e2a26;border:2px solid var(--line)}
+/* home */
+.logo{text-align:center;font-weight:900;font-size:clamp(1.8rem,7vw,2.6rem);letter-spacing:.04em;margin:4px 0 0;line-height:1.2}
+.logo .a{color:var(--leaf)}.logo .b{color:var(--accent)}
+.logo span{display:inline-block;animation:bob 2.4s ease-in-out infinite}
+.logo span.b{animation-delay:.4s}
+@keyframes bob{50%{transform:translateY(-5px)}}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:560px){.modes{grid-template-columns:1fr}}
+.mode{border:0;border-radius:24px;padding:14px 12px;cursor:pointer;color:#fff;font-weight:900;font-size:1.25rem;line-height:1.25;
+  display:flex;align-items:center;gap:12px;text-align:left;box-shadow:0 5px 0 rgba(0,0,0,.14);min-height:84px}
+.mode:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.14)}
+.mode .pv{flex:none;display:flex;gap:4px;background:rgba(255,255,255,.9);border-radius:14px;padding:5px}
+.mode .pv svg{width:34px;height:34px}
+.mode small{display:block;font-size:.78rem;font-weight:700;opacity:.95;margin-top:2px}
+.m-same{background:var(--leaf)}.m-diff{background:var(--accent)}.m-move{background:var(--plum)}
+.sect{font-weight:900;color:var(--muted);font-size:.9rem;margin:2px 4px -4px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{position:relative;border:3px solid var(--line);background:var(--card);color:#2e2a26;border-radius:18px;padding:6px 12px 6px 8px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px}
+.chip svg{width:30px;height:30px}
+.chip.on{border-color:var(--sun);background:#fff3c4}
+.chip.kk-lock{padding-right:30px}
+.stars{display:flex;gap:8px}
+.star{border:3px solid var(--line);background:var(--card);color:#d8a400;border-radius:16px;padding:6px 14px;font-weight:900;cursor:pointer;font-size:1.1rem;letter-spacing:-.05em}
+.star.on{border-color:var(--sun);background:#fff3c4}
+.homeFoot{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:auto;padding-top:6px}
+/* play */
+#play{height:100%;min-height:0}
+.dots{display:flex;gap:6px;justify-content:center;flex:1}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--line)}
+.dot.on{background:var(--sun);box-shadow:0 0 0 2px #e9a800 inset}
+.board{flex:1;min-height:0;display:flex;gap:14px;align-items:center;justify-content:center}
+.board.col{flex-direction:column}
+.modelBox{position:relative;flex:none;display:flex;flex-direction:column;align-items:center}
+.tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);z-index:2;background:var(--sun);color:#4a3600;font-weight:900;border-radius:999px;padding:2px 14px;font-size:.95rem;white-space:nowrap;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.grid{display:grid;gap:10px;justify-content:center;align-content:center}
+.pic{position:relative;background:var(--card);border-radius:20px;border:4px solid var(--line);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.pic.model{border-color:var(--sun);border-width:6px;box-shadow:0 0 0 4px #fff3c4}
+.pic.cand{cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.08);transition:transform .12s,opacity .3s,filter .3s}
+.pic.cand:active{transform:scale(.96)}
+.pic>.mv{width:88%;height:88%;display:flex}
+.pic svg{width:100%;height:100%;overflow:visible}
+.pic.in{animation:popin .35s cubic-bezier(.3,1.6,.6,1) both}
+@keyframes popin{from{transform:scale(.3);opacity:0}}
+.pic.win{border-color:var(--leaf);box-shadow:0 0 0 5px rgba(67,181,129,.45);animation:win .6s ease}
+@keyframes win{40%{transform:scale(1.1)}}
+.pic.no{animation:no .45s}
+@keyframes no{20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+.pic.gone{pointer-events:none}
+.pic.gone>.mv{opacity:.25;filter:grayscale(1)}
+.batsu{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:min(22vw,120px);font-weight:900;color:#5b7fa6;line-height:1;pointer-events:none;z-index:3;animation:popin .3s both}
+.pic.dim{opacity:.55}
+.ring{position:absolute;border:5px solid var(--ng);border-radius:50%;pointer-events:none;animation:ring 1.1s ease both;z-index:3}
+@keyframes ring{0%{transform:scale(1.8);opacity:0}40%{transform:scale(1);opacity:1}}
+.spark{position:absolute;left:50%;top:50%;font-size:1.6rem;pointer-events:none;z-index:4;animation:spark .9s ease-out both}
+@keyframes spark{0%{transform:translate(-50%,-50%) scale(.4);opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1);opacity:0}}
+/* motion */
+.mv{transform-origin:50% 60%}
+.mv-jump{animation:mvJump var(--d) ease-in-out infinite}
+.mv-spin{animation:mvSpin var(--d) linear infinite;transform-origin:50% 50%}
+.mv-spin.rev{animation-direction:reverse}
+.mv-shake{animation:mvShake var(--d) ease-in-out infinite}
+.mv-sway{animation:mvSway var(--d) ease-in-out infinite;transform-origin:50% 95%}
+.mv-pulse{animation:mvPulse var(--d) ease-in-out infinite;transform-origin:50% 50%}
+.mv-flip{animation:mvFlip var(--d) ease-in-out infinite;transform-origin:50% 50%}
+@keyframes mvJump{0%,100%{transform:translateY(4%)}50%{transform:translateY(-14%)}}
+@keyframes mvSpin{to{transform:rotate(360deg)}}
+@keyframes mvShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-11%)}75%{transform:translateX(11%)}}
+@keyframes mvSway{0%,100%{transform:rotate(-16deg)}50%{transform:rotate(16deg)}}
+@keyframes mvPulse{0%,100%{transform:scale(.78)}50%{transform:scale(1.06)}}
+@keyframes mvFlip{0%,40%{transform:scaleX(1)}50%,90%{transform:scaleX(-1)}}
+/* overlays */
+.ovl{position:fixed;inset:0;background:rgba(40,30,20,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.sheet{background:var(--card);color:#2e2a26;border-radius:26px;padding:20px;max-width:440px;width:100%;max-height:92vh;overflow:auto;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.sheet h2{margin:0 0 8px;font-size:1.4rem}
+.bigSticker{font-size:6rem;line-height:1.1;animation:stk 1s cubic-bezier(.3,1.6,.6,1) both}
+@keyframes stk{from{transform:scale(0) rotate(-40deg)}}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.book{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px;margin:10px 0}
+.book div{aspect-ratio:1;border-radius:14px;background:#fff3c4;display:flex;align-items:center;justify-content:center;font-size:2.1rem}
+.book div.empty{background:#f1ebe2;color:#c9bba8;font-size:1.2rem}
+.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid #efe5d6;text-align:left}
+.prow select{font:inherit;padding:6px 8px;border-radius:10px;border:2px solid #e6d8c2;background:#fff;color:#2e2a26}
+.seg{display:flex;border:2px solid #e6d8c2;border-radius:999px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:6px 12px;font-weight:700;cursor:pointer;color:#2e2a26}
+.seg button.on{background:var(--sun)}
+.note{font-size:.82rem;color:#7a6e62;line-height:1.55;text-align:left;margin:10px 0 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2e2a26;color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;z-index:60;animation:popin .3s both}
+</style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
+</head>
+<body>
+<div id="home" class="screen">
+  <div class="top"><div class="grow"></div><button class="rb" id="langBtn">English</button></div>
+  <h1 class="logo" id="logo"></h1>
+  <div class="modes">
+    <button class="mode m-same" id="mSame"><span class="pv" id="pvSame"></span><span id="tSame"></span></button>
+    <button class="mode m-diff" id="mDiff"><span class="pv" id="pvDiff"></span><span id="tDiff"></span></button>
+    <button class="mode m-move" id="mMove"><span class="pv" id="pvMove"></span><span id="tMove"></span></button>
+  </div>
+  <div class="sect" id="sTheme"></div>
+  <div class="chips" id="themes"></div>
+  <div class="sect" id="sLevel"></div>
+  <div class="stars" id="levels"></div>
+  <div class="homeFoot"><button class="rb" id="bookBtn"></button><button class="rb" id="parentBtn"></button></div>
+</div>
+
+<div id="play" class="screen" hidden>
+  <div class="top">
+    <button class="rb" id="backBtn"></button>
+    <div class="dots" id="dots"></div>
+    <button class="rb ic" id="againBtn" aria-label="again">🔊</button>
+    <button class="rb ic" id="hintBtn" aria-label="hint">💡</button>
+  </div>
+  <div class="board" id="board">
+    <div class="modelBox" id="modelBox"><div class="tag" id="modelTag"></div><div id="modelSlot"></div></div>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<div class="ovl" id="done" hidden><div class="sheet">
+  <h2 id="doneT"></h2><div class="bigSticker" id="doneS"></div><p id="doneP" style="margin:6px 0 0;font-weight:700"></p>
+  <div class="row"><button class="btn" id="doneAgain"></button><button class="btn sub" id="doneHome"></button></div>
+</div></div>
+
+<div class="ovl" id="bookOvl" hidden><div class="sheet">
+  <h2 id="bookT"></h2><div class="book" id="book"></div><button class="btn sub" id="bookClose"></button>
+</div></div>
+
+<div class="ovl" id="parent" hidden><div class="sheet">
+  <h2 id="pT"></h2>
+  <div class="prow"><span id="pLang"></span><div class="seg"><button data-l="ja">日本語</button><button data-l="en">English</button></div></div>
+  <div class="prow"><span id="pVoice"></span><select id="voiceSel"></select></div>
+  <div class="prow"><span id="pSnd"></span><div class="seg" id="sndSeg"><button data-s="1"></button><button data-s="0"></button></div></div>
+  <div class="prow"><span id="pTest"></span><button class="rb" id="pVoiceTest">▶</button></div>
+  <div class="prow"><span id="pReset"></span><button class="rb" id="pResetBtn"></button></div>
+  <div id="kkSlot" style="margin-top:12px"></div>
+  <p class="note" id="pNote"></p>
+  <div class="row"><button class="btn sub" id="pClose"></button></div>
+</div></div>
+
+<script src="../common/kakin.js"></script>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const rnd=n=>Math.floor(Math.random()*n);
+const pick=a=>a[rnd(a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ================= 保存 =================
+const KEY='onaji-v1';
+const S=Object.assign({lang:null,voice:'ai:1',snd:1,theme:'any',lv:1,stickers:[],rounds:0},(()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}})());
+const q=new URLSearchParams(location.search).get('lang');
+if(q==='en'||q==='ja')S.lang=q;
+if(!S.lang)S.lang=(navigator.language||'ja').toLowerCase().startsWith('ja')?'ja':'en';
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+// ================= ことば =================
+const TEXT={
+ja:{logo:['おなじ','？ ','ちがう','？'],same:'おなじ を さがそう',sameS:'おてほんと おなじ え',diff:'ちがう を さがそう',diffS:'ひとつだけ ちがう え',
+  move:'うごき を みてね',moveS:'うごきが おなじ？ ちがう？',theme:'えらぶ え',level:'むずかしさ',any:'おまかせ',
+  book:'⭐ シールちょう',parent:'おうちのかた',back:'← もどる',model:'おてほん',
+  doneT:'ぜんぶ できたね！',doneP:n=>`シールが ${n}まいに なったよ`,doneFull:'シールが ぜんぶ そろったよ！',again:'もういちど',home:'おわり',
+  bookT:'シールちょう',close:'とじる',pT:'おうちのかたへ',pLang:'ことば',pVoice:'こえ',pSnd:'おと',on:'あり',off:'なし',pTest:'こえの ためし',
+  pReset:'シールを けす',reset:'けす',resetSure:'ほんとうに けす',resetDone:'けしました',
+  voices:['AIのこえ 1','AIのこえ 2','AIのこえ 3','AIのこえ 4','たんまつの こえ','こえ なし'],
+  pNote:'むずかしさ ★ は2か所ちがう・えらぶ数3つ、★★ は1か所・4つ、★★★ は小さな ちがい・6つ。「うごき」は え は同じで、うごきかた（はねる・まわる・ゆれる・はやさ・むき）だけが ちがいます。まちがえると、ちがう ところに あかい まるが 出ます。 声：VOICEVOX:冥鳴ひまり、VOICEVOX:四国めたん、VOICEVOX:ずんだもん、VOICEVOX:雨晴はう（日本語、AIのこえ 1〜4）、Kokoro-82M（英語、Apache-2.0）。',
+  kkFree:'どうぶつ・アイス の え（おなじ／ちがう／うごき、むずかしさ ぜんぶ）',kkFull:'のりもの・おうち・ロボット・かたち の え'},
+en:{logo:['Same','? ','Different','?'],same:'Find the SAME',sameS:'Same as the picture',diff:'Find the DIFFERENT',diffS:'Only one is different',
+  move:'Watch them MOVE',moveS:'Same move? Different move?',theme:'Pictures',level:'Level',any:'Mix',
+  book:'⭐ Stickers',parent:'For parents',back:'← Back',model:'Look!',
+  doneT:'All done!',doneP:n=>`You have ${n} stickers`,doneFull:'You got every sticker!',again:'Play again',home:'Finish',
+  bookT:'Sticker book',close:'Close',pT:'For parents',pLang:'Language',pVoice:'Voice',pSnd:'Sound',on:'On',off:'Off',pTest:'Test voice',
+  pReset:'Clear stickers',reset:'Clear',resetSure:'Really clear',resetDone:'Cleared',
+  voices:['AI voice 1','AI voice 2','AI voice 3','AI voice 4','Device voice','No voice'],
+  pNote:'Level ★: two things differ, 3 choices. ★★: one thing, 4 choices. ★★★: small details, 6 choices. In "Move", the pictures are the same and only the movement differs (jump, spin, sway, speed, direction). After a wrong tap, a red circle shows what is different. Voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう (Japanese); Kokoro-82M (English, Apache-2.0).',
+  kkFree:'Animals and Ice cream pictures (Same / Different / Move, every level)',kkFull:'Vehicles, Houses, Robots and Shapes pictures'}
+};
+const T=()=>TEXT[S.lang];
+
+// 声のセリフ（AI の声は tools/make_voice.py で このまま作る。日本語の「は」は わ と書く）
+//@@LINES-BEGIN
+const LINES={
+ja:{hello:'こんにちわ！いっしょに遊ぼう',mSame:'同じ絵を、さがそう',mDiff:'違う絵を、さがそう',mMove:'動きを、よく見てね',
+  askSame:'お手本と、同じ絵を見つけてね',askDiff:'ひとつだけ、違う絵があるよ。見つけてね',
+  askMvSame:'お手本と、同じ動きを見つけてね',askMvDiff:'ひとつだけ、動きが違うよ。見つけてね',
+  ok0:'せいかい！',ok1:'すごいね！',ok2:'よく見つけたね！',ok3:'やったね！',
+  ng0:'おしい！もう一度、よく見てね',ng1:'よーく、見てごらん',same:'これわ、お手本と同じだね',
+  dKind:'ぜんぜん違うね',dColor:'色が違うね',dCount:'数が違うね',dShape:'形が違うね',dPart:'ここが違うね',dFace:'お顔が違うね',
+  dMove:'動きが違うね',dSpeed:'速さが違うね',dDir:'回る向きが違うね',
+  done:'全部できたね！シールをどうぞ'},
+en:{hello:"Hello! Let's play together!",mSame:"Let's find the same one!",mDiff:"Let's find the different one!",mMove:'Watch how they move!',
+  askSame:'Find the one that is the same as this picture.',askDiff:'One picture is different. Can you find it?',
+  askMvSame:'Find the one that moves the same way.',askMvDiff:'One of them moves differently. Can you find it?',
+  ok0:"That's right!",ok1:'Great job!',ok2:'You found it!',ok3:'Hooray!',
+  ng0:'So close! Look again.',ng1:'Look carefully.',same:'This one is the same as the picture.',
+  dKind:"It's a different one!",dColor:'The color is different!',dCount:'The number is different!',dShape:'The shape is different!',dPart:'This part is different!',dFace:'The face is different!',
+  dMove:'The movement is different!',dSpeed:'The speed is different!',dDir:'It spins the other way!',
+  done:"All done! Here's a sticker for you."}
+};
+//@@LINES-END
+
+// ================= おと・こえ =================
+let AC=null;
+function audio(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(AC.state==='suspended')AC.resume();return AC}
+function tone(f,d=.12,type='sine',when=0,vol=.13){if(!S.snd)return;const a=audio();if(!a)return;try{const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;o.connect(g);g.connect(a.destination);const t=a.currentTime+when;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.start(t);o.stop(t+d+.02)}catch(e){}}
+const sfx={pop:()=>{tone(880,.08,'triangle');tone(1320,.1,'triangle',.05)},ok:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.18,'triangle',i*.09)),ng:()=>tone(220,.16,'square',0,.05),tap:()=>tone(660,.05,'triangle',0,.08),
+  fan:()=>[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.22,'triangle',i*.1))};
+
+// 声は「順番待ち」。前の声を止めずに、最後まで読んでから次を読む。止めるのは もどる と 画面を閉じたときだけ。
+const AI_VOICES={ja:['vv_himari','vv_metan','vv_zunda','vv_hau'],en:['af_heart','af_bella','bf_emma','am_michael']};
+const aiId=()=>AI_VOICES[S.lang][(+S.voice.slice(3)||1)-1]||AI_VOICES[S.lang][0];
+const buf={};
+function load(k){const a=audio();const id=aiId()+'/'+k;if(!a)return Promise.resolve(null);
+  if(!buf[id])buf[id]=fetch(`voice/${id}.mp3?v=1`).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(b=>new Promise((res,rej)=>a.decodeAudioData(b,res,rej))).catch(()=>null);
+  return buf[id]}
+function prep(keys){if(S.voice.startsWith('ai:'))keys.forEach(load)}
+const devV={};function pickV(){try{const v=speechSynthesis.getVoices();for(const want of ['ja','en'])devV[want]=v.find(x=>x.lang.toLowerCase().startsWith(want)&&/Kyoko|O-ren|Samantha|Google/i.test(x.name))||v.find(x=>x.lang.toLowerCase().startsWith(want))||null}catch(e){}}
+try{pickV();speechSynthesis.onvoiceschanged=pickV}catch(e){}
+function ttsPlay(text,L){return new Promise(res=>{try{const u=new SpeechSynthesisUtterance(text);u.lang=L==='ja'?'ja-JP':'en-US';if(devV[L])u.voice=devV[L];u.rate=L==='ja'?.95:.9;u.pitch=1.15;
+  let done=false;const fin=()=>{if(!done){done=true;res()}};u.onend=fin;u.onerror=fin;setTimeout(fin,800+text.length*230);speechSynthesis.speak(u)}catch(e){res()}})}
+let curSrc=null,gen=0;
+async function playOne(k,g){
+  if(!S.snd||S.voice==='off'){await wait(200);return}
+  if(S.voice.startsWith('ai:')){const b=await load(k);if(g!==gen)return;if(b){const a=audio();await new Promise(res=>{try{const s=a.createBufferSource();s.buffer=b;s.connect(a.destination);curSrc=s;let done=false;const fin=()=>{if(!done){done=true;curSrc=null;res()}};s.onended=fin;setTimeout(fin,b.duration*1000+400);s.start()}catch(e){res()}});return}}
+  if(g!==gen)return;await ttsPlay(LINES[S.lang][k]||'',S.lang);
+}
+let chain=Promise.resolve(),pending=0;
+function say(...keys){const g=gen;pending++;const p=chain.then(async()=>{for(const k of keys){if(g!==gen)break;if(k)await playOne(k,g)}}).finally(()=>{pending--});chain=p.catch(()=>{});return p}
+const speaking=()=>pending>0;
+function hush(){gen++;try{curSrc&&curSrc.stop()}catch(e){}curSrc=null;try{speechSynthesis.cancel()}catch(e){}}
+
+// ================= え（SVG。100×100 の中に描く） =================
+const C={red:'#f05a4f',orange:'#ff9a3c',yellow:'#ffd23f',green:'#5cc26b',blue:'#4a9df0',purple:'#9b6be8',pink:'#ff8fc2',brown:'#a8714a',white:'#f6f2ea',gray:'#9aa5ad',mint:'#8fe0c4',choco:'#7a4a2e'};
+function shade(hex,k){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=x=>Math.max(0,Math.min(255,Math.round(k<0?x*(1+k):x+(255-x)*k)));return '#'+[f(r),f(g),f(b)].map(v=>v.toString(16).padStart(2,'0')).join('')}
+const INK='#3b2f2a';
+const eyesSvg=(t,y,dx=10,cx=50)=>{const L=cx-dx,R=cx+dx;
+  const open=x=>`<circle cx="${x}" cy="${y}" r="4.2" fill="${INK}"/><circle cx="${x+1.4}" cy="${y-1.5}" r="1.4" fill="#fff"/>`;
+  const happy=x=>`<path d="M${x-4.5} ${y+1.5} Q${x} ${y-4.5} ${x+4.5} ${y+1.5}" stroke="${INK}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+  const big=x=>`<circle cx="${x}" cy="${y}" r="7" fill="#fff" stroke="${INK}" stroke-width="1.6"/><circle cx="${x}" cy="${y+.8}" r="4.2" fill="${INK}"/><circle cx="${x+1.4}" cy="${y-.8}" r="1.4" fill="#fff"/>`;
+  const sleepy=x=>`<path d="M${x-4.5} ${y} H${x+4.5}" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>`;
+  if(t==='open')return open(L)+open(R);if(t==='happy')return happy(L)+happy(R);if(t==='wink')return open(L)+happy(R);if(t==='big')return big(L)+big(R);return sleepy(L)+sleepy(R)};
+const starPath=(cx,cy,r,ri=r*.45,n=5)=>{let d='';for(let i=0;i<n*2;i++){const rr=i%2?ri:r,a=-Math.PI/2+i*Math.PI/n;d+=(i?'L':'M')+(cx+Math.cos(a)*rr).toFixed(1)+' '+(cy+Math.sin(a)*rr).toFixed(1)}return d+'Z'};
+const heartPath=(cx,cy,r)=>`M${cx} ${cy+r*.85} C${cx-r*1.4} ${cy-r*.1} ${cx-r*.7} ${cy-r*1.2} ${cx} ${cy-r*.45} C${cx+r*.7} ${cy-r*1.2} ${cx+r*1.4} ${cy-r*.1} ${cx} ${cy+r*.85}Z`;
+const flowerSvg=(cx,cy,r,col)=>[0,72,144,216,288].map(a=>`<circle cx="${(cx+Math.cos(a*Math.PI/180)*r*.62).toFixed(1)}" cy="${(cy+Math.sin(a*Math.PI/180)*r*.62).toFixed(1)}" r="${r*.48}" fill="${col}"/>`).join('')+`<circle cx="${cx}" cy="${cy}" r="${r*.38}" fill="#ffd23f"/>`;
+
+// 1つの テーマ = いくつかの「ちがえられる ところ」(params)。lv: どの むずかしさで ちがえるか、cat: 声で言う ちがいの種類、at: 赤まるの場所 [x,y,半径]
+const THEMES=[
+{id:'animal',free:true,name:{ja:'どうぶつ',en:'Animals'},
+ params:{
+  kind:{vals:['cat','dog','bear','rabbit','pig'],lv:[1],cat:'Kind',at:()=>[50,52,46]},
+  fur:{vals:['orange','brown','gray','pink','yellow','white'],lv:[1,2],cat:'Color',at:()=>[50,58,38]},
+  eyes:{vals:['open','happy','wink','big','sleepy'],lv:[2,3],cat:'Face',at:()=>[50,52,17]},
+  mouth:{vals:['smile','open','tongue'],lv:[3],cat:'Face',at:p=>[50,p.kind==='pig'?76:70,11]},
+  cheek:{vals:[0,1],lv:[3],cat:'Part',at:()=>[50,63,25]},
+  acc:{vals:['none','ribbon','hat','flower'],lv:[2,3],cat:'Part',at:(p,b)=>{const a=p.acc==='none'?b.acc:p.acc;return a==='hat'?[50,15,16]:a==='flower'?[27,27,14]:[73,27,14]}}},
+ draw(p){const f=C[p.fur],d=shade(f,-.22),l=shade(f,.55),k=p.kind;let s='';
+  if(k==='cat')s+=`<path d="M22 44 L26 12 L46 30Z M78 44 L74 12 L54 30Z" fill="${f}" stroke="${d}" stroke-width="2"/><path d="M28 34 L29 20 L39 30Z M72 34 L71 20 L61 30Z" fill="#ffb3c8"/>`;
+  if(k==='bear')s+=`<circle cx="26" cy="30" r="12" fill="${f}" stroke="${d}" stroke-width="2"/><circle cx="74" cy="30" r="12" fill="${f}" stroke="${d}" stroke-width="2"/><circle cx="26" cy="30" r="6" fill="${l}"/><circle cx="74" cy="30" r="6" fill="${l}"/>`;
+  if(k==='rabbit')s+=`<ellipse cx="37" cy="18" rx="8" ry="20" fill="${f}" stroke="${d}" stroke-width="2"/><ellipse cx="63" cy="18" rx="8" ry="20" fill="${f}" stroke="${d}" stroke-width="2"/><ellipse cx="37" cy="19" rx="3.6" ry="14" fill="#ffb3c8"/><ellipse cx="63" cy="19" rx="3.6" ry="14" fill="#ffb3c8"/>`;
+  if(k==='pig')s+=`<path d="M24 38 L27 20 L42 30Z M76 38 L73 20 L58 30Z" fill="${f}" stroke="${d}" stroke-width="2"/>`;
+  s+=`<circle cx="50" cy="58" r="31" fill="${f}" stroke="${d}" stroke-width="2.4"/>`;
+  if(k==='dog')s+=`<ellipse cx="20" cy="54" rx="9" ry="19" fill="${d}" transform="rotate(14 20 54)"/><ellipse cx="80" cy="54" rx="9" ry="19" fill="${d}" transform="rotate(-14 80 54)"/>`;
+  if(k==='dog'||k==='bear')s+=`<ellipse cx="50" cy="69" rx="14" ry="10.5" fill="${l}"/>`;
+  if(k==='cat')s+=`<path d="M26 62 H12 M27 67 H13 M74 62 H88 M73 67 H87" stroke="${d}" stroke-width="1.6" stroke-linecap="round"/>`;
+  if(p.cheek)s+=`<ellipse cx="31" cy="66" rx="6" ry="4" fill="#ff6f91" opacity=".55"/><ellipse cx="69" cy="66" rx="6" ry="4" fill="#ff6f91" opacity=".55"/>`;
+  s+=eyesSvg(p.eyes,52);
+  const my=k==='pig'?77:70;
+  if(k==='pig')s+=`<ellipse cx="50" cy="66" rx="10" ry="7" fill="${shade('#ff8fc2',-.08)}" stroke="${d}" stroke-width="1.6"/><ellipse cx="46.5" cy="66" rx="2" ry="2.8" fill="${INK}"/><ellipse cx="53.5" cy="66" rx="2" ry="2.8" fill="${INK}"/>`;
+  else s+=`<ellipse cx="50" cy="63" rx="4.2" ry="3.2" fill="${INK}"/><path d="M50 66 V68" stroke="${INK}" stroke-width="2"/>`;
+  if(p.mouth==='smile')s+=`<path d="M43 ${my-1} Q50 ${my+5} 57 ${my-1}" stroke="${INK}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  if(p.mouth==='open')s+=`<path d="M43 ${my-2} Q50 ${my+9} 57 ${my-2}Z" fill="${INK}"/><ellipse cx="50" cy="${my+3}" rx="3.6" ry="2" fill="#ff7b8a"/>`;
+  if(p.mouth==='tongue')s+=`<path d="M43 ${my-1} Q50 ${my+4} 57 ${my-1}" stroke="${INK}" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M46.5 ${my+1.5} Q50 ${my+11} 53.5 ${my+1.5}Z" fill="#ff7b8a" stroke="${INK}" stroke-width="1.2"/>`;
+  if(p.acc==='ribbon')s+=`<path d="M73 27 L62 19 L62 35Z M73 27 L84 19 L84 35Z" fill="#f05a4f" stroke="#b83a32" stroke-width="1.4"/><circle cx="73" cy="27" r="4" fill="#ff7a6e" stroke="#b83a32" stroke-width="1.4"/>`;
+  if(p.acc==='hat')s+=`<path d="M38 30 L50 3 L62 30Z" fill="#4a9df0" stroke="#2c6fb8" stroke-width="1.6"/><circle cx="50" cy="4" r="4" fill="#ffd23f"/><path d="M42 21 L58 21" stroke="#ffd23f" stroke-width="3"/>`;
+  if(p.acc==='flower')s+=flowerSvg(27,27,11,'#ff8fc2');
+  return s}},
+{id:'ice',free:true,name:{ja:'アイス',en:'Ice cream'},
+ params:{
+  n:{vals:[1,2,3],lv:[2,3],cat:'Count',at:()=>[50,32,30]},
+  c1:{vals:['pink','white','choco','mint','yellow','blue'],lv:[1,2],cat:'Color',at:()=>[50,58,18]},
+  c2:{vals:['pink','white','choco','mint','yellow','blue'],lv:[2,3],cat:'Color',at:()=>[50,43,18]},
+  c3:{vals:['pink','white','choco','mint','yellow','blue'],lv:[2,3],cat:'Color',at:()=>[50,28,18]},
+  base:{vals:['cone','cup'],lv:[1,2],cat:'Shape',at:()=>[50,80,20]},
+  top:{vals:['none','cherry','star','wafer'],lv:[2,3],cat:'Part',at:p=>[50,[0,42,27,12][p.n],13]},
+  spr:{vals:[0,1],lv:[3],cat:'Part',at:p=>[50,[0,55,40,25][p.n]+2,16]}},
+ draw(p){let s='';const ys=[59,44,29];
+  if(p.base==='cone')s+=`<path d="M33 64 L67 64 L50 97Z" fill="#e8b46a" stroke="#b07d3a" stroke-width="2" stroke-linejoin="round"/><path d="M39 64 L56 88 M50 64 L61 79 M61 64 L44 88 M50 64 L39 79" stroke="#b07d3a" stroke-width="1.5"/>`;
+  else s+=`<path d="M30 66 L70 66 L64 96 L36 96Z" fill="#ff6f6f" stroke="#c94545" stroke-width="2" stroke-linejoin="round"/><path d="M45 66 L44 96 M56 66 L57 96" stroke="#fff" stroke-width="4" opacity=".8"/>`;
+  for(let i=0;i<p.n;i++){const col=C[p['c'+(i+1)]],y=ys[i];
+    s+=`<circle cx="50" cy="${y}" r="17" fill="${col}" stroke="${shade(col,-.25)}" stroke-width="2"/><circle cx="43" cy="${y-6}" r="4" fill="#fff" opacity=".55"/>`;
+    if(i===0)s+=`<path d="M34 ${y+7} Q38 ${y+13} 42 ${y+8} Q46 ${y+14} 50 ${y+9} Q54 ${y+14} 58 ${y+8} Q62 ${y+13} 66 ${y+7}" fill="${col}" stroke="${shade(col,-.25)}" stroke-width="2"/>`}
+  const ty=ys[p.n-1];
+  if(p.spr)[[-8,-6,'#f05a4f',30],[4,-10,'#4a9df0',-20],[9,-1,'#5cc26b',60],[-3,2,'#ffd23f',10],[-10,4,'#9b6be8',-50]].forEach(([dx,dy,c,r])=>{s+=`<rect x="${50+dx-3}" y="${ty+dy-1.1}" width="6" height="2.2" rx="1.1" fill="${c}" transform="rotate(${r} ${50+dx} ${ty+dy})"/>`});
+  if(p.top==='cherry')s+=`<path d="M50 ${ty-20} Q53 ${ty-30} 60 ${ty-32}" stroke="#3f8a3a" stroke-width="2" fill="none"/><circle cx="50" cy="${ty-16}" r="6" fill="#e0303a"/><circle cx="48" cy="${ty-18}" r="1.8" fill="#fff"/>`;
+  if(p.top==='star')s+=`<path d="${starPath(50,ty-19,9)}" fill="#ffd23f" stroke="#d9a400" stroke-width="1.6"/>`;
+  if(p.top==='wafer')s+=`<rect x="54" y="${ty-30}" width="8" height="24" rx="2" fill="#e8b46a" stroke="#b07d3a" stroke-width="1.6" transform="rotate(20 58 ${ty-18})"/>`;
+  return s}},
+{id:'car',free:false,name:{ja:'のりもの',en:'Vehicles'},
+ params:{
+  kind:{vals:['car','bus','truck'],lv:[1],cat:'Kind',at:()=>[50,55,46]},
+  col:{vals:['red','blue','yellow','green','orange','purple'],lv:[1,2],cat:'Color',at:()=>[50,60,36]},
+  win:{vals:[1,2,3],lv:[2,3],cat:'Count',at:p=>p.kind==='truck'?[75,48,14]:[50,40,26]},
+  face:{vals:['none','open','happy'],lv:[2,3],cat:'Face',at:()=>[84,58,12]},
+  top:{vals:['none','flag','light'],lv:[2,3],cat:'Part',at:p=>p.kind==='truck'?[75,20,13]:p.kind==='bus'?[50,16,13]:[50,20,13]},
+  smoke:{vals:[0,1],lv:[3],cat:'Part',at:()=>[9,64,10]},
+  wheel:{vals:['black','gray'],lv:[3],cat:'Color',at:()=>[50,82,40]}},
+ draw(p){const f=C[p.col],d=shade(f,-.28);let s='';
+  s+=`<path d="M2 92 H98" stroke="#c9bba8" stroke-width="2" stroke-linecap="round"/>`;
+  if(p.smoke)s+=`<circle cx="10" cy="66" r="5" fill="#cfd6db"/><circle cx="5" cy="59" r="3.6" fill="#dde3e7"/><circle cx="13" cy="57" r="2.8" fill="#e6eaed"/>`;
+  let win=[],roofY,topX=50;
+  if(p.kind==='car'){s+=`<path d="M28 52 Q32 30 42 30 H62 Q70 30 76 52Z" fill="${f}" stroke="${d}" stroke-width="2"/><rect x="12" y="50" width="78" height="28" rx="10" fill="${f}" stroke="${d}" stroke-width="2"/>`;
+    roofY=30;const W=[[[40,64]],[[32,50],[52,70]],[[31,44],[46,58],[60,71]]][p.win-1];win=W.map(([a,b])=>`<rect x="${a}" y="35" width="${b-a-2}" height="14" rx="3" fill="#cfefff" stroke="${d}" stroke-width="1.6"/>`)}
+  if(p.kind==='bus'){s+=`<rect x="8" y="26" width="84" height="52" rx="10" fill="${f}" stroke="${d}" stroke-width="2"/><rect x="8" y="60" width="84" height="5" fill="#fff" opacity=".7"/>`;
+    roofY=26;const n=p.win+1,w=62/n;for(let i=0;i<n;i++)win.push(`<rect x="${(14+i*w).toFixed(1)}" y="33" width="${(w-4).toFixed(1)}" height="18" rx="3" fill="#cfefff" stroke="${d}" stroke-width="1.6"/>`);
+    win.push(`<rect x="78" y="33" width="9" height="22" rx="2" fill="#cfefff" stroke="${d}" stroke-width="1.6"/>`)}
+  if(p.kind==='truck'){s+=`<rect x="6" y="28" width="56" height="44" rx="4" fill="#f3efe6" stroke="#b9ae9e" stroke-width="2"/><path d="M62 38 H80 Q86 38 89 50 L92 60 V78 H62Z" fill="${f}" stroke="${d}" stroke-width="2"/><rect x="6" y="70" width="86" height="8" rx="3" fill="${f}" stroke="${d}" stroke-width="2"/>`;
+    roofY=38;topX=75;const W=[[[67,85]],[[66,75],[77,86]],[[65,71],[72.5,78.5],[80,86]]][p.win-1];win=W.map(([a,b])=>`<rect x="${a}" y="43" width="${b-a}" height="12" rx="2" fill="#cfefff" stroke="${d}" stroke-width="1.6"/>`)}
+  s+=win.join('');
+  if(p.top==='flag')s+=`<path d="M${topX-4} ${roofY} V${roofY-20}" stroke="#7a6e62" stroke-width="2"/><path d="M${topX-4} ${roofY-20} L${topX+10} ${roofY-15} L${topX-4} ${roofY-10}Z" fill="#f05a4f"/>`;
+  if(p.top==='light')s+=`<rect x="${topX-6}" y="${roofY-8}" width="12" height="8" rx="3" fill="#ffd23f" stroke="#d9a400" stroke-width="1.6"/><path d="M${topX-11} ${roofY-12} L${topX-8} ${roofY-9} M${topX+11} ${roofY-12} L${topX+8} ${roofY-9} M${topX} ${roofY-15} V${roofY-11}" stroke="#ffb300" stroke-width="2" stroke-linecap="round"/>`;
+  s+=`<circle cx="88" cy="64" r="3.6" fill="#fff6c4" stroke="${d}" stroke-width="1.4"/>`;
+  if(p.face!=='none')s+=eyesSvg(p.face,58,5,80).replace(/r="4.2"/g,'r="2.8"').replace(/r="1.4"/g,'r=".9"')+`<path d="M78 66 Q82 69 86 66" stroke="${INK}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+  const wc=p.wheel==='black'?'#3a3a44':'#8a949b';
+  for(const x of p.kind==='bus'?[26,74]:p.kind==='truck'?[24,46,78]:[30,72])s+=`<circle cx="${x}" cy="80" r="9" fill="${wc}"/><circle cx="${x}" cy="80" r="3.5" fill="#e6e6e6"/>`;
+  return s}},
+{id:'house',free:false,name:{ja:'おうち',en:'Houses'},
+ params:{
+  roof:{vals:['red','blue','green','brown','purple','orange'],lv:[1,2],cat:'Color',at:()=>[50,34,30]},
+  rshape:{vals:['tri','round','flat'],lv:[1,3],cat:'Shape',at:()=>[50,34,30]},
+  wall:{vals:['white','yellow','pink','mint'],lv:[2,3],cat:'Color',at:()=>[50,70,30]},
+  win:{vals:[1,2,3],lv:[2,3],cat:'Count',at:()=>[50,62,28]},
+  door:{vals:['brown','red','blue','green'],lv:[3],cat:'Color',at:()=>[50,80,10]},
+  chim:{vals:[0,1],lv:[2,3],cat:'Part',at:()=>[70,24,12]},
+  sky:{vals:['none','sun','moon'],lv:[2,3],cat:'Part',at:()=>[13,13,12]},
+  flower:{vals:[0,1],lv:[3],cat:'Part',at:()=>[86,84,11]}},
+ draw(p){const r=C[p.roof],rd=shade(r,-.28),w=C[p.wall],wd=shade(w,-.3);let s='';
+  if(p.sky==='sun')s+=`<circle cx="13" cy="13" r="7" fill="#ffd23f"/>`+[0,45,90,135,180,225,270,315].map(a=>{const c=Math.cos(a*Math.PI/180),n=Math.sin(a*Math.PI/180);return `<path d="M${13+c*10} ${13+n*10} L${13+c*13} ${13+n*13}" stroke="#ffb300" stroke-width="2" stroke-linecap="round"/>`}).join('');
+  if(p.sky==='moon')s+=`<path d="M17 4 A10 10 0 1 0 19 22 A8 8 0 1 1 17 4Z" fill="#ffd23f"/>`;
+  if(p.chim)s+=`<rect x="64" y="${p.rshape==='flat'?30:18}" width="10" height="20" fill="#c9785a" stroke="#8f4f37" stroke-width="1.6"/>`;
+  s+=`<rect x="20" y="48" width="60" height="44" fill="${w}" stroke="${wd}" stroke-width="2"/>`;
+  if(p.rshape==='tri')s+=`<path d="M12 50 L50 16 L88 50Z" fill="${r}" stroke="${rd}" stroke-width="2" stroke-linejoin="round"/>`;
+  if(p.rshape==='round')s+=`<path d="M14 50 Q14 16 50 16 Q86 16 86 50Z" fill="${r}" stroke="${rd}" stroke-width="2"/>`;
+  if(p.rshape==='flat')s+=`<rect x="14" y="38" width="72" height="12" rx="3" fill="${r}" stroke="${rd}" stroke-width="2"/>`;
+  const wn=(x,y)=>`<rect x="${x}" y="${y}" width="13" height="12" rx="2" fill="#cfefff" stroke="${wd}" stroke-width="1.6"/><path d="M${x+6.5} ${y} V${y+12} M${x} ${y+6} H${x+13}" stroke="${wd}" stroke-width="1.2"/>`;
+  s+=[wn(26,56),wn(61,56),wn(26,74)].slice(0,p.win).join('');
+  s+=`<path d="M43 92 V76 Q50 69 57 76 V92Z" fill="${C[p.door]}" stroke="${shade(C[p.door],-.3)}" stroke-width="1.6"/><circle cx="54" cy="84" r="1.4" fill="#ffd23f"/>`;
+  if(p.flower)s+=`<rect x="81" y="86" width="10" height="7" rx="1.5" fill="#c9785a"/>`+flowerSvg(86,80,6,'#f05a4f');
+  s+=`<path d="M4 92 H96" stroke="#7fbf6a" stroke-width="3" stroke-linecap="round"/>`;
+  return s}},
+{id:'robot',free:false,name:{ja:'ロボット',en:'Robots'},
+ params:{
+  col:{vals:['blue','red','green','yellow','purple','gray'],lv:[1,2],cat:'Color',at:()=>[50,62,30]},
+  head:{vals:['square','round'],lv:[1,2],cat:'Shape',at:()=>[50,30,18]},
+  eyes:{vals:[1,2,3],lv:[2,3],cat:'Count',at:()=>[50,30,14]},
+  ant:{vals:['ball','star','none'],lv:[2,3],cat:'Shape',at:()=>[50,7,9]},
+  arms:{vals:['down','up','wave'],lv:[2,3],cat:'Shape',at:()=>[50,62,44]},
+  btn:{vals:[1,2,3],lv:[3],cat:'Count',at:()=>[50,66,12]},
+  mouth:{vals:['smile','grid','o'],lv:[3],cat:'Face',at:()=>[50,38,8]}},
+ draw(p){const f=C[p.col],d=shade(f,-.3),l=shade(f,.5);let s='';
+  const arm=(side,t)=>{const x=side<0?28:72,sx=side;const end=t==='down'?[x+sx*10,80]:t==='up'?[x+sx*12,40]:(side<0?[x-12,40]:[x+14,72]);
+    return `<path d="M${x} 56 L${end[0]} ${end[1]}" stroke="${d}" stroke-width="5" stroke-linecap="round"/><circle cx="${end[0]}" cy="${end[1]}" r="4.5" fill="${l}" stroke="${d}" stroke-width="1.6"/>`};
+  s+=arm(-1,p.arms)+arm(1,p.arms);
+  s+=`<rect x="36" y="84" width="9" height="12" rx="2" fill="${d}"/><rect x="55" y="84" width="9" height="12" rx="2" fill="${d}"/>`;
+  s+=`<rect x="28" y="48" width="44" height="38" rx="7" fill="${f}" stroke="${d}" stroke-width="2"/><rect x="38" y="56" width="24" height="22" rx="4" fill="${l}"/>`;
+  s+=[[67],[61,71],[58,66,74]][p.btn-1].map((y,i)=>`<circle cx="50" cy="${y}" r="3" fill="${['#f05a4f','#ffd23f','#5cc26b'][i]}"/>`).join('');
+  if(p.ant!=='none')s+=`<path d="M50 16 V8" stroke="${d}" stroke-width="2.4"/>`+(p.ant==='ball'?`<circle cx="50" cy="6" r="4.5" fill="#f05a4f"/>`:`<path d="${starPath(50,6,6.5)}" fill="#ffd23f" stroke="#d9a400" stroke-width="1.2"/>`);
+  s+=p.head==='square'?`<rect x="32" y="16" width="36" height="28" rx="6" fill="${f}" stroke="${d}" stroke-width="2"/>`:`<ellipse cx="50" cy="30" rx="20" ry="15" fill="${f}" stroke="${d}" stroke-width="2"/>`;
+  s+=[[50],[42,58],[38,50,62]][p.eyes-1].map(x=>`<circle cx="${x}" cy="28" r="4.2" fill="#fff" stroke="${d}" stroke-width="1.2"/><circle cx="${x}" cy="28" r="2.2" fill="${INK}"/>`).join('');
+  if(p.mouth==='smile')s+=`<path d="M44 36 Q50 41 56 36" stroke="${INK}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  if(p.mouth==='grid')s+=`<rect x="42" y="35" width="16" height="5" fill="#fff" stroke="${INK}" stroke-width="1.2"/><path d="M46 35 V40 M50 35 V40 M54 35 V40" stroke="${INK}" stroke-width="1"/>`;
+  if(p.mouth==='o')s+=`<circle cx="50" cy="38" r="2.8" fill="${INK}"/>`;
+  return s}},
+{id:'shape',free:false,name:{ja:'かたち',en:'Shapes'},
+ params:Object.fromEntries([0,1,2].flatMap(i=>{const at=()=>[[50,28,20],[27,70,20],[73,70,20]][i];return [
+  ['s'+i,{vals:['circle','square','triangle','star','heart'],lv:[1,2,3],cat:'Shape',at}],
+  ['k'+i,{vals:['red','blue','yellow','green','purple','orange'],lv:[1,2,3],cat:'Color',at}]]})),
+ draw(p){let s='';[[50,28],[27,70],[73,70]].forEach(([x,y],i)=>{const f=C[p['k'+i]],d=shade(f,-.3),t=p['s'+i],r=17;
+  const st=`fill="${f}" stroke="${d}" stroke-width="2.4" stroke-linejoin="round"`;
+  if(t==='circle')s+=`<circle cx="${x}" cy="${y}" r="${r}" ${st}/>`;
+  if(t==='square')s+=`<rect x="${x-r*.9}" y="${y-r*.9}" width="${r*1.8}" height="${r*1.8}" rx="3" ${st}/>`;
+  if(t==='triangle')s+=`<path d="M${x} ${y-r} L${x+r*1.05} ${y+r*.8} L${x-r*1.05} ${y+r*.8}Z" ${st}/>`;
+  if(t==='star')s+=`<path d="${starPath(x,y+1,r*1.12)}" ${st}/>`;
+  if(t==='heart')s+=`<path d="${heartPath(x,y+1,r)}" ${st}/>`});return s}}
+];
+const TH=id=>THEMES.find(t=>t.id===id);
+function svgOf(th,p){return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${th.draw(p)}</svg>`}
+function randParams(th){const p={};for(const[k,v]of Object.entries(th.params))p[k]=pick(v.vals);
+  // ice: 1-scoop has no 2nd/3rd colour; avoid same colours next to each other so scoops read clearly
+  if(th.id==='ice'){p.n=pick([1,2,2,3]);while(p.c2===p.c1)p.c2=pick(th.params.c2.vals);while(p.c3===p.c2)p.c3=pick(th.params.c3.vals)}
+  if(th.id==='shape'){const ss=shuffle(th.params.s0.vals);[0,1,2].forEach(i=>p['s'+i]=ss[i])}
+  return p}
+// 1か所（★は2か所）だけ変えた え。見た目が変わらない変え方（かくれた アイスの色 など）は つかわない
+function mutate(th,base,lv){const n=lv===1?2:1;
+  for(let tries=0;tries<60;tries++){const keys=shuffle(Object.keys(th.params).filter(k=>th.params[k].lv.includes(lv))).slice(0,n);
+    const p=Object.assign({},base);
+    for(const k of keys){const vs=th.params[k].vals.filter(v=>v!==base[k]);p[k]=pick(vs)}
+    if(th.id==='ice')for(let i=2;i<=3;i++)if(p['c'+i]===p['c'+(i-1)]&&i<=p.n)p['c'+i]=pick(th.params.c1.vals.filter(v=>v!==p['c'+(i-1)]));
+    if(th.draw(p)===th.draw(base))continue;
+    const vis=keys.filter(k=>{const q=Object.assign({},p);q[k]=base[k];return th.draw(q)!==th.draw(p)});
+    return {p,keys:vis.length?vis:keys}}
+  return null}
+
+// うごき
+const MV={1:['jump','spin','pulse','still'],2:['jump','spin','pulse','still','sway','shake','flip']};
+const mvEq=(a,b)=>a.t===b.t&&a.sp===b.sp&&a.rev===b.rev;
+function mvApply(el,m){el.className='mv'+(m.t==='still'?'':' mv-'+m.t)+(m.rev?' rev':'');el.style.setProperty('--d',({jump:.9,spin:2.2,pulse:1.2,sway:1.4,shake:.7,flip:2.4}[m.t]||1)*(m.sp==='fast'?.45:m.sp==='slow'?1.9:1)+'s')}
+function mvBase(lv){const t=pick(lv===3?['jump','spin','sway','pulse','shake']:MV[lv]);return{t,sp:'mid',rev:false}}
+function mvMutate(base,lv){
+  if(lv<3){const t=pick(MV[lv].filter(x=>x!==base.t));return{m:{t,sp:'mid',rev:false},cat:'Move'}}
+  // ★★★: はやさ・まわる向き・にている うごき（はねる↔ふくらむ、ゆれる↔ふるえる）
+  const opts=[{m:Object.assign({},base,{sp:'fast'}),cat:'Speed'},{m:Object.assign({},base,{sp:'slow'}),cat:'Speed'},
+    {m:{t:{jump:'pulse',pulse:'jump',sway:'shake',shake:'sway',spin:'flip'}[base.t],sp:'mid',rev:false},cat:'Move'}];
+  if(base.t==='spin')opts.push({m:Object.assign({},base,{rev:!base.rev}),cat:'Dir'},{m:Object.assign({},base,{rev:!base.rev}),cat:'Dir'});
+  return pick(opts)}
+
+// ================= あそび =================
+const ROUND=5;
+let G=null,run=0;
+function unlockedThemes(){return THEMES.filter(t=>t.free||Kakin.full())}
+function themeFor(){const ok=unlockedThemes();const t=S.theme!=='any'&&ok.find(x=>x.id===S.theme);return t||pick(ok)}
+function choices(mode,lv){return mode==='move'?[3,4,4][lv-1]:[3,4,6][lv-1]}
+
+function newQuestion(){
+  const lv=S.lv,mode=G.mode,th=themeFor();let sub=mode;
+  if(mode==='move')sub=G.qi%2?'mvdiff':'mvsame';
+  const n=choices(mode,lv),base=randParams(th);
+  const Q={th,sub,base,cands:[],ans:0,lv,miss:0,done:false};
+  if(sub==='same'||sub==='diff'){
+    const seen=new Set([th.draw(base)]);
+    const variant=()=>{for(let i=0;i<40;i++){const r=mutate(th,base,lv);if(!r)break;const k=th.draw(r.p);if(!seen.has(k)){seen.add(k);return r}}return null};
+    if(sub==='same'){Q.cands.push({p:base,keys:[]});for(let i=1;i<n;i++){const r=variant();if(r)Q.cands.push(r)}}
+    else{const r=variant()||{p:Object.assign({},base,{[Object.keys(th.params)[0]]:pick(Object.values(th.params)[0].vals.filter(v=>v!==base[Object.keys(th.params)[0]]))}),keys:[Object.keys(th.params)[0]]};Q.cands.push(r);for(let i=1;i<n;i++)Q.cands.push({p:base,keys:[]})}
+  }else{
+    const bm=mvBase(lv);Q.base={p:base,m:bm};
+    if(sub==='mvsame'){Q.cands.push({p:base,m:bm,keys:[]});const used=[bm];
+      for(let i=1;i<n;i++){let r=null;for(let t=0;t<30;t++){const c=mvMutate(bm,lv);if(!used.some(u=>mvEq(u,c.m))){r=c;break}}if(!r)r=mvMutate(bm,lv);used.push(r.m);Q.cands.push({p:base,m:r.m,keys:['mv'],cat:r.cat})}}
+    else{const r=mvMutate(bm,lv);Q.cands.push({p:base,m:r.m,keys:['mv'],cat:r.cat});for(let i=1;i<n;i++)Q.cands.push({p:base,m:bm,keys:[]})}
+  }
+  const order=shuffle(Q.cands.map((_,i)=>i));Q.cands=order.map(i=>Q.cands[i]);Q.ans=order.indexOf(0);
+  return Q}
+
+function picEl(th,c,model){const d=document.createElement(model?'div':'button');d.className='pic '+(model?'model':'cand in');
+  const m=document.createElement('div');m.className='mv';m.innerHTML=svgOf(th,c.p);d.appendChild(m);if(c.m)mvApply(m,c.m);return d}
+const askKey=sub=>({same:'askSame',diff:'askDiff',mvsame:'askMvSame',mvdiff:'askMvDiff'})[sub];
+
+function startGame(mode){audio();hush();run++;
+  G={mode,qi:0,score:0};$('home').hidden=true;$('play').hidden=false;
+  say({same:'mSame',diff:'mDiff',move:'mMove'}[mode]);nextQ()}
+
+function nextQ(){const my=++run;G.Q=newQuestion();const Q=G.Q;
+  $('dots').innerHTML=Array.from({length:ROUND},(_,i)=>`<div class="dot${i<G.qi?' on':''}"></div>`).join('');
+  $('modelTag').textContent=T().model;
+  const ms=$('modelSlot');ms.innerHTML='';const mc=Q.sub.startsWith('mv')?{p:Q.base.p,m:Q.base.m}:{p:Q.base};
+  ms.appendChild(picEl(Q.th,mc,true));
+  const g=$('grid');g.innerHTML='';
+  Q.cands.forEach((c,i)=>{const el=picEl(Q.th,c,false);el.style.animationDelay=(i*.07)+'s';el.onclick=()=>tapCand(i,el,my);g.appendChild(el)});
+  layout();
+  const k=askKey(Q.sub);prep([k,'ok0','ok1','ok2','ok3','ng0','ng1','same']);say(k)}
+
+function ringOn(el,th,c,base){const ks=c.keys||[];if(!ks.length)return;
+  const box=el.querySelector('.mv');
+  const add=(x,y,r)=>{const rg=document.createElement('div');rg.className='ring';const sz=el.clientWidth*.88,ox=(el.clientWidth-sz)/2-4,oy=(el.clientHeight-sz)/2-4;
+    rg.style.left=(ox+(x-r)/100*sz)+'px';rg.style.top=(oy+(y-r)/100*sz)+'px';rg.style.width=rg.style.height=(2*r/100*sz)+'px';el.appendChild(rg)};
+  if(ks[0]==='mv'){add(50,50,48);return}
+  for(const k of ks){const [x,y,r]=th.params[k].at(c.p,base);add(x,y,Math.max(r,9))}}
+function sparks(el){const R=el.clientWidth*.55;for(let i=0;i<8;i++){const s=document.createElement('div');s.className='spark';s.textContent=['⭐','✨','🌟'][i%3];const a=i/8*Math.PI*2;
+  s.style.setProperty('--dx',Math.cos(a)*R+'px');s.style.setProperty('--dy',Math.sin(a)*R+'px');el.appendChild(s);setTimeout(()=>s.remove(),950)}}
+// まちがいの しるしは ✕（赤い まるは 正解に みえるので、まちがいの絵には ぜったいに 出さない）
+function batsu(el){if(el.querySelector('.batsu'))return;const b=document.createElement('div');b.className='batsu';b.textContent='✕';el.appendChild(b)}
+const catKey=(th,c)=>c.cat?'d'+c.cat:'d'+th.params[c.keys[0]].cat;
+
+async function tapCand(i,el,my){const Q=G.Q;if(Q.done||my!==run)return;audio();
+  const c=Q.cands[i];
+  if(i===Q.ans){Q.done=true;sfx.ok();el.classList.add('win');sparks(el);
+    const keys=['ok'+rnd(4)];
+    if(Q.sub==='diff'||Q.sub==='mvdiff'){ringOn(el,Q.th,c,Q.base);keys.push(catKey(Q.th,c))}
+    else [...$('grid').children].forEach((e,j)=>{if(j!==i){e.classList.add('dim')}});
+    G.qi++;$('dots').children[G.qi-1]&&$('dots').children[G.qi-1].classList.add('on');
+    await say(...keys);await wait(700);if(my!==run)return;
+    if(G.qi>=ROUND)finish();else nextQ();return}
+  // まちがい
+  Q.miss++;sfx.ng();el.classList.remove('no');void el.offsetWidth;el.classList.add('no');
+  batsu(el);el.classList.add('gone');
+  if(Q.sub==='same'||Q.sub==='mvsame'){if(!speaking())say(catKey(Q.th,c))}
+  else{if(!speaking())say('same')}
+  if(Q.miss===2)hint()}
+
+function hint(){const Q=G.Q;if(!Q||Q.done)return;const els=[...$('grid').children];
+  const wrong=els.map((e,j)=>j).filter(j=>j!==Q.ans&&!els[j].classList.contains('gone'));
+  if(wrong.length<=1)return;sfx.pop();els[pick(wrong)].classList.add('gone')}
+
+function finish(){S.rounds++;let st=null;const left=STICKERS.filter(x=>!S.stickers.includes(x));
+  if(left.length){st=pick(left);S.stickers.push(st)}save();
+  sfx.fan();$('doneT').textContent=T().doneT;$('doneS').textContent=st||'🏆';$('doneP').textContent=st?T().doneP(S.stickers.length):T().doneFull;
+  $('done').hidden=false;say('done')}
+const STICKERS=['🐶','🐱','🐰','🐻','🐼','🐨','🦁','🐯','🐸','🐵','🐧','🐤','🦄','🐳','🐬','🐙','🦋','🐞','🌸','🌻','🍓','🍒','🍉','🍩','🍰','🍭','🚗','🚀','🚂','⛵','🌈','⭐','🌙','☀️','🎈','🎁'];
+
+function goHome(){hush();run++;G=null;$('play').hidden=true;$('done').hidden=true;$('home').hidden=false;renderHome()}
+
+// 画面に ちょうど入る大きさ
+function layout(){if(!G||!G.Q)return;const n=G.Q.cands.length,board=$('board');
+  const W=Math.min(innerWidth-28,920),H=innerHeight-$('play').querySelector('.top').offsetHeight-44;
+  const wide=W>H*1.15;board.classList.toggle('col',!wide);
+  // いちばん大きく なる 列の数を さがす
+  const fit=(w,h)=>{let best=[1,0];for(let cols=1;cols<=n;cols++){const rows=Math.ceil(n/cols);const c=Math.min((w-(cols-1)*10)/cols,(h-(rows-1)*10)/rows);if(c>best[1])best=[cols,c]}return best};
+  let m,cols,c;
+  if(wide){m=Math.min(H*.75,W*.36);[cols,c]=fit(W-m-24,H)}
+  else{m=Math.min(W*.6,H*.36);[cols,c]=fit(W,H-m-30)}
+  c=Math.max(60,Math.floor(Math.min(c,240)));m=Math.max(90,Math.floor(Math.min(m,c*1.6,300)));
+  const mp=$('modelSlot').firstChild;if(mp){mp.style.width=mp.style.height=m+'px'}
+  const g=$('grid');g.style.gridTemplateColumns=`repeat(${cols},${c}px)`;[...g.children].forEach(e=>{e.style.width=e.style.height=c+'px'})}
+addEventListener('resize',layout);
+
+// ================= ホーム =================
+function preview(th,p){return svgOf(th,p)}
+function renderHome(){const t=T();document.documentElement.lang=S.lang;document.title=S.lang==='ja'?'おなじ？ ちがう？':'Same or Different?';
+  $('langBtn').textContent=S.lang==='ja'?'English':'日本語';
+  $('logo').innerHTML=`<span class="a">${t.logo[0]}</span>${t.logo[1]}<span class="b">${t.logo[2]}</span>${t.logo[3]}`;
+  $('tSame').innerHTML=`${t.same}<small>${t.sameS}</small>`;$('tDiff').innerHTML=`${t.diff}<small>${t.diffS}</small>`;$('tMove').innerHTML=`${t.move}<small>${t.moveS}</small>`;
+  const a=TH('animal'),cat={kind:'cat',fur:'orange',eyes:'open',mouth:'smile',cheek:1,acc:'none'};
+  $('pvSame').innerHTML=preview(a,cat)+preview(a,cat);$('pvDiff').innerHTML=preview(a,cat)+preview(a,Object.assign({},cat,{fur:'gray'}));
+  $('pvMove').innerHTML=`<div class="mv mv-jump" style="--d:.9s;display:flex">${preview(a,Object.assign({},cat,{kind:'rabbit',fur:'white'}))}</div>`;
+  $('sTheme').textContent=t.theme;$('sLevel').textContent=t.level;
+  const ok=Kakin.full();
+  const samples={animal:{kind:'bear',fur:'brown',eyes:'open',mouth:'smile',cheek:0,acc:'none'},ice:{n:2,c1:'pink',c2:'mint',c3:'choco',base:'cone',top:'cherry',spr:0},
+    car:{kind:'car',col:'red',win:2,face:'none',top:'none',smoke:0,wheel:'black'},house:{roof:'red',rshape:'tri',wall:'white',win:2,door:'brown',chim:1,sky:'none',flower:0},
+    robot:{col:'blue',head:'square',eyes:2,ant:'ball',arms:'down',btn:2,mouth:'smile'},shape:{s0:'star',k0:'yellow',s1:'circle',k1:'red',s2:'triangle',k2:'blue'}};
+  $('themes').innerHTML=`<button class="chip${S.theme==='any'?' on':''}" data-t="any">🎲 ${t.any}</button>`+THEMES.map(th=>`<button class="chip${S.theme===th.id?' on':''}${!th.free&&!ok?' kk-lock':''}" data-t="${th.id}">${preview(th,samples[th.id])}${th.name[S.lang]}</button>`).join('');
+  $('levels').innerHTML=[1,2,3].map(l=>`<button class="star${S.lv===l?' on':''}" data-l="${l}">${'★'.repeat(l)}</button>`).join('');
+  $('bookBtn').textContent=t.book+` ${S.stickers.length}/${STICKERS.length}`;$('parentBtn').textContent=t.parent;$('backBtn').textContent=t.back;
+  $('doneAgain').textContent=t.again;$('doneHome').textContent=t.home;$('bookClose').textContent=t.close}
+$('themes').onclick=e=>{const b=e.target.closest('button');if(!b)return;audio();const id=b.dataset.t,th=TH(id);
+  if(th&&!th.free&&!Kakin.full()){Kakin.ask();return}sfx.tap();S.theme=id;save();renderHome()};
+$('levels').onclick=e=>{const b=e.target.closest('button');if(!b)return;audio();sfx.tap();S.lv=+b.dataset.l;save();renderHome()};
+$('mSame').onclick=()=>startGame('same');$('mDiff').onclick=()=>startGame('diff');$('mMove').onclick=()=>startGame('move');
+$('langBtn').onclick=()=>{S.lang=S.lang==='ja'?'en':'ja';save();setupKakin();renderHome()};
+$('backBtn').onclick=goHome;$('doneHome').onclick=goHome;
+$('doneAgain').onclick=()=>{$('done').hidden=true;hush();startGame(G.mode)};
+$('againBtn').onclick=()=>{audio();if(G&&G.Q&&!speaking())say(askKey(G.Q.sub))};
+$('hintBtn').onclick=()=>{audio();hint()};
+$('bookBtn').onclick=()=>{audio();$('bookT').textContent=T().bookT;
+  $('book').innerHTML=STICKERS.map(s=>S.stickers.includes(s)?`<div>${s}</div>`:'<div class="empty">？</div>').join('');$('bookOvl').hidden=false};
+$('bookClose').onclick=()=>{$('bookOvl').hidden=true};
+
+// ================= おうちのかた =================
+let resetArm=false;
+function openParent(){const t=T();$('pT').textContent=t.pT;$('pLang').textContent=t.pLang;$('pVoice').textContent=t.pVoice;$('pSnd').textContent=t.pSnd;$('pTest').textContent=t.pTest;
+  $('pReset').textContent=t.pReset;$('pResetBtn').textContent=resetArm?t.resetSure:t.reset;$('pNote').textContent=t.pNote;$('pClose').textContent=t.close;
+  document.querySelectorAll('#parent [data-l]').forEach(b=>b.classList.toggle('on',b.dataset.l===S.lang));
+  const sb=$('sndSeg').children;sb[0].textContent=t.on;sb[1].textContent=t.off;sb[0].classList.toggle('on',!!S.snd);sb[1].classList.toggle('on',!S.snd);
+  const vals=['ai:1','ai:2','ai:3','ai:4','dev','off'];$('voiceSel').innerHTML=vals.map((v,i)=>`<option value="${v}"${S.voice===v?' selected':''}>${t.voices[i]}</option>`).join('');
+  $('parent').hidden=false}
+$('parentBtn').onclick=()=>{audio();resetArm=false;openParent()};
+$('pClose').onclick=()=>{$('parent').hidden=true;renderHome()};
+document.querySelectorAll('#parent [data-l]').forEach(b=>b.onclick=()=>{S.lang=b.dataset.l;save();setupKakin();openParent();renderHome()});
+$('sndSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.snd=+b.dataset.s;save();openParent()};
+$('voiceSel').onchange=e=>{S.voice=e.target.value;save()};
+$('pVoiceTest').onclick=()=>{audio();hush();prep(['hello']);say('hello')};
+$('pResetBtn').onclick=()=>{if(!resetArm){resetArm=true;openParent();return}S.stickers=[];save();resetArm=false;openParent();$('pResetBtn').textContent=T().resetDone};
+
+// ================= 課金（おためし版） =================
+function setupKakin(){if(!window.Kakin||!Kakin.setup)return;
+  Kakin.setup({game:'onaji',lang:()=>S.lang,onChange:()=>{renderHome();if(!$('parent').hidden)openParent()},
+    name:{ja:'おなじ？ ちがう？',en:'Same or Different?'},free:{ja:TEXT.ja.kkFree,en:TEXT.en.kkFree},full:{ja:TEXT.ja.kkFull,en:TEXT.en.kkFull}});
+  $('kkSlot').innerHTML='';$('kkSlot').appendChild(Kakin.parentButton())}
+if(window.Kakin&&Kakin.setup)setupKakin();else window.Kakin={full:()=>false,ask:()=>{},open:()=>{}};
+
+document.addEventListener('visibilitychange',()=>{if(document.hidden)hush()});
+// iOS: ダブルタップの拡大を止める
+let lastT=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-lastT<350&&e.target.closest('.pic,.mode,.chip,.star'))e.preventDefault();lastT=n},{passive:false});
+renderHome();
+window.__onaji={THEMES,newQuestion,S,G:()=>G};
+})();
+</script>
+</body>
+</html>

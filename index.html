@@ -2,8 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="common/app.js" defer></script>
+<!-- /app -->
 </head>
 <body>
 <title>ラスト・ツー</title>
@@ -1185,7 +1192,7 @@ function onLeave(){
   Object.assign(ON, { peer: null, conn: null, open: false, host: false, code: "", oppFace: null, oppVideo: false, oppStream: null, H: null, called: false });
   $("invite").hidden = true;
 }
-const PAGE = "https://kudo12711-boop.github.io/last-two/";
+const PAGE = /(^|\.)(github\.io|hajimaruyo\.com)$/.test(location.hostname) ? location.origin + location.pathname.replace(/[^/]*$/, "") : "https://kudo12711-boop.github.io/last-two/"; // 招待のURL。公開している場所に合わせる（ドメインを変えても そのまま動く）
 const INAPP = /\bLine\/|FBAN|FBAV|Instagram|MicroMessenger|Twitter|KAKAOTALK|; wv\)/i.test(navigator.userAgent);
 // phones drop the signalling socket while you are off in LINE sending the invite; reconnect with the same room id when you come back
 document.addEventListener("visibilitychange", () => {

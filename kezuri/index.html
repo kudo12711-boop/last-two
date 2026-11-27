@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#e8f3ff">
 <title>けずって なにかな？</title>
@@ -39,6 +40,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 .row button small{display:block;font-size:11px;font-weight:400;opacity:.8}
 .row button.sel{background:var(--accent);color:#fff}
 #fats button{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0}
+#backs{display:grid;grid-template-columns:1fr 1fr}
 #fats button i{display:block;border-radius:50%;background:currentColor;opacity:.75}
 .foot{display:flex;gap:10px;font-size:14px;flex-wrap:wrap;justify-content:center}
 .foot button{background:none;text-decoration:underline;opacity:.7;padding:6px}
@@ -116,6 +118,12 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 .ph button.has{background:#d8f5e3}
 @keyframes blink{50%{opacity:.55}}
 </style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
 </head>
 <body>
 
@@ -170,7 +178,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 
 <div class="modal" id="setM"><div class="panel">
   <h2 id="tSet"></h2>
-  <h3 id="tVoice"></h3><div class="opt" id="voiceOpt"></div>
+  <h3 id="tVoice"></h3><div class="opt" id="voiceOpt"></div><p class="note" id="tVoiceNote"></p>
   <h3 id="tSound"></h3><div class="opt" id="soundOpt"></div>
   <h3>Language / ことば</h3><div class="opt" id="langOpt"></div>
   <h3 id="tKk"></h3><p class="note" id="tKkNote"></p><div id="kkSlot"></div>
@@ -202,13 +210,13 @@ const TEXT = {
   ja: {
     title: 'けずって なにかな？', sub: 'ゆびで ごしごし。なにが でてくるかな？', start: 'はじめる',
     cats: 'どれで あそぶ？', lv: 'むずかしさ', fat: 'けずる ふとさ（うえの「？」で ためせます）', fatName: ['ほそい', 'ふつう', 'ふとい', 'とても ふとい'],
-    back: 'けずった ところが また かくれる', backName: ['かくれない', 'ゆっくり', 'はやい'], backSub: ['', 'じっくり', 'いそいで！'], book: 'ずかん', photos: 'おうちの しゃしん',
+    back: 'けずった ところが また かくれる', backName: ['かくれない', 'ゆっくり', 'はやい', 'すぐ'], backSub: ['', 'じっくり', 'いそいで！', 'あっというま'], book: 'ずかん', photos: 'おうちの しゃしん',
     photosSub: 'かぞくや ペットの しゃしんを かくして あそべます', settings: '⚙️ おうちの人の せってい',
     scratch: 'ゆびで けずってね', next: 'つぎへ ▶', found: n => `ずかん ${n}`, newMark: 'NEW!',
     bookN: (a, b) => `${a} / ${b} こ みつけたよ`, bookSum: (a, b) => `${a} / ${b} こ　（✨は きらきら）`,
     ph: '📷 おうちの しゃしん', phNote: 'しゃしんを えらぶと「おうち」で あそべます。なまえを いれて、🎙️で おうちの人の こえを ろくおんすると、あたったときに その こえで よびます。しゃしんと こえは この たんまつの なかにだけ ほぞんされます。',
     phAdd: 'しゃしんを えらぶ', phName: 'なまえ', close: 'とじる', phDel: 'この しゃしんを けしますか？',
-    set: '⚙️ せってい', voice: 'こえ', sound: 'おと', on: 'あり', off: 'なし', dev: 'たんまつの こえ',
+    set: '⚙️ せってい', voice: 'こえ', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。', sound: 'おと', on: 'あり', off: 'なし', dev: 'たんまつの こえ',
     reset: 'ずかんを リセット', resetNote: 'みつけた ものの きろくを ぜんぶ けします。', resetB: 'リセットする', resetQ: 'ずかんを ぜんぶ けしますか？',
     ai: n => `AIのこえ ${n}`, noPhoto: 'まだ しゃしんが ありません',
     catName: { all: 'ぜんぶ', ani: 'どうぶつ', car: 'のりもの', food: 'たべもの', sea: 'うみ', nat: 'しぜん', home: 'おうち' },
@@ -225,13 +233,13 @@ const TEXT = {
   en: {
     title: 'Scratch & Guess', sub: 'Rub with your finger. What will appear?', start: 'Play',
     cats: 'Pick a theme', lv: 'Level', fat: 'Scratch size (try it on the "?" card above)', fatName: ['Thin', 'Normal', 'Thick', 'Extra thick'],
-    back: 'Scratched spots cover up again', backName: ['Off', 'Slow', 'Fast'], backSub: ['', 'take your time', 'hurry!'], book: 'Picture book', photos: 'Family photos',
+    back: 'Scratched spots cover up again', backName: ['Off', 'Slow', 'Fast', 'Instant'], backSub: ['', 'take your time', 'hurry!', 'in a flash'], book: 'Picture book', photos: 'Family photos',
     photosSub: 'Hide photos of family or pets and play', settings: '⚙️ Settings for grown-ups',
     scratch: 'Scratch with your finger', next: 'Next ▶', found: n => `Book ${n}`, newMark: 'NEW!',
     bookN: (a, b) => `Found ${a} of ${b}`, bookSum: (a, b) => `${a} / ${b} found  (✨ = sparkly)`,
     ph: '📷 Family photos', phNote: 'Pick photos to play the "Home" theme. Type a name and tap 🎙️ to record your own voice saying it. Photos and voices stay on this device only.',
     phAdd: 'Choose photos', phName: 'Name', close: 'Close', phDel: 'Delete this photo?',
-    set: '⚙️ Settings', voice: 'Voice', sound: 'Sound', on: 'On', off: 'Off', dev: 'Device voice',
+    set: '⚙️ Settings', voice: 'Voice', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).', sound: 'Sound', on: 'On', off: 'Off', dev: 'Device voice',
     reset: 'Reset picture book', resetNote: 'Erases everything found so far.', resetB: 'Reset', resetQ: 'Erase the whole picture book?',
     ai: n => `AI voice ${n}`, noPhoto: 'No photos yet',
     catName: { all: 'All', ani: 'Animals', car: 'Vehicles', food: 'Food', sea: 'Sea', nat: 'Nature', home: 'Home' },
@@ -335,7 +343,7 @@ function scratchSound(level) {
 
 /* ---------- こえ ---------- */
 // AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<key>.mp3）
-const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const AI_VOICES = { ja: ['vv_himari', 'vv_metan', 'vv_zunda', 'vv_hau'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const aiBuf = {}; let aiSrc = null;
 function aiLoad(id, keys) {
   const a = audio(); if (!a) return;
@@ -360,38 +368,65 @@ function voiceScore(v) {
 }
 function loadVoices() { try { devVoices = speechSynthesis.getVoices(); } catch (e) {} }
 if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-function tts(text, onend) {
-  if (!('speechSynthesis' in window)) { if (onend) setTimeout(onend, 700); return; }
+/* ---------- こえの じゅんばんまち（2026-11-16）: どの こえも さいごまで よむ。とめるのは がめんを でるとき（hush）だけ ----------
+   mode: なし＝じゅんばんに まつ / 'idle'＝ほかの こえが なっていなければ だけ（おしゃべり）/ 'swap'＝'swap' どうしだけ いれかわる（かぞえる こえ・タップで なまえ） */
+const VQ = { q: [], cur: null, seq: 0 };
+function vqBusy() { return !!VQ.cur || VQ.q.length > 0; }
+function vqHas(tag) { return (VQ.cur && VQ.cur.tag === tag) || VQ.q.some(x => x.tag === tag); }
+function vqAdd(it, mode) {
+  if (mode === 'idle' && vqBusy()) return false;
+  it.swap = mode === 'swap';
+  if (it.swap) { VQ.q = VQ.q.filter(x => !x.swap); if (VQ.cur && VQ.cur.swap) vqCut(); }
+  VQ.q.push(it); vqNext(); return true;
+}
+function vqCut() { const c = VQ.cur; VQ.cur = null; VQ.seq++; if (c && c.stop) try { c.stop(); } catch (e) {} }
+function vqNext() {
+  if (VQ.cur) return;
+  const it = VQ.q.shift(); if (!it) return;
+  VQ.cur = it; const my = ++VQ.seq; let fin = false, safety = 0;
+  const done = () => { if (fin) return; fin = true; clearTimeout(safety); if (my !== VQ.seq) return; VQ.cur = null; if (it.onend) try { it.onend(); } catch (e) {} vqNext(); };
+  safety = setTimeout(done, (it.max || 8) * 1000);
+  try { it.stop = it.play(done) || null; } catch (e) { done(); }
+}
+function hush() { VQ.q = []; vqCut(); try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+// AudioBuffer を ならす（おわったら done）
+function vqBuf(a, b, off, dur, gain) {
+  return done => {
+    const s = a.createBufferSource(); s.buffer = b; let out = a.destination;
+    if (gain) { const g = a.createGain(); g.gain.value = gain; g.connect(a.destination); out = g; }
+    s.connect(out); s.onended = done; s.start(0, off || 0, dur || b.duration);
+    return () => s.stop();
+  };
+}
+// 端末の よみあげ（u は SpeechSynthesisUtterance）
+function vqTts(u) {
+  return done => { u.onend = done; u.onerror = done; speechSynthesis.cancel(); speechSynthesis.speak(u); return () => speechSynthesis.cancel(); };
+}
+function tts(text, item, mode) {
+  if (!('speechSynthesis' in window) || !text) { if (item.onend) setTimeout(item.onend, 600); return; }
   try {
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text), code = L === 'ja' ? 'ja-JP' : 'en-US';
     const vs = devVoices.filter(v => v.lang.replace('_', '-').toLowerCase().startsWith(L)).sort((a, b) => voiceScore(b) - voiceScore(a));
     u.lang = code; u.pitch = 1.15; u.rate = L === 'ja' ? .95 : .9; if (vs[0]) u.voice = vs[0];
-    if (onend) { let done = false; const f = () => { if (!done) { done = true; onend(); } }; u.onend = f; setTimeout(f, 2600); }
-    speechSynthesis.speak(u);
+    item.play = vqTts(u); item.max = 3 + text.length * .25; vqAdd(item, mode);
   } catch (e) {}
 }
 // 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
 let voiceMode = store.get('kezuri-voice', 'ai:1');
-{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+{ const i = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'].indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => (AI_VOICES[L] || AI_VOICES.ja)[(+voiceMode.slice(3) || 1) - 1] || AI_VOICES.ja[0];
 const useAI = () => voiceMode.startsWith('ai:');
-function playBuf(b, off = 0, dur) {
-  const a = audio(); if (!a) return;
-  try { if (aiSrc) aiSrc.stop(); } catch (e) {}
-  try { speechSynthesis.cancel(); } catch (e) {}
-  const src = a.createBufferSource(); src.buffer = b; src.connect(a.destination); src.start(0, off, dur || b.duration); aiSrc = src;
-}
-let speakTok = 0;
-// key: 'ok0' など、または 'it_dog'（なまえ）。しゃべりおわったら onend
-function say(key, onend) {
-  const tok = ++speakTok, fin = () => { if (onend && tok === speakTok) onend(); };
-  if (!soundOn || voiceMode === 'off') { if (onend) setTimeout(fin, 350); return; }
+// key: 'ok0' など、または 'it_dog'（なまえ）。さいごまで よみおわったら onend
+// mode: なし＝まえの こえが おわるまで まつ / 'swap'＝タップで なまえ（まえの タップの なまえだけ とめる）/ tag: おなじ tag が まっていたら いれない
+function say(key, onend, mode, tag) {
+  if (!soundOn || voiceMode === 'off') { if (onend) setTimeout(onend, 350); return; }
+  if (tag && vqHas(tag)) return;
+  const item = { onend, tag };
   let text, ph = null;
   if (key.startsWith('it_')) {
     const id = key.slice(3); ph = photos.find(p => p.id === id);
     if (ph) {
-      if (ph.recBuf && audio()) { playBuf(ph.recBuf.buf, ph.recBuf.off, ph.recBuf.dur); if (onend) setTimeout(fin, ph.recBuf.dur * 1000 + 150); return; }
+      if (ph.recBuf && audio()) { item.play = vqBuf(audio(), ph.recBuf.buf, ph.recBuf.off, ph.recBuf.dur); item.max = ph.recBuf.dur + 2; vqAdd(item, mode); return; }
       text = ph.name;
     } else text = ITEM_BY[id] ? nameOf(ITEM_BY[id]) : '';
   } else text = T().say[key] || '';
@@ -400,13 +435,13 @@ function say(key, onend) {
     if (a) {
       aiLoad(id, [key]);
       const b = aiBuf[`${id}/${key}`];
-      if (b && typeof b !== 'string') { playBuf(b); if (onend) setTimeout(fin, b.duration * 1000 + 150); return; }
+      if (b && typeof b !== 'string') { item.play = vqBuf(a, b); item.max = b.duration + 2; vqAdd(item, mode); return; }
     }
   }
-  tts(text, onend ? fin : null);
+  tts(text, item, mode);
 }
 function sayCat(cat, onend) { say(cat + Math.floor(Math.random() * Object.keys(T().say).filter(k => k.replace(/\d+$/, '') === cat).length), onend); }
-function sayChain(keys) { if (keys.length) say(keys[0], () => setTimeout(() => sayChain(keys.slice(1)), 120)); }
+function sayChain(keys, tag) { if (tag && vqHas(tag)) return; keys.forEach(k => say(k, null, '', tag)); }
 function prepVoice(keys) { if (useAI()) aiLoad(aiId(), keys); }
 const PHRASES = Object.keys(TEXT.ja.say);
 
@@ -481,7 +516,7 @@ function renderPhotos() {
     const rb = row.querySelector('.r');
     if (p.rec) rb.classList.add('has');
     rb.onclick = () => recordFor(p, rb);
-    row.querySelector('.pl').onclick = () => { audio(); say('it_' + p.id); };
+    row.querySelector('.pl').onclick = () => { audio(); hush(); say('it_' + p.id); };
     row.querySelector('.d').onclick = () => {
       if (!confirm(T().phDel)) return;
       photos = photos.filter(x => x !== p); pdb.del(p.id); URL.revokeObjectURL(p.url);
@@ -500,7 +535,7 @@ async function recordFor(p, btn) {
     mr.onstop = () => {
       stream.getTracks().forEach(t => t.stop()); recState = null; btn.classList.remove('rec');
       const b = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
-      if (b.size > 800) { p.rec = b; p.recBuf = null; photoSave(p); decodeRec(p); btn.classList.add('has'); setTimeout(() => say('it_' + p.id), 400); }
+      if (b.size > 800) { p.rec = b; p.recBuf = null; photoSave(p); decodeRec(p); btn.classList.add('has'); setTimeout(() => { hush(); say('it_' + p.id); }, 400); }
     };
     mr.start(); btn.classList.add('rec');
     recState = { stop() { try { mr.stop(); } catch (e) {} } };
@@ -525,7 +560,12 @@ const LV = [ // ちょいす: えらぶ数、th: どのくらい けずったら
 let lv = store.get('kezuri-lv', 1), cat = store.get('kezuri-cat', 'all');
 const FAT = [.045, .075, .11, .16]; // けずる ふとさ（カードの はばに たいする 半径）
 let fat = clamp(store.get('kezuri-fat', 1), 0, FAT.length - 1);
-const BACK = [0, .5, 1.2]; // けずった ところが もどる はやさ（1びょうあたり。0=もどらない）
+const BACK = [0, .5, 1.2, 4]; // けずった ところが もどる はやさ（1びょうあたり。0=もどらない）
+// 「すぐ」は けずった そばから もどるので、いま 見えている りょうでは こたえまで とどかない。
+// そこで BACK_SEEN いじょうでは「いちどでも けずった ところ」（st.seen）で こたえを きめる。
+const BACK_SEEN = 3;
+const backStep = () => BACK[back] >= BACK_SEEN ? .05 : .15; // まくを かさねる 間かく（はやい ほど こまかく）
+const doneArr = () => BACK[back] >= BACK_SEEN ? st.seen : st.grid;
 let back = clamp(store.get('kezuri-back', 0), 0, BACK.length - 1);
 let book = store.get('kezuri-book', {}); // id -> { n, s(きらきらの数) }
 function catList() { const l = ['all', ...Object.keys(CATS)]; if (photos.length) l.push('home'); return l; }
@@ -566,7 +606,7 @@ function renderTitle() {
   $('#tBack').textContent = t.back; $('#backs').innerHTML = '';
   BACK.forEach((v, i) => {
     const b = document.createElement('button');
-    b.innerHTML = `${['🚫', '🐢', '🐇'][i]} ${t.backName[i]}${t.backSub[i] ? `<small>${t.backSub[i]}</small>` : ''}`;
+    b.innerHTML = `${['🚫', '🐢', '🐇', '⚡'][i]} ${t.backName[i]}${t.backSub[i] ? `<small>${t.backSub[i]}</small>` : ''}`;
     if (i === back) b.className = 'sel';
     b.onclick = () => { back = i; store.set('kezuri-back', i); sfx.tap(); demoInit(); renderTitle(); };
     $('#backs').appendChild(b);
@@ -585,7 +625,7 @@ $('#phClose').onclick = () => { $('#photoM').classList.remove('on'); renderTitle
 /* ---------- せってい ---------- */
 function renderSettings() {
   const t = T();
-  $('#tSet').textContent = t.set; $('#tVoice').textContent = t.voice; $('#tSound').textContent = t.sound;
+  $('#tSet').textContent = t.set; $('#tVoice').textContent = t.voice; $('#tVoiceNote').textContent = t.voiceNote; $('#tSound').textContent = t.sound;
   $('#tKk').textContent = L === 'ja' ? '🔓 ぜんぶ版' : '🔓 Full version';
   $('#tKkNote').textContent = L === 'ja' ? 'むりょうでは どうぶつ・たべもの・おうちの しゃしんで あそべます。ぜんぶ版（買い切り）か ファミリーパスで、のりもの・うみ・しぜんも あそべます。広告は出しません。' : 'Free: animals, food and family photos. The full version (one-time) or the Family Pass adds vehicles, sea and nature. No ads.';
   if (!$('#kkSlot').firstChild) $('#kkSlot').appendChild(Kakin.parentButton()); else $('#kkSlot').firstChild._kkUpdate();
@@ -594,8 +634,8 @@ function renderSettings() {
   const vl = [1, 2, 3, 4].map(n => ['ai:' + n, t.ai(n)]);
   vl.push(['dev', t.dev], ['off', t.off]);
   const curV = voiceMode;
-  opt($('#voiceOpt'), vl, curV, v => { voiceMode = v; store.set('kezuri-voice', v); audio(); prepVoice(['ok0']); setTimeout(() => say('ok0'), 300); });
-  opt($('#soundOpt'), [[true, t.on], [false, t.off]], soundOn, v => { soundOn = v; store.set('kezuri-sound', v); if (!v && scr) scr.g.gain.value = 0; });
+  opt($('#voiceOpt'), vl, curV, v => { voiceMode = v; store.set('kezuri-voice', v); audio(); hush(); prepVoice(['ok0']); setTimeout(() => say('ok0'), 300); });
+  opt($('#soundOpt'), [[true, t.on], [false, t.off]], soundOn, v => { soundOn = v; store.set('kezuri-sound', v); if (!v) hush(); if (!v && scr) scr.g.gain.value = 0; });
   opt($('#langOpt'), [['ja', '日本語'], ['en', 'English']], L, v => setLang(v));
 }
 $('#setB').onclick = () => { renderSettings(); $('#setM').classList.add('on'); };
@@ -661,7 +701,7 @@ function newCard(first) {
   const shiny = !it.photo && Math.random() < 1 / 8;
   st = {
     it, shiny, state: 'scratch', t0: performance.now(), lastScratch: performance.now(), hinted: false,
-    grid: new Float32Array(GRID * GRID), cov: COVERS[Math.floor(Math.random() * COVERS.length)],
+    grid: new Float32Array(GRID * GRID), seen: new Float32Array(GRID * GRID), cov: COVERS[Math.floor(Math.random() * COVERS.length)],
     // えの いち（すこし ずらして、どこに いるか さがす たのしさ）
     px: it.photo ? .5 : rnd(.38, .62), py: it.photo ? .5 : rnd(.38, .6), ps: it.photo ? 1 : rnd(.56, .68), rot: it.photo ? 0 : rnd(-.18, .18),
     choices: makeChoices(it, LV[lv].choices), openT: 0, flakes: [], hintAt: null
@@ -736,12 +776,12 @@ function scratchSeg(x0, y0, x1, y1) {
     const ga = Math.max(0, Math.floor((x - r) / cs)), gb = Math.min(GRID - 1, Math.floor((x + r) / cs));
     const ha = Math.max(0, Math.floor((y - r) / cs)), hb = Math.min(GRID - 1, Math.floor((y + r) / cs));
     for (let gy = ha; gy <= hb; gy++) for (let gx = ga; gx <= gb; gx++)
-      if (Math.hypot((gx + .5) * cs - x, (gy + .5) * cs - y) < r * .9) st.grid[gy * GRID + gx] = 1;
+      if (Math.hypot((gx + .5) * cs - x, (gy + .5) * cs - y) < r * .9) st.grid[gy * GRID + gx] = st.seen[gy * GRID + gx] = 1;
   }
   // けずりカス
   if (st.flakes.length < 80) for (let i = 0; i < 2; i++) st.flakes.push({ x: x1 + rnd(-r, r) * .6, y: y1 + rnd(-r, r) * .6, vx: rnd(-40, 40), vy: rnd(-60, 10), life: 1, s: rnd(2, 4.5), c: st.cov[i % 2 ? 0 : 2] });
 }
-function picFrac() { let n = 0; for (const i of st.picCells) n += st.grid[i]; return n / st.picCells.length; }
+function picFrac() { const a = doneArr(); let n = 0; for (const i of st.picCells) n += a[i]; return n / st.picCells.length; }
 function allFrac() { let n = 0; for (const v of st.grid) n += v; return n / st.grid.length; }
 
 const ptrs = new Map();
@@ -752,7 +792,7 @@ cv.addEventListener('pointerdown', e => {
   if (!st) return;
   const p = toCard(e);
   if (st.state === 'open') { // ひらいた えを さわると なまえを もういちど
-    if (p.x > 0 && p.y > 0 && p.x < lay.S && p.y < lay.S) { st.bounce = performance.now(); say('it_' + st.it.id); }
+    if (p.x > 0 && p.y > 0 && p.x < lay.S && p.y < lay.S) { st.bounce = performance.now(); say('it_' + st.it.id, null, 'swap'); }
     return;
   }
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
@@ -798,7 +838,7 @@ function answer(c, b) {
   if (!st || st.state !== 'quiz') return;
   audio();
   if (c === st.it) { b.classList.add('yes'); reveal(false); }
-  else { b.classList.add('no'); sfx.wrong(); sayChain(['miss0', 'miss1']); }
+  else { b.classList.add('no'); sfx.wrong(); sayChain(['miss0', 'miss1'], 'miss'); }
 }
 function reveal(auto) {
   st.state = 'open'; st.openT = performance.now(); st.bounce = st.openT + 500;
@@ -828,16 +868,16 @@ function reveal(auto) {
   }, 1300);
 }
 $('#nextB').onclick = () => { sfx.tap(); newCard(false); };
-$('#backB').onclick = () => { st = null; scratchSound(0); try { speechSynthesis.cancel(); } catch (e) {} renderTitle(); show('title'); };
-$('#gBookB').onclick = () => { scratchSound(0); openBook('game'); };
+$('#backB').onclick = () => { st = null; scratchSound(0); hush(); renderTitle(); show('title'); };
+$('#gBookB').onclick = () => { scratchSound(0); hush(); openBook('game'); };
 $('#hintB').onclick = () => { if (st && st.state !== 'open') { audio(); giveHint(true); } };
 function giveHint(force) {
   // まだ けずっていない、えの ところを ひからせる
-  const left = st.picCells.filter(i => st.grid[i] < .5);
+  const a = doneArr(), left = st.picCells.filter(i => a[i] < .5);
   if (!left.length) return;
   const i = pick(left);
   st.hintAt = { x: (i % GRID + .5) / GRID, y: (Math.floor(i / GRID) + .5) / GRID, t: performance.now() };
-  if (force || !st.hinted) say('hint0');
+  if (force || !st.hinted) say('hint0', null, '', 'hint');
   st.hinted = true;
 }
 
@@ -886,8 +926,8 @@ function frame(now) {
   // けずる おと
   if (st.state !== 'open') { scratchSound(ptrs.size ? speed : 0); speed *= .8; }
   // また かくれる モード: けずる まえの まくを うすく かさねて、すこしずつ もどす
-  // （まいフレームだと うすすぎて いろが のこるので、0.15びょうごとに まとめて かさねる）
-  if (BACK[back] && st.state !== 'open' && (st.backT = (st.backT || 0) + dt) >= .15) {
+  // （まいフレームだと うすすぎて いろが のこるので、0.15びょうごと〔すぐ は 0.05びょうごと〕に まとめて かさねる）
+  if (BACK[back] && st.state !== 'open' && (st.backT = (st.backT || 0) + dt) >= backStep()) {
     const k = 1 - Math.exp(-BACK[back] * st.backT); st.backT = 0;
     covG.save(); covG.setTransform(1, 0, 0, 1, 0, 0); covG.globalCompositeOperation = 'source-over'; covG.globalAlpha = k;
     covG.drawImage(covBase, 0, 0); covG.restore();
@@ -957,7 +997,7 @@ function drawDemo(now) {
   if (!$('#title').classList.contains('on')) return;
   if (!dm || demo.width === 0) demoInit();
   const { S, dpr } = dm, ddt = Math.min(.05, (now - dm.last) / 1000); dm.last = now;
-  if (BACK[back] && (dm.backT = (dm.backT || 0) + ddt) >= .15) { const x = dm.x; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1 - Math.exp(-BACK[back] * dm.backT); dm.backT = 0; x.drawImage(dm.base, 0, 0); x.restore(); }
+  if (BACK[back] && (dm.backT = (dm.backT || 0) + ddt) >= backStep()) { const x = dm.x; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1 - Math.exp(-BACK[back] * dm.backT); dm.backT = 0; x.drawImage(dm.base, 0, 0); x.restore(); }
   dg.setTransform(dpr, 0, 0, dpr, 0, 0);
   dg.fillStyle = '#fff3c9'; dg.fillRect(0, 0, S, S);
   dg.font = `${S * .62}px ${EMOJI_FONT}`; dg.textAlign = 'center'; dg.textBaseline = 'middle';
@@ -1008,7 +1048,7 @@ function renderBook() {
     else if (!it.photo) b.querySelector('span').textContent = '？';
     b.onclick = () => {
       if (!r) { sfx.tap(); return; }
-      b.classList.remove('hop'); void b.offsetWidth; b.classList.add('hop'); say('it_' + it.id);
+      b.classList.remove('hop'); void b.offsetWidth; b.classList.add('hop'); say('it_' + it.id, null, 'swap');
     };
     grid.appendChild(b);
   }

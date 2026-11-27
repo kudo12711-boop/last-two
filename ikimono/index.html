@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#bfe9ff">
 <title>ふしぎな いきもの ずかん</title>
@@ -53,6 +54,8 @@ button{font:inherit;color:inherit}
 .tray button{border:0;background:#fff4e2;border-radius:14px;width:48px;height:48px;font-size:28px;padding:0;cursor:pointer}
 .tray button:active{transform:scale(.9)}
 #meet .hint{bottom:calc(84px + env(safe-area-inset-bottom))}
+#meet .choice{position:absolute;left:0;right:0;bottom:calc(136px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;pointer-events:none}
+#meet .choice .btn{font-size:17px;padding:12px 18px}
 
 /* もーだる */
 .modal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(40,20,60,.35);pointer-events:auto;padding:16px;box-sizing:border-box}
@@ -91,6 +94,13 @@ button{font:inherit;color:inherit}
 .ptotal{font-weight:800;text-align:center;margin:4px 0 2px}
 .bar{height:10px;background:#f1e8f5;border-radius:999px;overflow:hidden;margin:0 0 6px}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,#ff9ac0,#ffc56b)}
+#dFeed{margin-top:10px;background:#fff4e2;border-radius:16px;padding:8px 8px 6px}
+#dFeed .fh{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;padding:0 4px}
+#dTummy{color:var(--sub);font-weight:700;letter-spacing:.05em}#dTummy b{color:#ff9a3a}
+.ftray{display:flex;gap:5px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+.ftray button{border:0;background:#fff;border-radius:12px;width:44px;height:44px;font-size:26px;padding:0;cursor:pointer;box-shadow:0 2px 6px rgba(60,30,80,.12)}
+.ftray button:active{transform:scale(.9)}.ftray button[disabled]{opacity:.35}
+#dFeed .news{margin:4px 0 0}#dFeed .meta{font-size:13px;line-height:1.5}
 #rename{display:none;gap:6px;justify-content:center;margin-top:6px}
 #rename input{font:inherit;font-size:16px;border:2px solid var(--line);border-radius:12px;padding:6px 10px;width:150px;-webkit-user-select:text;user-select:text}
 
@@ -99,6 +109,12 @@ button{font:inherit;color:inherit}
 #slotA{left:12px}#slotB{right:12px}
 #breed .hint{bottom:calc(76px + env(safe-area-inset-bottom))}
 </style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -135,6 +151,7 @@ button{font:inherit;color:inherit}
       <span></span>
     </div>
     <div class="hint" id="mHint"><span class="pill"></span></div>
+    <div class="choice" id="mChoice" style="display:none"><button class="btn pink" id="mYes"></button><button class="btn" id="mNo"></button></div>
     <div class="tray" id="tray"></div>
   </div>
 
@@ -175,6 +192,10 @@ button{font:inherit;color:inherit}
     <div id="rename"><input id="rnIn" maxlength="12"><button class="btn pink" id="rnOk">OK</button></div>
     <div class="meta" id="dMeta"></div>
     <div class="chips" id="dParts"></div>
+    <div id="dFeed"><div class="fh"><b id="dFeedHead"></b><span id="dTummy"></span></div>
+      <div class="ftray" id="dTray"></div>
+      <div class="news" id="dNews"></div>
+      <div class="meta" id="dDiet"></div></div>
     <div class="btns">
       <button class="btn" id="dRen"></button>
       <button class="btn blue" id="dEgg"></button>
@@ -186,7 +207,7 @@ button{font:inherit;color:inherit}
 <script>
 'use strict';
 /* =========================================================
-   ふしぎな いきもの ずかん v0.1
+   ふしぎな いきもの ずかん v0.5（v0.5: もう もっている ぶひん・にた いろでも かならず かわる／v0.3: ごはんで みためが かわる／v0.4: であったときの ごはんは おおきく かわり、なかよしに なるか えらべる）
    - 絵は1枚も使わず、生きもの・景色をすべてプログラムで描く
    - 生きもの = 8つの部品（からだ・もよう・め・くち・あたま・しっぽ・あし・はね）＋ 色
    - 2匹から 部品と色を受けつぐ子どもが 生まれる（ときどき めずらしい部品に かわる）
@@ -234,6 +255,66 @@ const COLLECT = c => PARTS[c].filter(k => k !== 'none');
 const TOTAL_PARTS = CATS.reduce((n, c) => n + COLLECT(c).length, 0);
 
 const FOODS = ['🍎', '🐟', '🌰', '🍯', '🍓', '🥕'];
+/* ---------- ごはんで すこしずつ かわる（v0.3） ----------
+   たべた かいすう e.fd[i] が ふえるほど、その たべものの いろ・かたちに ちかづく。
+   1 - exp(-n/15): 6かいで 3わり、15かいで 6わり、40かいで ほぼ ぜんぶ。 */
+const DIET = [
+  { h: 356, s: 74, l: 66 }, // りんご: あかく、ほっぺが まっかに
+  { h: 200, s: 62, l: 68 }, // さかな: あおく、うろこで つやつや
+  { h: 28, s: 40, l: 55 },  // どんぐり: ちゃいろく、まるまる
+  { h: 45, s: 88, l: 70 },  // はちみつ: きんいろ、おおきく、ひかる
+  { h: 340, s: 80, l: 76 }, // いちご: ピンク、つぶつぶ
+  { h: 24, s: 90, l: 63 },  // にんじん: オレンジ、せが たかく
+];
+// たくさん たべると ぶひんも かわる（v0.4）。きき目 .35 で 1つめ、.65 で 2つめ
+const DIET_PARTS = [ // まえから じゅんに、もう もっている ぶひんは とばして つかう（v0.5）
+  [['body', 'round'], ['mouth', 'tongue'], ['top', 'sprout'], ['pat', 'belly']],     // りんご: まんまる、ぺろり、はっぱ
+  [['tail', 'fin'], ['wings', 'fins'], ['mouth', 'o'], ['pat', 'stripes']],          // さかな: さかなの しっぽ、ひれ
+  [['tail', 'fluffy'], ['top', 'bear'], ['legs', 'paws'], ['body', 'mochi']],        // どんぐり: ふわふわしっぽ、くまみみ
+  [['top', 'antenna'], ['wings', 'fairy'], ['pat', 'stripes'], ['eyes', 'sparkle']], // はちみつ: しょっかく、はね、しましま
+  [['body', 'drop'], ['top', 'sprout'], ['pat', 'spots'], ['mouth', 'smile']],       // いちご: しずくがた、ふたば、みずたま
+  [['top', 'bunny'], ['tail', 'nub'], ['legs', 'four'], ['mouth', 'cat']],           // にんじん: うさみみ、ちょこん しっぽ
+];
+const DIET_STAGE = [.35, .65, .88];
+const DIET_K = 10, DIET_STEPS = [2, 4, 7, 12, 20, 30];
+const FULL_MAX = 6, FULL_MS = 10 * 60 * 1000; // おなかは 6かいで いっぱい。10ぷんで 1つ へる
+const dietAmt = n => 1 - Math.exp(-(n || 0) / DIET_K);
+const lookCache = new WeakMap();
+function lookG(g, fd) {
+  if (!fd || !fd.some(n => n > 0)) return g;
+  const key = fd.join(','), hit = lookCache.get(g); if (hit && hit.key === key) return hit.g;
+  const a = FOODS.map((_, i) => dietAmt(fd[i]));
+  let vx = 0, vy = 0, sa = 0, ss = 0, sl = 0;
+  a.forEach((w, i) => { const r = DIET[i].h * Math.PI / 180; vx += Math.cos(r) * w; vy += Math.sin(r) * w; sa += w; ss += DIET[i].s * w; sl += DIET[i].l * w; });
+  const k = clamp(Math.hypot(vx, vy) * 1.1, 0, .92), th = Math.atan2(vy, vx) * 180 / Math.PI;
+  const d = ((th - g.h1 + 540) % 360) - 180, k2 = clamp(sa * .9, 0, .8);
+  const o = Object.assign({}, g);
+  o.h1 = (g.h1 + d * k + 360) % 360; o.s = lerp(g.s, ss / sa, k2); o.l = lerp(g.l, sl / sa, k2 * .7);
+  // もともと にた いろの ときは、こく あざやかに して ちがいを だす（v0.5）
+  const near = 1 - clamp(Math.abs(d) / 50, 0, 1);
+  if (near > 0) { o.s = clamp(o.s + 28 * k * near, 0, 92); o.l = clamp(o.l + (g.l > 60 ? -20 : 14) * k * near, 30, 90); }
+  const best = {};
+  a.forEach((w, i) => {
+    const n = DIET_STAGE.filter(v => w >= v).length; let used = 0;
+    for (const [cat, k] of DIET_PARTS[i]) {
+      if (used >= n) break;
+      if (g[cat] === k) continue; // もう もっている ぶひんは とばす
+      used++;
+      if (!best[cat] || best[cat] < w) { best[cat] = w; o[cat] = k; }
+    }
+  });
+  o.dz = { blush: a[0], shine: a[1], plump: a[2], big: a[3], seeds: a[4], tall: a[5] };
+  lookCache.set(g, { key, g: o }); return o;
+}
+// であったとき（なかよしの まえ）の ごはんは 1かいで MEET_W かいぶん きく（v0.4）。e.fm に のこす
+const MEET_W = 8;
+const effFd = e => !e.fm ? e.fd : FOODS.map((_, i) => ((e.fd && e.fd[i]) || 0) + (e.fm[i] || 0) * MEET_W);
+const lookOf = e => lookG(e.g, effFd(e));
+function tummy(e) { // いまの おなか（0〜FULL_MAX）。じかんで へる
+  const f = e.ful; if (!f || !f.n) return 0;
+  const k = Math.floor((Date.now() - f.t) / FULL_MS); if (k > 0) { f.n = Math.max(0, f.n - k); f.t += k * FULL_MS; }
+  return f.n;
+}
 
 /* ---------- すみか ---------- */
 const HABS = [
@@ -261,7 +342,8 @@ const TEXT = {
     hab: { meadow: 'のはら', sea: 'うみ', forest: 'もり', snow: 'ゆきやま', volcano: 'かざん', night: 'よるのもり' },
     exHint: 'ゆびで よこに うごかしてね。ゆれている ところを タップ！',
     exHint2: 'ゆれている ところを さがそう',
-    meetHint: 'たべものを あげたり、ゆびで なでたり してね',
+    meetHint: 'ごはんを あげると みためが かわるよ。ゆびで なでても なかよく なれる',
+    choose: 'なかよしに なる？ ごはんで まだ かえられるよ', beFriend: '💞 なかよしに なる', notNow: '👋 またね',
     bye: '← またね', love: 'だいすき！', yum: 'もぐもぐ', purr: 'すりすり',
     friends: 'なかよしに なった！', newPart: p => '✨ あたらしい ぶひん: ' + p, sep: '・', backEx: 'さがしに もどる', toBook: 'ずかんを みる',
     bkTitle: '📖 ずかん', tabC: n => 'いきもの ' + n, tabP: (a, b) => 'ぶひん ' + a + '/' + b,
@@ -287,6 +369,11 @@ const TEXT = {
       wings: { none: 'なし', bird: 'とりの はね', fairy: 'ようせいの はね', bat: 'こうもりの はね', fins: 'ひれ' },
     },
     food: ['りんご', 'さかな', 'どんぐり', 'はちみつ', 'いちご', 'にんじん'],
+    feedHead: '🍽 ごはんを あげる', tummy: 'おなか', full: 'おなか いっぱい！ また あとで あげてね',
+    fed: 'たべたもの: ', dietHint: 'あげた ごはんで、すこしずつ みためが かわるよ',
+    dietNow: 'かわってきた: ', dietLv: ['ほんのり', 'だいぶ', 'すっかり'],
+    dietFx: ['あかく まんまる、ほっぺ まっか', 'あおく つやつや、ひれと さかなの しっぽ', 'ちゃいろく まるまる、ふわふわしっぽと くまみみ', 'きんいろで おおきく、しょっかくと はね', 'ピンクの しずくがた、ふたばと つぶつぶ', 'オレンジで せが たかく、うさみみ'],
+    changed: '✨ すこし かわった！', shaped: '✨ かたちが かわった！', favAte: 'だいすきな ごはん！',
   },
   en: {
     title: 'Curious Critters', sub: 'Search the bushes and make new friends',
@@ -295,7 +382,8 @@ const TEXT = {
     hab: { meadow: 'Meadow', sea: 'Sea', forest: 'Forest', snow: 'Snowy Peaks', volcano: 'Volcano', night: 'Night Woods' },
     exHint: 'Swipe sideways to walk. Tap whatever is shaking!',
     exHint2: 'Look for something shaking',
-    meetHint: 'Give it food or pet it with your finger',
+    meetHint: 'Food changes how it looks. Petting with your finger works too',
+    choose: 'Be friends? You can still feed it to change its look', beFriend: '💞 Be friends', notNow: '👋 Bye',
     bye: '← Bye', love: 'Yummy!', yum: 'Munch', purr: 'Purr',
     friends: 'New friend!', newPart: p => '✨ New parts: ' + p, sep: ', ', backEx: 'Keep exploring', toBook: 'Open the book',
     bkTitle: '📖 Critter Book', tabC: n => 'Critters ' + n, tabP: (a, b) => 'Parts ' + a + '/' + b,
@@ -321,6 +409,11 @@ const TEXT = {
       wings: { none: 'None', bird: 'Bird wings', fairy: 'Fairy wings', bat: 'Bat wings', fins: 'Fins' },
     },
     food: ['apple', 'fish', 'acorn', 'honey', 'strawberry', 'carrot'],
+    feedHead: '🍽 Feed it', tummy: 'Tummy', full: 'All full! Feed it again a bit later',
+    fed: 'Has eaten: ', dietHint: 'What it eats slowly changes how it looks',
+    dietNow: 'Changing: ', dietLv: ['a little', 'quite', 'very'],
+    dietFx: ['red and round, rosy cheeks', 'blue and shiny, fins and a fish tail', 'brown and chubby, fluffy tail and bear ears', 'golden and bigger, antennae and wings', 'a pink drop shape, sprout and seeds', 'orange and tall, bunny ears'],
+    changed: '✨ It changed a little!', shaped: '✨ Its shape changed!', favAte: 'Its favorite!',
   }
 };
 function pickLang() {
@@ -478,25 +571,30 @@ function starPath(c, x, y, r, n = 5) {
 function fillStroke(c, fill, line, lw) { c.fillStyle = fill; c.fill(); c.strokeStyle = line; c.lineWidth = lw; c.stroke(); }
 
 function drawCreature(c, g, x, y, R, st = {}) {
-  const t = st.t || 0, P = pal(g), I = bodyInfo(g.body, R), float = g.legs === 'none';
+  const t = st.t || 0, P = pal(g), I = bodyInfo(g.body, R), float = g.legs === 'none', z = g.dz;
   const lw = Math.max(1.4, R * .055);
+  const zs = z ? 1 + .22 * z.big : 1, zx = z ? zs * (1 + .26 * z.plump - .08 * z.tall) : 1, zy = z ? zs * (1 + .26 * z.tall - .08 * z.plump) : 1;
   const bob = float ? Math.sin(t * 2 + g.seed % 5) * R * .08 - R * .22 : 0;
   if (!st.noShadow) {
     c.fillStyle = 'rgba(30,20,40,.18)'; c.beginPath();
-    c.ellipse(x, y + I.bot + R * .05, I.hw * (float ? .55 : .85), R * .12, 0, 0, TAU); c.fill();
+    c.ellipse(x, y + I.bot + R * .05, I.hw * (float ? .55 : .85) * zx, R * .12, 0, 0, TAU); c.fill();
   }
   c.save();
   c.translate(x + (st.dx || 0), y + bob - (st.lift || 0));
   const br = Math.sin(t * 2.4 + g.seed % 7) * .025 + (st.squash || 0);
-  c.translate(0, I.bot); c.scale((st.flip ? -1 : 1) * (1 + br), 1 - br); c.translate(0, -I.bot);
+  c.translate(0, I.bot); c.scale((st.flip ? -1 : 1) * (1 + br) * zx, (1 - br) * zy); c.translate(0, -I.bot);
   c.lineJoin = 'round'; c.lineCap = 'round';
+  if (z && z.big > .04) { // はちみつ: きんいろに ひかる
+    c.save(); c.shadowColor = 'rgba(255,200,60,' + (.35 + .5 * z.big) * (.8 + .2 * Math.sin(t * 2.5)) + ')'; c.shadowBlur = R * (.25 + .7 * z.big);
+    bodyPath(c, g.body, R); c.fillStyle = P.body; c.fill(); c.restore();
+  }
   const happy = st.mood === 'happy';
   drawWings(c, g, P, I, R, t, lw, happy);
   drawTail(c, g, P, I, R, t, lw, happy);
   drawLegs(c, g, P, I, R, t, lw, 'back', st);
   drawTop(c, g, P, I, R, t, lw, 'back');
   bodyPath(c, g.body, R); c.fillStyle = P.body; c.fill();
-  c.save(); bodyPath(c, g.body, R); c.clip(); drawPattern(c, g, P, I, R, t);
+  c.save(); bodyPath(c, g.body, R); c.clip(); drawPattern(c, g, P, I, R, t); if (z) drawDiet(c, g, z, I, R, t);
   let gr = c.createRadialGradient(-I.hw * .35, I.top * .55, R * .05, -I.hw * .35, I.top * .55, R * 1.1);
   gr.addColorStop(0, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
   c.fillStyle = gr; c.fillRect(-R * 2, -R * 2, R * 4, R * 4);
@@ -508,7 +606,33 @@ function drawCreature(c, g, x, y, R, st = {}) {
   drawLegs(c, g, P, I, R, t, lw, 'front', st);
   drawTop(c, g, P, I, R, t, lw, 'front');
   drawFace(c, g, P, I, R, t, lw, st);
+  if (z && z.big > .3) { // きらきら
+    for (let i = 0; i < 3; i++) { const a = t * .8 + i * TAU / 3, rr = R * 1.25; starPath(c, Math.cos(a) * rr, I.top * .3 + Math.sin(a) * rr * .45, R * .07 * (z.big - .15)); c.fillStyle = 'rgba(255,224,102,' + (.5 + .4 * Math.sin(t * 4 + i)) + ')'; c.fill(); }
+  }
   c.restore();
+}
+function drawDiet(c, g, z, I, R, t) {
+  if (z.shine > .03) { // さかな: うろこ と つや
+    c.strokeStyle = 'rgba(255,255,255,' + (.6 * z.shine) + ')'; c.lineWidth = Math.max(1, R * .035);
+    const sc = R * .2;
+    for (let row = 0; row < 5; row++) for (let col = -6; col <= 6; col++) {
+      const x = col * sc * 1.1 + (row % 2 ? sc * .55 : 0), y = I.bot - R * .1 - row * sc * .75;
+      if (Math.abs(x) > I.hw * (1 - row * .08)) continue;
+      c.beginPath(); c.arc(x, y, sc * .55, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
+    }
+    const sx = ((t * .35) % 1.6 - .3) * I.hw * 2 - I.hw;
+    const gr = c.createLinearGradient(sx - R * .3, 0, sx + R * .3, 0);
+    gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.5, 'rgba(255,255,255,' + (.45 * z.shine) + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = gr; c.fillRect(-R * 2, -R * 2, R * 4, R * 4);
+  }
+  if (z.seeds > .03) { // いちご: つぶつぶ（ふえていく）
+    const rng = mulberry(g.seed + 31), n = Math.round(22 * z.seeds);
+    for (let i = 0; i < n; i++) {
+      const x = lerp(-I.hw * .85, I.hw * .85, rng()), y = lerp(I.top * .8, I.bot * .85, rng()), s = R * .045;
+      c.fillStyle = '#ffe27a'; c.beginPath(); c.ellipse(x, y, s * .7, s, 0, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(160,90,20,.35)'; c.beginPath(); c.ellipse(x + s * .2, y + s * .3, s * .3, s * .4, 0, 0, TAU); c.fill();
+    }
+  }
 }
 function drawPattern(c, g, P, I, R, t) {
   const rng = mulberry(g.seed);
@@ -587,8 +711,9 @@ function drawFace(c, g, P, I, R, t, lw, st) {
   }
   // ほっぺ
   const my = ey + (g.eyes === 'one' ? R * .4 : R * .3);
-  c.fillStyle = 'rgba(255,110,150,' + (mood === 'happy' || mood === 'shy' ? .55 : .3) + ')';
-  for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * (ew + R * .17), my - R * .06, R * .1, R * .06, 0, 0, TAU); c.fill(); }
+  const bl = g.dz ? g.dz.blush : 0;
+  c.fillStyle = 'rgba(255,' + Math.round(110 - 60 * bl) + ',' + Math.round(150 - 60 * bl) + ',' + Math.min(.85, (mood === 'happy' || mood === 'shy' ? .55 : .3) + .45 * bl) + ')';
+  for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * (ew + R * .17), my - R * .06, R * (.1 + .07 * bl), R * (.06 + .04 * bl), 0, 0, TAU); c.fill(); }
   // くち
   const chomp = mood === 'eat' && Math.sin(t * 18) > 0;
   const open = mood === 'happy' || (mood === 'eat' && !chomp);
@@ -1105,13 +1230,21 @@ function sceneAmb() {
 addEventListener('pointerdown', () => { ac(); if (!AMB.master && !muted) sceneAmb(); }, true); // さいしょの タップで 音が でる
 document.addEventListener('visibilitychange', () => { if (!AC) return; if (document.hidden) AC.suspend(); else AC.resume(); });
 // その場所の「がさがさ」と あしおと
+// やわらかい ざわざわ（いきなり 鳴らさず ふわっと 大きくして、ふわっと 消す）
+function softNoise(d, v, freq, delay = 0, q = .7) {
+  if (muted) return; const a = ac(); if (!a) return; const t = a.currentTime + delay;
+  const s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+  s.buffer = getNoise(a); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + d * .4); g.gain.linearRampToValueAtTime(.0001, t + d);
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start(t, rnd(1.5), d + .05);
+}
 function habRustle() {
   switch (hab.id) {
-    case 'sea': for (let i = 0; i < 4; i++) tone(rnd(300, 600), .1, 'sine', .08, rnd(800, 1400), i * .07); break;   // ぶくぶく
-    case 'snow': noise(.15, .25, 700); noise(.12, .2, 950, .1); break;                                                // ゆきが どさっ
-    case 'volcano': for (let i = 0; i < 4; i++) noise(.05, .35, 450, i * .06); break;                                  // いしが ころころ
-    case 'night': [1568, 1976, 2349].forEach((f, i) => tone(f, .3, 'sine', .04, null, i * .07)); break;               // きのこが ちりりん
-    default: sfx.rustle();                                                                                            // はっぱが がさがさ
+    case 'sea': for (let i = 0; i < 3; i++) tone(rnd(300, 500), .12, 'sine', .035, rnd(600, 900), i * .12); break;   // ぷくぷく
+    case 'snow': softNoise(.5, .05, 900); break;                                                                      // ゆきが さらさら
+    case 'volcano': softNoise(.35, .06, 500); softNoise(.3, .04, 700, .15); break;                                    // いしが ころころ
+    case 'night': [1568, 1976].forEach((f, i) => tone(f, .4, 'sine', .02, null, i * .1)); break;                     // きのこが ちりん
+    default: softNoise(.5, .05, 1700); softNoise(.4, .035, 2300, .18);                                               // はっぱが さわさわ
   }
 }
 function habStep() {
@@ -1143,7 +1276,7 @@ if (window.Kakin) Kakin.setup({
 let demo = [];
 function makeDemo() {
   const src = book.list.slice(-3);
-  demo = (src.length ? src.map(e => e.g) : [wildGenome(HABS[0]), wildGenome(HABS[1]), wildGenome(HABS[2])]).map((g, i) => ({ g, x: (i + 1) / 4, ph: rnd(TAU) }));
+  demo = (src.length ? src.map(lookOf) : [wildGenome(HABS[0]), wildGenome(HABS[1]), wildGenome(HABS[2])]).map((g, i) => ({ g, x: (i + 1) / 4, ph: rnd(TAU) }));
 }
 function renderTitle() {
   const t = T();
@@ -1207,13 +1340,13 @@ function updateExplore(dt) {
   if (shaking && (now > shaking.until || Math.abs(bushX(shaking.k) - camX - W / 2) > W)) { shaking = null; nextShake = now + rnd(1500, 3000); }
   if (!shaking && now > nextShake) {
     const vis = visibleBushes().filter(b => b.sx > 50 && b.sx < W - 50);
-    if (vis.length) { shaking = { k: pick(vis).k, until: now + 7000, nextFx: 0 }; habRustle(); } else nextShake = now + 500;
+    if (vis.length) { shaking = { k: pick(vis).k, until: now + 7000, nextFx: 0, nextSnd: now + 1800 }; habRustle(); } else nextShake = now + 500;
   }
   if (shaking && now > shaking.nextFx) {
     shaking.nextFx = now + rnd(250, 500);
+    if (now > (shaking.nextSnd || 0)) { shaking.nextSnd = now + rnd(1600, 2400); if (now < shaking.until - 2500) habRustle(); }
     const sx = bushX(shaking.k) - camX;
     spawn({ kind: 'leaf', x: sx + rnd(-30, 30), y: GY() - rnd(30, 60), vx: rnd(-.06, .06), vy: -.08, g: .0004, life: 900, size: 5, col: hab.id === 'snow' ? '#fff' : hab.id === 'volcano' ? '#ffb35a' : hab.id === 'night' ? '#c7a8ff' : '#6cc069' });
-    if (Math.random() < .5) habRustle();
   }
 }
 let lastCam = 0;
@@ -1264,10 +1397,11 @@ let meet = null;
 function meetR() { return clamp(Math.min(W, H * .9) * .2, 50, 130); }
 function meetPos() { const R = meetR(); return { x: W / 2, y: GY() + H * .04 - bodyInfo(meet.g.body, R).bot, R }; }
 function enterMeet(g, fromX) {
-  meet = { g, hearts: 0, rub: 0, mood: 'shy', moodUntil: 0, food: null, eatUntil: 0, done: false, fk: false, fromX, t0: now, lastPurr: 0 };
+  meet = { g, fd: [0, 0, 0, 0, 0, 0], fv: [0, 0, 0, 0, 0, 0], hearts: 0, rub: 0, mood: 'shy', moodUntil: 0, food: null, eatUntil: 0, done: false, fk: false, fromX, t0: now, lastPurr: 0 };
   pop = null; showScene('meet');
   $('#mBye').textContent = T().bye;
-  $('#mHint .pill').textContent = T().meetHint;
+  $('#mHint .pill').textContent = T().meetHint; $('#mHint').style.display = '';
+  $('#mChoice').style.display = 'none'; $('#mYes').textContent = T().beFriend; $('#mNo').textContent = T().notNow;
   const tr = $('#tray'); tr.innerHTML = '';
   FOODS.forEach((f, i) => {
     const b = document.createElement('button'); b.textContent = f; b.title = T().food[i];
@@ -1275,9 +1409,11 @@ function enterMeet(g, fromX) {
   });
 }
 $('#mBye').onclick = () => { sfx.tap(); meet = null; showScene('explore'); nextShake = now + 1500; };
+$('#mNo').onclick = () => $('#mBye').click();
+$('#mYes').onclick = () => { if (!meet || !meet.done || meet.food || meet.going) return; meet.going = true; sfx.tap(); const mp = meetPos(); burstHearts(mp.x, mp.y - mp.R * .4, 16); burstSparkle(mp.x, mp.y - mp.R, 16); sfx.love(); $('#mChoice').style.display = 'none'; setTimeout(befriend, 700); };
 function setMood(m, ms) { meet.mood = m; meet.moodUntil = now + ms; }
 function feed(i, btn) {
-  if (!meet || meet.food || meet.done) return;
+  if (!meet || meet.food || meet.going) return;
   ac(); sfx.tap();
   const r = btn.getBoundingClientRect();
   meet.food = { i, t0: now, fx: r.left + r.width / 2, fy: r.top + r.height / 2 };
@@ -1288,9 +1424,9 @@ function addHearts(n, txt) {
   burstHearts(mp.x, mp.y - mp.R * .6, 4 + n * 2); sfx.heart();
   if (txt) floatText(mp.x, mp.y - mp.R * 1.6, txt);
   if (meet.hearts >= 5 && !meet.done) {
-    meet.done = true; setMood('happy', 99999); sfx.love();
-    setTimeout(() => { burstHearts(mp.x, mp.y - mp.R * .4, 16); burstSparkle(mp.x, mp.y - mp.R, 16); }, 300);
-    setTimeout(befriend, 1400);
+    // すぐ なかよしに せず、みためを みてから えらべる（v0.4）
+    meet.done = true; setMood('happy', 1500); sfx.heart();
+    $('#mHint .pill').textContent = T().choose; $('#mChoice').style.display = '';
   }
 }
 function updateMeet(dt) {
@@ -1301,7 +1437,9 @@ function updateMeet(dt) {
   const f = meet.food;
   if (f && !f.arrived && now - f.t0 > 550) { f.arrived = true; meet.eatUntil = now + 900; setMood('eat', 900); sfx.munch(); }
   if (f && f.arrived && now > meet.eatUntil) {
-    meet.food = null;
+    meet.food = null; meet.fd[f.i]++;
+    { const mp = meetPos(); burstSparkle(mp.x, mp.y - mp.R * .3, 14); sfx.hatch(); }
+    if (meet.done) { setMood(f.i === meet.g.food ? 'happy' : 'idle', 900); if (f.i === meet.g.food) meet.fk = true; floatText(meetPos().x, meetPos().y - meetPos().R * 1.6, f.i === meet.g.food ? T().love : T().yum); return; }
     if (f.i === meet.g.food) { meet.fk = true; setMood('happy', 1500); addHearts(2, T().love); }
     else { setMood('idle', 600); addHearts(1, T().yum); }
   }
@@ -1315,7 +1453,8 @@ function drawMeet(dt) {
   const lift = meet.mood === 'happy' ? Math.abs(Math.sin(TS * 7)) * mp.R * .18 : e < 1 ? Math.sin(e * Math.PI) * mp.R * .5 : 0;
   const dx = meet.mood === 'shy' ? Math.sin(TS * 30) * 1.2 : 0;
   const look = P.down ? clamp((P.x - x) / (W / 2), -1, 1) : 0;
-  drawCreature(ctx, meet.g, x, mp.y, mp.R, { t: TS, mood: meet.mood, lift, dx, look, walk: e < 1 });
+  for (let i = 0; i < 6; i++) meet.fv[i] += (meet.fd[i] * MEET_W - meet.fv[i]) * Math.min(1, dt / 220); // ふわっと かわる
+  drawCreature(ctx, lookG(meet.g, meet.fv.map(v => Math.round(v * 10) / 10)), x, mp.y, mp.R, { t: TS, mood: meet.mood, lift, dx, look, walk: e < 1 });
   // たべもの が とんでいく
   const f = meet.food;
   if (f && !f.arrived) {
@@ -1346,9 +1485,11 @@ function rubMeet(dx, dy) {
   if (meet.rub > 650) { meet.rub = 0; setMood('happy', 900); addHearts(1, T().purr); }
 }
 function befriend() {
-  if (!meet) return;
+  if (!meet || meet.chosen) return; meet.chosen = true;
   const { e, newParts } = addToBook(meet.g, hab.id, null);
-  if (meet.fk) { e.fk = true; saveBook(); }
+  if (meet.fk) e.fk = true;
+  if (meet.fd.some(n => n > 0)) e.fm = meet.fd.slice();
+  saveBook();
   sfx.fan();
   showResult({ head: T().friends, e, newParts, a: T().backEx, b: T().toBook,
     onA: () => { meet = null; showScene('explore'); nextShake = now + 1200; renderTitle(); },
@@ -1357,13 +1498,24 @@ function befriend() {
 
 /* ---------- けっか ---------- */
 const live = new Set();
-function makeLive(g, size, mood) {
+function makeLive(src, size, mood) { // src = ずかんの いきもの（e）か いでんし（g）
   const c = document.createElement('canvas'); c.width = Math.round(size * DPR); c.height = Math.round(size * DPR);
-  c.style.width = c.style.height = size + 'px'; const o = { c, g, size, mood }; live.add(o); drawPortrait(o); return c;
+  c.style.width = c.style.height = size + 'px'; const o = src.g ? { c, e: src, size, mood } : { c, g: src, size, mood }; live.add(o); drawPortrait(o); return o;
 }
 function drawPortrait(o, t = TS) {
   const x = o.c.getContext('2d'); x.setTransform(DPR, 0, 0, DPR, 0, 0); x.clearRect(0, 0, o.size, o.size);
-  const R = o.size / 4.4; drawCreature(x, o.g, o.size / 2, o.size * .62, R, { t, mood: o.mood || 'idle', lift: o.mood === 'happy' ? Math.abs(Math.sin(t * 5)) * R * .12 : 0 });
+  if (o.moodUntil && now > o.moodUntil) { o.mood = o.next || 'idle'; o.moodUntil = o.next = 0; }
+  const g = o.e ? lookOf(o.e) : o.g, R = o.size / 4.4, cx = o.size / 2, cy = o.size * .62;
+  drawCreature(x, g, cx, cy, R, { t, mood: o.mood || 'idle', lift: o.mood === 'happy' ? Math.abs(Math.sin(t * 5)) * R * .12 : 0 });
+  if (o.food) { // たべものが とんでくる
+    const p = clamp((now - o.food.t0) / 500, 0, 1), ty = cy + bodyInfo(g.body, R).eyeY + R * .35;
+    if (p < 1) { x.font = (30 - p * 10) + 'px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(FOODS[o.food.i], cx, lerp(o.size - 12, ty, p) - Math.sin(p * Math.PI) * 30); }
+  }
+  if (o.spark) { // かわった ときの きらきら
+    const p = (now - o.spark) / 1200;
+    if (p >= 1) o.spark = 0;
+    else for (let i = 0; i < 8; i++) { const a = i / 8 * TAU + p * 2, rr = R * (1 + p * .9); starPath(x, cx + Math.cos(a) * rr, cy - R * .3 + Math.sin(a) * rr * .8, R * .12 * (1 - p)); x.fillStyle = i % 2 ? '#ffe066' : '#ffc6ff'; x.fill(); }
+  }
 }
 function thumb(g, size) {
   const c = document.createElement('canvas'); c.width = Math.round(size * DPR); c.height = Math.round(size * DPR); c.style.width = c.style.height = size + 'px';
@@ -1374,7 +1526,7 @@ let resultCb = null;
 function showResult(o) {
   const t = T();
   $('#rHead').textContent = o.head;
-  const pic = $('#rPic'); pic.innerHTML = ''; pic.appendChild(makeLive(o.e.g, 190, 'happy'));
+  const pic = $('#rPic'); pic.innerHTML = ''; pic.appendChild(makeLive(o.e, 190, 'happy').c);
   $('#rName').textContent = dispName(o.e);
   $('#rMeta').textContent = t.no(o.e.id) + (o.e.from === 'egg' ? ' · ' + t.gen(o.e.gen) : '');
   const news = [];
@@ -1395,7 +1547,7 @@ $('#tabC').onclick = () => { bookTab = 'c'; sfx.tap(); renderBook(); };
 $('#tabP').onclick = () => { bookTab = 'p'; sfx.tap(); renderBook(); };
 function cell(e, onclick) {
   const b = document.createElement('button'); b.className = 'cell';
-  b.appendChild(thumb(e.g, 86));
+  b.appendChild(thumb(lookOf(e), 86));
   b.insertAdjacentHTML('beforeend', '<div class="n">' + T().no(e.id) + '</div><div class="t"></div>' +
     '<span class="b">' + (rareCount(e.g) ? '★' : '') + (e.from === 'egg' ? '🥚' : '') + '</span>');
   b.querySelector('.t').textContent = dispName(e);
@@ -1431,23 +1583,72 @@ function renderBook() {
     }
   }
 }
-let detailE = null;
-function openDetail(e) {
-  detailE = e; const t = T();
-  const pic = $('#dPic'); pic.innerHTML = ''; pic.appendChild(makeLive(e.g, 200, 'idle'));
-  $('#dName').textContent = dispName(e); $('#rename').style.display = 'none';
+let detailE = null, detailO = null;
+function openDetailMeta(e) {
+  const t = T();
   const lines = [t.no(e.id) + ' · ' + (e.from === 'egg' ? t.fromEgg + ' · ' + t.gen(e.gen) : t.fromHab(t.hab[e.from] || ''))];
   if (e.par) { const a = findE(e.par[0]), b = findE(e.par[1]); if (a && b) lines.push(t.parents(dispName(a), dispName(b))); }
   lines.push(e.fk ? t.likes(FOODS[e.g.food] + ' ' + t.food[e.g.food]) : t.likesQ);
   $('#dMeta').innerHTML = lines.map(s => '<div></div>').join('');
   $('#dMeta').querySelectorAll('div').forEach((d, i) => d.textContent = lines[i]);
+}
+function openDetail(e) {
+  detailE = e; const t = T();
+  const pic = $('#dPic'); pic.innerHTML = ''; detailO = makeLive(e, 200, 'idle'); pic.appendChild(detailO.c);
+  $('#dName').textContent = dispName(e); $('#rename').style.display = 'none';
+  openDetailMeta(e);
   const ch = $('#dParts'); ch.innerHTML = '';
-  for (const c of CATS) { if (c !== 'body' && (e.g[c] === 'none')) continue; const s = document.createElement('span'); s.className = 'chip' + (isRare(c, e.g[c]) ? ' rare' : ''); s.textContent = (isRare(c, e.g[c]) ? '★ ' : '') + partName(c, e.g[c]); ch.appendChild(s); }
+  const lg = lookOf(e);
+  for (const c of CATS) { if (c !== 'body' && (lg[c] === 'none')) continue; const s = document.createElement('span'); s.className = 'chip' + (isRare(c, lg[c]) ? ' rare' : ''); s.textContent = (isRare(c, lg[c]) ? '★ ' : '') + partName(c, lg[c]); ch.appendChild(s); }
   $('#dRen').textContent = t.rename; $('#dEgg').textContent = t.useEgg; $('#dClose').textContent = t.close;
   $('#dEgg').style.display = book.list.length >= 2 ? '' : 'none';
+  $('#dFeedHead').textContent = t.feedHead;
+  const tr = $('#dTray'); tr.innerHTML = '';
+  FOODS.forEach((f, i) => { const b = document.createElement('button'); b.textContent = f; b.title = t.food[i]; b.onclick = () => feedBook(i); tr.appendChild(b); });
+  $('#dNews').textContent = '';
+  renderDiet();
   $('#detail').classList.add('on');
 }
-$('#dClose').onclick = () => { sfx.tap(); $('#detail').classList.remove('on'); };
+function renderDiet() {
+  const e = detailE, t = T(), fd = FOODS.map((_, i) => ((e.fd && e.fd[i]) || 0) + ((e.fm && e.fm[i]) || 0)), ef = effFd(e) || [], n = tummy(e), full = n >= FULL_MAX;
+  $('#dTummy').innerHTML = t.tummy + ' ' + '<b>' + '●'.repeat(n) + '</b>' + '○'.repeat(FULL_MAX - n);
+  $('#dTray').querySelectorAll('button').forEach(b => b.disabled = full);
+  const lines = [];
+  if (full) lines.push(t.full);
+  const eaten = FOODS.map((f, i) => ({ f, i, n: fd[i] || 0, x: ef[i] || 0 })).filter(o => o.n > 0);
+  if (!eaten.length) lines.push(t.dietHint);
+  else {
+    lines.push(t.fed + eaten.map(o => o.f + o.n).join(' '));
+    const ch = eaten.filter(o => o.x >= 3).sort((a, b) => b.x - a.x).slice(0, 2);
+    if (ch.length) lines.push(t.dietNow + ch.map(o => { const a = dietAmt(o.x); return o.f + ' ' + t.dietLv[a < .4 ? 0 : a < .75 ? 1 : 2] + ' ' + t.dietFx[o.i]; }).join(t.sep));
+    else lines.push(t.dietHint);
+  }
+  const d = $('#dDiet'); d.innerHTML = lines.map(() => '<div></div>').join('');
+  d.querySelectorAll('div').forEach((x, i) => x.textContent = lines[i]);
+}
+let feeding = false;
+function feedBook(i) {
+  const e = detailE, o = detailO; if (!e || !o || feeding) return;
+  ac();
+  if (tummy(e) >= FULL_MAX) { sfx.tap(); renderDiet(); return; }
+  feeding = true; sfx.tap(); $('#dNews').textContent = '';
+  o.food = { i, t0: now };
+  setTimeout(() => { o.food = null; o.mood = 'eat'; o.moodUntil = now + 900; o.next = 'idle'; sfx.munch(); }, 500);
+  setTimeout(() => {
+    feeding = false;
+    const before = lookOf(e);
+    e.fd = e.fd || [0, 0, 0, 0, 0, 0]; e.fd[i] = (e.fd[i] || 0) + 1;
+    const after = lookOf(e), shape = CATS.some(c => before[c] !== after[c]);
+    const n = tummy(e); e.ful = { n: n + 1, t: n ? e.ful.t : Date.now() };
+    const news = [];
+    if (i === e.g.food) { o.mood = 'happy'; o.moodUntil = now + 1200; sfx.heart(); news.push(T().favAte); if (!e.fk) { e.fk = true; if (detailE === e) openDetailMeta(e); } }
+    else { o.mood = 'happy'; o.moodUntil = now + 600; }
+    if (shape || DIET_STEPS.includes(e.fd[i])) { o.spark = now; setTimeout(() => sfx.hatch(), 250); news.push(shape ? T().shaped : T().changed); }
+    saveBook();
+    if (detailE === e && detailO === o) { renderDiet(); $('#dNews').textContent = news.join(' '); }
+  }, 1450);
+}
+$('#dClose').onclick = () => { sfx.tap(); $('#detail').classList.remove('on'); detailO = null; if ($('#book').classList.contains('on')) renderBook(); };
 $('#dRen').onclick = () => { sfx.tap(); $('#rename').style.display = 'flex'; $('#rnIn').value = dispName(detailE); $('#rnIn').focus(); };
 $('#rnOk').onclick = () => {
   const v = $('#rnIn').value.trim().slice(0, 12); detailE.cn = v; saveBook();
@@ -1553,7 +1754,7 @@ function drawBreed(dt) {
     if (!br[w]) continue;
     const q = brPos(w);
     const mood = br.phase === 'love' ? 'happy' : br.drag === w ? 'happy' : 'idle';
-    drawCreature(ctx, br[w].g, q.x, q.y, q.R, { t: TS + (w === 'b' ? 1.3 : 0), mood, flip: w === 'b', look: w === 'a' ? .7 : -.7, walk: br.drag === w });
+    drawCreature(ctx, lookOf(br[w]), q.x, q.y, q.R, { t: TS + (w === 'b' ? 1.3 : 0), mood, flip: w === 'b', look: w === 'a' ? .7 : -.7, walk: br.drag === w });
   }
   if (br.phase === 'egg') drawEgg(n.x, n.y - 4, Math.min(W, H) * .22, br.child.e.g, br.cracks, br.wob);
   if (br.phase === 'hatch') {

@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- hikkoshi --><script src="../common/hikkoshi.js"></script><!-- /hikkoshi -->
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#ffe9a8">
 <title>まちがいさがし</title>
@@ -115,6 +116,12 @@ input[type=file]{display:none}
 .opt button{padding:8px 12px;border-radius:12px;background:var(--soft);font-weight:700;font-size:14px}
 .opt button.sel{background:var(--accent);color:#fff}
 </style>
+<!-- app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<script src="../common/app.js" defer></script>
+<!-- /app -->
 </head>
 <body>
 
@@ -211,7 +218,7 @@ const TEXT = {
     parents: 'おうちのかたへ',
     howto: '・上と下（よこ向きなら左と右）の絵で、ちがうところをタッチします。どちらの絵をタッチしてもOKです。<br>・「しゃしんで あそぶ」を選ぶと、スマホの写真から自動で「色がかわる・物が消える・さかさまになる・大きくなる・シールがふえる」などの違いを作ります。写真はこの端末の中だけで使い、どこにも送りません。<br>・見つからないときは 💡 で場所がふんわり光ります。<br>・同じ写真でも「つぎの もんだい」で違う間違いになります。',
     recH: '🎙️ ほめる こえ', recNote: 'おうちの方の声を録音すると、その声でほめてくれます（いちばんおすすめ）。同じ場面に いくつも録音すると、毎回ランダムに えらばれます。録音はこの端末の中だけに保存されます。ひとつでも録音すると、機械の声は使わなくなります（録音していない「ぜんぶ」「ヒント」は「あたり」の録音でほめます）。録音がないときは、下で選んだ声が話します。',
-    test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた自然な声です（Kokoro-82M／Apache-2.0）。',
+    test: '▶ ためす', voiceNote: '「AIのこえ」は、あらかじめ AI で作っておいた声です。日本語の声：VOICEVOX:冥鳴ひまり（1）、VOICEVOX:四国めたん（2）、VOICEVOX:ずんだもん（3）、VOICEVOX:雨晴はう（4）。英語の声：Kokoro-82M（Apache-2.0）。',
     aiVoice: n => `AIのこえ ${n}`, devVoice: name => `スマホの読み上げ（${name}）`, noVoice: 'こえ なし（音だけ）', devTest: 'みーつけた！ すごいね！',
     fullH: '🔓 ぜんぶ版', fullNote: 'むりょうでは「のはら」と、しゃしんで あそぶ（1日2まいまで）、こえの録音が使えます。ぜんぶ版（買い切り）か ファミリーパスで、ほかの 7つの えと、しゃしんを何まいでも使えるようになります。広告は出しません。',
     close: 'とじる', takesN: n => `${n}こ`, ex: 'れい：', q: t => `「${t}」`, stop: '■ とめる', recMore: '＋ ろくおん', rec: '● ろくおん', del: 'けす',
@@ -236,7 +243,7 @@ const TEXT = {
     parents: 'For grown-ups',
     howto: '• Tap the differences between the top and bottom pictures (left and right in landscape). Tapping either picture is fine.<br>• “Play with a photo” turns a photo on this device into a puzzle, automatically adding differences such as a changed color, a missing object, something upside down, something bigger or an extra sticker. Photos stay on this device and are never sent anywhere.<br>• If your child is stuck, 💡 gently lights up the spot.<br>• “Next puzzle” makes new differences, even with the same photo.',
     recH: '🎙️ Praise voice', recNote: 'Record your own voice and the game will praise your child with it (our top tip). Record several takes per scene and one is picked at random each time. Recordings are saved only on this device. Once anything is recorded, the machine voice is no longer used (“All found” and “Hint” fall back to your “Correct” recordings). Without recordings, the voice chosen below speaks.',
-    test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI (Kokoro-82M / Apache-2.0).',
+    test: '▶ Try', voiceNote: '“AI voices” were made in advance with AI. Japanese voices: VOICEVOX:冥鳴ひまり, VOICEVOX:四国めたん, VOICEVOX:ずんだもん, VOICEVOX:雨晴はう. English voices: Kokoro-82M (Apache-2.0).',
     aiVoice: n => `AI voice ${n}`, devVoice: name => `Device voice (${name})`, noVoice: 'No voice (sounds only)', devTest: 'Found it! Great job!',
     fullH: '🔓 Full version', fullNote: 'Free: “Meadow”, photo mode (2 photos a day) and voice recording. The full version (one-time purchase) or the Family Pass opens the other 7 picture sets and unlimited photos. No ads.',
     close: 'Close', takesN: n => `${n}`, ex: 'e.g. ', q: t => `“${t}”`, stop: '■ Stop', recMore: '+ Record', rec: '● Record', del: 'Delete',
@@ -296,7 +303,7 @@ const sfx = {
 };
 /* こえ：①おうちの人の録音 → ②AIで作っておいた声（voice/フォルダ）→ ③端末の読み上げ の順に使う */
 // AIのこえ 1〜4。ことばごとに ちがう声（voice/<声>/<場面><番号>.mp3）
-const AI_VOICES = { ja: ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
+const AI_VOICES = { ja: ['vv_himari', 'vv_metan', 'vv_zunda', 'vv_hau'], en: ['af_heart', 'af_bella', 'bf_emma', 'am_michael'] };
 const aiCount = cat => T().say[cat].length;
 const aiBuf = {}; // 'jf_alpha/ok0' -> AudioBuffer
 let aiSrc = null;
@@ -310,15 +317,56 @@ function aiLoad(id) {
       .then(buf => { aiBuf[k] = buf; }).catch(() => { delete aiBuf[k]; });
   }
 }
-function aiPlay(id, cat) {
+/* ---------- こえの じゅんばんまち（2026-11-16）: どの こえも さいごまで よむ。とめるのは がめんを でるとき（hush）だけ ----------
+   mode: なし＝じゅんばんに まつ / 'idle'＝ほかの こえが なっていなければ だけ（おしゃべり）/ 'swap'＝'swap' どうしだけ いれかわる（かぞえる こえ・タップで なまえ） */
+const VQ = { q: [], cur: null, seq: 0 };
+function vqBusy() { return !!VQ.cur || VQ.q.length > 0; }
+function vqHas(tag) { return (VQ.cur && VQ.cur.tag === tag) || VQ.q.some(x => x.tag === tag); }
+function vqAdd(it, mode) {
+  if (mode === 'idle' && vqBusy()) return false;
+  it.swap = mode === 'swap';
+  if (it.swap) { VQ.q = VQ.q.filter(x => !x.swap); if (VQ.cur && VQ.cur.swap) vqCut(); }
+  VQ.q.push(it); vqNext(); return true;
+}
+function vqCut() { const c = VQ.cur; VQ.cur = null; VQ.seq++; if (c && c.stop) try { c.stop(); } catch (e) {} }
+function vqNext() {
+  if (VQ.cur) return;
+  const it = VQ.q.shift(); if (!it) return;
+  VQ.cur = it; const my = ++VQ.seq; let fin = false, safety = 0;
+  const done = () => { if (fin) return; fin = true; clearTimeout(safety); if (my !== VQ.seq) return; VQ.cur = null; if (it.onend) try { it.onend(); } catch (e) {} vqNext(); };
+  safety = setTimeout(done, (it.max || 8) * 1000);
+  try { it.stop = it.play(done) || null; } catch (e) { done(); }
+}
+function hush() { VQ.q = []; vqCut(); try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+// AudioBuffer を ならす（おわったら done）
+function vqBuf(a, b, off, dur, gain) {
+  return done => {
+    const s = a.createBufferSource(); s.buffer = b; let out = a.destination;
+    if (gain) { const g = a.createGain(); g.gain.value = gain; g.connect(a.destination); out = g; }
+    s.connect(out); s.onended = done; s.start(0, off || 0, dur || b.duration);
+    return () => s.stop();
+  };
+}
+// 端末の よみあげ（u は SpeechSynthesisUtterance）
+function vqTts(u) {
+  return done => { u.onend = done; u.onerror = done; speechSynthesis.cancel(); speechSynthesis.speak(u); return () => speechSynthesis.cancel(); };
+}
+// おうちの人の 録音（Blob）を ならす
+function vqBlob(b) {
+  return done => {
+    const au = new Audio(URL.createObjectURL(b)), end = () => { URL.revokeObjectURL(au.src); done(); };
+    au.onended = end; au.onerror = end; au.play().catch(end);
+    return () => { au.pause(); URL.revokeObjectURL(au.src); };
+  };
+}
+function aiPlay(id, cat, mode) {
   const a = audio(); if (!a) return;
   aiLoad(id);
   const ready = [];
   for (let i = 0; i < aiCount(cat); i++) { const b = aiBuf[`${id}/${cat}${i}`]; if (b && b !== 'loading') ready.push(`${id}/${cat}${i}`); }
   if (!ready.length) return;
-  try { if (aiSrc) aiSrc.stop(); } catch (e) {}
-  const src = a.createBufferSource(); src.buffer = aiBuf[pickTake('ai-' + cat, ready)];
-  src.connect(a.destination); src.start(); aiSrc = src;
+  const b = aiBuf[pickTake('ai-' + cat, ready)];
+  vqAdd({ play: vqBuf(a, b), max: b.duration + 2 }, mode);
 }
 const VOICE_CATS = ['ok', 'miss', 'hint', 'clear'];
 const MAX_TAKES = 8;
@@ -348,19 +396,15 @@ function loadVoice() {
   } catch (e) {}
 }
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
-function tts(text) {
+function tts(text, mode) {
   if (!('speechSynthesis' in window)) return;
   try {
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = LANG === 'ja' ? 'ja-JP' : 'en-US'; u.pitch = 1.15; u.rate = LANG === 'ja' ? .95 : .9; u.volume = 1; if (devVoice) u.voice = devVoice;
-    speechSynthesis.speak(u);
+    vqAdd({ play: vqTts(u), max: 3 + text.length * .25 }, mode);
   } catch (e) {}
 }
-let recAudio = null;
-function playBlob(b) {
-  try { if (recAudio) { recAudio.pause(); URL.revokeObjectURL(recAudio.src); } recAudio = new Audio(URL.createObjectURL(b)); recAudio.play().catch(() => {}); } catch (e) {}
-}
+function playBlob(b, mode) { vqAdd({ play: vqBlob(b), max: 20 }, mode); }
 const lastTake = {};
 function pickTake(cat, list) { // おなじ声が つづかないように
   const c = list.length > 1 ? list.filter(k => k !== lastTake[cat]) : list;
@@ -369,20 +413,22 @@ function pickTake(cat, list) { // おなじ声が つづかないように
 // 'ai:1'〜'ai:4'（AIのこえ 何番）/ 'dev'（端末の読み上げ）/ 'off'。むかしの 'ai:jf_alpha' なども よめる
 let voiceMode = store.get('machigai-voice3', 'ai:1');
 if (store.get('machigai-voicemode', '') === 'off' && store.get('machigai-voice3', null) == null) voiceMode = 'off';
-{ const i = AI_VOICES.ja.indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
+{ const i = ['jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro'].indexOf(voiceMode.slice(3)); if (i >= 0) voiceMode = 'ai:' + (i + 1); }
 const aiId = () => AI_VOICES[LANG][(+voiceMode.slice(3) || 1) - 1] || AI_VOICES[LANG][0];
-function speak(cat) {
+// mode 'idle'＝おしゃべり（ほかの こえが なっていなければ だけ）。なし＝まえの こえが おわるまで まつ
+function speak(cat, mode) {
   if (!soundOn) return;
+  if (mode === 'idle' && vqBusy()) return;
   const mine = takesOf(cat);
-  if (mine.length) return playBlob(recs[pickTake(cat, mine)]);
+  if (mine.length) return playBlob(recs[pickTake(cat, mine)], mode);
   // ひとつでも録音があれば、機械の声は まぜない（ぜんぶ・ヒントは「あたり」の録音でかわりにほめる）
   if (Object.keys(recs).length) {
     const alt = takesOf('ok');
-    if ((cat === 'clear' || cat === 'hint') && alt.length) playBlob(recs[pickTake('ok', alt)]);
+    if ((cat === 'clear' || cat === 'hint') && alt.length) playBlob(recs[pickTake('ok', alt)], mode);
     return;
   }
-  if (voiceMode.startsWith('ai:')) aiPlay(aiId(), cat);
-  else if (voiceMode === 'dev' && T().say[cat]) tts(pick(T().say[cat]));
+  if (voiceMode.startsWith('ai:')) aiPlay(aiId(), cat, mode);
+  else if (voiceMode === 'dev' && T().say[cat]) tts(pick(T().say[cat]), mode);
 }
 
 /* 録音は この端末の中(IndexedDB)にだけ保存 */
@@ -408,7 +454,7 @@ async function toggleRec(cat) {
   mr.onstop = async () => {
     stream.getTracks().forEach(t => t.stop()); clearTimeout(timer); recording = null;
     const blob = new Blob(chunks, { type: mr.mimeType || 'audio/mp4' });
-    if (blob.size > 800) { const k = cat + ':' + Date.now(); recs[k] = blob; try { await vdb.put(k, blob); } catch (e) {} playBlob(blob); }
+    if (blob.size > 800) { const k = cat + ':' + Date.now(); recs[k] = blob; try { await vdb.put(k, blob); } catch (e) {} hush(); playBlob(blob); }
     renderRecs();
   };
   const timer = setTimeout(() => mr.state !== 'inactive' && mr.stop(), 5000);
@@ -430,7 +476,7 @@ function renderRecs() {
 document.addEventListener('click', async e => {
   const t = e.target.closest('[data-rec],[data-play],[data-del]'); if (!t) return;
   if (t.dataset.rec) toggleRec(t.dataset.rec);
-  else if (t.dataset.play) recs[t.dataset.play] && playBlob(recs[t.dataset.play]);
+  else if (t.dataset.play && recs[t.dataset.play]) { hush(); playBlob(recs[t.dataset.play]); }
   else if (t.dataset.del) { delete recs[t.dataset.del]; try { await vdb.del(t.dataset.del); } catch (err) {} renderRecs(); }
 });
 function renderVoiceSel() {
@@ -448,7 +494,7 @@ function initVoiceUI() {
     if (voiceMode.startsWith('ai:')) aiLoad(aiId());
   };
   $('#voiceTest').onclick = async () => {
-    audio();
+    audio(); hush();
     if (voiceMode.startsWith('ai:')) { const id = aiId(); aiLoad(id); for (let i = 0; i < 20 && !(aiBuf[`${id}/ok1`] instanceof AudioBuffer); i++) await new Promise(r => setTimeout(r, 100)); aiPlay(id, 'ok'); }
     else if (voiceMode === 'dev') tts(T().devTest);
   };
@@ -456,7 +502,7 @@ function initVoiceUI() {
 function updSndBtn() { $('#btnSnd').textContent = soundOn ? T().sndOn : T().sndOff; $('#btnLang').textContent = T().lang; }
 $('#btnLang').onclick = () => { sfx.tap(); setLang(LANG === 'ja' ? 'en' : 'ja'); };
 $('#optLang').onclick = e => { const b = e.target.closest('button'); if (b) { setLang(b.dataset.v); renderVoiceSel(); } };
-$('#btnSnd').onclick = () => { soundOn = !soundOn; store.set('machigai-sound', soundOn); updSndBtn(); if (soundOn) sfx.tap(); };
+$('#btnSnd').onclick = () => { soundOn = !soundOn; if (!soundOn) hush(); store.set('machigai-sound', soundOn); updSndBtn(); if (soundOn) sfx.tap(); };
 updSndBtn();
 
 /* ---------- 用意した絵 ---------- */
@@ -1064,14 +1110,14 @@ function miss(pic, px, py) {
   m.style.left = px * 100 + '%'; m.style.top = py * 100 + '%';
   pic.appendChild(m); setTimeout(() => m.remove(), 1000);
   pic.classList.remove('shake'); void pic.offsetWidth; pic.classList.add('shake');
-  sfx.miss(); speak('miss');
+  sfx.miss(); speak('miss', 'idle');
 }
 function sayText(t) { const s = $('#say'); s.textContent = t; s.classList.remove('go'); void s.offsetWidth; s.classList.add('go'); }
 
 $('#btnHint').onclick = () => {
   if (!cur) return;
   const i = cur.found.findIndex(f => !f); if (i < 0) return;
-  sfx.tap(); speak('hint');
+  sfx.tap(); speak('hint', 'idle');
   const d = cur.diffs[i], ox = rnd(-.5, .5) * d.r, oy = rnd(-.5, .5) * d.r * cur.w / cur.h;
   for (const p of [picA, picB]) {
     const rc = p.getBoundingClientRect(), size = d.r * 5 * rc.width;
@@ -1111,7 +1157,7 @@ function confetti() {
   })(t0);
 }
 $('#btnNext').onclick = () => { sfx.tap(); newRound(); };
-$('#btnBack').onclick = $('#btnHome').onclick = () => { sfx.tap(); $('#clear').classList.remove('on'); show('title'); renderBook(); };
+$('#btnBack').onclick = $('#btnHome').onclick = () => { sfx.tap(); hush(); $('#clear').classList.remove('on'); show('title'); renderBook(); };
 $('#btnHelp').onclick = () => { $('#help').classList.add('on'); initVoiceUI(); };
 $('#btnHelpClose').onclick = () => { if (recording) recording.stop(); $('#help').classList.remove('on'); };
 
