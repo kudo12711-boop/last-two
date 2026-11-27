@@ -1,6 +1,6 @@
 # ゲーム開発の記録（目次）
 
-最終更新: 2026-11-26
+最終更新: 2026-11-27
 
 くどうさんと Claude が「ゲーム開発」プロジェクトで作ってきたゲームの記録です。ゲームごとに、生まれたきっかけ、くどうさんの声と直したこと、遊ぶ場所、これからやることをまとめています。各ファイルの下のほうにある「技術メモ」は、次に作業する Claude（や開発者）向けの作り方の説明です。
 
@@ -16,8 +16,7 @@
 | ぬけぬけリング | 1人用の連鎖パズル | v0.7 | [公開ページ](https://kudo12711-boop.github.io/last-two/nukenuke-ring/) | [nukenuke-ring.md](nukenuke-ring.md) |
 | ラスト・ツー | 最後の2人の表情の読み合い | v1.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/) | [last-two.md](last-two.md) |
 | まちがいさがし | 幼児向け、写真でも遊べる（題材8つ・間違い11種類） | v0.8 | [公開ページ](https://kudo12711-boop.github.io/last-two/machigai/) | [machigai.md](machigai.md) |
-| 都道府県パズル | 47都道府県の形をはめる（こどもステージつき） | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md) |
-| アメリカ 州パズル | 都道府県パズルの英語・アメリカ版。50州の形をはめる（こどもステージ15こ・シールずかん） | v0.1 | [かくしURL](https://kudo12711-boop.github.io/last-two/try-a985755ea1ec1719/) | [usa-states.md](usa-states.md) |
+| 都道府県パズル | 都道府県（47）と アメリカの州（50）の形をはめる。地図とことば（日本語・English）を えらべる、こどもステージつき | v0.7（PR で公開まち） | [公開ページ](https://kudo12711-boop.github.io/last-two/todofuken/) | [todofuken.md](todofuken.md)・[usa-states.md](usa-states.md) |
 | キャンピングカー世界一周 | 放置型の車窓の旅 | テレビ（Fire TV）向けの画面（11/15）まで | [公開ページ](https://kudo12711-boop.github.io/last-two/camper/) | [camper.md](camper.md) |
 | ゆびで めいろ | 幼児向け、指でなぞる迷路 | v0.5 | [公開ページ](https://kudo12711-boop.github.io/last-two/meiro/) | [meiro.md](meiro.md) |
 | てんつなぎ | 幼児向け、番号順に点をつないで絵を完成（31まい、点は最大60こ） | v0.4 | [公開ページ](https://kudo12711-boop.github.io/last-two/tentsunagi/) | [tentsunagi.md](tentsunagi.md) |
@@ -82,6 +81,7 @@
 35. **2026-11-25** くどうさん「一つのボールで複数の積み木を倒せたり…風船はもっと連続的に割れるように…口にめがけて投げるものを食べ物に」→ ぽーん！ ボールなげ v0.2（おもい ボールで つみきが まとめて たおれる、ふうせんは たばで うかび 割れが つぎつぎ ひろがる、ぱくぱく どうぶつ は 食べもの 7しゅるいを なげる）。[pon.md](pon.md)
 
 36. **2026-11-26** くどうさんが 都道府県パズルの英語版（アメリカの州・ヨーロッパの国）を作れるか たずね、アメリカから →「アメリカをお願いします」。都道府県パズルと同じ遊び方の「アメリカ 州パズル（USA States Puzzle）」v0.1 を作り、かくしURLで公開。[usa-states.md](usa-states.md)
+37. **2026-11-27** くどうさん「周パズルは都道府県の英語版と考えていましたが、同じアプリという扱いになっていませんか？」→「おすすめでおねがいします」。アメリカ版を 都道府県パズルの中へ まとめ、地図（日本・アメリカ）と ことば（日本語・English）を べつべつに えらべるようにした（v0.7）。[todofuken.md](todofuken.md)
 
 ## お金の方針（2026-10-23 決定）
 
